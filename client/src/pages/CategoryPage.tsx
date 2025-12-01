@@ -102,14 +102,14 @@ export default function CategoryPage() {
         description={category.metaDescription || category.description || `Shop ${category.name} products`}
       />
       {category.bannerUrl && (
-        <div className="relative w-full max-w-[1200px] mx-auto aspect-[3/1] min-h-[240px] mb-6 rounded-lg overflow-hidden">
+        <div className="relative w-full aspect-[3/1] min-h-[240px] mb-6 -mx-4 md:-mx-6 lg:-mx-8">
           <img
             src={category.bannerUrl}
             alt={`${category.name} banner`}
             className="w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 lg:p-8">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 md:mb-2">{category.name}</h1>
             {category.description && (
               <p className="text-white/80 max-w-2xl text-sm md:text-base">{category.description}</p>
