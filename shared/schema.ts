@@ -187,6 +187,7 @@ export const coupons = pgTable("coupons", {
   type: varchar("type").notNull(), // percentage, fixed
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   minCartTotal: decimal("min_cart_total", { precision: 10, scale: 2 }),
+  minQuantity: integer("min_quantity"), // Minimum quantity of items required for volume discounts
   maxUses: integer("max_uses"),
   usedCount: integer("used_count").default(0),
   productId: varchar("product_id"), // If set, coupon is product-specific; null means general coupon
