@@ -8,6 +8,7 @@ import {
   Edit,
   Trash2,
   GripVertical,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -279,6 +280,10 @@ function CategoryDialog({
   const [parentId, setParentId] = useState("none");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [iconUrl, setIconUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [isUploadingIcon, setIsUploadingIcon] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -288,12 +293,16 @@ function CategoryDialog({
       setParentId(category.parentId || "none");
       setDescription(category.description || "");
       setIsActive(category.isActive !== false);
+      setIconUrl((category as any).iconUrl || "");
+      setBannerUrl((category as any).bannerUrl || "");
     } else {
       setName("");
       setSlug("");
       setParentId("none");
       setDescription("");
       setIsActive(true);
+      setIconUrl("");
+      setBannerUrl("");
     }
   }, [category, open]);
 
@@ -305,6 +314,8 @@ function CategoryDialog({
         parentId: parentId === "none" ? null : parentId,
         description,
         isActive,
+        iconUrl: iconUrl || null,
+        bannerUrl: bannerUrl || null,
       };
       if (category) {
         return await apiRequest("PATCH", `/api/admin/categories/${category.id}`, payload);
@@ -329,6 +340,8 @@ function CategoryDialog({
     setParentId("none");
     setDescription("");
     setIsActive(true);
+    setIconUrl("");
+    setBannerUrl("");
   };
 
   const generateSlug = (n: string) => {
@@ -338,7 +351,56 @@ function CategoryDialog({
       .replace(/^-|-$/g, "");
   };
 
-  // Flatten the tree for dropdown and depth calculations
+  const handleImageUpload = async (
+    file: File,
+    setUrl: (url: string) => void,
+    setUploading: (uploading: boolean) => void
+  ) => {
+    setUploading(true);
+    try {
+      const uploadRes = await apiRequest("POST", "/api/admin/upload");
+      const { uploadURL } = await uploadRes.json();
+      
+      await fetch(uploadURL, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      const finalizeRes = await apiRequest("POST", "/api/admin/upload/finalize", { uploadURL });
+      const { objectPath } = await finalizeRes.json();
+      
+      setUrl(objectPath);
+      toast({ title: "Image uploaded successfully" });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({ title: "Failed to upload image", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setUrl: (url: string) => void,
+    setUploading: (uploading: boolean) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({ title: "Please select an image file", variant: "destructive" });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast({ title: "Image must be less than 5MB", variant: "destructive" });
+        return;
+      }
+      handleImageUpload(file, setUrl, setUploading);
+    }
+  };
+
   const flatCategories = flattenCategories(categories);
   
   const eligibleParents = flatCategories.filter((c) => {
@@ -347,30 +409,35 @@ function CategoryDialog({
     return depth < 2;
   });
 
+  const isSubOrChildCategory = parentId !== "none";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{category ? "Edit Category" : "Add Category"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Name</Label>
-            <Input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (!category) {
-                  setSlug(generateSlug(e.target.value));
-                }
-              }}
-              data-testid="input-category-name"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (!category) {
+                    setSlug(generateSlug(e.target.value));
+                  }
+                }}
+                data-testid="input-category-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Slug</Label>
+              <Input value={slug} onChange={(e) => setSlug(e.target.value)} data-testid="input-category-slug" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Slug</Label>
-            <Input value={slug} onChange={(e) => setSlug(e.target.value)} data-testid="input-category-slug" />
-          </div>
+          
           <div className="space-y-2">
             <Label>Parent Category</Label>
             <Select value={parentId} onValueChange={setParentId}>
@@ -387,6 +454,7 @@ function CategoryDialog({
               </SelectContent>
             </Select>
           </div>
+          
           <div className="space-y-2">
             <Label>Description</Label>
             <Textarea
@@ -395,12 +463,111 @@ function CategoryDialog({
               rows={3}
             />
           </div>
+
+          {isSubOrChildCategory && (
+            <>
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-4">Category Images</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Icon Image (for menu)</Label>
+                    <div className="flex flex-col gap-2">
+                      {iconUrl && (
+                        <div className="relative w-16 h-16 border rounded overflow-hidden">
+                          <img src={iconUrl} alt="Icon" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setIconUrl("")}
+                            className="absolute top-0 right-0 bg-destructive text-destructive-foreground w-5 h-5 flex items-center justify-center text-xs"
+                          >
+                            X
+                          </button>
+                        </div>
+                      )}
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, setIconUrl, setIsUploadingIcon)}
+                          className="hidden"
+                          id="icon-upload"
+                          disabled={isUploadingIcon}
+                        />
+                        <label htmlFor="icon-upload">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={isUploadingIcon}
+                            asChild
+                          >
+                            <span>
+                              <Upload className="h-4 w-4 mr-2" />
+                              {isUploadingIcon ? "Uploading..." : "Upload Icon"}
+                            </span>
+                          </Button>
+                        </label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Recommended: 64x64px</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Banner Image (for category page)</Label>
+                    <div className="flex flex-col gap-2">
+                      {bannerUrl && (
+                        <div className="relative w-full h-20 border rounded overflow-hidden">
+                          <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setBannerUrl("")}
+                            className="absolute top-0 right-0 bg-destructive text-destructive-foreground w-5 h-5 flex items-center justify-center text-xs"
+                          >
+                            X
+                          </button>
+                        </div>
+                      )}
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, setBannerUrl, setIsUploadingBanner)}
+                          className="hidden"
+                          id="banner-upload"
+                          disabled={isUploadingBanner}
+                        />
+                        <label htmlFor="banner-upload">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={isUploadingBanner}
+                            asChild
+                          >
+                            <span>
+                              <Upload className="h-4 w-4 mr-2" />
+                              {isUploadingBanner ? "Uploading..." : "Upload Banner"}
+                            </span>
+                          </Button>
+                        </label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Recommended: 1200x300px</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} data-testid="button-save-category">
+          <Button 
+            onClick={() => saveMutation.mutate()} 
+            disabled={saveMutation.isPending || isUploadingIcon || isUploadingBanner} 
+            data-testid="button-save-category"
+          >
             {category ? "Update" : "Create"}
           </Button>
         </DialogFooter>
