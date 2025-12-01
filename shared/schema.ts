@@ -53,6 +53,8 @@ export const categories = pgTable("categories", {
   slug: varchar("slug").notNull().unique(),
   description: text("description"),
   imageUrl: varchar("image_url"),
+  iconUrl: varchar("icon_url"), // Icon image for menu display
+  bannerUrl: varchar("banner_url"), // Banner image for category page header
   position: integer("position").default(0),
   isActive: boolean("is_active").default(true),
   metaTitle: varchar("meta_title"),
