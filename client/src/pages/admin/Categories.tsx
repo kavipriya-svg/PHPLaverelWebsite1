@@ -358,19 +358,50 @@ function CategoryDialog({
   ) => {
     setUploading(true);
     try {
-      const uploadRes = await apiRequest("POST", "/api/admin/upload");
-      const { uploadURL } = await uploadRes.json();
+      const uploadRes = await fetch("/api/admin/upload", {
+        method: "POST",
+        credentials: "include",
+      });
       
-      await fetch(uploadURL, {
+      if (!uploadRes.ok) {
+        const errorText = await uploadRes.text();
+        console.error("Upload URL error:", errorText);
+        throw new Error("Failed to get upload URL");
+      }
+      const uploadData = await uploadRes.json();
+      const uploadURL = uploadData.uploadURL;
+      
+      if (!uploadURL) {
+        throw new Error("No upload URL received");
+      }
+      
+      const putRes = await fetch(uploadURL, {
         method: "PUT",
         body: file,
         headers: {
           "Content-Type": file.type,
         },
       });
+      
+      if (!putRes.ok) {
+        console.error("PUT to storage failed:", putRes.status, putRes.statusText);
+        throw new Error("Failed to upload file to storage");
+      }
 
-      const finalizeRes = await apiRequest("POST", "/api/admin/upload/finalize", { uploadURL });
-      const { objectPath } = await finalizeRes.json();
+      const finalizeRes = await fetch("/api/admin/upload/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uploadURL }),
+        credentials: "include",
+      });
+      
+      if (!finalizeRes.ok) {
+        const errorText = await finalizeRes.text();
+        console.error("Finalize error:", errorText);
+        throw new Error("Failed to finalize upload");
+      }
+      const finalizeData = await finalizeRes.json();
+      const objectPath = finalizeData.objectPath;
       
       setUrl(objectPath);
       toast({ title: "Image uploaded successfully" });
