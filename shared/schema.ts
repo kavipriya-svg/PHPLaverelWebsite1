@@ -114,6 +114,8 @@ export const products = pgTable("products", {
   expectedDeliveryDays: integer("expected_delivery_days").default(5), // Expected delivery in days
   isFeatured: boolean("is_featured").default(false),
   isTrending: boolean("is_trending").default(false),
+  isNewArrival: boolean("is_new_arrival").default(false),
+  isOnSale: boolean("is_on_sale").default(false),
   isActive: boolean("is_active").default(true),
   averageRating: decimal("average_rating", { precision: 2, scale: 1 }).default("0"),
   reviewCount: integer("review_count").default(0),
