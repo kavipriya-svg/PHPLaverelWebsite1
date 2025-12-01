@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Plus,
@@ -273,12 +273,28 @@ function CategoryDialog({
   category: CategoryWithChildren | null;
   categories: CategoryWithChildren[];
 }) {
-  const [name, setName] = useState(category?.name || "");
-  const [slug, setSlug] = useState(category?.slug || "");
-  const [parentId, setParentId] = useState(category?.parentId || "none");
-  const [description, setDescription] = useState(category?.description || "");
-  const [isActive, setIsActive] = useState(category?.isActive !== false);
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [parentId, setParentId] = useState("none");
+  const [description, setDescription] = useState("");
+  const [isActive, setIsActive] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (category) {
+      setName(category.name || "");
+      setSlug(category.slug || "");
+      setParentId(category.parentId || "none");
+      setDescription(category.description || "");
+      setIsActive(category.isActive !== false);
+    } else {
+      setName("");
+      setSlug("");
+      setParentId("none");
+      setDescription("");
+      setIsActive(true);
+    }
+  }, [category, open]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
