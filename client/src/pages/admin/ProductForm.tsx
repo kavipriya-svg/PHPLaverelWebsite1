@@ -309,9 +309,14 @@ export default function ProductForm() {
         },
       });
 
-      // Add to media items
+      // Finalize upload to set ACL policy for public access
+      const finalizedResult = await apiRequest("POST", "/api/admin/upload/finalize", {
+        uploadURL: presignedUrl,
+      });
+
+      // Add to media items using the finalized object path
       const newMedia: MediaItem = {
-        url: `/objects/${objectPath}`,
+        url: finalizedResult.objectPath || `/objects/${objectPath}`,
         altText: file.name.replace(/\.[^/.]+$/, ""),
         mediaType,
         isPrimary: mediaItems.length === 0,
@@ -320,6 +325,7 @@ export default function ProductForm() {
       setMediaItems([...mediaItems, newMedia]);
       toast({ title: `${mediaType === "video" ? "Video" : "Image"} uploaded successfully` });
     } catch (error) {
+      console.error("Upload error:", error);
       toast({ title: "Upload failed", variant: "destructive" });
     } finally {
       setIsUploading(false);
