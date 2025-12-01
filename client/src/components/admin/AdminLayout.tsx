@@ -35,8 +35,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { ReactNode, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { ReactNode } from "react";
 
 const adminMenuItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
@@ -59,18 +58,6 @@ const adminMenuItems = [
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !isAdmin)) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to access this area.",
-        variant: "destructive",
-      });
-      window.location.href = "/";
-    }
-  }, [isAuthenticated, isAdmin, isLoading, toast]);
 
   if (isLoading) {
     return (
@@ -80,8 +67,47 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!isAuthenticated || !isAdmin) {
-    return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-6 p-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-2xl">
+          A
+        </div>
+        <h1 className="text-2xl font-bold">Admin Panel</h1>
+        <p className="text-muted-foreground text-center max-w-md">
+          Please sign in with your Replit account to access the admin panel.
+        </p>
+        <Button asChild size="lg" data-testid="button-admin-login">
+          <a href="/api/login">Sign in with Replit</a>
+        </Button>
+        <Link href="/">
+          <Button variant="ghost" size="sm">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to Store
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-6 p-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-md bg-destructive text-destructive-foreground font-bold text-2xl">
+          !
+        </div>
+        <h1 className="text-2xl font-bold">Access Denied</h1>
+        <p className="text-muted-foreground text-center max-w-md">
+          You don't have permission to access the admin panel. Please contact an administrator if you believe this is an error.
+        </p>
+        <Link href="/">
+          <Button variant="outline" size="lg">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to Store
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
   const sidebarStyle = {
