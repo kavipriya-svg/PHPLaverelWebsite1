@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -17,6 +17,8 @@ import {
   Calendar,
   Copy,
   Check,
+  Timer,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +58,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>();
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+  const [saleCountdown, setSaleCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
   
   const { addToCart, isInWishlist, toggleWishlist } = useStore();
   const { isAuthenticated } = useAuth();
@@ -117,6 +120,42 @@ export default function ProductDetail() {
     date.setDate(date.getDate() + product.expectedDeliveryDays);
     return date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
   };
+
+  const isOnSale = (product as any)?.isOnSale;
+  const salePriceEnd = (product as any)?.salePriceEnd;
+  const salePriceStart = (product as any)?.salePriceStart;
+  const isSaleActive = isOnSale && salePriceEnd && new Date(salePriceEnd) > new Date() && 
+    (!salePriceStart || new Date(salePriceStart) <= new Date());
+
+  useEffect(() => {
+    if (!isSaleActive || !salePriceEnd) {
+      setSaleCountdown(null);
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const endDate = new Date(salePriceEnd);
+      const now = new Date();
+      const difference = endDate.getTime() - now.getTime();
+
+      if (difference <= 0) {
+        setSaleCountdown(null);
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      setSaleCountdown({ days, hours, minutes, seconds });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [isSaleActive, salePriceEnd]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -391,6 +430,46 @@ export default function ProductDetail() {
               </>
             )}
           </div>
+
+          {isSaleActive && saleCountdown && (
+            <div className="p-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg" data-testid="sale-countdown">
+              <div className="flex items-center gap-2 mb-3">
+                <Timer className="h-5 w-5 text-red-500" />
+                <span className="font-bold text-red-500">Sale Ends In:</span>
+                {(product as any)?.isNewArrival && (
+                  <Badge variant="secondary" className="ml-auto">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    New Arrival
+                  </Badge>
+                )}
+              </div>
+              <div className="flex gap-3 justify-center">
+                <div className="text-center bg-background rounded-lg p-3 min-w-[60px] shadow-sm">
+                  <div className="text-2xl font-bold text-foreground">{saleCountdown.days}</div>
+                  <div className="text-xs text-muted-foreground uppercase">Days</div>
+                </div>
+                <div className="text-center bg-background rounded-lg p-3 min-w-[60px] shadow-sm">
+                  <div className="text-2xl font-bold text-foreground">{saleCountdown.hours.toString().padStart(2, '0')}</div>
+                  <div className="text-xs text-muted-foreground uppercase">Hours</div>
+                </div>
+                <div className="text-center bg-background rounded-lg p-3 min-w-[60px] shadow-sm">
+                  <div className="text-2xl font-bold text-foreground">{saleCountdown.minutes.toString().padStart(2, '0')}</div>
+                  <div className="text-xs text-muted-foreground uppercase">Minutes</div>
+                </div>
+                <div className="text-center bg-background rounded-lg p-3 min-w-[60px] shadow-sm">
+                  <div className="text-2xl font-bold text-foreground">{saleCountdown.seconds.toString().padStart(2, '0')}</div>
+                  <div className="text-xs text-muted-foreground uppercase">Seconds</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {(product as any)?.isNewArrival && !isSaleActive && (
+            <Badge variant="secondary" className="w-fit">
+              <Sparkles className="h-3 w-3 mr-1" />
+              New Arrival
+            </Badge>
+          )}
 
           {product.shortDesc && (
             <p className="text-muted-foreground">{product.shortDesc}</p>

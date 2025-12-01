@@ -61,12 +61,16 @@ const productSchema = z.object({
   longDesc: z.string().optional(),
   price: z.string().min(1, "Price is required"),
   salePrice: z.string().optional(),
+  salePriceStart: z.string().optional(),
+  salePriceEnd: z.string().optional(),
   stock: z.number().min(0).default(0),
   weight: z.string().optional(),
   dimensions: z.string().optional(),
   expectedDeliveryDays: z.number().min(1).default(5),
   isFeatured: z.boolean().default(false),
   isTrending: z.boolean().default(false),
+  isNewArrival: z.boolean().default(false),
+  isOnSale: z.boolean().default(false),
   isActive: z.boolean().default(true),
 });
 
@@ -115,12 +119,16 @@ export default function ProductForm() {
       longDesc: "",
       price: "",
       salePrice: "",
+      salePriceStart: "",
+      salePriceEnd: "",
       stock: 0,
       weight: "",
       dimensions: "",
       expectedDeliveryDays: 5,
       isFeatured: false,
       isTrending: false,
+      isNewArrival: false,
+      isOnSale: false,
       isActive: true,
     },
   });
@@ -138,12 +146,16 @@ export default function ProductForm() {
         longDesc: p.longDesc || "",
         price: p.price as string,
         salePrice: p.salePrice as string || "",
+        salePriceStart: (p as any).salePriceStart ? new Date((p as any).salePriceStart).toISOString().split("T")[0] : "",
+        salePriceEnd: (p as any).salePriceEnd ? new Date((p as any).salePriceEnd).toISOString().split("T")[0] : "",
         stock: p.stock || 0,
         weight: p.weight as string || "",
         dimensions: p.dimensions || "",
         expectedDeliveryDays: (p as any).expectedDeliveryDays || 5,
         isFeatured: p.isFeatured || false,
         isTrending: p.isTrending || false,
+        isNewArrival: (p as any).isNewArrival || false,
+        isOnSale: (p as any).isOnSale || false,
         isActive: p.isActive !== false,
       });
       // Set media items from existing images
@@ -618,13 +630,14 @@ export default function ProductForm() {
                   ))}
                   
                   {/* Upload Image Button */}
-                  <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                  <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors p-2">
                     {isUploading ? (
                       <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
                     ) : (
                       <>
                         <Image className="h-8 w-8 text-muted-foreground mb-2" />
-                        <span className="text-sm text-muted-foreground">Add Image</span>
+                        <span className="text-sm text-muted-foreground text-center">Add Image</span>
+                        <span className="text-xs text-muted-foreground/70 text-center mt-1">800x800px or larger</span>
                       </>
                     )}
                     <input
@@ -642,13 +655,14 @@ export default function ProductForm() {
                   </label>
                   
                   {/* Upload Video Button */}
-                  <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                  <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors p-2">
                     {isUploading ? (
                       <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
                     ) : (
                       <>
                         <Video className="h-8 w-8 text-muted-foreground mb-2" />
-                        <span className="text-sm text-muted-foreground">Add Video</span>
+                        <span className="text-sm text-muted-foreground text-center">Add Video</span>
+                        <span className="text-xs text-muted-foreground/70 text-center mt-1">1080p, max 50MB</span>
                       </>
                     )}
                     <input
@@ -818,6 +832,72 @@ export default function ProductForm() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="isNewArrival"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                      <div>
+                        <FormLabel className="text-base">New Arrival</FormLabel>
+                        <FormDescription>
+                          Mark as a new arrival product
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-new-arrival" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isOnSale"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                      <div>
+                        <FormLabel className="text-base">On Sale</FormLabel>
+                        <FormDescription>
+                          Product is on sale with special pricing
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-on-sale" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                {form.watch("isOnSale") && (
+                  <div className="grid sm:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/30">
+                    <FormField
+                      control={form.control}
+                      name="salePriceStart"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sale Start Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} data-testid="input-sale-start" />
+                          </FormControl>
+                          <FormDescription>When the sale begins</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="salePriceEnd"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sale End Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} data-testid="input-sale-end" />
+                          </FormControl>
+                          <FormDescription>When the sale ends</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
