@@ -55,6 +55,9 @@ export const categories = pgTable("categories", {
   imageUrl: varchar("image_url"),
   position: integer("position").default(0),
   isActive: boolean("is_active").default(true),
+  metaTitle: varchar("meta_title"),
+  metaDescription: text("meta_description"),
+  metaKeywords: varchar("meta_keywords"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -107,6 +110,9 @@ export const products = pgTable("products", {
   isActive: boolean("is_active").default(true),
   averageRating: decimal("average_rating", { precision: 2, scale: 1 }).default("0"),
   reviewCount: integer("review_count").default(0),
+  metaTitle: varchar("meta_title"),
+  metaDescription: text("meta_description"),
+  metaKeywords: varchar("meta_keywords"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
