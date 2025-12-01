@@ -18,6 +18,9 @@ import {
   cartItems,
   reviews,
   reviewVotes,
+  sharedWishlists,
+  giftRegistries,
+  giftRegistryItems,
   type User,
   type UpsertUser,
   type Category,
@@ -52,11 +55,18 @@ import {
   type InsertReview,
   type ReviewVote,
   type InsertReviewVote,
+  type SharedWishlist,
+  type InsertSharedWishlist,
+  type GiftRegistry,
+  type InsertGiftRegistry,
+  type GiftRegistryItem,
+  type InsertGiftRegistryItem,
   type ProductWithDetails,
   type CategoryWithChildren,
   type OrderWithItems,
   type CartItemWithProduct,
   type ReviewWithUser,
+  type GiftRegistryWithItems,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -141,6 +151,22 @@ export interface IStorage {
   hasUserPurchasedProduct(userId: string, productId: string): Promise<boolean>;
   hasUserReviewedProduct(userId: string, productId: string): Promise<boolean>;
   updateProductRating(productId: string): Promise<void>;
+
+  getSharedWishlist(userId: string): Promise<SharedWishlist | undefined>;
+  getSharedWishlistByCode(shareCode: string): Promise<SharedWishlist | undefined>;
+  createOrUpdateSharedWishlist(wishlist: InsertSharedWishlist): Promise<SharedWishlist>;
+  deleteSharedWishlist(userId: string): Promise<void>;
+
+  getGiftRegistries(userId: string): Promise<GiftRegistry[]>;
+  getGiftRegistryById(id: string): Promise<GiftRegistryWithItems | undefined>;
+  getGiftRegistryByCode(shareCode: string): Promise<GiftRegistryWithItems | undefined>;
+  createGiftRegistry(registry: InsertGiftRegistry): Promise<GiftRegistry>;
+  updateGiftRegistry(id: string, registry: Partial<InsertGiftRegistry>): Promise<GiftRegistry | undefined>;
+  deleteGiftRegistry(id: string): Promise<void>;
+  addGiftRegistryItem(item: InsertGiftRegistryItem): Promise<GiftRegistryItem>;
+  updateGiftRegistryItem(id: string, item: Partial<InsertGiftRegistryItem>): Promise<GiftRegistryItem | undefined>;
+  removeGiftRegistryItem(id: string): Promise<void>;
+  markGiftRegistryItemPurchased(id: string, purchasedBy: string): Promise<GiftRegistryItem | undefined>;
 }
 
 export interface ProductFilters {
@@ -888,6 +914,176 @@ export class DatabaseStorage implements IStorage {
       .update(products)
       .set({ averageRating, reviewCount })
       .where(eq(products.id, productId));
+  }
+
+  async getSharedWishlist(userId: string): Promise<SharedWishlist | undefined> {
+    const [wishlist] = await db
+      .select()
+      .from(sharedWishlists)
+      .where(eq(sharedWishlists.userId, userId))
+      .limit(1);
+    return wishlist;
+  }
+
+  async getSharedWishlistByCode(shareCode: string): Promise<SharedWishlist | undefined> {
+    const [wishlist] = await db
+      .select()
+      .from(sharedWishlists)
+      .where(eq(sharedWishlists.shareCode, shareCode))
+      .limit(1);
+    return wishlist;
+  }
+
+  async createOrUpdateSharedWishlist(wishlist: InsertSharedWishlist): Promise<SharedWishlist> {
+    const [existing] = await db
+      .select()
+      .from(sharedWishlists)
+      .where(eq(sharedWishlists.userId, wishlist.userId))
+      .limit(1);
+
+    if (existing) {
+      const [updated] = await db
+        .update(sharedWishlists)
+        .set({ ...wishlist, updatedAt: new Date() })
+        .where(eq(sharedWishlists.id, existing.id))
+        .returning();
+      return updated;
+    }
+
+    const [created] = await db.insert(sharedWishlists).values(wishlist).returning();
+    return created;
+  }
+
+  async deleteSharedWishlist(userId: string): Promise<void> {
+    await db.delete(sharedWishlists).where(eq(sharedWishlists.userId, userId));
+  }
+
+  async getGiftRegistries(userId: string): Promise<GiftRegistry[]> {
+    return db.select().from(giftRegistries).where(eq(giftRegistries.userId, userId)).orderBy(desc(giftRegistries.createdAt));
+  }
+
+  async getGiftRegistryById(id: string): Promise<GiftRegistryWithItems | undefined> {
+    const [registry] = await db.select().from(giftRegistries).where(eq(giftRegistries.id, id)).limit(1);
+    if (!registry) return undefined;
+    return this.getGiftRegistryWithItems(registry);
+  }
+
+  async getGiftRegistryByCode(shareCode: string): Promise<GiftRegistryWithItems | undefined> {
+    const [registry] = await db.select().from(giftRegistries).where(eq(giftRegistries.shareCode, shareCode)).limit(1);
+    if (!registry) return undefined;
+    return this.getGiftRegistryWithItems(registry);
+  }
+
+  private async getGiftRegistryWithItems(registry: GiftRegistry): Promise<GiftRegistryWithItems> {
+    const items = await db
+      .select()
+      .from(giftRegistryItems)
+      .where(eq(giftRegistryItems.registryId, registry.id))
+      .orderBy(asc(giftRegistryItems.createdAt));
+
+    const itemsWithProducts = await Promise.all(
+      items.map(async (item) => {
+        const product = await this.getProductById(item.productId);
+        const variant = item.variantId
+          ? (await db.select().from(productVariants).where(eq(productVariants.id, item.variantId)).limit(1))[0]
+          : null;
+        return { ...item, product: product!, variant };
+      })
+    );
+
+    const [user] = registry.userId
+      ? await db.select().from(users).where(eq(users.id, registry.userId)).limit(1)
+      : [null];
+
+    const [shippingAddress] = registry.shippingAddressId
+      ? await db.select().from(addresses).where(eq(addresses.id, registry.shippingAddressId)).limit(1)
+      : [null];
+
+    return {
+      ...registry,
+      items: itemsWithProducts,
+      user: user || undefined,
+      shippingAddress: shippingAddress || undefined,
+    };
+  }
+
+  async createGiftRegistry(registry: InsertGiftRegistry): Promise<GiftRegistry> {
+    const [created] = await db.insert(giftRegistries).values(registry).returning();
+    return created;
+  }
+
+  async updateGiftRegistry(id: string, registry: Partial<InsertGiftRegistry>): Promise<GiftRegistry | undefined> {
+    const [updated] = await db
+      .update(giftRegistries)
+      .set({ ...registry, updatedAt: new Date() })
+      .where(eq(giftRegistries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteGiftRegistry(id: string): Promise<void> {
+    await db.delete(giftRegistryItems).where(eq(giftRegistryItems.registryId, id));
+    await db.delete(giftRegistries).where(eq(giftRegistries.id, id));
+  }
+
+  async addGiftRegistryItem(item: InsertGiftRegistryItem): Promise<GiftRegistryItem> {
+    const [existing] = await db
+      .select()
+      .from(giftRegistryItems)
+      .where(
+        and(
+          eq(giftRegistryItems.registryId, item.registryId),
+          eq(giftRegistryItems.productId, item.productId),
+          item.variantId ? eq(giftRegistryItems.variantId, item.variantId) : isNull(giftRegistryItems.variantId)
+        )
+      )
+      .limit(1);
+
+    if (existing) {
+      const newQuantity = (existing.quantityDesired || 1) + (item.quantityDesired || 1);
+      const [updated] = await db
+        .update(giftRegistryItems)
+        .set({ quantityDesired: newQuantity })
+        .where(eq(giftRegistryItems.id, existing.id))
+        .returning();
+      return updated;
+    }
+
+    const [created] = await db.insert(giftRegistryItems).values(item).returning();
+    return created;
+  }
+
+  async updateGiftRegistryItem(id: string, item: Partial<InsertGiftRegistryItem>): Promise<GiftRegistryItem | undefined> {
+    const [updated] = await db
+      .update(giftRegistryItems)
+      .set(item)
+      .where(eq(giftRegistryItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async removeGiftRegistryItem(id: string): Promise<void> {
+    await db.delete(giftRegistryItems).where(eq(giftRegistryItems.id, id));
+  }
+
+  async markGiftRegistryItemPurchased(id: string, purchasedBy: string): Promise<GiftRegistryItem | undefined> {
+    const [item] = await db.select().from(giftRegistryItems).where(eq(giftRegistryItems.id, id)).limit(1);
+    if (!item) return undefined;
+
+    const newPurchasedQty = (item.quantityPurchased || 0) + 1;
+    const isPurchased = newPurchasedQty >= (item.quantityDesired || 1);
+
+    const [updated] = await db
+      .update(giftRegistryItems)
+      .set({
+        quantityPurchased: newPurchasedQty,
+        isPurchased,
+        purchasedBy,
+        purchasedAt: new Date(),
+      })
+      .where(eq(giftRegistryItems.id, id))
+      .returning();
+    return updated;
   }
 }
 

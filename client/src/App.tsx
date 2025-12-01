@@ -35,6 +35,10 @@ import AdminReviews from "@/pages/admin/Reviews";
 import AdminEmailSettings from "@/pages/admin/EmailSettings";
 import AdminAnalytics from "@/pages/admin/Analytics";
 import AdminSEOSettings from "@/pages/admin/SEOSettings";
+import GiftRegistry from "@/pages/GiftRegistry";
+import GiftRegistryDetail from "@/pages/GiftRegistryDetail";
+import PublicRegistry from "@/pages/PublicRegistry";
+import SharedWishlist from "@/pages/SharedWishlist";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -114,6 +118,30 @@ function Router() {
       <Route path="/wishlist">
         <StoreLayout>
           <Wishlist />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/gift-registry">
+        <StoreLayout>
+          <GiftRegistry />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/gift-registry/:id">
+        <StoreLayout>
+          <GiftRegistryDetail />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/registry/:shareCode">
+        <StoreLayout>
+          <PublicRegistry />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/shared-wishlist/:shareCode">
+        <StoreLayout>
+          <SharedWishlist />
         </StoreLayout>
       </Route>
 
