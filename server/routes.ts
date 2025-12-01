@@ -1033,6 +1033,119 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/admin/inventory/low-stock", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const threshold = req.query.threshold ? parseInt(req.query.threshold as string) : undefined;
+      const products = await storage.getLowStockProducts(threshold);
+      res.json({ products });
+    } catch (error) {
+      console.error("Low stock error:", error);
+      res.status(500).json({ error: "Failed to fetch low stock products" });
+    }
+  });
+
+  app.get("/api/admin/inventory/notifications", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const productId = req.query.productId as string | undefined;
+      const notifications = await storage.getStockNotifications(productId);
+      res.json({ notifications });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stock notifications" });
+    }
+  });
+
+  app.post("/api/admin/inventory/send-low-stock-alerts", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { productIds } = req.body;
+      const productsToAlert = productIds 
+        ? await Promise.all(productIds.map((id: string) => storage.getProductById(id)))
+        : await storage.getLowStockProducts();
+      
+      const validProducts = productsToAlert.filter((p): p is NonNullable<typeof p> => !!p);
+      
+      if (validProducts.length === 0) {
+        return res.json({ success: true, message: "No products to alert" });
+      }
+
+      const adminEmail = req.body.adminEmail || "admin@example.com";
+      
+      await emailService.sendLowStockAlert({
+        adminEmail,
+        products: validProducts.map(p => ({
+          title: p.title,
+          sku: p.sku,
+          currentStock: p.stock || 0,
+          threshold: p.lowStockThreshold || 10,
+        })),
+      });
+
+      res.json({ success: true, message: `Low stock alert sent for ${validProducts.length} products` });
+    } catch (error) {
+      console.error("Low stock alert error:", error);
+      res.status(500).json({ error: "Failed to send low stock alerts" });
+    }
+  });
+
+  app.post("/api/products/:id/notify-restock", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+      
+      const product = await storage.getProductById(req.params.id);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      const userInfo = getUserInfo(req);
+      const notification = await storage.createStockNotification({
+        productId: req.params.id,
+        email,
+        userId: userInfo?.id,
+      });
+
+      res.json({ success: true, notification });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create restock notification" });
+    }
+  });
+
+  app.post("/api/admin/inventory/process-restock-notifications", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { productId } = req.body;
+      
+      const product = await storage.getProductById(productId);
+      if (!product || !product.stock || product.stock <= 0) {
+        return res.status(400).json({ error: "Product not restocked or not found" });
+      }
+
+      const notifications = await storage.getUnnotifiedStockNotifications(productId);
+      
+      if (notifications.length === 0) {
+        return res.json({ success: true, message: "No pending notifications" });
+      }
+
+      for (const notification of notifications) {
+        await emailService.sendRestockNotification(notification.email, {
+          productTitle: product.title,
+          productUrl: `/product/${product.slug}`,
+          productImage: product.images?.[0]?.url,
+        });
+      }
+
+      await storage.markStockNotificationsNotified(productId);
+
+      res.json({ 
+        success: true, 
+        message: `Sent restock notifications to ${notifications.length} subscribers` 
+      });
+    } catch (error) {
+      console.error("Restock notification error:", error);
+      res.status(500).json({ error: "Failed to process restock notifications" });
+    }
+  });
+
   app.get("/api/admin/products", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const filters = {

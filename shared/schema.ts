@@ -103,6 +103,10 @@ export const products = pgTable("products", {
   salePriceStart: timestamp("sale_price_start"),
   salePriceEnd: timestamp("sale_price_end"),
   stock: integer("stock").default(0),
+  lowStockThreshold: integer("low_stock_threshold").default(10),
+  allowBackorder: boolean("allow_backorder").default(false),
+  restockDate: timestamp("restock_date"),
+  warehouseLocation: varchar("warehouse_location"),
   weight: decimal("weight", { precision: 8, scale: 2 }),
   dimensions: varchar("dimensions"),
   isFeatured: boolean("is_featured").default(false),
@@ -489,6 +493,33 @@ export const giftRegistryItemsRelations = relations(giftRegistryItems, ({ one })
   }),
 }));
 
+// Stock Notifications - For restock alerts
+export const stockNotifications = pgTable("stock_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: varchar("product_id").notNull(),
+  variantId: varchar("variant_id"),
+  email: varchar("email").notNull(),
+  userId: varchar("user_id"), // Optional if logged in
+  isNotified: boolean("is_notified").default(false),
+  notifiedAt: timestamp("notified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const stockNotificationsRelations = relations(stockNotifications, ({ one }) => ({
+  product: one(products, {
+    fields: [stockNotifications.productId],
+    references: [products.id],
+  }),
+  variant: one(productVariants, {
+    fields: [stockNotifications.variantId],
+    references: [productVariants.id],
+  }),
+  user: one(users, {
+    fields: [stockNotifications.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true, updatedAt: true });
@@ -510,6 +541,7 @@ export const insertReviewVoteSchema = createInsertSchema(reviewVotes).omit({ id:
 export const insertSharedWishlistSchema = createInsertSchema(sharedWishlists).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertGiftRegistrySchema = createInsertSchema(giftRegistries).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertGiftRegistryItemSchema = createInsertSchema(giftRegistryItems).omit({ id: true, createdAt: true });
+export const insertStockNotificationSchema = createInsertSchema(stockNotifications).omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -563,6 +595,9 @@ export type InsertReview = z.infer<typeof insertReviewSchema>;
 
 export type ReviewVote = typeof reviewVotes.$inferSelect;
 export type InsertReviewVote = z.infer<typeof insertReviewVoteSchema>;
+
+export type StockNotification = typeof stockNotifications.$inferSelect;
+export type InsertStockNotification = z.infer<typeof insertStockNotificationSchema>;
 
 // Extended types for frontend usage
 export type ProductWithDetails = Product & {
