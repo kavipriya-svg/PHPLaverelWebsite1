@@ -1199,6 +1199,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Presigned URL endpoint for direct uploads from frontend
+  app.post("/api/upload/presigned-url", isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const presignedUrl = await objectStorageService.getObjectEntityUploadURL();
+      
+      // Extract the object path from the presigned URL
+      const url = new URL(presignedUrl);
+      const pathParts = url.pathname.split('/');
+      // The path format is /bucket/prefix/uploads/uuid
+      const objectPath = `uploads/${pathParts[pathParts.length - 1]}`;
+      
+      res.json({ presignedUrl, objectPath });
+    } catch (error) {
+      console.error("Error getting presigned URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
   app.post("/api/admin/upload", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();
