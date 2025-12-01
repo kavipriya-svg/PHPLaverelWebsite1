@@ -12,6 +12,11 @@ import {
   Truck,
   RotateCcw,
   Shield,
+  Play,
+  Ticket,
+  Calendar,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -40,7 +46,7 @@ import { ProductGrid } from "@/components/store/ProductGrid";
 import { ReviewSection } from "@/components/store/ReviewSection";
 import { ShareButtons } from "@/components/store/ShareButtons";
 import { SEOHead } from "@/components/SEOHead";
-import type { ProductWithDetails } from "@shared/schema";
+import type { ProductWithDetails, Coupon } from "@shared/schema";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:slug");
@@ -49,6 +55,7 @@ export default function ProductDetail() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>();
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   
   const { addToCart, isInWishlist, toggleWishlist } = useStore();
   const { isAuthenticated } = useAuth();
@@ -59,27 +66,57 @@ export default function ProductDetail() {
     enabled: !!slug,
   });
 
+  const product = data?.product;
+
+  const { data: couponsData } = useQuery<{ coupons: Coupon[] }>({
+    queryKey: ["/api/coupons", { productId: product?.id }],
+    queryFn: async () => {
+      const res = await fetch(`/api/coupons?productId=${product?.id}`);
+      return res.json();
+    },
+    enabled: !!product?.id,
+  });
+
   const relatedQueryParams = new URLSearchParams();
-  if (data?.product?.categoryId) {
-    relatedQueryParams.set("categoryId", data.product.categoryId);
+  if (product?.categoryId) {
+    relatedQueryParams.set("categoryId", product.categoryId);
     relatedQueryParams.set("limit", "4");
-    if (data.product.id) relatedQueryParams.set("exclude", data.product.id);
+    if (product.id) relatedQueryParams.set("exclude", product.id);
   }
 
   const { data: relatedData } = useQuery<{ products: ProductWithDetails[] }>({
     queryKey: ["/api/products", relatedQueryParams.toString()],
-    enabled: !!data?.product?.categoryId,
+    enabled: !!product?.categoryId,
   });
 
-  const product = data?.product;
   const relatedProducts = relatedData?.products || [];
   const images = product?.images || [];
   const variants = product?.variants || [];
+  const applicableCoupons = (couponsData?.coupons || []).filter(
+    (c) => c.isActive && (!c.productId || c.productId === product?.id)
+  );
   
   const selectedVariant = variants.find(v => v.id === selectedVariantId);
   const currentPrice = selectedVariant?.price || product?.salePrice || product?.price;
   const originalPrice = product?.price;
   const hasDiscount = product?.salePrice && parseFloat(product.salePrice as string) < parseFloat(product.price as string);
+  const discountPercentage = hasDiscount 
+    ? Math.round((1 - parseFloat(product.salePrice as string) / parseFloat(product.price as string)) * 100)
+    : 0;
+  
+  const copyToClipboard = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCoupon(code);
+    toast({ title: "Coupon code copied!" });
+    setTimeout(() => setCopiedCoupon(null), 2000);
+  };
+
+  const getExpectedDeliveryDate = () => {
+    if (!product?.expectedDeliveryDays) return null;
+    const date = new Date();
+    date.setDate(date.getDate() + product.expectedDeliveryDays);
+    return date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  };
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -192,61 +229,117 @@ export default function ProductDetail() {
       </Breadcrumb>
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-        <div className="space-y-4">
-          <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-            <img
-              src={primaryImage}
-              alt={product.title}
-              className="w-full h-full object-cover"
-              data-testid="img-product-main"
-            />
-            {hasDiscount && (
-              <Badge variant="destructive" className="absolute top-4 left-4">
-                Sale
-              </Badge>
-            )}
-            {images.length > 1 && (
-              <>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80"
-                  onClick={() => setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80"
-                  onClick={() => setSelectedImageIndex((prev) => (prev + 1) % images.length)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </>
-            )}
-          </div>
-          
+        <div className="flex gap-4">
           {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {images.map((image, index) => (
-                <button
-                  key={image.id}
-                  onClick={() => setSelectedImageIndex(index)}
-                  className={`shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors ${
-                    index === selectedImageIndex ? "border-primary" : "border-transparent"
-                  }`}
-                  data-testid={`button-thumbnail-${index}`}
-                >
-                  <img
-                    src={image.url}
-                    alt={`${product.title} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
+            <div className="hidden md:flex flex-col gap-2 max-h-[500px] overflow-y-auto">
+              {images.map((image, index) => {
+                const isVideo = image.mediaType === "video";
+                return (
+                  <button
+                    key={image.id}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors relative ${
+                      index === selectedImageIndex ? "border-primary" : "border-muted hover:border-primary/50"
+                    }`}
+                    data-testid={`button-thumbnail-${index}`}
+                  >
+                    {isVideo ? (
+                      <>
+                        <video src={image.url} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <Play className="h-6 w-6 text-white fill-white" />
+                        </div>
+                      </>
+                    ) : (
+                      <img
+                        src={image.url}
+                        alt={`${product.title} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
+          
+          <div className="flex-1 space-y-4">
+            <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+              {images[selectedImageIndex]?.mediaType === "video" ? (
+                <video
+                  src={images[selectedImageIndex]?.url || ""}
+                  controls
+                  className="w-full h-full object-cover"
+                  data-testid="video-product-main"
+                />
+              ) : (
+                <img
+                  src={primaryImage}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                  data-testid="img-product-main"
+                />
+              )}
+              {hasDiscount && (
+                <Badge variant="destructive" className="absolute top-4 left-4">
+                  -{discountPercentage}%
+                </Badge>
+              )}
+              {images.length > 1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80"
+                    onClick={() => setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80"
+                    onClick={() => setSelectedImageIndex((prev) => (prev + 1) % images.length)}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+            
+            {images.length > 1 && (
+              <div className="flex md:hidden gap-2 overflow-x-auto pb-2">
+                {images.map((image, index) => {
+                  const isVideo = image.mediaType === "video";
+                  return (
+                    <button
+                      key={image.id}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors relative ${
+                        index === selectedImageIndex ? "border-primary" : "border-transparent"
+                      }`}
+                      data-testid={`button-thumbnail-mobile-${index}`}
+                    >
+                      {isVideo ? (
+                        <>
+                          <video src={image.url} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Play className="h-6 w-6 text-white fill-white" />
+                          </div>
+                        </>
+                      ) : (
+                        <img
+                          src={image.url}
+                          alt={`${product.title} ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -283,19 +376,76 @@ export default function ProductDetail() {
             </div>
           )}
 
-          <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold" data-testid="text-product-price">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <span className="text-3xl font-bold text-primary" data-testid="text-product-price">
               ${parseFloat(currentPrice as string).toFixed(2)}
             </span>
             {hasDiscount && (
-              <span className="text-xl text-muted-foreground line-through">
-                ${parseFloat(originalPrice as string).toFixed(2)}
-              </span>
+              <>
+                <span className="text-xl text-muted-foreground line-through" data-testid="text-original-price">
+                  ${parseFloat(originalPrice as string).toFixed(2)}
+                </span>
+                <Badge variant="destructive" data-testid="badge-discount">
+                  Save {discountPercentage}%
+                </Badge>
+              </>
             )}
           </div>
 
           {product.shortDesc && (
             <p className="text-muted-foreground">{product.shortDesc}</p>
+          )}
+
+          {getExpectedDeliveryDate() && (
+            <div className="flex items-center gap-2 text-sm p-3 bg-muted/50 rounded-lg" data-testid="delivery-date">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span>
+                Expected delivery by <strong>{getExpectedDeliveryDate()}</strong>
+              </span>
+            </div>
+          )}
+
+          {applicableCoupons.length > 0 && (
+            <Card className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Ticket className="h-4 w-4 text-primary" />
+                <span className="font-medium text-sm">Available Coupons</span>
+              </div>
+              <div className="space-y-2">
+                {applicableCoupons.slice(0, 3).map((coupon) => (
+                  <div
+                    key={coupon.id}
+                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                    data-testid={`coupon-${coupon.id}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs font-mono font-medium bg-background px-2 py-1 rounded">
+                        {coupon.code}
+                      </code>
+                      <span className="text-xs text-muted-foreground">
+                        {coupon.type === "percentage"
+                          ? `${coupon.amount}% off`
+                          : `$${parseFloat(coupon.amount as string).toFixed(2)} off`}
+                        {coupon.minCartTotal && ` (min $${parseFloat(coupon.minCartTotal as string).toFixed(0)})`}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(coupon.code)}
+                      className="h-7"
+                      data-testid={`button-copy-coupon-${coupon.id}`}
+                    >
+                      {copiedCoupon === coupon.code ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </Card>
           )}
 
           <Separator />
