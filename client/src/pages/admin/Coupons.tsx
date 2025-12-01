@@ -152,7 +152,18 @@ export default function AdminCoupons() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {coupon.productId ? (
+                      {(coupon as any).minQuantity ? (
+                        coupon.productId ? (
+                          <Badge variant="default" className="flex items-center gap-1 w-fit">
+                            <Package className="h-3 w-3" />
+                            Volume (Product)
+                          </Badge>
+                        ) : (
+                          <Badge variant="default" className="flex items-center gap-1 w-fit">
+                            Volume (All)
+                          </Badge>
+                        )
+                      ) : coupon.productId ? (
                         <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                           <Package className="h-3 w-3" />
                           Product
@@ -269,7 +280,13 @@ function CouponDialog({
     coupon?.expiresAt ? new Date(coupon.expiresAt).toISOString().split("T")[0] : ""
   );
   const [isActive, setIsActive] = useState(coupon?.isActive !== false);
-  const [scope, setScope] = useState<"all" | "product">(coupon?.productId ? "product" : "all");
+  const getInitialScope = () => {
+    if ((coupon as any)?.minQuantity) {
+      return coupon?.productId ? "volume_product" : "volume_all";
+    }
+    return coupon?.productId ? "product" : "all";
+  };
+  const [scope, setScope] = useState<"all" | "product" | "volume_all" | "volume_product">(getInitialScope());
   const [productId, setProductId] = useState(coupon?.productId || "");
   const { toast } = useToast();
 
@@ -282,16 +299,17 @@ function CouponDialog({
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const isVolumeScope = scope === "volume_all" || scope === "volume_product";
       const payload = {
         code: code.toUpperCase(),
         type,
         amount,
         minCartTotal: minCartTotal || null,
-        minQuantity: minQuantity ? parseInt(minQuantity) : null,
+        minQuantity: isVolumeScope && minQuantity ? parseInt(minQuantity) : null,
         maxUses: maxUses ? parseInt(maxUses) : null,
         expiresAt: expiresAt || null,
         isActive,
-        productId: scope === "product" ? productId : null,
+        productId: (scope === "product" || scope === "volume_product") ? productId : null,
       };
       if (coupon) {
         return await apiRequest("PATCH", `/api/admin/coupons/${coupon.id}`, payload);
@@ -343,18 +361,24 @@ function CouponDialog({
 
           <div className="space-y-2">
             <Label>Coupon Scope</Label>
-            <Select value={scope} onValueChange={(v) => setScope(v as "all" | "product")}>
+            <Select value={scope} onValueChange={(v) => setScope(v as "all" | "product" | "volume_all" | "volume_product")}>
               <SelectTrigger data-testid="select-coupon-scope">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Products</SelectItem>
                 <SelectItem value="product">Specific Product</SelectItem>
+                <SelectItem value="volume_all">Volume Purchase - All Products</SelectItem>
+                <SelectItem value="volume_product">Volume Purchase - Single Product</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              {scope === "volume_all" && "Discount applies when buying min quantity of any products"}
+              {scope === "volume_product" && "Discount applies when buying min quantity of a specific product"}
+            </p>
           </div>
 
-          {scope === "product" && (
+          {(scope === "product" || scope === "volume_product") && (
             <div className="space-y-2">
               <Label>Select Product</Label>
               <Select value={productId} onValueChange={setProductId}>
@@ -369,6 +393,23 @@ function CouponDialog({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {(scope === "volume_all" || scope === "volume_product") && (
+            <div className="space-y-2">
+              <Label>Minimum Quantity Required</Label>
+              <Input
+                type="number"
+                value={minQuantity}
+                onChange={(e) => setMinQuantity(e.target.value)}
+                placeholder="e.g. 3"
+                min="1"
+                data-testid="input-coupon-min-quantity"
+              />
+              <p className="text-xs text-muted-foreground">
+                Customer must buy at least this many items to use the coupon
+              </p>
             </div>
           )}
 
@@ -407,27 +448,14 @@ function CouponDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label>Min. Quantity (Volume)</Label>
+              <Label>Max Uses</Label>
               <Input
                 type="number"
-                value={minQuantity}
-                onChange={(e) => setMinQuantity(e.target.value)}
-                placeholder="e.g. 3"
-                data-testid="input-coupon-min-quantity"
+                value={maxUses}
+                onChange={(e) => setMaxUses(e.target.value)}
+                placeholder="Unlimited"
               />
-              <p className="text-xs text-muted-foreground">
-                For volume discounts: min items required
-              </p>
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Max Uses</Label>
-            <Input
-              type="number"
-              value={maxUses}
-              onChange={(e) => setMaxUses(e.target.value)}
-              placeholder="Unlimited"
-            />
           </div>
           <div className="space-y-2">
             <Label>Expires At</Label>
