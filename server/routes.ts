@@ -1262,7 +1262,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/products", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const parsed = insertProductSchema.parse(req.body);
+      // Convert empty strings to null for date fields
+      const body = { ...req.body };
+      if (body.salePriceStart === '' || body.salePriceStart === undefined) body.salePriceStart = null;
+      if (body.salePriceEnd === '' || body.salePriceEnd === undefined) body.salePriceEnd = null;
+      // Convert date strings to Date objects if they're valid
+      if (body.salePriceStart && typeof body.salePriceStart === 'string') {
+        body.salePriceStart = new Date(body.salePriceStart);
+      }
+      if (body.salePriceEnd && typeof body.salePriceEnd === 'string') {
+        body.salePriceEnd = new Date(body.salePriceEnd);
+      }
+      
+      const parsed = insertProductSchema.parse(body);
       const product = await storage.createProduct(parsed);
       
       if (req.body.images?.length) {
@@ -1287,6 +1299,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/admin/products/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { images, variants, ...productData } = req.body;
+      
+      // Convert empty strings to null for date fields
+      if (productData.salePriceStart === '' || productData.salePriceStart === undefined) productData.salePriceStart = null;
+      if (productData.salePriceEnd === '' || productData.salePriceEnd === undefined) productData.salePriceEnd = null;
+      // Convert date strings to Date objects if they're valid
+      if (productData.salePriceStart && typeof productData.salePriceStart === 'string') {
+        productData.salePriceStart = new Date(productData.salePriceStart);
+      }
+      if (productData.salePriceEnd && typeof productData.salePriceEnd === 'string') {
+        productData.salePriceEnd = new Date(productData.salePriceEnd);
+      }
+      
       const product = await storage.updateProduct(req.params.id, productData);
       
       // Update images if provided
