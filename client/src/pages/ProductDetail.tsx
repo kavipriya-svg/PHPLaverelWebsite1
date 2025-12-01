@@ -38,6 +38,7 @@ import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ProductGrid } from "@/components/store/ProductGrid";
+import { ReviewSection } from "@/components/store/ReviewSection";
 import type { ProductWithDetails } from "@shared/schema";
 
 export default function ProductDetail() {
@@ -429,7 +430,11 @@ export default function ProductDetail() {
           </div>
         </TabsContent>
         <TabsContent value="reviews" className="mt-6">
-          <p className="text-muted-foreground">Reviews coming soon...</p>
+          <ReviewSection
+            productId={product.id}
+            averageRating={product.averageRating as string | null}
+            reviewCount={product.reviewCount || 0}
+          />
         </TabsContent>
       </Tabs>
 

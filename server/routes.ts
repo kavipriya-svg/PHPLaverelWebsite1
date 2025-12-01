@@ -12,6 +12,7 @@ import {
   insertBannerSchema,
   insertHomeBlockSchema,
   insertAddressSchema,
+  insertReviewSchema,
 } from "@shared/schema";
 
 const isAdmin = (req: Request, res: Response, next: NextFunction) => {
@@ -229,6 +230,73 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to remove from wishlist" });
+    }
+  });
+
+  app.get("/api/products/:productId/reviews", async (req, res) => {
+    try {
+      const reviews = await storage.getProductReviews(req.params.productId, true);
+      res.json({ reviews });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  app.get("/api/products/:productId/can-review", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const hasPurchased = await storage.hasUserPurchasedProduct(userInfo!.id, req.params.productId);
+      const hasReviewed = await storage.hasUserReviewedProduct(userInfo!.id, req.params.productId);
+      res.json({ canReview: hasPurchased && !hasReviewed, hasPurchased, hasReviewed });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check review eligibility" });
+    }
+  });
+
+  app.post("/api/products/:productId/reviews", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const productId = req.params.productId;
+
+      const hasReviewed = await storage.hasUserReviewedProduct(userInfo!.id, productId);
+      if (hasReviewed) {
+        return res.status(400).json({ error: "You have already reviewed this product" });
+      }
+
+      const hasPurchased = await storage.hasUserPurchasedProduct(userInfo!.id, productId);
+      
+      const reviewData = insertReviewSchema.parse({
+        ...req.body,
+        productId,
+        userId: userInfo!.id,
+        isVerifiedPurchase: hasPurchased,
+        isApproved: false,
+      });
+
+      const review = await storage.createReview(reviewData);
+      res.status(201).json({ review });
+    } catch (error) {
+      console.error("Create review error:", error);
+      res.status(500).json({ error: "Failed to create review" });
+    }
+  });
+
+  app.post("/api/reviews/:reviewId/vote", optionalAuth, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const guestSessionId = (req as any).guestSessionId;
+      const { isHelpful } = req.body;
+
+      const vote = await storage.voteReview({
+        reviewId: req.params.reviewId,
+        userId: userInfo?.id,
+        sessionId: userInfo ? undefined : guestSessionId,
+        isHelpful,
+      });
+
+      res.json({ vote });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to vote on review" });
     }
   });
 
@@ -591,6 +659,57 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete coupon" });
+    }
+  });
+
+  app.get("/api/admin/reviews", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const filters = {
+        isApproved: req.query.approved === "true" ? true : req.query.approved === "false" ? false : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
+      };
+      const result = await storage.getAllReviews(filters);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  app.get("/api/admin/reviews/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const review = await storage.getReviewById(req.params.id);
+      if (!review) {
+        return res.status(404).json({ error: "Review not found" });
+      }
+      res.json({ review });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch review" });
+    }
+  });
+
+  app.patch("/api/admin/reviews/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const review = await storage.updateReview(req.params.id, req.body);
+      if (review && req.body.isApproved !== undefined) {
+        await storage.updateProductRating(review.productId);
+      }
+      res.json({ review });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update review" });
+    }
+  });
+
+  app.delete("/api/admin/reviews/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const review = await storage.getReviewById(req.params.id);
+      if (review) {
+        await storage.deleteReview(req.params.id);
+        await storage.updateProductRating(review.productId);
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete review" });
     }
   });
 
