@@ -15,6 +15,7 @@ import {
   Menu,
   Star,
   Mail,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -37,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const adminMenuItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
   { href: "/admin/products", icon: Package, label: "Products" },
   { href: "/admin/categories", icon: FolderTree, label: "Categories" },
   { href: "/admin/brands", icon: Tag, label: "Brands" },

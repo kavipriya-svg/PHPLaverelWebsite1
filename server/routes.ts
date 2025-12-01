@@ -476,18 +476,125 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       );
 
       const recentOrders = orders.orders.slice(0, 5);
+      
+      const lowStockProducts = products.products
+        .filter(p => p.stock !== null && p.stock <= 10)
+        .slice(0, 5);
 
       res.json({
         stats: {
           totalProducts: products.total,
           totalOrders: orders.total,
-          totalCustomers: users.total,
-          totalRevenue,
+          totalUsers: users.total,
+          revenue: totalRevenue,
+          recentOrders,
+          lowStockProducts,
         },
-        recentOrders,
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch dashboard data" });
+    }
+  });
+  
+  app.get("/api/admin/analytics", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const period = (req.query.period as string) || "30days";
+      const orders = await storage.getOrders({ limit: 10000 });
+      
+      const now = new Date();
+      let daysBack = 30;
+      if (period === "7days") daysBack = 7;
+      else if (period === "90days") daysBack = 90;
+      else if (period === "year") daysBack = 365;
+      
+      const startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - daysBack);
+      startDate.setHours(0, 0, 0, 0);
+      
+      const revenueByDay: Record<string, { revenue: number; orders: number }> = {};
+      const statusCounts: Record<string, number> = {};
+      
+      for (let i = 0; i <= daysBack; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        const key = date.toISOString().split('T')[0];
+        revenueByDay[key] = { revenue: 0, orders: 0 };
+      }
+      
+      for (const order of orders.orders) {
+        const orderDate = new Date(order.createdAt);
+        statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+        
+        if (orderDate >= startDate) {
+          const key = orderDate.toISOString().split('T')[0];
+          if (revenueByDay[key]) {
+            revenueByDay[key].revenue += parseFloat(order.total as string) || 0;
+            revenueByDay[key].orders += 1;
+          }
+        }
+      }
+      
+      const salesTrend = Object.entries(revenueByDay)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, data]) => ({
+          date,
+          revenue: Math.round(data.revenue * 100) / 100,
+          orders: data.orders,
+        }));
+      
+      const ordersByStatus = Object.entries(statusCounts).map(([status, count]) => ({
+        status,
+        count,
+      }));
+      
+      const products = await storage.getProducts({ limit: 1000 });
+      const topProducts = products.products
+        .filter(p => (p.reviewCount || 0) > 0)
+        .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
+        .slice(0, 10)
+        .map(p => ({
+          id: p.id,
+          title: p.title,
+          revenue: Math.round(parseFloat(p.price as string) * (p.reviewCount || 1) * 100) / 100,
+          sales: p.reviewCount || 0,
+          stock: p.stock || 0,
+        }));
+      
+      const periodRevenue = salesTrend.reduce((sum, d) => sum + d.revenue, 0);
+      const periodOrders = salesTrend.reduce((sum, d) => sum + d.orders, 0);
+      const avgOrderValue = periodOrders > 0 ? periodRevenue / periodOrders : 0;
+      
+      const daysWithRevenue = salesTrend.filter(d => d.revenue > 0);
+      const midPoint = Math.floor(daysWithRevenue.length / 2);
+      let revenueGrowth = 0;
+      
+      if (daysWithRevenue.length >= 2 && midPoint > 0) {
+        const firstHalf = daysWithRevenue.slice(0, midPoint);
+        const secondHalf = daysWithRevenue.slice(midPoint);
+        const firstHalfRevenue = firstHalf.reduce((sum, d) => sum + d.revenue, 0);
+        const secondHalfRevenue = secondHalf.reduce((sum, d) => sum + d.revenue, 0);
+        
+        if (firstHalfRevenue > 0) {
+          revenueGrowth = Math.round(((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100);
+        } else if (secondHalfRevenue > 0) {
+          revenueGrowth = 100;
+        }
+      }
+
+      res.json({
+        salesTrend,
+        ordersByStatus,
+        topProducts,
+        summary: {
+          periodRevenue: Math.round(periodRevenue * 100) / 100,
+          periodOrders,
+          avgOrderValue: Math.round(avgOrderValue * 100) / 100,
+          revenueGrowth,
+        },
+      });
+    } catch (error) {
+      console.error("Analytics error:", error);
+      res.status(500).json({ error: "Failed to fetch analytics data" });
     }
   });
 

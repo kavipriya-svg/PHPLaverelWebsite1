@@ -33,6 +33,7 @@ import AdminSettings from "@/pages/admin/Settings";
 import AdminUsers from "@/pages/admin/Users";
 import AdminReviews from "@/pages/admin/Reviews";
 import AdminEmailSettings from "@/pages/admin/EmailSettings";
+import AdminAnalytics from "@/pages/admin/Analytics";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -128,6 +129,7 @@ function Router() {
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/reviews" component={AdminReviews} />
       <Route path="/admin/email" component={AdminEmailSettings} />
+      <Route path="/admin/analytics" component={AdminAnalytics} />
 
       <Route>
         <StoreLayout>
