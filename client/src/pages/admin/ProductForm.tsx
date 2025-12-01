@@ -84,6 +84,26 @@ const VARIANT_OPTION_TYPES = [
   { value: "style", label: "Style" },
 ];
 
+// Helper to flatten category tree into flat list
+interface CategoryWithChildren extends Category {
+  children?: CategoryWithChildren[];
+}
+
+function flattenCategories(cats: CategoryWithChildren[]): Category[] {
+  const result: Category[] = [];
+  function traverse(categories: CategoryWithChildren[]) {
+    for (const cat of categories) {
+      const { children, ...categoryData } = cat;
+      result.push(categoryData);
+      if (children && children.length > 0) {
+        traverse(children);
+      }
+    }
+  }
+  traverse(cats);
+  return result;
+}
+
 export default function ProductForm() {
   const [, params] = useRoute("/admin/products/:id");
   const isNew = params?.id === "new";
@@ -93,6 +113,10 @@ export default function ProductForm() {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [variants, setVariants] = useState<VariantItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Category hierarchy state
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
 
   const { data: productData } = useQuery<{ product: ProductWithDetails }>({
     queryKey: ["/api/admin/products", productId],
@@ -182,6 +206,35 @@ export default function ProductForm() {
       );
     }
   }, [productData, form]);
+
+  // Set parent categories when editing existing product
+  useEffect(() => {
+    if (productData?.product?.categoryId && categoriesData?.categories) {
+      const allCats = categoriesData.categories;
+      const selectedCat = allCats.find(c => c.id === productData.product.categoryId);
+      
+      if (selectedCat) {
+        if (selectedCat.parentId) {
+          // This is a sub or child category
+          const parentCat = allCats.find(c => c.id === selectedCat.parentId);
+          if (parentCat) {
+            if (parentCat.parentId) {
+              // selectedCat is a child category (level 3)
+              setSelectedMainCategory(parentCat.parentId);
+              setSelectedSubCategory(parentCat.id);
+            } else {
+              // selectedCat is a subcategory (level 2)
+              setSelectedMainCategory(parentCat.id);
+              setSelectedSubCategory(selectedCat.id);
+            }
+          }
+        } else {
+          // This is a main category
+          setSelectedMainCategory(selectedCat.id);
+        }
+      }
+    }
+  }, [productData, categoriesData]);
 
   const generateSlug = (title: string) => {
     return title
@@ -317,7 +370,10 @@ export default function ProductForm() {
     })));
   };
 
-  const categories = categoriesData?.categories || [];
+  // Flatten the category tree to get a flat list for filtering
+  const categories = categoriesData?.categories 
+    ? flattenCategories(categoriesData.categories as CategoryWithChildren[]) 
+    : [];
   const brands = brandsData?.brands || [];
 
   return (
@@ -393,31 +449,96 @@ export default function ProductForm() {
                   />
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="categoryId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-product-category">
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {categories.map((cat) => (
+                {/* Category Hierarchy Selection */}
+                <div className="space-y-4">
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    {/* Main Category */}
+                    <FormItem>
+                      <FormLabel>Main Category</FormLabel>
+                      <Select
+                        value={selectedMainCategory}
+                        onValueChange={(value) => {
+                          setSelectedMainCategory(value);
+                          setSelectedSubCategory("");
+                          form.setValue("categoryId", value);
+                        }}
+                      >
+                        <SelectTrigger data-testid="select-main-category">
+                          <SelectValue placeholder="Select main category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories
+                            .filter((cat) => !cat.parentId)
+                            .map((cat) => (
                               <SelectItem key={cat.id} value={cat.id}>
                                 {cat.name}
                               </SelectItem>
                             ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+
+                    {/* Subcategory - only show if main category selected */}
+                    {selectedMainCategory && categories.some((cat) => cat.parentId === selectedMainCategory) && (
+                      <FormItem>
+                        <FormLabel>Subcategory</FormLabel>
+                        <Select
+                          value={selectedSubCategory}
+                          onValueChange={(value) => {
+                            setSelectedSubCategory(value);
+                            form.setValue("categoryId", value);
+                          }}
+                        >
+                          <SelectTrigger data-testid="select-sub-category">
+                            <SelectValue placeholder="Select subcategory" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories
+                              .filter((cat) => cat.parentId === selectedMainCategory)
+                              .map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
                       </FormItem>
                     )}
-                  />
+
+                    {/* Child Category - only show if subcategory selected and has children */}
+                    {selectedSubCategory && categories.some((cat) => cat.parentId === selectedSubCategory) && (
+                      <FormField
+                        control={form.control}
+                        name="categoryId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Child Category</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-child-category">
+                                  <SelectValue placeholder="Select child category" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {categories
+                                  .filter((cat) => cat.parentId === selectedSubCategory)
+                                  .map((cat) => (
+                                    <SelectItem key={cat.id} value={cat.id}>
+                                      {cat.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Brand Selection */}
+                <div className="grid sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="brandId"
