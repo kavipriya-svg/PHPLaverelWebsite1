@@ -16,6 +16,8 @@ import {
   addresses,
   wishlistItems,
   cartItems,
+  reviews,
+  reviewVotes,
   type User,
   type UpsertUser,
   type Category,
@@ -46,10 +48,15 @@ import {
   type InsertWishlistItem,
   type CartItem,
   type InsertCartItem,
+  type Review,
+  type InsertReview,
+  type ReviewVote,
+  type InsertReviewVote,
   type ProductWithDetails,
   type CategoryWithChildren,
   type OrderWithItems,
   type CartItemWithProduct,
+  type ReviewWithUser,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -123,6 +130,17 @@ export interface IStorage {
   updateCartItem(id: string, quantity: number): Promise<CartItem | undefined>;
   removeFromCart(id: string): Promise<void>;
   clearCart(userId?: string, sessionId?: string): Promise<void>;
+
+  getProductReviews(productId: string, approved?: boolean): Promise<ReviewWithUser[]>;
+  getReviewById(id: string): Promise<ReviewWithUser | undefined>;
+  getAllReviews(filters?: ReviewFilters): Promise<{ reviews: ReviewWithUser[]; total: number }>;
+  createReview(review: InsertReview): Promise<Review>;
+  updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined>;
+  deleteReview(id: string): Promise<void>;
+  voteReview(vote: InsertReviewVote): Promise<ReviewVote>;
+  hasUserPurchasedProduct(userId: string, productId: string): Promise<boolean>;
+  hasUserReviewedProduct(userId: string, productId: string): Promise<boolean>;
+  updateProductRating(productId: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -144,6 +162,16 @@ export interface OrderFilters {
   search?: string;
   status?: string;
   userId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ReviewFilters {
+  productId?: string;
+  userId?: string;
+  isApproved?: boolean;
+  minRating?: number;
+  maxRating?: number;
   limit?: number;
   offset?: number;
 }
@@ -686,6 +714,175 @@ export class DatabaseStorage implements IStorage {
       : eq(cartItems.sessionId, sessionId!);
 
     await db.delete(cartItems).where(condition);
+  }
+
+  async getProductReviews(productId: string, approved?: boolean): Promise<ReviewWithUser[]> {
+    let query = db.select().from(reviews).where(eq(reviews.productId, productId));
+    
+    if (approved !== undefined) {
+      query = db.select().from(reviews).where(
+        and(eq(reviews.productId, productId), eq(reviews.isApproved, approved))
+      ) as typeof query;
+    }
+
+    const reviewList = await query.orderBy(desc(reviews.createdAt));
+    return this.loadReviewsWithUsers(reviewList);
+  }
+
+  private async loadReviewsWithUsers(reviewList: Review[]): Promise<ReviewWithUser[]> {
+    return Promise.all(
+      reviewList.map(async (review) => {
+        let user = null;
+        if (review.userId) {
+          const [u] = await db
+            .select({
+              id: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              profileImageUrl: users.profileImageUrl,
+            })
+            .from(users)
+            .where(eq(users.id, review.userId))
+            .limit(1);
+          user = u || null;
+        }
+        return { ...review, user };
+      })
+    );
+  }
+
+  async getReviewById(id: string): Promise<ReviewWithUser | undefined> {
+    const [review] = await db.select().from(reviews).where(eq(reviews.id, id)).limit(1);
+    if (!review) return undefined;
+
+    const [withUser] = await this.loadReviewsWithUsers([review]);
+    return withUser;
+  }
+
+  async getAllReviews(filters: ReviewFilters = {}): Promise<{ reviews: ReviewWithUser[]; total: number }> {
+    const conditions = [];
+
+    if (filters.productId) conditions.push(eq(reviews.productId, filters.productId));
+    if (filters.userId) conditions.push(eq(reviews.userId, filters.userId));
+    if (filters.isApproved !== undefined) conditions.push(eq(reviews.isApproved, filters.isApproved));
+    if (filters.minRating) conditions.push(gte(reviews.rating, filters.minRating));
+    if (filters.maxRating) conditions.push(lte(reviews.rating, filters.maxRating));
+
+    const baseQuery = conditions.length > 0
+      ? db.select().from(reviews).where(and(...conditions))
+      : db.select().from(reviews);
+
+    const countResult = await (conditions.length > 0
+      ? db.select({ count: sql<number>`count(*)` }).from(reviews).where(and(...conditions))
+      : db.select({ count: sql<number>`count(*)` }).from(reviews));
+
+    const total = Number(countResult[0]?.count || 0);
+
+    let query = baseQuery.orderBy(desc(reviews.createdAt)) as any;
+    if (filters.limit) query = query.limit(filters.limit);
+    if (filters.offset) query = query.offset(filters.offset);
+
+    const reviewList = await query;
+    const reviewsWithUsers = await this.loadReviewsWithUsers(reviewList);
+
+    return { reviews: reviewsWithUsers, total };
+  }
+
+  async createReview(review: InsertReview): Promise<Review> {
+    const [created] = await db.insert(reviews).values(review).returning();
+    return created;
+  }
+
+  async updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined> {
+    const [updated] = await db
+      .update(reviews)
+      .set({ ...review, updatedAt: new Date() })
+      .where(eq(reviews.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteReview(id: string): Promise<void> {
+    await db.delete(reviewVotes).where(eq(reviewVotes.reviewId, id));
+    await db.delete(reviews).where(eq(reviews.id, id));
+  }
+
+  async voteReview(vote: InsertReviewVote): Promise<ReviewVote> {
+    const condition = vote.userId
+      ? and(eq(reviewVotes.reviewId, vote.reviewId), eq(reviewVotes.userId, vote.userId))
+      : and(eq(reviewVotes.reviewId, vote.reviewId), eq(reviewVotes.sessionId, vote.sessionId!));
+
+    const [existing] = await db.select().from(reviewVotes).where(condition).limit(1);
+
+    if (existing) {
+      const [updated] = await db
+        .update(reviewVotes)
+        .set({ isHelpful: vote.isHelpful })
+        .where(eq(reviewVotes.id, existing.id))
+        .returning();
+      
+      await this.updateReviewHelpfulCount(vote.reviewId);
+      return updated;
+    }
+
+    const [created] = await db.insert(reviewVotes).values(vote).returning();
+    await this.updateReviewHelpfulCount(vote.reviewId);
+    return created;
+  }
+
+  private async updateReviewHelpfulCount(reviewId: string): Promise<void> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reviewVotes)
+      .where(and(eq(reviewVotes.reviewId, reviewId), eq(reviewVotes.isHelpful, true)));
+    
+    const helpfulCount = Number(result?.count || 0);
+    await db.update(reviews).set({ helpfulCount }).where(eq(reviews.id, reviewId));
+  }
+
+  async hasUserPurchasedProduct(userId: string, productId: string): Promise<boolean> {
+    const [result] = await db
+      .select()
+      .from(orderItems)
+      .innerJoin(orders, eq(orderItems.orderId, orders.id))
+      .where(
+        and(
+          eq(orders.userId, userId),
+          eq(orderItems.productId, productId),
+          eq(orders.status, "delivered")
+        )
+      )
+      .limit(1);
+    
+    return !!result;
+  }
+
+  async hasUserReviewedProduct(userId: string, productId: string): Promise<boolean> {
+    const [result] = await db
+      .select()
+      .from(reviews)
+      .where(and(eq(reviews.userId, userId), eq(reviews.productId, productId)))
+      .limit(1);
+    
+    return !!result;
+  }
+
+  async updateProductRating(productId: string): Promise<void> {
+    const [result] = await db
+      .select({
+        avgRating: sql<string>`COALESCE(AVG(rating), 0)`,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(reviews)
+      .where(and(eq(reviews.productId, productId), eq(reviews.isApproved, true)));
+
+    const averageRating = parseFloat(result?.avgRating || "0").toFixed(1);
+    const reviewCount = Number(result?.count || 0);
+
+    await db
+      .update(products)
+      .set({ averageRating, reviewCount })
+      .where(eq(products.id, productId));
   }
 }
 
