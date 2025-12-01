@@ -112,6 +112,7 @@ export default function AdminCoupons() {
                 <TableHead>Type</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Min. Cart</TableHead>
+                <TableHead>Min. Qty</TableHead>
                 <TableHead>Usage</TableHead>
                 <TableHead>Expires</TableHead>
                 <TableHead>Status</TableHead>
@@ -122,14 +123,14 @@ export default function AdminCoupons() {
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <TableRow key={i}>
-                    {Array.from({ length: 9 }).map((_, j) => (
+                    {Array.from({ length: 10 }).map((_, j) => (
                       <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : coupons.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     No coupons yet
                   </TableCell>
                 </TableRow>
@@ -168,6 +169,9 @@ export default function AdminCoupons() {
                     </TableCell>
                     <TableCell>
                       {coupon.minCartTotal ? `$${parseFloat(coupon.minCartTotal as string).toFixed(2)}` : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {(coupon as any).minQuantity ? `${(coupon as any).minQuantity}+ items` : "-"}
                     </TableCell>
                     <TableCell>
                       {coupon.usedCount || 0} / {coupon.maxUses || "∞"}
@@ -259,6 +263,7 @@ function CouponDialog({
   const [type, setType] = useState(coupon?.type || "percentage");
   const [amount, setAmount] = useState(coupon?.amount?.toString() || "");
   const [minCartTotal, setMinCartTotal] = useState(coupon?.minCartTotal?.toString() || "");
+  const [minQuantity, setMinQuantity] = useState((coupon as any)?.minQuantity?.toString() || "");
   const [maxUses, setMaxUses] = useState(coupon?.maxUses?.toString() || "");
   const [expiresAt, setExpiresAt] = useState(
     coupon?.expiresAt ? new Date(coupon.expiresAt).toISOString().split("T")[0] : ""
@@ -282,6 +287,7 @@ function CouponDialog({
         type,
         amount,
         minCartTotal: minCartTotal || null,
+        minQuantity: minQuantity ? parseInt(minQuantity) : null,
         maxUses: maxUses ? parseInt(maxUses) : null,
         expiresAt: expiresAt || null,
         isActive,
@@ -401,14 +407,27 @@ function CouponDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label>Max Uses</Label>
+              <Label>Min. Quantity (Volume)</Label>
               <Input
                 type="number"
-                value={maxUses}
-                onChange={(e) => setMaxUses(e.target.value)}
-                placeholder="Unlimited"
+                value={minQuantity}
+                onChange={(e) => setMinQuantity(e.target.value)}
+                placeholder="e.g. 3"
+                data-testid="input-coupon-min-quantity"
               />
+              <p className="text-xs text-muted-foreground">
+                For volume discounts: min items required
+              </p>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Max Uses</Label>
+            <Input
+              type="number"
+              value={maxUses}
+              onChange={(e) => setMaxUses(e.target.value)}
+              placeholder="Unlimited"
+            />
           </div>
           <div className="space-y-2">
             <Label>Expires At</Label>
