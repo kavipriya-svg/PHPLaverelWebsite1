@@ -95,8 +95,10 @@ export interface IStorage {
   deleteProduct(id: string): Promise<void>;
   addProductImage(image: InsertProductImage): Promise<ProductImage>;
   deleteProductImage(id: string): Promise<void>;
+  deleteProductImages(productId: string): Promise<void>;
   addProductVariant(variant: InsertProductVariant): Promise<ProductVariant>;
   deleteProductVariant(id: string): Promise<void>;
+  deleteProductVariants(productId: string): Promise<void>;
 
   getCoupons(): Promise<Coupon[]>;
   getCouponByCode(code: string): Promise<Coupon | undefined>;
@@ -434,6 +436,14 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProductVariant(id: string): Promise<void> {
     await db.delete(productVariants).where(eq(productVariants.id, id));
+  }
+
+  async deleteProductImages(productId: string): Promise<void> {
+    await db.delete(productImages).where(eq(productImages.productId, productId));
+  }
+
+  async deleteProductVariants(productId: string): Promise<void> {
+    await db.delete(productVariants).where(eq(productVariants.productId, productId));
   }
 
   async getCoupons(): Promise<Coupon[]> {

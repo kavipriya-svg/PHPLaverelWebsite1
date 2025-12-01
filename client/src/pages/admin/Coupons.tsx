@@ -7,6 +7,7 @@ import {
   Trash2,
   Copy,
   Ticket,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,7 +56,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Coupon } from "@shared/schema";
+import type { Coupon, ProductWithDetails } from "@shared/schema";
 
 export default function AdminCoupons() {
   const [editCoupon, setEditCoupon] = useState<Coupon | null>(null);
@@ -107,6 +108,7 @@ export default function AdminCoupons() {
             <TableHeader>
               <TableRow>
                 <TableHead>Code</TableHead>
+                <TableHead>Scope</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Min. Cart</TableHead>
@@ -120,14 +122,14 @@ export default function AdminCoupons() {
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <TableRow key={i}>
-                    {Array.from({ length: 8 }).map((_, j) => (
+                    {Array.from({ length: 9 }).map((_, j) => (
                       <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : coupons.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No coupons yet
                   </TableCell>
                 </TableRow>
@@ -147,6 +149,16 @@ export default function AdminCoupons() {
                           <Copy className="h-3 w-3" />
                         </Button>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {coupon.productId ? (
+                        <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                          <Package className="h-3 w-3" />
+                          Product
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">All Products</Badge>
+                      )}
                     </TableCell>
                     <TableCell className="capitalize">{coupon.type}</TableCell>
                     <TableCell>
@@ -252,7 +264,16 @@ function CouponDialog({
     coupon?.expiresAt ? new Date(coupon.expiresAt).toISOString().split("T")[0] : ""
   );
   const [isActive, setIsActive] = useState(coupon?.isActive !== false);
+  const [scope, setScope] = useState<"all" | "product">(coupon?.productId ? "product" : "all");
+  const [productId, setProductId] = useState(coupon?.productId || "");
   const { toast } = useToast();
+
+  const { data: productsData } = useQuery<{ products: ProductWithDetails[]; total: number }>({
+    queryKey: ["/api/admin/products"],
+    enabled: open,
+  });
+
+  const products = productsData?.products || [];
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -264,6 +285,7 @@ function CouponDialog({
         maxUses: maxUses ? parseInt(maxUses) : null,
         expiresAt: expiresAt || null,
         isActive,
+        productId: scope === "product" ? productId : null,
       };
       if (coupon) {
         return await apiRequest("PATCH", `/api/admin/coupons/${coupon.id}`, payload);
@@ -292,11 +314,11 @@ function CouponDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{coupon ? "Edit Coupon" : "Add Coupon"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
           <div className="space-y-2">
             <Label>Code</Label>
             <div className="flex gap-2">
@@ -312,6 +334,38 @@ function CouponDialog({
               </Button>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label>Coupon Scope</Label>
+            <Select value={scope} onValueChange={(v) => setScope(v as "all" | "product")}>
+              <SelectTrigger data-testid="select-coupon-scope">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Products</SelectItem>
+                <SelectItem value="product">Specific Product</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {scope === "product" && (
+            <div className="space-y-2">
+              <Label>Select Product</Label>
+              <Select value={productId} onValueChange={setProductId}>
+                <SelectTrigger data-testid="select-coupon-product">
+                  <SelectValue placeholder="Choose a product" />
+                </SelectTrigger>
+                <SelectContent>
+                  {products.map((product) => (
+                    <SelectItem key={product.id} value={product.id}>
+                      {product.title} ({product.sku})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Type</Label>
