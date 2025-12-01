@@ -26,27 +26,38 @@ export default function CategoryPage() {
   const limit = 12;
 
   const { data: categoryData, isLoading: categoryLoading } = useQuery<{ category: Category & { parent?: Category; children?: Category[] } }>({
-    queryKey: ["/api/categories", slug],
+    queryKey: ["/api/categories/" + slug],
     enabled: !!slug,
   });
+
+  const categoryId = categoryData?.category?.id;
+  const productsQueryParams = new URLSearchParams();
+  if (categoryId) productsQueryParams.set("categoryId", categoryId);
+  if (filters.minPrice) productsQueryParams.set("minPrice", filters.minPrice.toString());
+  if (filters.maxPrice) productsQueryParams.set("maxPrice", filters.maxPrice.toString());
+  if (filters.brandId) productsQueryParams.set("brandId", filters.brandId);
+  if (filters.sort === "price-low") {
+    productsQueryParams.set("sortBy", "price");
+    productsQueryParams.set("sortOrder", "asc");
+  } else if (filters.sort === "price-high") {
+    productsQueryParams.set("sortBy", "price");
+    productsQueryParams.set("sortOrder", "desc");
+  }
+  productsQueryParams.set("limit", limit.toString());
+  productsQueryParams.set("offset", ((page - 1) * limit).toString());
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{ 
     products: ProductWithDetails[]; 
     total: number;
-    pages: number;
   }>({
-    queryKey: ["/api/products", { 
-      categoryId: categoryData?.category?.id,
-      ...filters,
-      page,
-      limit,
-    }],
-    enabled: !!categoryData?.category?.id,
+    queryKey: ["/api/products", productsQueryParams.toString()],
+    enabled: !!categoryId,
   });
 
   const category = categoryData?.category;
   const products = productsData?.products || [];
-  const totalPages = productsData?.pages || 1;
+  const totalItems = productsData?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
 
   if (categoryLoading) {
     return (
