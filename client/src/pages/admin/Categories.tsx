@@ -175,7 +175,8 @@ function CategoryItem({
 }) {
   const [expanded, setExpanded] = useState(level < 1);
 
-  const children = allCategories.filter((c) => c.parentId === category.id);
+  // Use nested children from the category object (tree structure from API)
+  const children = category.children || [];
   const hasChildren = children.length > 0;
 
   return (
@@ -337,9 +338,12 @@ function CategoryDialog({
       .replace(/^-|-$/g, "");
   };
 
-  const eligibleParents = categories.filter((c) => {
+  // Flatten the tree for dropdown and depth calculations
+  const flatCategories = flattenCategories(categories);
+  
+  const eligibleParents = flatCategories.filter((c) => {
     if (category && c.id === category.id) return false;
-    const depth = getDepth(c, categories);
+    const depth = getDepth(c, flatCategories);
     return depth < 2;
   });
 
@@ -410,4 +414,19 @@ function getDepth(category: CategoryWithChildren, all: CategoryWithChildren[]): 
   const parent = all.find((c) => c.id === category.parentId);
   if (!parent) return 0;
   return 1 + getDepth(parent, all);
+}
+
+// Flatten tree structure to flat array for dropdown and depth calculations
+function flattenCategories(categories: CategoryWithChildren[]): CategoryWithChildren[] {
+  const result: CategoryWithChildren[] = [];
+  const flatten = (cats: CategoryWithChildren[]) => {
+    for (const cat of cats) {
+      result.push(cat);
+      if (cat.children && cat.children.length > 0) {
+        flatten(cat.children);
+      }
+    }
+  };
+  flatten(categories);
+  return result;
 }
