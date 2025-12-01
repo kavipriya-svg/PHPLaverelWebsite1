@@ -308,7 +308,7 @@ function MegaMenu({
             <div key={subCategory.id}>
               <Link
                 href={`/category/${subCategory.slug}`}
-                className="font-semibold text-sm hover:text-primary mb-2 flex items-center gap-2"
+                className="font-semibold text-sm hover:text-primary mb-2 flex items-center gap-2 group"
                 onClick={onClose}
                 data-testid={`link-subcategory-${subCategory.slug}`}
               >
@@ -316,7 +316,7 @@ function MegaMenu({
                   <img 
                     src={subCategory.iconUrl} 
                     alt="" 
-                    className="w-5 h-5 object-contain rounded"
+                    className="w-5 h-5 object-contain rounded transition-transform duration-150 ease-out group-hover:scale-150 group-focus-visible:scale-150"
                   />
                 )}
                 {subCategory.name}
@@ -324,20 +324,20 @@ function MegaMenu({
               {subCategory.children && subCategory.children.length > 0 && (
                 <ul className="space-y-1">
                   {subCategory.children.map((childCategory) => (
-                    <li key={childCategory.id} className="flex items-center gap-2">
-                      {childCategory.iconUrl && (
-                        <img 
-                          src={childCategory.iconUrl} 
-                          alt="" 
-                          className="w-4 h-4 object-contain rounded"
-                        />
-                      )}
+                    <li key={childCategory.id}>
                       <Link
                         href={`/category/${childCategory.slug}`}
-                        className="text-sm text-muted-foreground hover:text-foreground"
+                        className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 group"
                         onClick={onClose}
                         data-testid={`link-childcategory-${childCategory.slug}`}
                       >
+                        {childCategory.iconUrl && (
+                          <img 
+                            src={childCategory.iconUrl} 
+                            alt="" 
+                            className="w-4 h-4 object-contain rounded transition-transform duration-150 ease-out group-hover:scale-150 group-focus-visible:scale-150"
+                          />
+                        )}
                         {childCategory.name}
                       </Link>
                     </li>
@@ -381,14 +381,14 @@ function MobileCategoryItem({
       >
         <Link
           href={`/category/${category.slug}`}
-          className="flex-1 text-sm font-medium flex items-center gap-2"
+          className="flex-1 text-sm font-medium flex items-center gap-2 group"
           onClick={onNavigate}
         >
           {category.iconUrl && (
             <img 
               src={category.iconUrl} 
               alt="" 
-              className="w-5 h-5 object-contain rounded"
+              className="w-5 h-5 object-contain rounded transition-transform duration-150 ease-out group-hover:scale-150 group-focus-visible:scale-150"
             />
           )}
           {category.name}
