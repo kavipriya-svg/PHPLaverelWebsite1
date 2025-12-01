@@ -26,9 +26,12 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
   if (req.isAuthenticated?.()) {
     return next();
   }
-  if (!req.cookies?.sessionId) {
-    res.cookie("sessionId", randomUUID(), { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
+  let sessionId = req.cookies?.sessionId;
+  if (!sessionId) {
+    sessionId = randomUUID();
+    res.cookie("sessionId", sessionId, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
   }
+  (req as any).guestSessionId = sessionId;
   next();
 };
 
@@ -141,7 +144,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/cart", optionalAuth, async (req, res) => {
     try {
       const userInfo = getUserInfo(req);
-      const sessionId = req.cookies?.sessionId;
+      const sessionId = (req as any).guestSessionId || req.cookies?.sessionId;
       const items = await storage.getCartItems(userInfo?.id, sessionId);
       res.json({ items });
     } catch (error) {
@@ -152,7 +155,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/cart", optionalAuth, async (req, res) => {
     try {
       const userInfo = getUserInfo(req);
-      const sessionId = req.cookies?.sessionId;
+      const sessionId = (req as any).guestSessionId || req.cookies?.sessionId;
       const { productId, quantity = 1, variantId } = req.body;
       
       const item = await storage.addToCart({
@@ -190,7 +193,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.delete("/api/cart", optionalAuth, async (req, res) => {
     try {
       const userInfo = getUserInfo(req);
-      const sessionId = req.cookies?.sessionId;
+      const sessionId = (req as any).guestSessionId || req.cookies?.sessionId;
       await storage.clearCart(userInfo?.id, sessionId);
       res.json({ success: true });
     } catch (error) {

@@ -31,7 +31,6 @@ import AdminBrands from "@/pages/admin/Brands";
 import AdminHomeBlocks from "@/pages/admin/HomeBlocks";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminUsers from "@/pages/admin/Users";
-import { useAuth } from "@/hooks/useAuth";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,24 +45,12 @@ function StoreLayout({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
   return (
     <Switch>
       <Route path="/">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-screen">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : isAuthenticated ? (
-          <StoreLayout>
-            <Home />
-          </StoreLayout>
-        ) : (
-          <StoreLayout>
-            <Landing />
-          </StoreLayout>
-        )}
+        <StoreLayout>
+          <Home />
+        </StoreLayout>
       </Route>
       
       <Route path="/product/:slug">
