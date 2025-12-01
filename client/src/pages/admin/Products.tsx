@@ -9,6 +9,8 @@ import {
   Trash2,
   Eye,
   Copy,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +68,19 @@ export default function AdminProducts() {
     },
     onError: () => {
       toast({ title: "Failed to delete product", variant: "destructive" });
+    },
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      await apiRequest("PATCH", `/api/admin/products/${id}`, { isActive });
+    },
+    onSuccess: (_, { isActive }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
+      toast({ title: isActive ? "Product activated" : "Product deactivated" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update product status", variant: "destructive" });
     },
   });
 
@@ -228,6 +243,25 @@ export default function AdminProducts() {
                             Duplicate
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => toggleActiveMutation.mutate({ 
+                              id: product.id, 
+                              isActive: !product.isActive 
+                            })}
+                            data-testid={`button-toggle-active-${product.id}`}
+                          >
+                            {product.isActive ? (
+                              <>
+                                <ToggleLeft className="h-4 w-4 mr-2" />
+                                Deactivate
+                              </>
+                            ) : (
+                              <>
+                                <ToggleRight className="h-4 w-4 mr-2" />
+                                Activate
+                              </>
+                            )}
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => setDeleteProductId(product.id)}
