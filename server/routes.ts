@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, getUserInfo } from "./replitAuth";
+import { emailService } from "./email";
 import { randomUUID } from "crypto";
 import {
   insertProductSchema,
@@ -378,6 +379,39 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const sessionId = req.cookies?.sessionId;
       await storage.clearCart(userInfo?.id, sessionId);
 
+      const customerEmail = userInfo?.email || guestEmail;
+      const customerName = userInfo ? `${userInfo.firstName || ""} ${userInfo.lastName || ""}`.trim() || "Customer" : "Customer";
+      
+      if (customerEmail) {
+        const parsedShipping = typeof shippingAddress === "string" ? JSON.parse(shippingAddress) : shippingAddress;
+        emailService.sendOrderConfirmation({
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          customerName,
+          customerEmail,
+          items: orderItems.map((item: any) => ({
+            title: item.title,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          subtotal: subtotal.toFixed(2),
+          tax: tax.toFixed(2),
+          shipping: shippingCost.toFixed(2),
+          discount: discount > 0 ? discount.toFixed(2) : undefined,
+          total: total.toFixed(2),
+          shippingAddress: parsedShipping ? {
+            name: parsedShipping.name,
+            line1: parsedShipping.line1,
+            line2: parsedShipping.line2,
+            city: parsedShipping.city,
+            state: parsedShipping.state,
+            postalCode: parsedShipping.postalCode,
+            country: parsedShipping.country,
+          } : undefined,
+          paymentMethod,
+        }).catch(err => console.error("[Email] Order confirmation failed:", err));
+      }
+
       res.json({ order });
     } catch (error) {
       console.error("Order creation error:", error);
@@ -618,7 +652,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/admin/orders/:id/status", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { status, trackingNumber } = req.body;
+      
+      const existingOrder = await storage.getOrderById(req.params.id);
+      const oldStatus = existingOrder?.status || "pending";
+      
       const order = await storage.updateOrderStatus(req.params.id, status, trackingNumber);
+      
+      if (order && oldStatus !== status) {
+        const customerEmail = order.userId 
+          ? (await storage.getUser(order.userId))?.email
+          : order.guestEmail;
+        
+        if (customerEmail) {
+          const user = order.userId ? await storage.getUser(order.userId) : null;
+          const customerName = user 
+            ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Customer"
+            : "Customer";
+          
+          emailService.sendStatusUpdate({
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            customerName,
+            customerEmail,
+            oldStatus,
+            newStatus: status,
+            trackingNumber: order.trackingNumber || undefined,
+            trackingUrl: order.trackingNumber ? `https://track.example.com/${order.trackingNumber}` : undefined,
+          }).catch(err => console.error("[Email] Status update failed:", err));
+        }
+      }
+      
       res.json({ order });
     } catch (error) {
       res.status(500).json({ error: "Failed to update order status" });
@@ -823,6 +886,92 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ user });
     } catch (error) {
       res.status(500).json({ error: "Failed to update user role" });
+    }
+  });
+
+  app.get("/api/admin/email/status", isAuthenticated, isAdmin, async (req, res) => {
+    res.json({
+      configured: emailService.isConfigured(),
+      provider: "resend",
+    });
+  });
+
+  app.post("/api/admin/email/test", isAuthenticated, isAdmin, async (req, res) => {
+    const { email } = req.body;
+    const user = (req as any).user;
+    
+    if (!emailService.isConfigured()) {
+      return res.status(400).json({ error: "Email service not configured. Set RESEND_API_KEY environment variable." });
+    }
+    
+    try {
+      const testEmail = email || user?.email;
+      if (!testEmail) {
+        return res.status(400).json({ error: "No email address provided" });
+      }
+      
+      const success = await emailService.sendOrderConfirmation({
+        orderId: "test-123",
+        orderNumber: "TEST-ORDER-001",
+        customerName: user?.firstName || "Test User",
+        customerEmail: testEmail,
+        items: [
+          { title: "Test Product", quantity: 1, price: "29.99" },
+          { title: "Another Product", quantity: 2, price: "19.99" },
+        ],
+        subtotal: "69.97",
+        tax: "5.60",
+        shipping: "0.00",
+        total: "75.57",
+        paymentMethod: "stripe",
+      });
+      
+      if (success) {
+        res.json({ success: true, message: `Test email sent to ${testEmail}` });
+      } else {
+        res.status(500).json({ error: "Failed to send test email" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send test email" });
+    }
+  });
+
+  app.post("/api/admin/inventory/check-low-stock", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const threshold = parseInt(req.body.threshold) || 10;
+      const { products } = await storage.getProducts({ limit: 1000 });
+      
+      const lowStockProducts = products
+        .filter(p => p.stock !== null && p.stock <= threshold)
+        .map(p => ({
+          id: p.id,
+          title: p.title,
+          sku: p.sku,
+          currentStock: p.stock || 0,
+          threshold,
+        }));
+      
+      if (lowStockProducts.length === 0) {
+        return res.json({ lowStockProducts: [], message: "No products below threshold" });
+      }
+      
+      const adminEmail = req.body.adminEmail || (req as any).user?.email;
+      let emailSent = false;
+      
+      if (adminEmail && emailService.isConfigured()) {
+        emailSent = await emailService.sendLowStockAlert({
+          adminEmail,
+          products: lowStockProducts,
+        });
+      }
+      
+      res.json({
+        lowStockProducts,
+        emailSent,
+        message: `Found ${lowStockProducts.length} product(s) with low stock`,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check low stock" });
     }
   });
 
