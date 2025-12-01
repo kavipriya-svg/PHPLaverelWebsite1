@@ -347,6 +347,59 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
   }),
 }));
 
+// Product Reviews
+export const reviews = pgTable("reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: varchar("product_id").notNull(),
+  userId: varchar("user_id"),
+  orderId: varchar("order_id"),
+  rating: integer("rating").notNull(), // 1-5 stars
+  title: varchar("title"),
+  content: text("content"),
+  isVerifiedPurchase: boolean("is_verified_purchase").default(false),
+  isApproved: boolean("is_approved").default(false), // Moderation status
+  helpfulCount: integer("helpful_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const reviewsRelations = relations(reviews, ({ one, many }) => ({
+  product: one(products, {
+    fields: [reviews.productId],
+    references: [products.id],
+  }),
+  user: one(users, {
+    fields: [reviews.userId],
+    references: [users.id],
+  }),
+  order: one(orders, {
+    fields: [reviews.orderId],
+    references: [orders.id],
+  }),
+  votes: many(reviewVotes),
+}));
+
+// Review Helpful Votes
+export const reviewVotes = pgTable("review_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reviewId: varchar("review_id").notNull(),
+  userId: varchar("user_id"),
+  sessionId: varchar("session_id"),
+  isHelpful: boolean("is_helpful").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const reviewVotesRelations = relations(reviewVotes, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewVotes.reviewId],
+    references: [reviews.id],
+  }),
+  user: one(users, {
+    fields: [reviewVotes.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true, updatedAt: true });
@@ -363,6 +416,8 @@ export const insertSettingSchema = createInsertSchema(settings).omit({ updatedAt
 export const insertAddressSchema = createInsertSchema(addresses).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertWishlistItemSchema = createInsertSchema(wishlistItems).omit({ id: true, createdAt: true });
 export const insertCartItemSchema = createInsertSchema(cartItems).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertReviewSchema = createInsertSchema(reviews).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertReviewVoteSchema = createInsertSchema(reviewVotes).omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -411,6 +466,12 @@ export type InsertWishlistItem = z.infer<typeof insertWishlistItemSchema>;
 export type CartItem = typeof cartItems.$inferSelect;
 export type InsertCartItem = z.infer<typeof insertCartItemSchema>;
 
+export type Review = typeof reviews.$inferSelect;
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+
+export type ReviewVote = typeof reviewVotes.$inferSelect;
+export type InsertReviewVote = z.infer<typeof insertReviewVoteSchema>;
+
 // Extended types for frontend usage
 export type ProductWithDetails = Product & {
   brand?: Brand | null;
@@ -432,4 +493,13 @@ export type OrderWithItems = Order & {
 export type CartItemWithProduct = CartItem & {
   product: ProductWithDetails;
   variant?: ProductVariant | null;
+};
+
+export type ReviewWithUser = Review & {
+  user?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+  } | null;
 };
