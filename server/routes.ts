@@ -133,7 +133,8 @@ async function generateOgHtml(req: Request, baseUrl: string): Promise<string | n
 
 const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
-  if (!user || !["admin", "manager"].includes(user.role)) {
+  const dbUser = user?.dbUser;
+  if (!dbUser || !["admin", "manager"].includes(dbUser.role)) {
     return res.status(403).json({ error: "Admin access required" });
   }
   next();
@@ -961,6 +962,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       for (const order of orders.orders) {
+        if (!order.createdAt) continue;
         const orderDate = new Date(order.createdAt);
         statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
         
