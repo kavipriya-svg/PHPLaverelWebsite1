@@ -21,6 +21,7 @@ import {
   sharedWishlists,
   giftRegistries,
   giftRegistryItems,
+  stockNotifications,
   type User,
   type UpsertUser,
   type Category,
@@ -167,6 +168,13 @@ export interface IStorage {
   updateGiftRegistryItem(id: string, item: Partial<InsertGiftRegistryItem>): Promise<GiftRegistryItem | undefined>;
   removeGiftRegistryItem(id: string): Promise<void>;
   markGiftRegistryItemPurchased(id: string, purchasedBy: string): Promise<GiftRegistryItem | undefined>;
+
+  getLowStockProducts(threshold?: number): Promise<ProductWithDetails[]>;
+  getStockNotifications(productId?: string): Promise<any[]>;
+  createStockNotification(notification: { productId: string; variantId?: string; email: string; userId?: string }): Promise<any>;
+  deleteStockNotification(id: string): Promise<void>;
+  markStockNotificationsNotified(productId: string): Promise<void>;
+  getUnnotifiedStockNotifications(productId: string): Promise<any[]>;
 }
 
 export interface ProductFilters {
@@ -1084,6 +1092,108 @@ export class DatabaseStorage implements IStorage {
       .where(eq(giftRegistryItems.id, id))
       .returning();
     return updated;
+  }
+
+  async getLowStockProducts(threshold?: number): Promise<ProductWithDetails[]> {
+    const defaultThreshold = threshold || 10;
+    
+    const result = await db
+      .select()
+      .from(products)
+      .leftJoin(brands, eq(products.brandId, brands.id))
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(
+        and(
+          eq(products.isActive, true),
+          or(
+            lte(products.stock, sql`COALESCE(${products.lowStockThreshold}, ${defaultThreshold})`),
+            eq(products.stock, 0)
+          )
+        )
+      )
+      .orderBy(asc(products.stock));
+
+    const productIds = result.map((r) => r.products.id);
+    
+    const images = productIds.length > 0 
+      ? await db.select().from(productImages).where(inArray(productImages.productId, productIds))
+      : [];
+    
+    const variants = productIds.length > 0
+      ? await db.select().from(productVariants).where(inArray(productVariants.productId, productIds))
+      : [];
+
+    return result.map((r) => ({
+      ...r.products,
+      brand: r.brands,
+      category: r.categories,
+      images: images.filter((img) => img.productId === r.products.id),
+      variants: variants.filter((v) => v.productId === r.products.id),
+    }));
+  }
+
+  async getStockNotifications(productId?: string): Promise<any[]> {
+    const query = db
+      .select()
+      .from(stockNotifications)
+      .leftJoin(products, eq(stockNotifications.productId, products.id));
+
+    if (productId) {
+      return query.where(eq(stockNotifications.productId, productId));
+    }
+    return query;
+  }
+
+  async createStockNotification(notification: { productId: string; variantId?: string; email: string; userId?: string }): Promise<any> {
+    const existing = await db
+      .select()
+      .from(stockNotifications)
+      .where(
+        and(
+          eq(stockNotifications.productId, notification.productId),
+          eq(stockNotifications.email, notification.email),
+          notification.variantId 
+            ? eq(stockNotifications.variantId, notification.variantId) 
+            : isNull(stockNotifications.variantId),
+          eq(stockNotifications.isNotified, false)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const [created] = await db.insert(stockNotifications).values(notification).returning();
+    return created;
+  }
+
+  async deleteStockNotification(id: string): Promise<void> {
+    await db.delete(stockNotifications).where(eq(stockNotifications.id, id));
+  }
+
+  async markStockNotificationsNotified(productId: string): Promise<void> {
+    await db
+      .update(stockNotifications)
+      .set({ isNotified: true, notifiedAt: new Date() })
+      .where(
+        and(
+          eq(stockNotifications.productId, productId),
+          eq(stockNotifications.isNotified, false)
+        )
+      );
+  }
+
+  async getUnnotifiedStockNotifications(productId: string): Promise<any[]> {
+    return db
+      .select()
+      .from(stockNotifications)
+      .where(
+        and(
+          eq(stockNotifications.productId, productId),
+          eq(stockNotifications.isNotified, false)
+        )
+      );
   }
 }
 

@@ -14,7 +14,9 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Coupon and promotional offer system
 - Multi-variant product support
 - Product reviews and ratings with moderation
-- Email notifications (order confirmation, status updates, low stock alerts)
+- Email notifications (order confirmation, status updates, low stock alerts, restock notifications)
+- Wishlist sharing and gift registry functionality
+- Advanced inventory management with low stock alerts and restock notifications
 
 ## User Preferences
 
@@ -100,6 +102,9 @@ Preferred communication style: Simple, everyday language.
 - **sessions**: PostgreSQL-backed session storage for authentication
 - **reviews**: Product reviews with ratings, titles, content, and moderation status
 - **reviewVotes**: Helpful/not helpful votes on reviews with user/session tracking
+- **stockNotifications**: Customer email subscriptions for product restock alerts
+- **giftRegistries**: User gift registries for events (wedding, birthday, baby shower, etc.)
+- **giftRegistryItems**: Products added to gift registries with quantity tracking
 
 **Data Relationships:**
 - One-to-many: categories (parent-child), products-images, products-variants, users-orders, orders-orderItems
