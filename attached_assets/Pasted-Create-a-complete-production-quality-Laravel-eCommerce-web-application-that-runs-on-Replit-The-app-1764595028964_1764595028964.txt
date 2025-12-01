@@ -1,0 +1,279 @@
+Create a complete, production-quality Laravel eCommerce web application that runs on Replit. The app must include a public frontend and an admin panel. Everything on the frontend (hero banners/video, main menu, submenus, all homepage sections, categories, product groupings, featured/special offers, order tracker link, etc.) must be fully controllable from the admin panel. Categories created in admin (main → sub → child) must be automatically reflected in the frontend menu. Customers must be able to register/login, place orders, view order history and track order status. The site’s frontend should be modern, responsive and ‘trending’ (clean layout, big hero, micro-animations, mobile-first).
+
+Required tech stack & packages
+
+Backend: Laravel (latest stable)
+
+Frontend: Blade + Tailwind CSS for UI (or optional Vue/Alpine for richer interactions)
+
+Admin UI: Filament Admin (or custom admin with Tailwind + Livewire) — admin must be powerful, not static.
+
+DB: MySQL / MariaDB (Replit provides a database option; alternatively SQLite for quick dev)
+
+Auth: Laravel Breeze or Jetstream (use Breeze for simplicity and Blade compatibility)
+
+Order tracking: Order model + tracking statuses and public order tracking page (search by order id & email)
+
+Media / files: Use local storage for Replit; design storage abstraction for S3 later.
+
+Search & filters: Database search with full-text where possible, category filters, price filter, sort by popularity/new/price.
+
+Payment: Provide payment gateway integration stubs (Stripe sandbox) and offline COD.
+
+Replit specifics: Provide composer.json, .replit (run command), replit.nix or instructions to enable PHP 8+ & composer, and .env.example. Provide a simple start script.
+
+Deliverables (must produce)
+
+Full Laravel project structure with working routes, controllers, models, views, migrations, seeders, factories, middleware, and tests for key flows.
+
+Admin panel with CRUD for:
+
+Products (images, gallery, SKU, price, sale price, stock, weight, dimensions, attributes)
+
+Categories (Main → Sub → Child hierarchy)
+
+Brands
+
+Banners/hero blocks (static image or video URL) — reorderable
+
+Home page sections (add/remove/reorder editable content blocks; WYSIWYG or structured block types)
+
+Coupons and special offers
+
+Orders and statuses + shipment tracking fields
+
+Users & roles (Admin, Manager, Customer support)
+
+Settings (site name, contact, currency, tax settings, payment credentials)
+
+Frontend:
+
+Fully dynamic main menu showing categories in three levels exactly as created in admin.
+
+Hero area (image/video) controlled by admin (enable/disable video or image, autoplay option).
+
+Homepage sections controlled by admin (promotions, featured products, special offers, product carousels, custom HTML block).
+
+Product listing pages: category listing (with child categories), search results, special offer page, featured products page, new arrivals, best sellers.
+
+Product detail page with gallery, title, price, variants, add to cart, review snippet, breadcrumbs.
+
+Cart page & Checkout page (guest checkout supported) with validation and order summary.
+
+Order tracker accessible from main menu — input order ID + email to view status and shipment updates.
+
+Customer account area: profile, addresses, orders, order detail & tracking, wishlist.
+
+Responsive design and accessible HTML semantics.
+
+APIs (RESTful and CSRF-protected):
+
+Public product list, product detail, categories, cart operations, checkout, order creation, order status.
+
+Auth endpoints for login/register (token for SPA if used).
+
+Search & filters: keyword search, category filter, price range, sorting, pagination.
+
+Seeders to create sample categories (3 levels), 50 sample products, demo admin user, banners, and demo orders.
+
+Replit deployment config: .replit and Procfile or start command, instructions to set environment variables inside Replit; use SQLite by default if external DB not available; clear setup steps.
+
+Documentation: README with setup and deployment steps on Replit, admin credentials, how to change hero video, how to manage menu & categories, and how to configure Stripe sandbox.
+
+Automated tests: basic feature tests for product listing, cart, checkout, and order tracking.
+
+Data model (suggested tables & essential fields)
+
+users (id, name, email, password, role, phone, created_at, updated_at)
+
+categories (id, parent_id nullable, name, slug, description, position, is_active)
+
+brands (id, name, slug)
+
+products (id, sku, title, slug, brand_id, short_desc, long_desc, price, sale_price, stock, is_featured, is_trending, is_active, weight, dimensions, created_at)
+
+product_images (id, product_id, url, is_primary, position)
+
+product_variants (id, product_id, option_name, option_value, price, sku, stock)
+
+coupons (code, type, amount, min_cart_total, expires_at)
+
+orders (id, user_id nullable, order_number, total, status, shipping_address json, billing_address json, payment_method, tracking_number, tracking_status, created_at)
+
+order_items (order_id, product_id, qty, price, variant_id)
+
+banners (id, type [hero, section], media_url, video_url, title, subtitle, cta_text, cta_link, position, active)
+
+home_blocks (id, type, payload json, position)
+
+settings (key, value)
+
+Admin features — details
+
+Menu & Categories manager:
+
+Create hierarchy: main → sub → child.
+
+Drag-and-drop ordering.
+
+Toggle visibility. Frontend menu reads only visible categories.
+
+Hero manager:
+
+Upload hero image or paste video URL (YouTube/Vimeo or mp4).
+
+Option: show video (autoplay, mute), otherwise show image.
+
+CTA text & link editable.
+
+Home blocks:
+
+Add block types: Featured products (select product list), Category products (pick category; sort order), Promo HTML (rich text), Banner carousel (choose banners), Custom code (HTML) — admin can place blocks and reorder.
+
+Product manager:
+
+CSV import/export for bulk upload.
+
+Set attributes & variants, stock per variant.
+
+Mark product as featured/special/trending.
+
+Schedule sale prices (start/stop date).
+
+Order manager:
+
+View/update statuses (Pending → Processing → Shipped → Delivered → Cancelled).
+
+Add tracking number and update tracking status; send email notification on update.
+
+Role-based access: Admin and Manager roles with permissions.
+
+Frontend behavior specifics
+
+Menu: top nav shows Main Categories (level 1). On hover (desktop) or tap (mobile) show submenus and child categories. Only categories with is_active appear.
+
+Order Tracker: main menu shows “Track Order” link/icon. Clicking opens a modal or page where user enters Order ID & email to fetch order status and tracking updates.
+
+Homepage admin blocks: Admin chooses order and content of home blocks — frontend reads home_blocks ordered by position and renders accordingly.
+
+Product listing rules:
+
+Special Offer: products with active sale_price and within sale dates
+
+Featured Product: is_featured == true
+
+Product by Category: listing filtered by selected category and includes products in its child categories.
+
+Cart persistence: for logged-in users sync cart server side; for guests use session/cookie.
+
+SEO: proper meta tags per product/category, sitemaps, and friendly slugs.
+
+Accessibility: keyboard nav, alt tags, ARIA for critical UI.
+
+Security & validation
+
+Server-side validation for all forms.
+
+CSRF protection enabled.
+
+Password hashing and login throttling.
+
+Input sanitization for admin custom HTML (sanitize or provide safe WYSIWYG).
+
+Role-based guard for admin panel routes (middleware).
+
+Replit setup & start commands (deliverable)
+
+Include:
+
+.replit with start command: composer install && php artisan migrate --seed && php artisan serve --host=0.0.0.0 --port=3000
+
+replit.nix or instructions to enable PHP & composer on Replit (provide both options).
+
+.env.example with placeholders for DB, mail, stripe, app url.
+
+Guide to set environment variables from Replit UI and setting up a persistent file storage (if any).
+
+A short checklist in README for Replit-specific config and common gotchas.
+
+UX / Design brief (for “trending” frontend)
+
+Modern hero with large san-serif font, centered CTA button, autoplay muted video fallback to hero image.
+
+Use Tailwind utility classes for rapid responsive layout.
+
+Prominent search bar in navbar with suggestion dropdown and category filter.
+
+Cart & user icon in nav; order tracker button visible.
+
+Product cards with quick-add hover action, rating badges, and “sale” tagging.
+
+Smooth micro-animations (fade/slide) using CSS or small Alpine/Vue for interactions.
+
+Mobile-first: collapsible menu with full category tree.
+
+Testing & QA
+
+Include Laravel feature tests for:
+
+Product listing and category filtering.
+
+Cart add/remove and checkout flow with order creation.
+
+Order tracking lookup by order number + email.
+
+Admin CRUD for categories, products, banners.
+
+Basic end-to-end steps in README for manual QA.
+
+Example developer prompt for code generator (paste this part into the generator)
+
+Build a complete Laravel eCommerce application with the exact features described below. Deliver the full project folder ready to run on Replit (include .replit, replit.nix if needed, .env.example, migrations, seeders, and README). Use Laravel (latest), Tailwind CSS, and Filament or an equivalent admin UI. The app must include:
+
+Dynamic three-level categories (main → sub → child) editable in admin; frontend menu must reflect only what admin creates.
+
+Admin editable hero (image or video), banners, and reorderable homepage blocks that the frontend consumes.
+
+Product CRUD with variants, gallery, stock, SKU, sale price with schedule, featured/trending flags, CSV import.
+
+Product listing pages: special offer (active sales), featured, by category (including children), search and filter (price, sort).
+
+Cart, checkout (guest & registered), order model, order items, coupon support, payments stub for Stripe sandbox and COD.
+
+Order manager in admin: update status, set tracking number. Public Order Tracker page accessible from main nav where customer enters order number + email to see status and tracking updates.
+
+Customer account with orders, addresses, wishlist.
+
+RESTful API endpoints for product listing, cart, and orders (with authentication).
+
+Seeders with demo data (50 products, categories, banners, admin user).
+
+Replit config: .replit with a single start command, .env.example, and short README with step-by-step Replit deploy notes.
+
+Tests: add feature tests for listing, cart, checkout, order tracking.
+
+Security: server validation, CSRF, role-based admin middleware, sanitized admin content.
+
+Deliver: a Git repository or zipped Laravel project. Include an “Admin setup” doc (admin credentials) and “How to change hero video and homepage blocks” doc.
+
+Small checklist the delivered project must pass (for acceptance)
+
+ Run composer install then php artisan migrate --seed — site loads.
+
+ Admin login works with seeded admin user.
+
+ Create categories (3-level) in admin; categories appear in frontend menu properly.
+
+ Add hero video via admin; homepage shows video (or image fallback).
+
+ Create home block (e.g., Featured products) in admin; homepage shows it.
+
+ Create order from frontend checkout; admin can update status and add tracking number.
+
+ Order Tracker on main nav returns the correct order status by order number + email.
+
+ Product CSV import imports products with images (or image URLs).
+
+ Seeded sample data visible and functional.
+
+ README contains Replit instructions and environment variables.
