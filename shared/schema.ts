@@ -406,6 +406,89 @@ export const reviewVotesRelations = relations(reviewVotes, ({ one }) => ({
   }),
 }));
 
+// Shared Wishlists - Allow users to share their wishlist publicly
+export const sharedWishlists = pgTable("shared_wishlists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  shareCode: varchar("share_code").notNull().unique(), // Unique code for sharing
+  title: varchar("title").default("My Wishlist"),
+  description: text("description"),
+  isPublic: boolean("is_public").default(true),
+  allowAnonymous: boolean("allow_anonymous").default(true), // Allow non-logged-in users to view
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const sharedWishlistsRelations = relations(sharedWishlists, ({ one }) => ({
+  user: one(users, {
+    fields: [sharedWishlists.userId],
+    references: [users.id],
+  }),
+}));
+
+// Gift Registries - For weddings, baby showers, birthdays, etc.
+export const giftRegistries = pgTable("gift_registries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  shareCode: varchar("share_code").notNull().unique(),
+  title: varchar("title").notNull(),
+  eventType: varchar("event_type").notNull(), // wedding, baby_shower, birthday, housewarming, other
+  eventDate: timestamp("event_date"),
+  description: text("description"),
+  coverImage: varchar("cover_image"),
+  registrantName: varchar("registrant_name"),
+  partnerName: varchar("partner_name"), // For wedding registries
+  shippingAddressId: varchar("shipping_address_id"), // Link to addresses table
+  isPublic: boolean("is_public").default(true),
+  showPurchased: boolean("show_purchased").default(false), // Show which items have been bought
+  allowMessages: boolean("allow_messages").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const giftRegistriesRelations = relations(giftRegistries, ({ one, many }) => ({
+  user: one(users, {
+    fields: [giftRegistries.userId],
+    references: [users.id],
+  }),
+  shippingAddress: one(addresses, {
+    fields: [giftRegistries.shippingAddressId],
+    references: [addresses.id],
+  }),
+  items: many(giftRegistryItems),
+}));
+
+// Gift Registry Items
+export const giftRegistryItems = pgTable("gift_registry_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  registryId: varchar("registry_id").notNull(),
+  productId: varchar("product_id").notNull(),
+  variantId: varchar("variant_id"),
+  quantityDesired: integer("quantity_desired").default(1),
+  quantityPurchased: integer("quantity_purchased").default(0),
+  priority: varchar("priority").default("normal"), // high, normal, low
+  note: text("note"), // Personal note about why they want this
+  isPurchased: boolean("is_purchased").default(false),
+  purchasedBy: varchar("purchased_by"), // userId or email of purchaser
+  purchasedAt: timestamp("purchased_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const giftRegistryItemsRelations = relations(giftRegistryItems, ({ one }) => ({
+  registry: one(giftRegistries, {
+    fields: [giftRegistryItems.registryId],
+    references: [giftRegistries.id],
+  }),
+  product: one(products, {
+    fields: [giftRegistryItems.productId],
+    references: [products.id],
+  }),
+  variant: one(productVariants, {
+    fields: [giftRegistryItems.variantId],
+    references: [productVariants.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true, updatedAt: true });
@@ -424,6 +507,9 @@ export const insertWishlistItemSchema = createInsertSchema(wishlistItems).omit({
 export const insertCartItemSchema = createInsertSchema(cartItems).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertReviewSchema = createInsertSchema(reviews).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertReviewVoteSchema = createInsertSchema(reviewVotes).omit({ id: true, createdAt: true });
+export const insertSharedWishlistSchema = createInsertSchema(sharedWishlists).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertGiftRegistrySchema = createInsertSchema(giftRegistries).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertGiftRegistryItemSchema = createInsertSchema(giftRegistryItems).omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -508,4 +594,22 @@ export type ReviewWithUser = Review & {
     lastName: string | null;
     profileImageUrl: string | null;
   } | null;
+};
+
+export type SharedWishlist = typeof sharedWishlists.$inferSelect;
+export type InsertSharedWishlist = z.infer<typeof insertSharedWishlistSchema>;
+
+export type GiftRegistry = typeof giftRegistries.$inferSelect;
+export type InsertGiftRegistry = z.infer<typeof insertGiftRegistrySchema>;
+
+export type GiftRegistryItem = typeof giftRegistryItems.$inferSelect;
+export type InsertGiftRegistryItem = z.infer<typeof insertGiftRegistryItemSchema>;
+
+export type GiftRegistryWithItems = GiftRegistry & {
+  items: (GiftRegistryItem & {
+    product: ProductWithDetails;
+    variant?: ProductVariant | null;
+  })[];
+  user?: User | null;
+  shippingAddress?: Address | null;
 };
