@@ -275,7 +275,7 @@ function CategoryDialog({
 }) {
   const [name, setName] = useState(category?.name || "");
   const [slug, setSlug] = useState(category?.slug || "");
-  const [parentId, setParentId] = useState(category?.parentId || "");
+  const [parentId, setParentId] = useState(category?.parentId || "none");
   const [description, setDescription] = useState(category?.description || "");
   const [isActive, setIsActive] = useState(category?.isActive !== false);
   const { toast } = useToast();
@@ -285,7 +285,7 @@ function CategoryDialog({
       const payload = {
         name,
         slug,
-        parentId: parentId || null,
+        parentId: parentId === "none" ? null : parentId,
         description,
         isActive,
       };
@@ -309,7 +309,7 @@ function CategoryDialog({
   const resetForm = () => {
     setName("");
     setSlug("");
-    setParentId("");
+    setParentId("none");
     setDescription("");
     setIsActive(true);
   };
@@ -358,7 +358,7 @@ function CategoryDialog({
                 <SelectValue placeholder="None (Top Level)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None (Top Level)</SelectItem>
+                <SelectItem value="none">None (Top Level)</SelectItem>
                 {eligibleParents.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}
