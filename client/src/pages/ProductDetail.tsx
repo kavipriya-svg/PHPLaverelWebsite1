@@ -53,12 +53,19 @@ export default function ProductDetail() {
   const { toast } = useToast();
 
   const { data, isLoading } = useQuery<{ product: ProductWithDetails }>({
-    queryKey: ["/api/products", slug],
+    queryKey: [`/api/products/${slug}`],
     enabled: !!slug,
   });
 
+  const relatedQueryParams = new URLSearchParams();
+  if (data?.product?.categoryId) {
+    relatedQueryParams.set("categoryId", data.product.categoryId);
+    relatedQueryParams.set("limit", "4");
+    if (data.product.id) relatedQueryParams.set("exclude", data.product.id);
+  }
+
   const { data: relatedData } = useQuery<{ products: ProductWithDetails[] }>({
-    queryKey: ["/api/products", { categoryId: data?.product?.categoryId, limit: 4, exclude: data?.product?.id }],
+    queryKey: ["/api/products", relatedQueryParams.toString()],
     enabled: !!data?.product?.categoryId,
   });
 
