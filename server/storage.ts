@@ -730,25 +730,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   private async loadReviewsWithUsers(reviewList: Review[]): Promise<ReviewWithUser[]> {
-    return Promise.all(
-      reviewList.map(async (review) => {
-        let user = null;
-        if (review.userId) {
-          const [u] = await db
-            .select({
-              id: users.id,
-              firstName: users.firstName,
-              lastName: users.lastName,
-              profileImageUrl: users.profileImageUrl,
-            })
-            .from(users)
-            .where(eq(users.id, review.userId))
-            .limit(1);
-          user = u || null;
-        }
-        return { ...review, user };
-      })
-    );
+    if (reviewList.length === 0) return [];
+
+    const userIds = [...new Set(reviewList.filter(r => r.userId).map(r => r.userId!))];
+    
+    const userMap = new Map<string, { id: string; firstName: string | null; lastName: string | null; profileImageUrl: string | null }>();
+    
+    if (userIds.length > 0) {
+      const userResults = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        })
+        .from(users)
+        .where(inArray(users.id, userIds));
+      
+      userResults.forEach(u => userMap.set(u.id, u));
+    }
+    
+    return reviewList.map(review => ({
+      ...review,
+      user: review.userId ? userMap.get(review.userId) || null : null,
+    }));
   }
 
   async getReviewById(id: string): Promise<ReviewWithUser | undefined> {
