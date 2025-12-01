@@ -17,6 +17,7 @@ import {
   Mail,
   BarChart3,
   Search,
+  Warehouse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,6 +45,7 @@ const adminMenuItems = [
   { href: "/admin/categories", icon: FolderTree, label: "Categories" },
   { href: "/admin/brands", icon: Tag, label: "Brands" },
   { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
+  { href: "/admin/inventory", icon: Warehouse, label: "Inventory" },
   { href: "/admin/reviews", icon: Star, label: "Reviews" },
   { href: "/admin/banners", icon: Image, label: "Banners" },
   { href: "/admin/home-blocks", icon: LayoutGrid, label: "Home Blocks" },
