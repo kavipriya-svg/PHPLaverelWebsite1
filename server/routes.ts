@@ -547,16 +547,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         count,
       }));
       
-      const products = await storage.getProducts({ limit: 1000 });
-      const topProducts = products.products
+      const products = await storage.getProducts({ limit: 100 });
+      const mostReviewedProducts = products.products
         .filter(p => (p.reviewCount || 0) > 0)
         .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
         .slice(0, 10)
         .map(p => ({
           id: p.id,
           title: p.title,
-          revenue: Math.round(parseFloat(p.price as string) * (p.reviewCount || 1) * 100) / 100,
-          sales: p.reviewCount || 0,
+          reviewCount: p.reviewCount || 0,
+          price: parseFloat(p.price as string),
           stock: p.stock || 0,
         }));
       
@@ -564,27 +564,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const periodOrders = salesTrend.reduce((sum, d) => sum + d.orders, 0);
       const avgOrderValue = periodOrders > 0 ? periodRevenue / periodOrders : 0;
       
-      const daysWithRevenue = salesTrend.filter(d => d.revenue > 0);
-      const midPoint = Math.floor(daysWithRevenue.length / 2);
-      let revenueGrowth = 0;
+      const midPoint = Math.floor(salesTrend.length / 2);
+      const firstHalf = salesTrend.slice(0, midPoint);
+      const secondHalf = salesTrend.slice(midPoint);
+      const firstHalfRevenue = firstHalf.reduce((sum, d) => sum + d.revenue, 0);
+      const secondHalfRevenue = secondHalf.reduce((sum, d) => sum + d.revenue, 0);
       
-      if (daysWithRevenue.length >= 2 && midPoint > 0) {
-        const firstHalf = daysWithRevenue.slice(0, midPoint);
-        const secondHalf = daysWithRevenue.slice(midPoint);
-        const firstHalfRevenue = firstHalf.reduce((sum, d) => sum + d.revenue, 0);
-        const secondHalfRevenue = secondHalf.reduce((sum, d) => sum + d.revenue, 0);
-        
-        if (firstHalfRevenue > 0) {
-          revenueGrowth = Math.round(((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100);
-        } else if (secondHalfRevenue > 0) {
-          revenueGrowth = 100;
-        }
+      let revenueGrowth: number | null = null;
+      if (firstHalfRevenue > 0 && secondHalfRevenue >= 0) {
+        revenueGrowth = Math.round(((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100);
+      } else if (firstHalfRevenue === 0 && secondHalfRevenue > 0) {
+        revenueGrowth = null;
       }
 
       res.json({
         salesTrend,
         ordersByStatus,
-        topProducts,
+        mostReviewedProducts,
         summary: {
           periodRevenue: Math.round(periodRevenue * 100) / 100,
           periodOrders,
@@ -1079,6 +1075,189 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to check low stock" });
+    }
+  });
+
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const { products } = await storage.getProducts({ limit: 10000, isActive: true });
+      const categories = await storage.getCategories();
+      const activeCategories = categories.filter(c => c.isActive !== false);
+      
+      const now = new Date().toISOString();
+      
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/shop</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>`;
+
+      for (const category of activeCategories) {
+        xml += `
+  <url>
+    <loc>${baseUrl}/category/${category.slug}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+      }
+
+      for (const product of products) {
+        const lastMod = product.updatedAt ? new Date(product.updatedAt).toISOString() : now;
+        xml += `
+  <url>
+    <loc>${baseUrl}/product/${product.slug}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+      }
+
+      xml += `
+</urlset>`;
+
+      res.set("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (error) {
+      console.error("Sitemap generation error:", error);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
+  app.get("/robots.txt", (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const robotsTxt = `User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout
+Disallow: /account/
+
+Sitemap: ${baseUrl}/sitemap.xml`;
+    
+    res.set("Content-Type", "text/plain");
+    res.send(robotsTxt);
+  });
+
+  app.get("/api/products/:slug/structured-data", async (req, res) => {
+    try {
+      const product = await storage.getProductBySlug(req.params.slug);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const primaryImage = product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url;
+      
+      const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.title,
+        description: product.shortDesc || product.longDesc?.substring(0, 160),
+        image: primaryImage ? [primaryImage] : [],
+        sku: product.sku,
+        brand: product.brand ? {
+          "@type": "Brand",
+          name: product.brand.name,
+        } : undefined,
+        category: product.category?.name,
+        offers: {
+          "@type": "Offer",
+          url: `${baseUrl}/product/${product.slug}`,
+          priceCurrency: "USD",
+          price: product.salePrice || product.price,
+          availability: product.stock && product.stock > 0 
+            ? "https://schema.org/InStock" 
+            : "https://schema.org/OutOfStock",
+          itemCondition: "https://schema.org/NewCondition",
+        },
+        aggregateRating: product.reviewCount && product.reviewCount > 0 ? {
+          "@type": "AggregateRating",
+          ratingValue: product.averageRating || 0,
+          reviewCount: product.reviewCount,
+        } : undefined,
+      };
+      
+      res.json(structuredData);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to generate structured data" });
+    }
+  });
+
+  app.patch("/api/admin/products/:id/seo", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { metaTitle, metaDescription, metaKeywords, slug } = req.body;
+      
+      if (slug) {
+        const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+        if (!slugRegex.test(slug)) {
+          return res.status(400).json({ 
+            error: "Invalid slug format. Use lowercase letters, numbers, and hyphens only." 
+          });
+        }
+        
+        const existing = await storage.getProductBySlug(slug);
+        if (existing && existing.id !== req.params.id) {
+          return res.status(400).json({ error: "Slug already in use by another product" });
+        }
+      }
+      
+      const product = await storage.updateProduct(req.params.id, {
+        metaTitle,
+        metaDescription,
+        metaKeywords,
+        slug,
+      });
+      
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      res.json({ product });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update product SEO" });
+    }
+  });
+
+  app.patch("/api/admin/categories/:id/seo", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { metaTitle, metaDescription, metaKeywords, slug } = req.body;
+      
+      if (slug) {
+        const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+        if (!slugRegex.test(slug)) {
+          return res.status(400).json({ 
+            error: "Invalid slug format. Use lowercase letters, numbers, and hyphens only." 
+          });
+        }
+        
+        const existing = await storage.getCategoryBySlug(slug);
+        if (existing && existing.id !== req.params.id) {
+          return res.status(400).json({ error: "Slug already in use by another category" });
+        }
+      }
+      
+      const category = await storage.updateCategory(req.params.id, {
+        metaTitle,
+        metaDescription,
+        metaKeywords,
+        slug,
+      });
+      
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      
+      res.json({ category });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update category SEO" });
     }
   });
 

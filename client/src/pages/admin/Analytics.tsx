@@ -43,23 +43,23 @@ interface OrderStatus {
   count: number;
 }
 
-interface TopProduct {
+interface MostReviewedProduct {
   id: string;
   title: string;
-  revenue: number;
-  sales: number;
+  reviewCount: number;
+  price: number;
   stock: number;
 }
 
 interface AnalyticsData {
   salesTrend: SalesTrendData[];
   ordersByStatus: OrderStatus[];
-  topProducts: TopProduct[];
+  mostReviewedProducts: MostReviewedProduct[];
   summary: {
     periodRevenue: number;
     periodOrders: number;
     avgOrderValue: number;
-    revenueGrowth: number;
+    revenueGrowth: number | null;
   };
 }
 
@@ -143,7 +143,9 @@ export default function AdminAnalytics() {
           />
           <SummaryCard
             title="Growth Rate"
-            value={`${data?.summary?.revenueGrowth || 0}%`}
+            value={data?.summary?.revenueGrowth !== null && data?.summary?.revenueGrowth !== undefined
+              ? `${data.summary.revenueGrowth}%`
+              : "N/A"}
             icon={data?.summary?.revenueGrowth && data.summary.revenueGrowth >= 0 ? TrendingUp : TrendingDown}
             trend={data?.summary?.revenueGrowth}
             isLoading={isLoading}
@@ -362,8 +364,8 @@ export default function AdminAnalytics() {
           <TabsContent value="products" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Top Performing Products</CardTitle>
-                <CardDescription>Products ranked by estimated revenue contribution</CardDescription>
+                <CardTitle>Most Reviewed Products</CardTitle>
+                <CardDescription>Products ranked by customer engagement (review count)</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -374,7 +376,7 @@ export default function AdminAnalytics() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {(data?.topProducts || []).map((product, index) => (
+                    {(data?.mostReviewedProducts || []).map((product, index) => (
                       <div
                         key={product.id}
                         className="flex items-center justify-between p-4 border rounded-lg"
@@ -387,17 +389,17 @@ export default function AdminAnalytics() {
                           <div>
                             <p className="font-medium line-clamp-1">{product.title}</p>
                             <p className="text-sm text-muted-foreground">
-                              {product.sales} reviews | Stock: {product.stock}
+                              {product.reviewCount} reviews | Stock: {product.stock}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-lg">{formatCurrency(product.revenue)}</p>
-                          <p className="text-sm text-muted-foreground">est. revenue</p>
+                          <p className="font-bold text-lg">{formatCurrency(product.price)}</p>
+                          <p className="text-sm text-muted-foreground">unit price</p>
                         </div>
                       </div>
                     ))}
-                    {(!data?.topProducts || data.topProducts.length === 0) && (
+                    {(!data?.mostReviewedProducts || data.mostReviewedProducts.length === 0) && (
                       <p className="text-center text-muted-foreground py-8">No product data available</p>
                     )}
                   </div>
@@ -407,8 +409,8 @@ export default function AdminAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Product Revenue Distribution</CardTitle>
-                <CardDescription>Visual comparison of top product revenues</CardDescription>
+                <CardTitle>Product Engagement</CardTitle>
+                <CardDescription>Visual comparison of product review counts</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -417,14 +419,13 @@ export default function AdminAnalytics() {
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
-                        data={(data?.topProducts || []).slice(0, 8)}
+                        data={(data?.mostReviewedProducts || []).slice(0, 8)}
                         layout="vertical"
                         margin={{ left: 100 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
                         <XAxis
                           type="number"
-                          tickFormatter={(value) => `$${value}`}
                           tick={{ fontSize: 12 }}
                         />
                         <YAxis
@@ -437,14 +438,14 @@ export default function AdminAnalytics() {
                           }
                         />
                         <Tooltip
-                          formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+                          formatter={(value: number) => [value, "Reviews"]}
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
                             border: "1px solid hsl(var(--border))",
                             borderRadius: "8px",
                           }}
                         />
-                        <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="reviewCount" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Reviews" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -468,7 +469,7 @@ function SummaryCard({
   title: string;
   value: string;
   icon: typeof DollarSign;
-  trend?: number;
+  trend?: number | null;
   isLoading?: boolean;
 }) {
   return (
@@ -483,7 +484,7 @@ function SummaryCard({
         ) : (
           <div className="flex items-center gap-2">
             <div className="text-2xl font-bold">{value}</div>
-            {trend !== undefined && (
+            {trend !== undefined && trend !== null && (
               <Badge variant={trend >= 0 ? "default" : "destructive"} className="text-xs">
                 {trend >= 0 ? "+" : ""}
                 {trend}%

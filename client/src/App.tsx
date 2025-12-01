@@ -34,6 +34,7 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminReviews from "@/pages/admin/Reviews";
 import AdminEmailSettings from "@/pages/admin/EmailSettings";
 import AdminAnalytics from "@/pages/admin/Analytics";
+import AdminSEOSettings from "@/pages/admin/SEOSettings";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -130,6 +131,7 @@ function Router() {
       <Route path="/admin/reviews" component={AdminReviews} />
       <Route path="/admin/email" component={AdminEmailSettings} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
+      <Route path="/admin/seo" component={AdminSEOSettings} />
 
       <Route>
         <StoreLayout>
