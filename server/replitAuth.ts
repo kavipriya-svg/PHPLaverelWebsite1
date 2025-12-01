@@ -98,7 +98,20 @@ export async function setupAuth(app: Express) {
   };
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  passport.deserializeUser(async (user: Express.User, cb) => {
+    try {
+      const sessionUser = user as any;
+      if (sessionUser?.claims?.sub) {
+        const dbUser = await storage.getUser(sessionUser.claims.sub);
+        if (dbUser) {
+          sessionUser.dbUser = dbUser;
+        }
+      }
+      cb(null, user);
+    } catch (error) {
+      cb(null, user);
+    }
+  });
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
