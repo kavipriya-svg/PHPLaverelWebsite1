@@ -13,6 +13,8 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Dynamic home page with customizable content blocks
 - Coupon and promotional offer system
 - Multi-variant product support
+- Product reviews and ratings with moderation
+- Email notifications (order confirmation, status updates, low stock alerts)
 
 ## User Preferences
 
@@ -96,6 +98,8 @@ Preferred communication style: Simple, everyday language.
 - **wishlistItems**: User-specific product wishlists
 - **cartItems**: Shopping cart items (session-based for guests, user-linked when authenticated)
 - **sessions**: PostgreSQL-backed session storage for authentication
+- **reviews**: Product reviews with ratings, titles, content, and moderation status
+- **reviewVotes**: Helpful/not helpful votes on reviews with user/session tracking
 
 **Data Relationships:**
 - One-to-many: categories (parent-child), products-images, products-variants, users-orders, orders-orderItems
@@ -139,6 +143,12 @@ Preferred communication style: Simple, everyday language.
 **File Storage:**
 - Currently uses local storage for product images
 - Designed with abstraction for future S3 migration
+
+**Email Service:**
+- Resend for transactional emails (order confirmations, status updates, low stock alerts)
+- Configurable via RESEND_API_KEY environment variable
+- HTML email templates with responsive design
+- Admin panel for testing emails and checking low stock
 
 **Notable Architectural Decisions:**
 
