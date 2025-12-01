@@ -31,6 +31,7 @@ import AdminBrands from "@/pages/admin/Brands";
 import AdminHomeBlocks from "@/pages/admin/HomeBlocks";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminUsers from "@/pages/admin/Users";
+import AdminReviews from "@/pages/admin/Reviews";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -124,6 +125,7 @@ function Router() {
       <Route path="/admin/home-blocks" component={AdminHomeBlocks} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/reviews" component={AdminReviews} />
 
       <Route>
         <StoreLayout>
