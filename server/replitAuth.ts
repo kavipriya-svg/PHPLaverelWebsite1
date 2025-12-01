@@ -145,14 +145,15 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user?.expires_at) {
+  // Check if user exists and has valid claims (same as getUserInfo check)
+  if (!user?.claims?.sub) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
   
   // Handle token refresh if needed
-  if (now > user.expires_at) {
+  if (user.expires_at && now > user.expires_at) {
     const refreshToken = user.refresh_token;
     if (!refreshToken) {
       res.status(401).json({ message: "Unauthorized" });
@@ -171,11 +172,9 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   // Fetch and attach database user for role checking
   try {
-    const userId = user.claims?.sub;
-    if (userId) {
-      const dbUser = await storage.getUser(userId);
-      user.dbUser = dbUser;
-    }
+    const userId = user.claims.sub;
+    const dbUser = await storage.getUser(userId);
+    user.dbUser = dbUser;
   } catch (error) {
     // Continue even if db fetch fails - dbUser will be undefined
   }
