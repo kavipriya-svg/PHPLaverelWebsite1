@@ -363,6 +363,316 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/wishlist/share", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const sharedWishlist = await storage.getSharedWishlist(userInfo!.id);
+      res.json({ sharedWishlist });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch shared wishlist settings" });
+    }
+  });
+
+  app.post("/api/wishlist/share", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const { title, description, isPublic, allowAnonymous } = req.body;
+      
+      const shareCode = Math.random().toString(36).substring(2, 10);
+      const sharedWishlist = await storage.createOrUpdateSharedWishlist({
+        userId: userInfo!.id,
+        shareCode,
+        title: title || "My Wishlist",
+        description,
+        isPublic: isPublic ?? true,
+        allowAnonymous: allowAnonymous ?? true,
+      });
+      res.json({ sharedWishlist });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create shared wishlist" });
+    }
+  });
+
+  app.put("/api/wishlist/share", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const { title, description, isPublic, allowAnonymous } = req.body;
+      
+      const existing = await storage.getSharedWishlist(userInfo!.id);
+      if (!existing) {
+        return res.status(404).json({ error: "No shared wishlist found" });
+      }
+      
+      const sharedWishlist = await storage.createOrUpdateSharedWishlist({
+        userId: userInfo!.id,
+        shareCode: existing.shareCode,
+        title,
+        description,
+        isPublic,
+        allowAnonymous,
+      });
+      res.json({ sharedWishlist });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update shared wishlist" });
+    }
+  });
+
+  app.delete("/api/wishlist/share", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      await storage.deleteSharedWishlist(userInfo!.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete shared wishlist" });
+    }
+  });
+
+  app.get("/api/shared-wishlist/:shareCode", async (req, res) => {
+    try {
+      const sharedWishlist = await storage.getSharedWishlistByCode(req.params.shareCode);
+      if (!sharedWishlist) {
+        return res.status(404).json({ error: "Wishlist not found" });
+      }
+      if (!sharedWishlist.isPublic) {
+        const userInfo = getUserInfo(req);
+        if (!userInfo || sharedWishlist.userId !== userInfo.id) {
+          return res.status(403).json({ error: "This wishlist is private" });
+        }
+      }
+      
+      const items = await storage.getWishlistItems(sharedWishlist.userId);
+      const owner = await storage.getUser(sharedWishlist.userId);
+      
+      res.json({
+        sharedWishlist,
+        items,
+        owner: owner ? { firstName: owner.firstName, lastName: owner.lastName } : null,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch shared wishlist" });
+    }
+  });
+
+  app.get("/api/gift-registries", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const registries = await storage.getGiftRegistries(userInfo!.id);
+      res.json({ registries });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch gift registries" });
+    }
+  });
+
+  app.get("/api/gift-registries/:id", isAuthenticated, async (req, res) => {
+    try {
+      const registry = await storage.getGiftRegistryById(req.params.id);
+      if (!registry) {
+        return res.status(404).json({ error: "Gift registry not found" });
+      }
+      
+      const userInfo = getUserInfo(req);
+      if (registry.userId !== userInfo!.id) {
+        return res.status(403).json({ error: "Not authorized to view this registry" });
+      }
+      
+      res.json({ registry });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch gift registry" });
+    }
+  });
+
+  app.post("/api/gift-registries", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const { title, eventType, eventDate, description, coverImage, registrantName, partnerName, shippingAddressId, isPublic, showPurchased, allowMessages } = req.body;
+      
+      const shareCode = Math.random().toString(36).substring(2, 10);
+      const registry = await storage.createGiftRegistry({
+        userId: userInfo!.id,
+        shareCode,
+        title,
+        eventType,
+        eventDate: eventDate ? new Date(eventDate) : undefined,
+        description,
+        coverImage,
+        registrantName,
+        partnerName,
+        shippingAddressId,
+        isPublic: isPublic ?? true,
+        showPurchased: showPurchased ?? false,
+        allowMessages: allowMessages ?? true,
+      });
+      res.status(201).json({ registry });
+    } catch (error) {
+      console.error("Create registry error:", error);
+      res.status(500).json({ error: "Failed to create gift registry" });
+    }
+  });
+
+  app.put("/api/gift-registries/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const existing = await storage.getGiftRegistryById(req.params.id);
+      
+      if (!existing) {
+        return res.status(404).json({ error: "Gift registry not found" });
+      }
+      if (existing.userId !== userInfo!.id) {
+        return res.status(403).json({ error: "Not authorized to update this registry" });
+      }
+      
+      const { title, eventType, eventDate, description, coverImage, registrantName, partnerName, shippingAddressId, isPublic, showPurchased, allowMessages } = req.body;
+      const registry = await storage.updateGiftRegistry(req.params.id, {
+        title,
+        eventType,
+        eventDate: eventDate ? new Date(eventDate) : undefined,
+        description,
+        coverImage,
+        registrantName,
+        partnerName,
+        shippingAddressId,
+        isPublic,
+        showPurchased,
+        allowMessages,
+      });
+      res.json({ registry });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update gift registry" });
+    }
+  });
+
+  app.delete("/api/gift-registries/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const existing = await storage.getGiftRegistryById(req.params.id);
+      
+      if (!existing) {
+        return res.status(404).json({ error: "Gift registry not found" });
+      }
+      if (existing.userId !== userInfo!.id) {
+        return res.status(403).json({ error: "Not authorized to delete this registry" });
+      }
+      
+      await storage.deleteGiftRegistry(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete gift registry" });
+    }
+  });
+
+  app.post("/api/gift-registries/:id/items", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const registry = await storage.getGiftRegistryById(req.params.id);
+      
+      if (!registry) {
+        return res.status(404).json({ error: "Gift registry not found" });
+      }
+      if (registry.userId !== userInfo!.id) {
+        return res.status(403).json({ error: "Not authorized to add items to this registry" });
+      }
+      
+      const { productId, variantId, quantityDesired, priority, note } = req.body;
+      const item = await storage.addGiftRegistryItem({
+        registryId: req.params.id,
+        productId,
+        variantId,
+        quantityDesired: quantityDesired || 1,
+        priority: priority || "normal",
+        note,
+      });
+      res.status(201).json({ item });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add item to gift registry" });
+    }
+  });
+
+  app.put("/api/gift-registry-items/:itemId", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const { quantityDesired, priority, note } = req.body;
+      
+      const item = await storage.updateGiftRegistryItem(req.params.itemId, {
+        quantityDesired,
+        priority,
+        note,
+      });
+      
+      if (!item) {
+        return res.status(404).json({ error: "Item not found" });
+      }
+      
+      res.json({ item });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update gift registry item" });
+    }
+  });
+
+  app.delete("/api/gift-registry-items/:itemId", isAuthenticated, async (req, res) => {
+    try {
+      await storage.removeGiftRegistryItem(req.params.itemId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to remove item from gift registry" });
+    }
+  });
+
+  app.get("/api/registry/:shareCode", async (req, res) => {
+    try {
+      const registry = await storage.getGiftRegistryByCode(req.params.shareCode);
+      if (!registry) {
+        return res.status(404).json({ error: "Gift registry not found" });
+      }
+      if (!registry.isPublic) {
+        const userInfo = getUserInfo(req);
+        if (!userInfo || registry.userId !== userInfo.id) {
+          return res.status(403).json({ error: "This registry is private" });
+        }
+      }
+      
+      const itemsToShow = registry.showPurchased 
+        ? registry.items 
+        : registry.items.map(item => ({
+            ...item,
+            isPurchased: false,
+            purchasedBy: null,
+            purchasedAt: null,
+            quantityPurchased: 0,
+          }));
+      
+      res.json({
+        registry: { ...registry, items: itemsToShow },
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch gift registry" });
+    }
+  });
+
+  app.post("/api/registry/:shareCode/items/:itemId/purchase", async (req, res) => {
+    try {
+      const registry = await storage.getGiftRegistryByCode(req.params.shareCode);
+      if (!registry) {
+        return res.status(404).json({ error: "Gift registry not found" });
+      }
+      if (!registry.isPublic) {
+        return res.status(403).json({ error: "This registry is private" });
+      }
+      
+      const userInfo = getUserInfo(req);
+      const { email } = req.body;
+      const purchasedBy = userInfo?.email || email || "Anonymous";
+      
+      const item = await storage.markGiftRegistryItemPurchased(req.params.itemId, purchasedBy);
+      if (!item) {
+        return res.status(404).json({ error: "Item not found" });
+      }
+      
+      res.json({ item });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark item as purchased" });
+    }
+  });
+
   app.get("/api/products/:productId/reviews", async (req, res) => {
     try {
       const reviews = await storage.getProductReviews(req.params.productId, true);
