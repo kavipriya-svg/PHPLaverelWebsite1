@@ -53,6 +53,7 @@ export default function AdminBrands() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/brands"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/brands"] });
       toast({ title: "Brand deleted successfully" });
       setDeleteBrand(null);
     },
@@ -211,6 +212,7 @@ function BrandDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/brands"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/brands"] });
       toast({ title: `Brand ${brand ? "updated" : "created"} successfully` });
       onOpenChange(false);
     },
