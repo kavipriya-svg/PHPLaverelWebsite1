@@ -111,6 +111,7 @@ export const products = pgTable("products", {
   warehouseLocation: varchar("warehouse_location"),
   weight: decimal("weight", { precision: 8, scale: 2 }),
   dimensions: varchar("dimensions"),
+  expectedDeliveryDays: integer("expected_delivery_days").default(5), // Expected delivery in days
   isFeatured: boolean("is_featured").default(false),
   isTrending: boolean("is_trending").default(false),
   isActive: boolean("is_active").default(true),
@@ -139,12 +140,13 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   cartItems: many(cartItems),
 }));
 
-// Product Images
+// Product Images (supports images and videos)
 export const productImages = pgTable("product_images", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   productId: varchar("product_id").notNull(),
   url: varchar("url").notNull(),
   altText: varchar("alt_text"),
+  mediaType: varchar("media_type").default("image"), // image, video
   isPrimary: boolean("is_primary").default(false),
   position: integer("position").default(0),
   createdAt: timestamp("created_at").defaultNow(),
@@ -185,6 +187,8 @@ export const coupons = pgTable("coupons", {
   minCartTotal: decimal("min_cart_total", { precision: 10, scale: 2 }),
   maxUses: integer("max_uses"),
   usedCount: integer("used_count").default(0),
+  productId: varchar("product_id"), // If set, coupon is product-specific; null means general coupon
+  description: text("description"), // Description shown to customers
   isActive: boolean("is_active").default(true),
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
