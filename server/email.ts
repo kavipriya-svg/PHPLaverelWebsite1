@@ -42,15 +42,16 @@ interface StatusUpdateData {
   trackingUrl?: string;
 }
 
+interface LowStockAlertProduct {
+  title: string;
+  sku: string;
+  currentStock: number;
+  threshold: number;
+}
+
 interface LowStockAlertData {
   adminEmail: string;
-  products: Array<{
-    id: string;
-    title: string;
-    sku: string;
-    currentStock: number;
-    threshold: number;
-  }>;
+  products: LowStockAlertProduct[];
 }
 
 function formatCurrency(amount: string | number): string {
@@ -400,6 +401,68 @@ export const emailService = {
       return true;
     } catch (error) {
       console.error("[Email] Failed to send low stock alert:", error);
+      return false;
+    }
+  },
+
+  async sendRestockNotification(email: string, data: { productTitle: string; productUrl: string; productImage?: string }): Promise<boolean> {
+    if (!resend) {
+      console.log("[Email] Resend not configured, skipping restock notification");
+      return true;
+    }
+
+    try {
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div style="background: #16a34a; padding: 32px; text-align: center;">
+        <h1 style="margin: 0; color: #fff; font-size: 24px;">Good News! It's Back in Stock!</h1>
+      </div>
+      
+      <div style="padding: 32px;">
+        <p style="margin: 0 0 24px 0; color: #333; font-size: 16px;">
+          Great news! The item you've been waiting for is now back in stock:
+        </p>
+        
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; text-align: center;">
+          ${data.productImage ? `<img src="${data.productImage}" alt="${data.productTitle}" style="max-width: 200px; height: auto; margin-bottom: 16px; border-radius: 8px;">` : ''}
+          <h2 style="margin: 0 0 16px 0; color: #333;">${data.productTitle}</h2>
+          <a href="${data.productUrl}" style="display: inline-block; padding: 12px 24px; background: #16a34a; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600;">Shop Now</a>
+        </div>
+        
+        <p style="margin: 24px 0 0 0; color: #666; font-size: 14px; text-align: center;">
+          Hurry! Popular items sell out quickly.
+        </p>
+      </div>
+      
+      <div style="background: #f9f9f9; padding: 24px; text-align: center; border-top: 1px solid #eee;">
+        <p style="margin: 0; color: #666; font-size: 14px;">
+          Thank you for shopping with ${STORE_NAME}!
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject: `${data.productTitle} is back in stock!`,
+        html,
+      });
+      console.log(`[Email] Restock notification sent to ${email}`);
+      return true;
+    } catch (error) {
+      console.error("[Email] Failed to send restock notification:", error);
       return false;
     }
   },
