@@ -149,25 +149,37 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
-    return next();
+  
+  // Handle token refresh if needed
+  if (now > user.expires_at) {
+    const refreshToken = user.refresh_token;
+    if (!refreshToken) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    try {
+      const config = await getOidcConfig();
+      const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+      updateUserSession(user, tokenResponse);
+    } catch (error) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
   }
 
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
+  // Fetch and attach database user for role checking
   try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
+    const userId = user.claims?.sub;
+    if (userId) {
+      const dbUser = await storage.getUser(userId);
+      user.dbUser = dbUser;
+    }
   } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
+    // Continue even if db fetch fails - dbUser will be undefined
   }
+
+  return next();
 };
 
 export function getUserInfo(req: Request): { id: string; email?: string } | null {
