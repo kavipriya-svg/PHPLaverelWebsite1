@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { ProductFilters, SortSelect, type ProductFiltersState } from "@/components/store/ProductFilters";
 import { Button } from "@/components/ui/button";
+import { SEOHead } from "@/components/SEOHead";
 import type { Category, ProductWithDetails } from "@shared/schema";
 
 export default function CategoryPage() {
@@ -96,6 +97,10 @@ export default function CategoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <SEOHead
+        title={category.metaTitle || category.name}
+        description={category.metaDescription || category.description || `Shop ${category.name} products`}
+      />
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>

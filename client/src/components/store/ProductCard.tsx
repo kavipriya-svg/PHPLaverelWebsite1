@@ -146,11 +146,9 @@ export function ProductCard({ product }: ProductCardProps) {
                 size="icon"
                 variant="secondary"
                 className="h-9 w-9"
-                asChild
+                data-testid={`button-view-${product.id}`}
               >
-                <Link href={`/product/${product.slug}`} data-testid={`button-view-${product.id}`}>
-                  <Eye className="h-4 w-4" />
-                </Link>
+                <Eye className="h-4 w-4" />
               </Button>
             </div>
           </div>
