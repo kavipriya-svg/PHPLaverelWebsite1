@@ -101,6 +101,23 @@ export default function CategoryPage() {
         title={category.metaTitle || category.name}
         description={category.metaDescription || category.description || `Shop ${category.name} products`}
       />
+      {category.bannerUrl && (
+        <div className="relative w-full h-48 md:h-64 lg:h-72 mb-6 rounded-lg overflow-hidden">
+          <img
+            src={category.bannerUrl}
+            alt={`${category.name} banner`}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{category.name}</h1>
+            {category.description && (
+              <p className="text-white/80 max-w-2xl">{category.description}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -123,12 +140,14 @@ export default function CategoryPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
-        {category.description && (
-          <p className="text-muted-foreground">{category.description}</p>
-        )}
-      </div>
+      {!category.bannerUrl && (
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
+          {category.description && (
+            <p className="text-muted-foreground">{category.description}</p>
+          )}
+        </div>
+      )}
 
       {category.children && category.children.length > 0 && (
         <div className="mb-8">
