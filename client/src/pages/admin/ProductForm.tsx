@@ -4,12 +4,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Upload, Loader2, Video, Image, X, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -26,11 +26,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Category, Brand, ProductWithDetails } from "@shared/schema";
+import type { Category, Brand, ProductWithDetails, ProductVariant } from "@shared/schema";
 import { Link } from "wouter";
+
+interface MediaItem {
+  id?: string;
+  url: string;
+  altText?: string;
+  mediaType: "image" | "video";
+  isPrimary?: boolean;
+  position: number;
+}
+
+interface VariantItem {
+  id?: string;
+  optionName: string;
+  optionValue: string;
+  sku?: string;
+  price?: string;
+  stock: number;
+}
 
 const productSchema = z.object({
   sku: z.string().min(1, "SKU is required"),
@@ -45,6 +64,7 @@ const productSchema = z.object({
   stock: z.number().min(0).default(0),
   weight: z.string().optional(),
   dimensions: z.string().optional(),
+  expectedDeliveryDays: z.number().min(1).default(5),
   isFeatured: z.boolean().default(false),
   isTrending: z.boolean().default(false),
   isActive: z.boolean().default(true),
@@ -52,13 +72,23 @@ const productSchema = z.object({
 
 type ProductFormData = z.infer<typeof productSchema>;
 
+const VARIANT_OPTION_TYPES = [
+  { value: "size", label: "Size" },
+  { value: "weight", label: "Weight" },
+  { value: "color", label: "Color" },
+  { value: "material", label: "Material" },
+  { value: "style", label: "Style" },
+];
+
 export default function ProductForm() {
   const [, params] = useRoute("/admin/products/:id");
   const isNew = params?.id === "new";
   const productId = isNew ? undefined : params?.id;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [images, setImages] = useState<string[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [variants, setVariants] = useState<VariantItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: productData } = useQuery<{ product: ProductWithDetails }>({
     queryKey: ["/api/admin/products", productId],
@@ -88,6 +118,7 @@ export default function ProductForm() {
       stock: 0,
       weight: "",
       dimensions: "",
+      expectedDeliveryDays: 5,
       isFeatured: false,
       isTrending: false,
       isActive: true,
@@ -110,11 +141,33 @@ export default function ProductForm() {
         stock: p.stock || 0,
         weight: p.weight as string || "",
         dimensions: p.dimensions || "",
+        expectedDeliveryDays: (p as any).expectedDeliveryDays || 5,
         isFeatured: p.isFeatured || false,
         isTrending: p.isTrending || false,
         isActive: p.isActive !== false,
       });
-      setImages(p.images?.map((img) => img.url) || []);
+      // Set media items from existing images
+      setMediaItems(
+        p.images?.map((img, index) => ({
+          id: img.id,
+          url: img.url,
+          altText: img.altText || "",
+          mediaType: ((img as any).mediaType || "image") as "image" | "video",
+          isPrimary: img.isPrimary || index === 0,
+          position: img.position || index,
+        })) || []
+      );
+      // Set variants
+      setVariants(
+        p.variants?.map((v) => ({
+          id: v.id,
+          optionName: v.optionName,
+          optionValue: v.optionValue,
+          sku: v.sku || "",
+          price: v.price as string || "",
+          stock: v.stock || 0,
+        })) || []
+      );
     }
   }, [productData, form]);
 
@@ -134,7 +187,23 @@ export default function ProductForm() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
-      const payload = { ...data, images };
+      const payload = { 
+        ...data, 
+        images: mediaItems.map((m, i) => ({
+          url: m.url,
+          altText: m.altText,
+          mediaType: m.mediaType,
+          isPrimary: m.isPrimary || i === 0,
+          position: i,
+        })),
+        variants: variants.map(v => ({
+          optionName: v.optionName,
+          optionValue: v.optionValue,
+          sku: v.sku || undefined,
+          price: v.price || undefined,
+          stock: v.stock || 0,
+        })),
+      };
       if (productId) {
         return await apiRequest("PATCH", `/api/admin/products/${productId}`, payload);
       } else {
@@ -153,6 +222,87 @@ export default function ProductForm() {
 
   const onSubmit = (data: ProductFormData) => {
     saveMutation.mutate(data);
+  };
+
+  // Handle file upload to object storage
+  const handleFileUpload = async (file: File, mediaType: "image" | "video") => {
+    setIsUploading(true);
+    try {
+      // Get presigned URL for upload
+      const { presignedUrl, objectPath } = await apiRequest("POST", "/api/upload/presigned-url", {
+        filename: file.name,
+        contentType: file.type,
+        folder: "products",
+      });
+
+      // Upload file directly to storage
+      await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      // Add to media items
+      const newMedia: MediaItem = {
+        url: `/objects/${objectPath}`,
+        altText: file.name.replace(/\.[^/.]+$/, ""),
+        mediaType,
+        isPrimary: mediaItems.length === 0,
+        position: mediaItems.length,
+      };
+      setMediaItems([...mediaItems, newMedia]);
+      toast({ title: `${mediaType === "video" ? "Video" : "Image"} uploaded successfully` });
+    } catch (error) {
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Add variant
+  const addVariant = () => {
+    setVariants([
+      ...variants,
+      {
+        optionName: "Size",
+        optionValue: "",
+        sku: "",
+        price: "",
+        stock: 0,
+      },
+    ]);
+  };
+
+  // Remove variant
+  const removeVariant = (index: number) => {
+    setVariants(variants.filter((_, i) => i !== index));
+  };
+
+  // Update variant
+  const updateVariant = (index: number, field: keyof VariantItem, value: string | number) => {
+    const updated = [...variants];
+    updated[index] = { ...updated[index], [field]: value };
+    setVariants(updated);
+  };
+
+  // Remove media item
+  const removeMediaItem = (index: number) => {
+    const updated = mediaItems.filter((_, i) => i !== index);
+    // If removed item was primary, set first item as primary
+    if (mediaItems[index]?.isPrimary && updated.length > 0) {
+      updated[0].isPrimary = true;
+    }
+    setMediaItems(updated);
+  };
+
+  // Set primary media item
+  const setPrimaryMedia = (index: number) => {
+    setMediaItems(mediaItems.map((m, i) => ({
+      ...m,
+      isPrimary: i === index,
+    })));
   };
 
   const categories = categoriesData?.categories || [];
@@ -364,7 +514,7 @@ export default function ProductForm() {
                   />
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="weight"
@@ -391,48 +541,224 @@ export default function ProductForm() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="expectedDeliveryDays"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Expected Delivery (Days)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="1" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 5)}
+                            data-testid="input-expected-delivery"
+                          />
+                        </FormControl>
+                        <FormDescription>Days until delivery after order</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Images</CardTitle>
+                <CardTitle>Media (Images & Videos)</CardTitle>
+                <CardDescription>
+                  Upload product images and videos. First item will be the primary display image. Click on an item to set it as primary.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {images.map((url, index) => (
-                    <div key={index} className="relative aspect-square">
-                      <img
-                        src={url}
-                        alt={`Product ${index + 1}`}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
+                  {mediaItems.map((media, index) => (
+                    <div 
+                      key={index} 
+                      className={`relative aspect-square group cursor-pointer ${media.isPrimary ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                      onClick={() => setPrimaryMedia(index)}
+                    >
+                      {media.mediaType === "video" ? (
+                        <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center">
+                          <Video className="h-12 w-12 text-muted-foreground" />
+                          <video
+                            src={media.url}
+                            className="absolute inset-0 w-full h-full object-cover rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            muted
+                          />
+                        </div>
+                      ) : (
+                        <img
+                          src={media.url}
+                          alt={media.altText || `Product ${index + 1}`}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      )}
+                      {media.isPrimary && (
+                        <Badge className="absolute bottom-2 left-2 text-xs">Primary</Badge>
+                      )}
+                      <Badge variant="outline" className="absolute top-2 left-2 text-xs bg-background">
+                        {media.mediaType === "video" ? <Video className="h-3 w-3" /> : <Image className="h-3 w-3" />}
+                      </Badge>
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-2 right-2 h-6 w-6"
-                        onClick={() => setImages(images.filter((_, i) => i !== index))}
+                        className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeMediaItem(index);
+                        }}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   ))}
+                  
+                  {/* Upload Image Button */}
                   <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
-                    <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                    <span className="text-sm text-muted-foreground">Add Image</span>
+                    {isUploading ? (
+                      <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                    ) : (
+                      <>
+                        <Image className="h-8 w-8 text-muted-foreground mb-2" />
+                        <span className="text-sm text-muted-foreground">Add Image</span>
+                      </>
+                    )}
                     <input
                       type="file"
                       className="hidden"
                       accept="image/*"
+                      disabled={isUploading}
                       onChange={(e) => {
-                        const url = URL.createObjectURL(e.target.files![0]);
-                        setImages([...images, url]);
+                        if (e.target.files?.[0]) {
+                          handleFileUpload(e.target.files[0], "image");
+                        }
                       }}
+                      data-testid="input-upload-image"
+                    />
+                  </label>
+                  
+                  {/* Upload Video Button */}
+                  <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                    {isUploading ? (
+                      <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                    ) : (
+                      <>
+                        <Video className="h-8 w-8 text-muted-foreground mb-2" />
+                        <span className="text-sm text-muted-foreground">Add Video</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="video/*"
+                      disabled={isUploading}
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          handleFileUpload(e.target.files[0], "video");
+                        }
+                      }}
+                      data-testid="input-upload-video"
                     />
                   </label>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Product Variants</CardTitle>
+                  <CardDescription>
+                    Add size, weight, color, or other options for this product
+                  </CardDescription>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addVariant} data-testid="button-add-variant">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Variant
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {variants.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No variants added. Click "Add Variant" to create size, weight, or other options.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {variants.map((variant, index) => (
+                      <div key={index} className="flex items-start gap-3 p-4 border rounded-lg">
+                        <div className="flex-1 grid sm:grid-cols-5 gap-3">
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Option Type</label>
+                            <Select
+                              value={variant.optionName}
+                              onValueChange={(value) => updateVariant(index, "optionName", value)}
+                            >
+                              <SelectTrigger data-testid={`select-variant-type-${index}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {VARIANT_OPTION_TYPES.map((opt) => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Value</label>
+                            <Input
+                              placeholder={variant.optionName === "weight" ? "e.g., 500g" : "e.g., Large"}
+                              value={variant.optionValue}
+                              onChange={(e) => updateVariant(index, "optionValue", e.target.value)}
+                              data-testid={`input-variant-value-${index}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">SKU (Optional)</label>
+                            <Input
+                              placeholder="SKU-001-L"
+                              value={variant.sku}
+                              onChange={(e) => updateVariant(index, "sku", e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Price Override</label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="Leave empty for default"
+                              value={variant.price}
+                              onChange={(e) => updateVariant(index, "price", e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Stock</label>
+                            <Input
+                              type="number"
+                              value={variant.stock}
+                              onChange={(e) => updateVariant(index, "stock", parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="mt-6 text-destructive hover:text-destructive"
+                          onClick={() => removeVariant(index)}
+                          data-testid={`button-remove-variant-${index}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

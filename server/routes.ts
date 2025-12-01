@@ -255,6 +255,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/coupons", async (req, res) => {
+    try {
+      const productId = req.query.productId as string;
+      const allCoupons = await storage.getCoupons();
+      const now = new Date();
+      
+      const applicableCoupons = allCoupons.filter((coupon) => {
+        if (!coupon.isActive) return false;
+        if (coupon.expiresAt && new Date(coupon.expiresAt) < now) return false;
+        if (coupon.maxUses && coupon.usedCount !== null && coupon.usedCount >= coupon.maxUses) return false;
+        if (productId && coupon.productId && coupon.productId !== productId) return false;
+        return true;
+      });
+      
+      res.json({ coupons: applicableCoupons });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch coupons" });
+    }
+  });
+
   app.get("/api/banners", async (req, res) => {
     try {
       const type = req.query.type as string;
@@ -1266,9 +1286,33 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.patch("/api/admin/products/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const product = await storage.updateProduct(req.params.id, req.body);
-      res.json({ product });
+      const { images, variants, ...productData } = req.body;
+      const product = await storage.updateProduct(req.params.id, productData);
+      
+      // Update images if provided
+      if (images !== undefined) {
+        // Delete existing images
+        await storage.deleteProductImages(req.params.id);
+        // Add new images
+        for (const img of images) {
+          await storage.addProductImage({ productId: req.params.id, ...img });
+        }
+      }
+      
+      // Update variants if provided
+      if (variants !== undefined) {
+        // Delete existing variants
+        await storage.deleteProductVariants(req.params.id);
+        // Add new variants
+        for (const variant of variants) {
+          await storage.addProductVariant({ productId: req.params.id, ...variant });
+        }
+      }
+      
+      const fullProduct = await storage.getProductById(req.params.id);
+      res.json({ product: fullProduct });
     } catch (error) {
+      console.error("Product update error:", error);
       res.status(500).json({ error: "Failed to update product" });
     }
   });
