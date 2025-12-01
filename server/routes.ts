@@ -16,6 +16,121 @@ import {
   insertReviewSchema,
 } from "@shared/schema";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+const socialMediaCrawlers = [
+  "facebookexternalhit",
+  "Facebot",
+  "Twitterbot",
+  "LinkedInBot",
+  "Pinterest",
+  "WhatsApp",
+  "TelegramBot",
+  "Slackbot",
+  "Discordbot",
+  "vkShare",
+];
+
+function isSocialCrawler(userAgent: string | undefined): boolean {
+  if (!userAgent) return false;
+  return socialMediaCrawlers.some(crawler => userAgent.includes(crawler));
+}
+
+async function generateOgHtml(req: Request, baseUrl: string): Promise<string | null> {
+  const url = req.path;
+  
+  const productMatch = url.match(/^\/product\/([^\/\?]+)/);
+  if (productMatch) {
+    const slug = productMatch[1];
+    try {
+      const product = await storage.getProductBySlug(slug);
+      if (product) {
+        const image = product.images?.[0]?.url || "";
+        const price = product.salePrice || product.price;
+        const description = product.metaDescription || product.shortDesc || product.longDesc || "";
+        const title = product.metaTitle || product.title;
+        const productUrl = `${baseUrl}/product/${slug}`;
+        
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>${escapeHtml(title)} | ShopEase</title>
+  <meta name="description" content="${escapeHtml(description.slice(0, 160))}" />
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description.slice(0, 160))}" />
+  <meta property="og:image" content="${escapeHtml(image)}" />
+  <meta property="og:url" content="${escapeHtml(productUrl)}" />
+  <meta property="og:type" content="product" />
+  <meta property="og:site_name" content="ShopEase" />
+  <meta property="product:price:amount" content="${price}" />
+  <meta property="product:price:currency" content="USD" />
+  <meta property="product:availability" content="${product.stock && product.stock > 0 ? 'in stock' : 'out of stock'}" />
+  ${product.brand ? `<meta property="product:brand" content="${escapeHtml(product.brand.name)}" />` : ""}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description.slice(0, 160))}" />
+  <meta name="twitter:image" content="${escapeHtml(image)}" />
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <p>${escapeHtml(description)}</p>
+  <p>Price: $${price}</p>
+  ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" />` : ""}
+</body>
+</html>`;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  const categoryMatch = url.match(/^\/category\/([^\/\?]+)/);
+  if (categoryMatch) {
+    const slug = categoryMatch[1];
+    try {
+      const category = await storage.getCategoryBySlug(slug);
+      if (category) {
+        const title = category.metaTitle || category.name;
+        const description = category.metaDescription || category.description || `Shop ${category.name} products`;
+        const categoryUrl = `${baseUrl}/category/${slug}`;
+        
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>${escapeHtml(title)} | ShopEase</title>
+  <meta name="description" content="${escapeHtml(description.slice(0, 160))}" />
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description.slice(0, 160))}" />
+  <meta property="og:url" content="${escapeHtml(categoryUrl)}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ShopEase" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description.slice(0, 160))}" />
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <p>${escapeHtml(description)}</p>
+</body>
+</html>`;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
 const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
   if (!user || !["admin", "manager"].includes(user.role)) {
@@ -39,6 +154,20 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
+
+  app.use(async (req, res, next) => {
+    try {
+      if (isSocialCrawler(req.get("User-Agent"))) {
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        const ogHtml = await generateOgHtml(req, baseUrl);
+        if (ogHtml) {
+          return res.status(200).set({ "Content-Type": "text/html" }).send(ogHtml);
+        }
+      }
+    } catch {
+    }
+    next();
+  });
 
   app.get("/api/auth/user", async (req, res) => {
     const userInfo = getUserInfo(req);

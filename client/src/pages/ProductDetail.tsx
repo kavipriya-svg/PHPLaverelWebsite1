@@ -12,7 +12,6 @@ import {
   Truck,
   RotateCcw,
   Shield,
-  Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +38,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { ReviewSection } from "@/components/store/ReviewSection";
+import { ShareButtons } from "@/components/store/ShareButtons";
+import { SEOHead } from "@/components/SEOHead";
 import type { ProductWithDetails } from "@shared/schema";
 
 export default function ProductDetail() {
@@ -158,6 +159,16 @@ export default function ProductDetail() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <SEOHead
+        title={product.metaTitle || product.title}
+        description={product.metaDescription || product.shortDesc || product.description || ""}
+        image={primaryImage}
+        type="product"
+        price={currentPrice?.toString()}
+        currency="USD"
+        availability={product.stock === 0 ? "out of stock" : "in stock"}
+        brand={product.brand?.name}
+      />
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -361,9 +372,11 @@ export default function ProductDetail() {
             >
               <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? "fill-destructive text-destructive" : ""}`} />
             </Button>
-            <Button size="lg" variant="outline" data-testid="button-share">
-              <Share2 className="h-5 w-5" />
-            </Button>
+            <ShareButtons
+              title={product.title}
+              description={product.shortDesc || product.description || ""}
+              imageUrl={primaryImage}
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-4 pt-4">
