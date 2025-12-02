@@ -29,6 +29,7 @@ import {
 import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -406,7 +407,7 @@ export default function Checkout() {
                             )}
                           </div>
                           <p className="text-sm font-medium">
-                            ${(parseFloat(price as string) * item.quantity).toFixed(2)}
+                            {formatCurrency(parseFloat(price as string) * item.quantity)}
                           </p>
                         </div>
                       );
@@ -418,11 +419,11 @@ export default function Checkout() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Shipping</span>
-                      <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+                      <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
                     </div>
                   </div>
 
@@ -430,7 +431,7 @@ export default function Checkout() {
 
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{formatCurrency(total)}</span>
                   </div>
 
                   <Button 

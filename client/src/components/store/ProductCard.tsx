@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
 import type { ProductWithDetails } from "@shared/schema";
 
 interface ProductCardProps {
@@ -185,11 +186,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
           <div className="flex items-center gap-2">
             <span className="font-bold text-lg" data-testid={`text-price-${product.id}`}>
-              ${parseFloat(currentPrice as string).toFixed(2)}
+              {formatCurrency(currentPrice)}
             </span>
             {hasDiscount && (
               <span className="text-sm text-muted-foreground line-through">
-                ${parseFloat(product.price as string).toFixed(2)}
+                {formatCurrency(product.price)}
               </span>
             )}
           </div>

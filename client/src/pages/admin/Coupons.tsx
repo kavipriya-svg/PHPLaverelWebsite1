@@ -56,6 +56,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 import type { Coupon, ProductWithDetails } from "@shared/schema";
 
 export default function AdminCoupons() {
@@ -176,10 +177,10 @@ export default function AdminCoupons() {
                     <TableCell>
                       {coupon.type === "percentage"
                         ? `${coupon.amount}%`
-                        : `$${parseFloat(coupon.amount as string).toFixed(2)}`}
+                        : formatCurrency(coupon.amount)}
                     </TableCell>
                     <TableCell>
-                      {coupon.minCartTotal ? `$${parseFloat(coupon.minCartTotal as string).toFixed(2)}` : "-"}
+                      {coupon.minCartTotal ? formatCurrency(coupon.minCartTotal) : "-"}
                     </TableCell>
                     <TableCell>
                       {(coupon as any).minQuantity ? `${(coupon as any).minQuantity}+ items` : "-"}

@@ -47,6 +47,7 @@ import { Card } from "@/components/ui/card";
 import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { ReviewSection } from "@/components/store/ReviewSection";
 import { ShareButtons } from "@/components/store/ShareButtons";
@@ -437,12 +438,12 @@ export default function ProductDetail() {
 
           <div className="flex items-baseline gap-3 flex-wrap">
             <span className="text-3xl font-bold text-primary" data-testid="text-product-price">
-              ${parseFloat(currentPrice as string).toFixed(2)}
+              {formatCurrency(currentPrice)}
             </span>
             {hasDiscount && (
               <>
                 <span className="text-xl text-muted-foreground line-through" data-testid="text-original-price">
-                  ${parseFloat(originalPrice as string).toFixed(2)}
+                  {formatCurrency(originalPrice)}
                 </span>
                 <Badge variant="destructive" data-testid="badge-discount">
                   Save {discountPercentage}%
@@ -536,7 +537,7 @@ export default function ProductDetail() {
                           <span className="text-xs text-muted-foreground">
                             {coupon.type === "percentage"
                               ? `${coupon.amount}% off`
-                              : `₹${parseFloat(coupon.amount as string).toFixed(0)} off`}
+                              : `${CURRENCY_SYMBOL}${parseFloat(coupon.amount as string).toFixed(0)} off`}
                           </span>
                         </div>
                         <Button
@@ -579,8 +580,8 @@ export default function ProductDetail() {
                           <span className="text-xs text-muted-foreground">
                             {coupon.type === "percentage"
                               ? `${coupon.amount}% off`
-                              : `₹${parseFloat(coupon.amount as string).toFixed(0)} off`}
-                            {coupon.minCartTotal && ` (min ₹${parseFloat(coupon.minCartTotal as string).toFixed(0)})`}
+                              : `${CURRENCY_SYMBOL}${parseFloat(coupon.amount as string).toFixed(0)} off`}
+                            {coupon.minCartTotal && ` (min ${CURRENCY_SYMBOL}${parseFloat(coupon.minCartTotal as string).toFixed(0)})`}
                           </span>
                         </div>
                         <Button
@@ -623,7 +624,7 @@ export default function ProductDetail() {
                           <span className="text-xs text-muted-foreground">
                             {coupon.type === "percentage"
                               ? `${coupon.amount}% off`
-                              : `₹${parseFloat(coupon.amount as string).toFixed(0)} off`}
+                              : `${CURRENCY_SYMBOL}${parseFloat(coupon.amount as string).toFixed(0)} off`}
                             {` (min ${coupon.minQuantity} items)`}
                           </span>
                         </div>
@@ -663,7 +664,7 @@ export default function ProductDetail() {
                   {variants.map((variant) => (
                     <SelectItem key={variant.id} value={variant.id}>
                       {variant.optionValue}
-                      {variant.price && ` - $${parseFloat(variant.price).toFixed(2)}`}
+                      {variant.price && ` - ${formatCurrency(variant.price)}`}
                     </SelectItem>
                   ))}
                 </SelectContent>

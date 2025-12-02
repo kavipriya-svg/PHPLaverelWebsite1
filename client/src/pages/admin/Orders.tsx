@@ -48,6 +48,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 import type { OrderWithItems } from "@shared/schema";
 
 export default function AdminOrders() {
@@ -179,7 +180,7 @@ export default function AdminOrders() {
                     </TableCell>
                     <TableCell>{order.items.length}</TableCell>
                     <TableCell className="font-medium">
-                      ${parseFloat(order.total as string).toFixed(2)}
+                      {formatCurrency(order.total)}
                     </TableCell>
                     <TableCell>
                       <Badge variant={order.paymentStatus === "paid" ? "default" : "outline"}>
@@ -270,7 +271,7 @@ export default function AdminOrders() {
                           <p className="font-medium text-sm">{item.title}</p>
                           <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                         </div>
-                        <p className="font-medium">${(parseFloat(item.price as string) * item.quantity).toFixed(2)}</p>
+                        <p className="font-medium">{formatCurrency(parseFloat(item.price as string) * item.quantity)}</p>
                       </div>
                     ))}
                   </div>
@@ -279,7 +280,7 @@ export default function AdminOrders() {
                 <div className="border-t pt-4">
                   <div className="flex justify-between font-medium text-lg">
                     <span>Total</span>
-                    <span>${parseFloat(selectedOrder.total as string).toFixed(2)}</span>
+                    <span>{formatCurrency(selectedOrder.total)}</span>
                   </div>
                 </div>
               </div>
