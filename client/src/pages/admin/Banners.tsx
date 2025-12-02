@@ -281,21 +281,54 @@ function BannerDialog({
         contentType: file.type,
         folder: "banners",
       });
+      
+      // Check if we got an unauthorized response
+      if (presignedResponse.status === 401) {
+        toast({ 
+          title: "Session expired", 
+          description: "Please log in again to upload files.",
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      if (!presignedResponse.ok) {
+        throw new Error("Failed to get upload URL");
+      }
+      
       const { presignedUrl, objectPath } = await presignedResponse.json();
 
       // Upload file directly to storage
-      await fetch(presignedUrl, {
+      const uploadResponse = await fetch(presignedUrl, {
         method: "PUT",
         body: file,
         headers: {
           "Content-Type": file.type,
         },
       });
+      
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to storage");
+      }
 
       // Finalize upload to set ACL policy for public access
       const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
         uploadURL: presignedUrl,
       });
+      
+      if (finalizeResponse.status === 401) {
+        toast({ 
+          title: "Session expired", 
+          description: "Please log in again to complete the upload.",
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      if (!finalizeResponse.ok) {
+        throw new Error("Failed to finalize upload");
+      }
+      
       const finalizedResult = await finalizeResponse.json();
 
       // Set the URL based on upload type
@@ -308,7 +341,11 @@ function BannerDialog({
       toast({ title: `${uploadType === "video" ? "Video" : "Image"} uploaded successfully` });
     } catch (error) {
       console.error("Upload error:", error);
-      toast({ title: "Upload failed", variant: "destructive" });
+      toast({ 
+        title: "Upload failed", 
+        description: error instanceof Error ? error.message : "Please try again or check your connection.",
+        variant: "destructive" 
+      });
     } finally {
       setIsUploading(false);
     }
