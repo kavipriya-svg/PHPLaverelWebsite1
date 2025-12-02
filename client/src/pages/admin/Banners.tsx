@@ -51,7 +51,7 @@ import { Label } from "@/components/ui/label";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Banner } from "@shared/schema";
+import type { Banner, HomeBlock } from "@shared/schema";
 
 export default function AdminBanners() {
   const [editBanner, setEditBanner] = useState<Banner | null>(null);
@@ -267,9 +267,22 @@ function BannerDialog({
   const [ctaLink, setCtaLink] = useState(banner?.ctaLink || "");
   const [isActive, setIsActive] = useState(banner?.isActive !== false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Section banner placement options
+  const [targetBlockId, setTargetBlockId] = useState(banner?.targetBlockId || "");
+  const [relativePlacement, setRelativePlacement] = useState(banner?.relativePlacement || "below");
+  const [displayWidth, setDisplayWidth] = useState(banner?.displayWidth?.toString() || "100");
+  const [alignment, setAlignment] = useState(banner?.alignment || "center");
+  
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  // Fetch home blocks for the dropdown
+  const { data: homeBlocksData } = useQuery<{ homeBlocks: HomeBlock[] }>({
+    queryKey: ["/api/admin/home-blocks"],
+  });
+  const homeBlocks = homeBlocksData?.homeBlocks || [];
 
   // Handle file upload to object storage
   const handleFileUpload = async (file: File, uploadType: "image" | "video") => {
@@ -353,7 +366,7 @@ function BannerDialog({
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
+      const payload: Record<string, unknown> = {
         type,
         title,
         subtitle,
@@ -364,6 +377,15 @@ function BannerDialog({
         ctaLink,
         isActive,
       };
+      
+      // Add section banner placement options if type is section
+      if (type === "section") {
+        payload.targetBlockId = targetBlockId || null;
+        payload.relativePlacement = relativePlacement;
+        payload.displayWidth = parseInt(displayWidth);
+        payload.alignment = alignment;
+      }
+      
       if (banner) {
         return await apiRequest("PATCH", `/api/admin/banners/${banner.id}`, payload);
       } else {
@@ -391,7 +413,7 @@ function BannerDialog({
             <div className="space-y-2">
               <Label>Type</Label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger>
+                <SelectTrigger data-testid="select-banner-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -411,7 +433,7 @@ function BannerDialog({
                   setMediaUrl("");
                 }
               }}>
-                <SelectTrigger>
+                <SelectTrigger data-testid="select-media-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -421,6 +443,76 @@ function BannerDialog({
               </Select>
             </div>
           </div>
+          
+          {/* Section Banner Placement Options */}
+          {type === "section" && (
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-medium text-sm">Placement Options</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Position Relative To</Label>
+                  <Select value={targetBlockId} onValueChange={setTargetBlockId}>
+                    <SelectTrigger data-testid="select-target-block">
+                      <SelectValue placeholder="Select a Home Block" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Top of Page</SelectItem>
+                      {homeBlocks
+                        .filter(b => b.isActive)
+                        .sort((a, b) => (a.position || 0) - (b.position || 0))
+                        .map((block) => (
+                          <SelectItem key={block.id} value={block.id}>
+                            {block.title || `${block.type} Block`} (Position {block.position})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Show Banner</Label>
+                  <Select value={relativePlacement} onValueChange={setRelativePlacement}>
+                    <SelectTrigger data-testid="select-relative-placement">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="above">Above Block</SelectItem>
+                      <SelectItem value="below">Below Block</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Display Width</Label>
+                  <Select value={displayWidth} onValueChange={setDisplayWidth}>
+                    <SelectTrigger data-testid="select-display-width">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="50">50%</SelectItem>
+                      <SelectItem value="75">75%</SelectItem>
+                      <SelectItem value="100">100%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Alignment</Label>
+                  <Select value={alignment} onValueChange={setAlignment}>
+                    <SelectTrigger data-testid="select-alignment">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Title</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
