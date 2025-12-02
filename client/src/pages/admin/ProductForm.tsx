@@ -293,35 +293,45 @@ export default function ProductForm() {
   const handleFileUpload = async (file: File, mediaType: "image" | "video") => {
     setIsUploading(true);
     try {
+      console.log("[Upload] Starting upload for:", file.name, file.type);
+      
       // Get presigned URL for upload
       const { presignedUrl, objectPath } = await apiRequest("POST", "/api/upload/presigned-url", {
         filename: file.name,
         contentType: file.type,
         folder: "products",
       });
+      console.log("[Upload] Got presigned URL:", presignedUrl);
+      console.log("[Upload] Object path:", objectPath);
 
       // Upload file directly to storage
-      await fetch(presignedUrl, {
+      const uploadResponse = await fetch(presignedUrl, {
         method: "PUT",
         body: file,
         headers: {
           "Content-Type": file.type,
         },
       });
+      console.log("[Upload] Upload response status:", uploadResponse.status);
 
       // Finalize upload to set ACL policy for public access
       const finalizedResult = await apiRequest("POST", "/api/admin/upload/finalize", {
         uploadURL: presignedUrl,
       });
+      console.log("[Upload] Finalized result:", finalizedResult);
 
       // Add to media items using the finalized object path
+      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      console.log("[Upload] Final URL for media:", finalUrl);
+      
       const newMedia: MediaItem = {
-        url: finalizedResult.objectPath || `/objects/${objectPath}`,
+        url: finalUrl,
         altText: file.name.replace(/\.[^/.]+$/, ""),
         mediaType,
         isPrimary: mediaItems.length === 0,
         position: mediaItems.length,
       };
+      console.log("[Upload] Adding new media item:", newMedia);
       setMediaItems([...mediaItems, newMedia]);
       toast({ title: `${mediaType === "video" ? "Video" : "Image"} uploaded successfully` });
     } catch (error) {

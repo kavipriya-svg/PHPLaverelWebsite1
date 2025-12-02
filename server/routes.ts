@@ -1187,12 +1187,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
+    console.log("[Objects] Fetching object:", req.path);
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      console.log("[Objects] Found object, downloading...");
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
-      console.error("Error checking object access:", error);
+      console.error("[Objects] Error checking object access:", error);
       if (error instanceof ObjectNotFoundError) {
+        console.log("[Objects] Object not found");
         return res.sendStatus(404);
       }
       return res.sendStatus(500);
@@ -1202,14 +1205,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Presigned URL endpoint for direct uploads from frontend
   app.post("/api/upload/presigned-url", isAuthenticated, async (req, res) => {
     try {
+      console.log("[Upload] Getting presigned URL for:", req.body);
       const objectStorageService = new ObjectStorageService();
       const presignedUrl = await objectStorageService.getObjectEntityUploadURL();
+      console.log("[Upload] Got presigned URL:", presignedUrl);
       
       // Extract the object path from the presigned URL
       const url = new URL(presignedUrl);
       const pathParts = url.pathname.split('/');
       // The path format is /bucket/prefix/uploads/uuid
       const objectPath = `uploads/${pathParts[pathParts.length - 1]}`;
+      console.log("[Upload] Object path:", objectPath);
       
       res.json({ presignedUrl, objectPath });
     } catch (error) {
@@ -1231,11 +1237,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/upload/finalize", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      console.log("[Upload Finalize] Request body:", req.body);
       if (!req.body.uploadURL) {
         return res.status(400).json({ error: "uploadURL is required" });
       }
 
       const userId = (req.user as any)?.dbUser?.id || (req.user as any)?.claims?.sub || "admin";
+      console.log("[Upload Finalize] User ID:", userId);
       const objectStorageService = new ObjectStorageService();
       const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
         req.body.uploadURL,
@@ -1244,6 +1252,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           visibility: "public",
         }
       );
+      console.log("[Upload Finalize] Finalized object path:", objectPath);
 
       res.json({ objectPath });
     } catch (error) {
