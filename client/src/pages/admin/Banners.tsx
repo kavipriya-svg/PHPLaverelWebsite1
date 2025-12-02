@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Plus,
@@ -8,6 +8,9 @@ import {
   GripVertical,
   Image,
   Video,
+  Upload,
+  X,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -263,7 +266,53 @@ function BannerDialog({
   const [ctaText, setCtaText] = useState(banner?.ctaText || "");
   const [ctaLink, setCtaLink] = useState(banner?.ctaLink || "");
   const [isActive, setIsActive] = useState(banner?.isActive !== false);
+  const [isUploading, setIsUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Handle file upload to object storage
+  const handleFileUpload = async (file: File, uploadType: "image" | "video") => {
+    setIsUploading(true);
+    try {
+      // Get presigned URL for upload
+      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
+        filename: file.name,
+        contentType: file.type,
+        folder: "banners",
+      });
+      const { presignedUrl, objectPath } = await presignedResponse.json();
+
+      // Upload file directly to storage
+      await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      // Finalize upload to set ACL policy for public access
+      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
+        uploadURL: presignedUrl,
+      });
+      const finalizedResult = await finalizeResponse.json();
+
+      // Set the URL based on upload type
+      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      if (uploadType === "image") {
+        setMediaUrl(finalUrl);
+      } else {
+        setVideoUrl(finalUrl);
+      }
+      toast({ title: `${uploadType === "video" ? "Video" : "Image"} uploaded successfully` });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -316,7 +365,15 @@ function BannerDialog({
             </div>
             <div className="space-y-2">
               <Label>Media Type</Label>
-              <Select value={mediaType} onValueChange={setMediaType}>
+              <Select value={mediaType} onValueChange={(value) => {
+                setMediaType(value);
+                // Clear the other media type when switching
+                if (value === "image") {
+                  setVideoUrl("");
+                } else {
+                  setMediaUrl("");
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -335,17 +392,128 @@ function BannerDialog({
             <Label>Subtitle</Label>
             <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
           </div>
+          
+          {/* Media Upload Section */}
           {mediaType === "image" ? (
             <div className="space-y-2">
-              <Label>Image URL</Label>
-              <Input value={mediaUrl} onChange={(e) => setMediaUrl(e.target.value)} placeholder="https://..." />
+              <Label>Banner Image</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Recommended size: 1920 x 600 pixels (Hero) or 800 x 400 pixels (Section). Max 5MB. Formats: JPG, PNG, WebP
+              </p>
+              <input
+                type="file"
+                ref={imageInputRef}
+                className="hidden"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast({ title: "Image must be less than 5MB", variant: "destructive" });
+                      return;
+                    }
+                    handleFileUpload(file, "image");
+                  }
+                }}
+              />
+              {mediaUrl ? (
+                <div className="relative rounded-lg overflow-hidden border">
+                  <img
+                    src={mediaUrl}
+                    alt="Banner preview"
+                    className="w-full h-32 object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6"
+                    onClick={() => setMediaUrl("")}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => !isUploading && imageInputRef.current?.click()}
+                >
+                  {isUploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Uploading...</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Click to upload image</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-2">
-              <Label>Video URL</Label>
-              <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://..." />
+              <Label>Banner Video</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Recommended size: 1920 x 600 pixels. Max 50MB. Formats: MP4, WebM. Keep videos under 15 seconds for best performance.
+              </p>
+              <input
+                type="file"
+                ref={videoInputRef}
+                className="hidden"
+                accept="video/mp4,video/webm"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 50 * 1024 * 1024) {
+                      toast({ title: "Video must be less than 50MB", variant: "destructive" });
+                      return;
+                    }
+                    handleFileUpload(file, "video");
+                  }
+                }}
+              />
+              {videoUrl ? (
+                <div className="relative rounded-lg overflow-hidden border">
+                  <video
+                    src={videoUrl}
+                    className="w-full h-32 object-cover"
+                    muted
+                    loop
+                    autoPlay
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6"
+                    onClick={() => setVideoUrl("")}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => !isUploading && videoInputRef.current?.click()}
+                >
+                  {isUploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Uploading...</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Video className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Click to upload video</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
+          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>CTA Text</Label>
@@ -365,8 +533,15 @@ function BannerDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
-            {banner ? "Update" : "Create"}
+          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isUploading}>
+            {saveMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              banner ? "Update" : "Create"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
