@@ -10,10 +10,53 @@ interface HomeBlocksProps {
   blocks: HomeBlock[];
 }
 
+type BannerRow = Banner[];
+
+function groupBannersIntoRows(banners: Banner[]): BannerRow[] {
+  if (banners.length === 0) return [];
+  
+  const sortedBanners = [...banners].sort((a, b) => (a.position || 0) - (b.position || 0));
+  const rows: BannerRow[] = [];
+  let currentRow: Banner[] = [];
+  let currentRowWidth = 0;
+  
+  for (const banner of sortedBanners) {
+    const bannerWidth = banner.displayWidth ?? 100;
+    
+    if (bannerWidth === 100) {
+      if (currentRow.length > 0) {
+        rows.push(currentRow);
+        currentRow = [];
+        currentRowWidth = 0;
+      }
+      rows.push([banner]);
+    } else if (currentRowWidth + bannerWidth <= 100) {
+      currentRow.push(banner);
+      currentRowWidth += bannerWidth;
+      if (currentRowWidth === 100) {
+        rows.push(currentRow);
+        currentRow = [];
+        currentRowWidth = 0;
+      }
+    } else {
+      if (currentRow.length > 0) {
+        rows.push(currentRow);
+      }
+      currentRow = [banner];
+      currentRowWidth = bannerWidth;
+    }
+  }
+  
+  if (currentRow.length > 0) {
+    rows.push(currentRow);
+  }
+  
+  return rows;
+}
+
 export function HomeBlocks({ blocks }: HomeBlocksProps) {
   const sortedBlocks = [...blocks].sort((a, b) => (a.position || 0) - (b.position || 0));
   
-  // Fetch section banners with placement options
   const { data: bannersData } = useQuery<{ banners: Banner[] }>({
     queryKey: ["/api/banners"],
   });
@@ -22,67 +65,123 @@ export function HomeBlocks({ blocks }: HomeBlocksProps) {
     b => b.type === "section" && b.isActive
   );
   
-  // Banners without targetBlockId show at top of page
   const topOfPageBanners = sectionBanners.filter(b => !b.targetBlockId);
+  const topOfPageRows = groupBannersIntoRows(topOfPageBanners);
   
-  // Group banners by target block and placement
-  const getBannersForBlock = (blockId: string, placement: "above" | "below") => {
-    return sectionBanners.filter(
+  const getBannerRowsForBlock = (blockId: string, placement: "above" | "below") => {
+    const banners = sectionBanners.filter(
       b => b.targetBlockId === blockId && b.relativePlacement === placement
     );
+    return groupBannersIntoRows(banners);
   };
 
   return (
     <div className="space-y-16">
       {/* Render banners positioned at top of page (no target block) */}
-      {topOfPageBanners.map((banner) => (
-        <SectionBannerRenderer key={banner.id} banner={banner} />
+      {topOfPageRows.map((row, rowIndex) => (
+        <SectionBannerRow key={`top-row-${rowIndex}`} banners={row} />
       ))}
       
-      {sortedBlocks.map((block) => (
-        <div key={block.id}>
-          {/* Render banners positioned above this block */}
-          {getBannersForBlock(block.id, "above").map((banner) => (
-            <SectionBannerRenderer key={banner.id} banner={banner} />
-          ))}
-          
-          <HomeBlockRenderer block={block} />
-          
-          {/* Render banners positioned below this block */}
-          {getBannersForBlock(block.id, "below").map((banner) => (
-            <SectionBannerRenderer key={banner.id} banner={banner} />
-          ))}
-        </div>
-      ))}
+      {sortedBlocks.map((block) => {
+        const aboveRows = getBannerRowsForBlock(block.id, "above");
+        const belowRows = getBannerRowsForBlock(block.id, "below");
+        
+        return (
+          <div key={block.id}>
+            {/* Render banners positioned above this block */}
+            {aboveRows.map((row, rowIndex) => (
+              <SectionBannerRow key={`above-${block.id}-${rowIndex}`} banners={row} />
+            ))}
+            
+            <HomeBlockRenderer block={block} />
+            
+            {/* Render banners positioned below this block */}
+            {belowRows.map((row, rowIndex) => (
+              <SectionBannerRow key={`below-${block.id}-${rowIndex}`} banners={row} />
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function SectionBannerRenderer({ banner }: { banner: Banner }) {
-  // Don't render if no media
-  if (!banner.mediaUrl && !banner.videoUrl) return null;
+function SectionBannerRow({ banners }: { banners: Banner[] }) {
+  const validBanners = banners.filter(b => b.mediaUrl || b.videoUrl);
+  if (validBanners.length === 0) return null;
   
-  // Width classes - use w-* for actual sizing within container
-  // Default to 100% if displayWidth is undefined
-  const width = banner.displayWidth ?? 100;
-  const widthClass = 
-    width === 25 ? "w-full md:w-1/4" :
-    width === 50 ? "w-full md:w-1/2" : 
-    width === 75 ? "w-full md:w-3/4" : 
-    "w-full";
+  const isSingleBanner = validBanners.length === 1;
   
-  const alignmentClass = 
-    banner.alignment === "left" ? "mr-auto" : 
-    banner.alignment === "right" ? "ml-auto" : 
-    "mx-auto";
+  if (isSingleBanner) {
+    const banner = validBanners[0];
+    const width = banner.displayWidth ?? 100;
+    const widthClass = 
+      width === 25 ? "w-full md:w-1/4" :
+      width === 50 ? "w-full md:w-1/2" : 
+      width === 75 ? "w-full md:w-3/4" : 
+      "w-full";
+    
+    const alignmentClass = 
+      banner.alignment === "left" ? "mr-auto" : 
+      banner.alignment === "right" ? "ml-auto" : 
+      "mx-auto";
 
+    return (
+      <section 
+        className="container mx-auto px-4 py-8"
+        data-testid={`section-banner-${banner.id}`}
+      >
+        <div className={`${widthClass} ${alignmentClass}`}>
+          <SectionBannerCard banner={banner} />
+        </div>
+      </section>
+    );
+  }
+  
+  const widthToFr = (w: number) => {
+    if (w === 25) return '1fr';
+    if (w === 50) return '2fr';
+    if (w === 75) return '3fr';
+    return '4fr';
+  };
+  
+  const gridColsDesktop = validBanners.map(b => widthToFr(b.displayWidth ?? 100)).join(' ');
+  
+  const gridStyle = {
+    '--banner-grid-cols': gridColsDesktop,
+  } as React.CSSProperties;
+  
+  return (
+    <section 
+      className="container mx-auto px-4 py-8"
+      data-testid="section-banner-row"
+    >
+      <div 
+        className="grid grid-cols-1 gap-4 md:[grid-template-columns:var(--banner-grid-cols)]"
+        style={gridStyle}
+      >
+        {validBanners.map((banner) => (
+          <div 
+            key={banner.id} 
+            className="min-w-0 h-full"
+            data-testid={`section-banner-${banner.id}`}
+          >
+            <SectionBannerCard banner={banner} className="h-full" />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SectionBannerCard({ banner, className = "" }: { banner: Banner; className?: string }) {
   const bannerContent = (
-    <Card className="overflow-hidden hover-elevate">
-      <div className="relative">
+    <Card className={`overflow-hidden hover-elevate ${className}`}>
+      <div className="relative h-full">
         {banner.mediaType === "video" && banner.videoUrl ? (
           <video
             src={banner.videoUrl}
-            className="w-full object-cover"
+            className="w-full h-full object-cover"
             muted
             loop
             autoPlay={banner.autoplay !== false}
@@ -92,7 +191,7 @@ function SectionBannerRenderer({ banner }: { banner: Banner }) {
           <img
             src={banner.mediaUrl}
             alt={banner.title || "Promotional banner"}
-            className="w-full object-cover"
+            className="w-full h-full object-cover"
           />
         ) : null}
         {(banner.title || banner.subtitle) && (
@@ -114,19 +213,10 @@ function SectionBannerRenderer({ banner }: { banner: Banner }) {
     </Card>
   );
 
-  return (
-    <section 
-      className="container mx-auto px-4 py-8"
-      data-testid={`section-banner-${banner.id}`}
-    >
-      <div className={`${widthClass} ${alignmentClass}`}>
-        {banner.ctaLink ? (
-          <Link href={banner.ctaLink}>{bannerContent}</Link>
-        ) : (
-          bannerContent
-        )}
-      </div>
-    </section>
+  return banner.ctaLink ? (
+    <Link href={banner.ctaLink} className="block h-full">{bannerContent}</Link>
+  ) : (
+    bannerContent
   );
 }
 
