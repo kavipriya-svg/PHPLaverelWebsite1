@@ -781,8 +781,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/coupons/validate/:code", async (req, res) => {
+  app.get("/api/coupons/validate/:code", optionalAuth, async (req, res) => {
     try {
+      const userInfo = getUserInfo(req);
       const coupon = await storage.getCouponByCode(req.params.code);
       if (!coupon || !coupon.isActive) {
         return res.status(404).json({ error: "Invalid coupon code" });
@@ -792,6 +793,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       if (coupon.maxUses && coupon.usedCount && coupon.usedCount >= coupon.maxUses) {
         return res.status(400).json({ error: "Coupon usage limit reached" });
+      }
+      // Check if authenticated user has already used this coupon
+      if (userInfo?.id) {
+        const alreadyUsed = await storage.hasUserUsedCoupon(userInfo.id, req.params.code);
+        if (alreadyUsed) {
+          return res.status(400).json({ error: "You have already used this coupon" });
+        }
       }
       res.json({ coupon });
     } catch (error) {
@@ -819,9 +827,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
 
       let discount = 0;
+      let validatedCouponCode: string | undefined = undefined;
       if (couponCode) {
         const coupon = await storage.getCouponByCode(couponCode);
         if (coupon && coupon.isActive) {
+          // Check if authenticated user has already used this coupon
+          if (userInfo?.id) {
+            const alreadyUsed = await storage.hasUserUsedCoupon(userInfo.id, couponCode);
+            if (alreadyUsed) {
+              return res.status(400).json({ error: "You have already used this coupon. Only one coupon use per customer is allowed." });
+            }
+          }
+          validatedCouponCode = coupon.code;
           if (coupon.type === "percentage") {
             discount = (subtotal * parseFloat(coupon.amount as string)) / 100;
           } else {
@@ -851,7 +868,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           paymentStatus: paymentMethod === "cod" ? "pending" : "paid",
           shippingAddress,
           billingAddress,
-          couponCode,
+          couponCode: validatedCouponCode,
         },
         orderItems
       );
