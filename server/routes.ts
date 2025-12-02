@@ -910,7 +910,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       await storage.clearCart(userInfo?.id, sessionId);
 
       const customerEmail = userInfo?.email || guestEmail;
-      const customerName = userInfo ? `${userInfo.firstName || ""} ${userInfo.lastName || ""}`.trim() || "Customer" : "Customer";
+      let customerName = "Customer";
+      if (userInfo?.id) {
+        const fullUser = await storage.getUser(userInfo.id);
+        if (fullUser) {
+          customerName = `${fullUser.firstName || ""} ${fullUser.lastName || ""}`.trim() || "Customer";
+        }
+      }
       
       if (customerEmail) {
         const parsedShipping = typeof shippingAddress === "string" ? JSON.parse(shippingAddress) : shippingAddress;
