@@ -40,6 +40,7 @@ import GiftRegistry from "@/pages/GiftRegistry";
 import GiftRegistryDetail from "@/pages/GiftRegistryDetail";
 import PublicRegistry from "@/pages/PublicRegistry";
 import SharedWishlist from "@/pages/SharedWishlist";
+import OrderConfirmation from "@/pages/OrderConfirmation";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -83,6 +84,12 @@ function Router() {
       <Route path="/checkout">
         <StoreLayout>
           <Checkout />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/order-confirmation/:orderNumber">
+        <StoreLayout>
+          <OrderConfirmation />
         </StoreLayout>
       </Route>
       
