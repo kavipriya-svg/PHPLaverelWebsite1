@@ -30,8 +30,9 @@ import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Category, Brand, ProductWithDetails, ProductVariant } from "@shared/schema";
+import type { Category, Brand, ProductWithDetails, ProductVariant, Coupon } from "@shared/schema";
 import { Link } from "wouter";
+import { Ticket, Tag, Package } from "lucide-react";
 
 interface MediaItem {
   id?: string;
@@ -130,6 +131,23 @@ export default function ProductForm() {
   const { data: brandsData } = useQuery<{ brands: Brand[] }>({
     queryKey: ["/api/brands"],
   });
+
+  // Fetch all coupons for display
+  const { data: couponsData } = useQuery<{ coupons: Coupon[] }>({
+    queryKey: ["/api/admin/coupons"],
+  });
+
+  // Group coupons by type
+  const allCoupons = couponsData?.coupons || [];
+  const productSpecificCoupons = productId 
+    ? allCoupons.filter((c) => c.productId === productId && c.isActive)
+    : [];
+  const allProductCoupons = allCoupons.filter(
+    (c) => !c.productId && (!c.minQuantity || c.minQuantity <= 1) && c.isActive
+  );
+  const bulkCoupons = allCoupons.filter(
+    (c) => !c.productId && c.minQuantity && c.minQuantity > 1 && c.isActive
+  );
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -1037,6 +1055,100 @@ export default function ProductForm() {
                     />
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Applicable Coupons Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Ticket className="h-5 w-5" />
+                  Applicable Coupons
+                </CardTitle>
+                <CardDescription>
+                  Coupons that can be applied to this product. Only one coupon can be used per order.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Product-Specific Coupons */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Tag className="h-4 w-4 text-primary" />
+                    Product-Specific Coupons
+                  </div>
+                  {productSpecificCoupons.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {productSpecificCoupons.map((coupon) => (
+                        <Badge key={coupon.id} variant="secondary" className="px-3 py-1.5">
+                          <span className="font-mono font-semibold mr-2">{coupon.code}</span>
+                          <span className="text-muted-foreground">
+                            {coupon.type === "percentage" ? `${coupon.amount}% off` : `₹${coupon.amount} off`}
+                          </span>
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {isNew 
+                        ? "Save the product first to add product-specific coupons" 
+                        : "No product-specific coupons available"}
+                    </p>
+                  )}
+                </div>
+
+                {/* All-Product Coupons */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Ticket className="h-4 w-4 text-green-600" />
+                    All-Product Coupons (General)
+                  </div>
+                  {allProductCoupons.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {allProductCoupons.map((coupon) => (
+                        <Badge key={coupon.id} variant="outline" className="px-3 py-1.5">
+                          <span className="font-mono font-semibold mr-2">{coupon.code}</span>
+                          <span className="text-muted-foreground">
+                            {coupon.type === "percentage" ? `${coupon.amount}% off` : `₹${coupon.amount} off`}
+                            {coupon.minCartTotal && ` (min ₹${coupon.minCartTotal})`}
+                          </span>
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No general coupons available</p>
+                  )}
+                </div>
+
+                {/* Bulk/Volume Coupons */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Package className="h-4 w-4 text-orange-600" />
+                    Bulk Purchase Coupons (Volume Discounts)
+                  </div>
+                  {bulkCoupons.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {bulkCoupons.map((coupon) => (
+                        <Badge key={coupon.id} variant="outline" className="px-3 py-1.5 border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
+                          <span className="font-mono font-semibold mr-2">{coupon.code}</span>
+                          <span className="text-muted-foreground">
+                            {coupon.type === "percentage" ? `${coupon.amount}% off` : `₹${coupon.amount} off`}
+                            {` (min ${coupon.minQuantity} items)`}
+                          </span>
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No bulk purchase coupons available</p>
+                  )}
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
+                  <strong>Note:</strong> Customers can only use one coupon per order. Manage coupons in the{" "}
+                  <Link href="/admin/coupons" className="text-primary underline">
+                    Coupons section
+                  </Link>
+                  .
+                </div>
               </CardContent>
             </Card>
 
