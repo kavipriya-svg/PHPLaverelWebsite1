@@ -88,7 +88,7 @@ export function HeroSection() {
         <video
           ref={videoRef}
           src={currentBanner.videoUrl || ""}
-          className="absolute inset-0 w-full h-full object-contain"
+          className="absolute inset-0 w-full h-full object-cover"
           autoPlay={currentBanner.autoplay !== false}
           loop
           muted={isMuted}
@@ -98,7 +98,7 @@ export function HeroSection() {
         <img
           src={currentBanner.mediaUrl || ""}
           alt={currentBanner.title || "Hero banner"}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
         />
       )}
 
