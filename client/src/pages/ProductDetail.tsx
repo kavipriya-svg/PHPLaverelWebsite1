@@ -14,11 +14,14 @@ import {
   Shield,
   Play,
   Ticket,
+  Tag,
+  Package,
   Calendar,
   Copy,
   Check,
   Timer,
   Sparkles,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,9 +98,19 @@ export default function ProductDetail() {
   const relatedProducts = relatedData?.products || [];
   const images = product?.images || [];
   const variants = product?.variants || [];
-  const applicableCoupons = (couponsData?.coupons || []).filter(
-    (c) => c.isActive && (!c.productId || c.productId === product?.id)
+  
+  // Group coupons by type
+  const allCoupons = (couponsData?.coupons || []).filter((c) => c.isActive);
+  const productSpecificCoupons = allCoupons.filter(
+    (c) => c.productId === product?.id
   );
+  const allProductCoupons = allCoupons.filter(
+    (c) => !c.productId && (!c.minQuantity || c.minQuantity <= 1)
+  );
+  const bulkCoupons = allCoupons.filter(
+    (c) => !c.productId && c.minQuantity && c.minQuantity > 1
+  );
+  const hasCoupons = productSpecificCoupons.length > 0 || allProductCoupons.length > 0 || bulkCoupons.length > 0;
   
   const selectedVariant = variants.find(v => v.id === selectedVariantId);
   const currentPrice = selectedVariant?.price || product?.salePrice || product?.price;
@@ -484,46 +497,147 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {applicableCoupons.length > 0 && (
-            <Card className="p-4 space-y-3">
+          {hasCoupons && (
+            <Card className="p-4 space-y-4">
               <div className="flex items-center gap-2">
                 <Ticket className="h-4 w-4 text-primary" />
                 <span className="font-medium text-sm">Available Coupons</span>
+                <Badge variant="outline" className="text-xs">
+                  <Info className="h-3 w-3 mr-1" />
+                  One per order
+                </Badge>
               </div>
-              <div className="space-y-2">
-                {applicableCoupons.slice(0, 3).map((coupon) => (
-                  <div
-                    key={coupon.id}
-                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
-                    data-testid={`coupon-${coupon.id}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs font-mono font-medium bg-background px-2 py-1 rounded">
-                        {coupon.code}
-                      </code>
-                      <span className="text-xs text-muted-foreground">
-                        {coupon.type === "percentage"
-                          ? `${coupon.amount}% off`
-                          : `$${parseFloat(coupon.amount as string).toFixed(2)} off`}
-                        {coupon.minCartTotal && ` (min $${parseFloat(coupon.minCartTotal as string).toFixed(0)})`}
-                      </span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(coupon.code)}
-                      className="h-7"
-                      data-testid={`button-copy-coupon-${coupon.id}`}
-                    >
-                      {copiedCoupon === coupon.code ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </Button>
+              
+              {/* Product-Specific Coupons */}
+              {productSpecificCoupons.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-primary">
+                    <Tag className="h-3 w-3" />
+                    <span>Exclusive to this product</span>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-1.5">
+                    {productSpecificCoupons.map((coupon) => (
+                      <div
+                        key={coupon.id}
+                        className="flex items-center justify-between p-2.5 bg-primary/5 border border-primary/20 rounded-md"
+                        data-testid={`coupon-specific-${coupon.id}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono font-bold bg-primary/10 text-primary px-2 py-1 rounded">
+                            {coupon.code}
+                          </code>
+                          <span className="text-xs text-muted-foreground">
+                            {coupon.type === "percentage"
+                              ? `${coupon.amount}% off`
+                              : `₹${parseFloat(coupon.amount as string).toFixed(0)} off`}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(coupon.code)}
+                          className="h-7"
+                          data-testid={`button-copy-coupon-${coupon.id}`}
+                        >
+                          {copiedCoupon === coupon.code ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* All-Product Coupons */}
+              {allProductCoupons.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-green-600">
+                    <Ticket className="h-3 w-3" />
+                    <span>Store-wide discounts</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {allProductCoupons.slice(0, 3).map((coupon) => (
+                      <div
+                        key={coupon.id}
+                        className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                        data-testid={`coupon-general-${coupon.id}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono font-medium bg-background px-2 py-1 rounded">
+                            {coupon.code}
+                          </code>
+                          <span className="text-xs text-muted-foreground">
+                            {coupon.type === "percentage"
+                              ? `${coupon.amount}% off`
+                              : `₹${parseFloat(coupon.amount as string).toFixed(0)} off`}
+                            {coupon.minCartTotal && ` (min ₹${parseFloat(coupon.minCartTotal as string).toFixed(0)})`}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(coupon.code)}
+                          className="h-7"
+                          data-testid={`button-copy-coupon-${coupon.id}`}
+                        >
+                          {copiedCoupon === coupon.code ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Bulk Purchase Coupons */}
+              {bulkCoupons.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-orange-600">
+                    <Package className="h-3 w-3" />
+                    <span>Bulk purchase discounts</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {bulkCoupons.slice(0, 2).map((coupon) => (
+                      <div
+                        key={coupon.id}
+                        className="flex items-center justify-between p-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-md"
+                        data-testid={`coupon-bulk-${coupon.id}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono font-medium bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 px-2 py-1 rounded">
+                            {coupon.code}
+                          </code>
+                          <span className="text-xs text-muted-foreground">
+                            {coupon.type === "percentage"
+                              ? `${coupon.amount}% off`
+                              : `₹${parseFloat(coupon.amount as string).toFixed(0)} off`}
+                            {` (min ${coupon.minQuantity} items)`}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(coupon.code)}
+                          className="h-7"
+                          data-testid={`button-copy-coupon-${coupon.id}`}
+                        >
+                          {copiedCoupon === coupon.code ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
           )}
 
