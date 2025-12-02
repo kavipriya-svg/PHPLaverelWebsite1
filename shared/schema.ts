@@ -270,6 +270,11 @@ export const banners = pgTable("banners", {
   ctaLink: varchar("cta_link"),
   position: integer("position").default(0),
   isActive: boolean("is_active").default(true),
+  // Section banner placement options
+  targetBlockId: varchar("target_block_id"), // Home block ID to position relative to
+  relativePlacement: varchar("relative_placement").default("below"), // "above" or "below" the target block
+  displayWidth: integer("display_width").default(100), // Width percentage: 50, 75, or 100
+  alignment: varchar("alignment").default("center"), // "left", "center", or "right"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
