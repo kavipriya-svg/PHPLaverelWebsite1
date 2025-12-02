@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Plus,
@@ -69,6 +69,7 @@ export default function AdminBanners() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/banners"] });
       toast({ title: "Banner deleted successfully" });
       setDeleteBanner(null);
     },
@@ -278,11 +279,30 @@ function BannerDialog({
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
+  // Reset state when banner changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      setType(banner?.type || "hero");
+      setTitle(banner?.title || "");
+      setSubtitle(banner?.subtitle || "");
+      setMediaUrl(banner?.mediaUrl || "");
+      setVideoUrl(banner?.videoUrl || "");
+      setMediaType(banner?.mediaType || "image");
+      setCtaText(banner?.ctaText || "");
+      setCtaLink(banner?.ctaLink || "");
+      setIsActive(banner?.isActive !== false);
+      setTargetBlockId(banner?.targetBlockId || "");
+      setRelativePlacement(banner?.relativePlacement || "below");
+      setDisplayWidth(banner?.displayWidth?.toString() || "100");
+      setAlignment(banner?.alignment || "center");
+    }
+  }, [open, banner]);
+  
   // Fetch home blocks for the dropdown
-  const { data: homeBlocksData } = useQuery<{ homeBlocks: HomeBlock[] }>({
+  const { data: homeBlocksData } = useQuery<{ blocks: HomeBlock[] }>({
     queryKey: ["/api/admin/home-blocks"],
   });
-  const homeBlocks = homeBlocksData?.homeBlocks || [];
+  const homeBlocks = homeBlocksData?.blocks || [];
 
   // Handle file upload to object storage
   const handleFileUpload = async (file: File, uploadType: "image" | "video") => {
@@ -376,15 +396,13 @@ function BannerDialog({
         ctaText,
         ctaLink,
         isActive,
+        // Always include placement fields - they'll only be used for section banners
+        // but including them prevents data loss when temporarily switching types
+        targetBlockId: type === "section" ? (targetBlockId || null) : null,
+        relativePlacement: type === "section" ? relativePlacement : "below",
+        displayWidth: type === "section" ? parseInt(displayWidth) : 100,
+        alignment: type === "section" ? alignment : "center",
       };
-      
-      // Add section banner placement options if type is section
-      if (type === "section") {
-        payload.targetBlockId = targetBlockId || null;
-        payload.relativePlacement = relativePlacement;
-        payload.displayWidth = parseInt(displayWidth);
-        payload.alignment = alignment;
-      }
       
       if (banner) {
         return await apiRequest("PATCH", `/api/admin/banners/${banner.id}`, payload);
@@ -394,6 +412,7 @@ function BannerDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/banners"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/banners"] });
       toast({ title: `Banner ${banner ? "updated" : "created"} successfully` });
       onOpenChange(false);
     },
