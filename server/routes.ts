@@ -294,6 +294,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Public settings endpoint for frontend (currency, store name, etc.)
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      // Convert array to object for easier consumption
+      const settingsObj: Record<string, string> = {};
+      settings.forEach((s) => {
+        settingsObj[s.key] = s.value || "";
+      });
+      // Set default currency to INR if not set
+      if (!settingsObj.currency) {
+        settingsObj.currency = "INR";
+      }
+      res.json({ settings: settingsObj });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
   app.get("/api/cart", optionalAuth, async (req, res) => {
     try {
       const userInfo = getUserInfo(req);
