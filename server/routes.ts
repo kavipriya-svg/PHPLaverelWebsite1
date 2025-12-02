@@ -1246,8 +1246,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Presigned URL endpoint for direct uploads from frontend
-  app.post("/api/upload/presigned-url", isAuthenticated, async (req, res) => {
+  // Presigned URL endpoint for direct uploads from frontend (admin only)
+  app.post("/api/upload/presigned-url", isAuthenticated, isAdmin, async (req, res) => {
     try {
       console.log("[Upload] Getting presigned URL for:", req.body);
       const objectStorageService = new ObjectStorageService();
