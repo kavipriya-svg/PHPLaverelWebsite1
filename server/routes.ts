@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, getUserInfo } from "./replitAuth";
+import { setupAuth, isAuthenticated, getUserInfo, getOidcConfig, client } from "./replitAuth";
 import { emailService } from "./email";
 import { randomUUID } from "crypto";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -176,6 +176,31 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     if (!userInfo) {
       return res.json(null);
     }
+    
+    // Check if the token is expired (same as isAuthenticated middleware)
+    const sessionUser = req.user as any;
+    const now = Math.floor(Date.now() / 1000);
+    if (sessionUser?.expires_at && now > sessionUser.expires_at) {
+      // Token expired - try to refresh
+      const refreshToken = sessionUser.refresh_token;
+      if (!refreshToken) {
+        return res.json(null); // No refresh token, user needs to re-login
+      }
+      
+      try {
+        const config = await getOidcConfig();
+        const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+        // Update session with new tokens
+        sessionUser.claims = tokenResponse.claims();
+        sessionUser.access_token = tokenResponse.access_token;
+        sessionUser.refresh_token = tokenResponse.refresh_token;
+        sessionUser.expires_at = sessionUser.claims?.exp;
+      } catch (error) {
+        // Refresh failed, user needs to re-login
+        return res.json(null);
+      }
+    }
+    
     const user = await storage.getUser(userInfo.id);
     res.json(user || null);
   });
