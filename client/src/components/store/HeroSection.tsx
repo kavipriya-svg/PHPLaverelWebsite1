@@ -47,12 +47,12 @@ export function HeroSection() {
     setCurrentIndex((prev) => (prev + 1) % banners.length);
   };
 
-  // Hero banner dimensions: 1920x600 = 31.25% aspect ratio
-  const heroHeight = "h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]";
+  // Hero banner dimensions: 1920x600 - use aspect ratio to display full image without cropping
+  // Aspect ratio 1920:600 = 16:5 = 3.2
 
   if (isLoading) {
     return (
-      <section className={`relative w-full ${heroHeight}`}>
+      <section className="relative w-full aspect-[1920/600]">
         <Skeleton className="w-full h-full" />
       </section>
     );
@@ -60,7 +60,7 @@ export function HeroSection() {
 
   if (!banners.length) {
     return (
-      <section className={`relative w-full ${heroHeight} bg-gradient-to-br from-primary/20 via-background to-accent/20`}>
+      <section className="relative w-full aspect-[1920/600] bg-gradient-to-br from-primary/20 via-background to-accent/20">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center px-4">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4">
@@ -83,25 +83,22 @@ export function HeroSection() {
   const isVideo = currentBanner.mediaType === "video" && currentBanner.videoUrl;
 
   return (
-    <section className={`relative w-full ${heroHeight} overflow-hidden`} data-testid="section-hero">
+    <section className="relative w-full aspect-[1920/600] overflow-hidden" data-testid="section-hero">
       {isVideo ? (
         <video
           ref={videoRef}
           src={currentBanner.videoUrl || ""}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain"
           autoPlay={currentBanner.autoplay !== false}
           loop
           muted={isMuted}
           playsInline
         />
       ) : (
-        <div
-          className="absolute inset-0 w-full h-full bg-cover bg-center"
-          style={{
-            backgroundImage: currentBanner.mediaUrl
-              ? `url(${currentBanner.mediaUrl})`
-              : "linear-gradient(to bottom right, hsl(var(--primary) / 0.2), hsl(var(--background)), hsl(var(--accent) / 0.2))",
-          }}
+        <img
+          src={currentBanner.mediaUrl || ""}
+          alt={currentBanner.title || "Hero banner"}
+          className="w-full h-full object-contain"
         />
       )}
 
