@@ -11,7 +11,8 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Admin dashboard for complete store management
 - Responsive design optimized for mobile and desktop
 - Dynamic home page with customizable content blocks
-- Section banner placement system with dynamic controls (position relative to home blocks, width percentage, alignment)
+- Section banner placement system with dynamic controls (position relative to home blocks, width percentage 25/50/75/100%, alignment)
+- Multi-banner row layout: banners with complementary widths (e.g., 50%+50%, 75%+25%) display side-by-side on desktop with equal heights, stacking vertically on mobile
 - Coupon and promotional offer system
 - Multi-variant product support
 - Product reviews and ratings with moderation
@@ -97,7 +98,7 @@ Preferred communication style: Simple, everyday language.
 - **coupons**: Discount codes with validation rules and usage tracking
 - **orders**: Customer orders with status tracking and payment information
 - **orderItems**: Line items for each order with snapshot of product details
-- **banners**: Hero and section banners supporting image or video content with placement controls (targetBlockId, relativePlacement above/below, displayWidth 50/75/100%, alignment left/center/right)
+- **banners**: Hero and section banners supporting image or video content with placement controls (targetBlockId, relativePlacement above/below, displayWidth 25/50/75/100%, alignment left/center/right)
 - **homeBlocks**: Customizable content blocks for home page (featured products, categories, HTML promos)
 - **settings**: Key-value store for site configuration
 - **addresses**: Customer shipping/billing addresses
