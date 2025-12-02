@@ -92,9 +92,9 @@ export default function AdminAnalytics() {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
@@ -187,7 +187,7 @@ export default function AdminAnalytics() {
                           axisLine={false}
                         />
                         <YAxis
-                          tickFormatter={(value) => `$${value}`}
+                          tickFormatter={(value) => `₹${value}`}
                           tick={{ fontSize: 12 }}
                           tickLine={false}
                           axisLine={false}

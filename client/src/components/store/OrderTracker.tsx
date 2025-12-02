@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 import type { Order } from "@shared/schema";
 
 const trackOrderSchema = z.object({
@@ -270,7 +271,7 @@ export function OrderTracker() {
 
               <div className="border-t pt-6">
                 <h3 className="font-semibold mb-2">Order Total</h3>
-                <p className="text-2xl font-bold">${parseFloat(order.total as string).toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(order.total)}</p>
               </div>
             </div>
           )}
