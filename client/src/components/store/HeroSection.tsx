@@ -105,18 +105,16 @@ export function HeroSection() {
         />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center px-4 max-w-4xl">
-          <div className="bg-black/20 backdrop-blur-sm rounded-xl p-8 md:p-12">
+      {(currentBanner.title || currentBanner.subtitle || (currentBanner.ctaText && currentBanner.ctaLink)) && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-4 max-w-4xl">
             {currentBanner.title && (
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 text-white">
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 text-white drop-shadow-lg">
                 {currentBanner.title}
               </h1>
             )}
             {currentBanner.subtitle && (
-              <p className="text-base md:text-lg lg:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+              <p className="text-base md:text-lg lg:text-xl text-white mb-8 max-w-2xl mx-auto drop-shadow-md">
                 {currentBanner.subtitle}
               </p>
             )}
@@ -133,7 +131,7 @@ export function HeroSection() {
             )}
           </div>
         </div>
-      </div>
+      )}
 
       {isVideo && (
         <div className="absolute bottom-6 right-6 flex gap-2">
