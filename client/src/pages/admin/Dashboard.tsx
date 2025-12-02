@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 
 interface DashboardStats {
   totalProducts: number;
@@ -52,7 +53,7 @@ export default function AdminDashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Revenue"
-            value={stats?.revenue ? `$${stats.revenue.toLocaleString()}` : "$0"}
+            value={stats?.revenue ? `${CURRENCY_SYMBOL}${stats.revenue.toLocaleString()}` : `${CURRENCY_SYMBOL}0`}
             icon={DollarSign}
             description="All time revenue"
             isLoading={isLoading}
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-medium">${parseFloat(order.total).toFixed(2)}</span>
+                        <span className="font-medium">{formatCurrency(order.total)}</span>
                         <Badge variant={getStatusVariant(order.status)}>
                           {order.status}
                         </Badge>

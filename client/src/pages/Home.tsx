@@ -59,7 +59,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold">Free Shipping</h3>
-                <p className="text-sm text-muted-foreground">On orders over $50</p>
+                <p className="text-sm text-muted-foreground">On orders over ₹500</p>
               </div>
             </div>
             <div className="flex items-center gap-4 p-6 bg-card rounded-lg">

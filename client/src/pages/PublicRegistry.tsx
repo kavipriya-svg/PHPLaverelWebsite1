@@ -3,6 +3,7 @@ import { Link, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
 import { Gift, ShoppingCart, Calendar, Users, Check, Lock, Heart, PartyPopper, Baby, Home, Cake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -233,7 +234,7 @@ export default function PublicRegistryPage() {
                                 </h3>
                               </Link>
                               <p className="text-muted-foreground">
-                                ${price.toFixed(2)}
+                                {formatCurrency(price)}
                               </p>
                             </div>
                             <div className="flex flex-col items-end gap-1">

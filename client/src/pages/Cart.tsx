@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/contexts/StoreContext";
+import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -139,7 +140,7 @@ export default function Cart() {
                           </Button>
                         </div>
                         <p className="font-semibold">
-                          ${(parseFloat(price as string) * item.quantity).toFixed(2)}
+                          {formatCurrency(parseFloat(price as string) * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -178,15 +179,15 @@ export default function Cart() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatCurrency(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+                  <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
                 </div>
                 {shipping > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Free shipping on orders over $50
+                    Free shipping on orders over {CURRENCY_SYMBOL}500
                   </p>
                 )}
               </div>
@@ -195,7 +196,7 @@ export default function Cart() {
 
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatCurrency(total)}</span>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">

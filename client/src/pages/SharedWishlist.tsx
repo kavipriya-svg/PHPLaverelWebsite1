@@ -2,6 +2,7 @@ import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
 import { Heart, ShoppingCart, User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -168,11 +169,11 @@ export default function SharedWishlistPage() {
                             </Link>
                             <div className="flex items-center gap-2 mt-2">
                               <span className="font-semibold">
-                                ${parseFloat(currentPrice as string).toFixed(2)}
+                                {formatCurrency(currentPrice)}
                               </span>
                               {hasDiscount && (
                                 <span className="text-sm text-muted-foreground line-through">
-                                  ${parseFloat(product.price as string).toFixed(2)}
+                                  {formatCurrency(product.price)}
                                 </span>
                               )}
                             </div>

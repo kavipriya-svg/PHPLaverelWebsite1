@@ -42,7 +42,7 @@ export default function Landing() {
                 <Truck className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-1">Free Shipping</h3>
-              <p className="text-sm text-muted-foreground">On orders over $50</p>
+              <p className="text-sm text-muted-foreground">On orders over ₹500</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
