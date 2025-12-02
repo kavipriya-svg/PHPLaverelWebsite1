@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
 import { Gift, Plus, Trash2, Copy, Check, ArrowLeft, ExternalLink, Search, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -226,7 +227,7 @@ export default function GiftRegistryDetailPage() {
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium truncate">{product.title}</p>
                                   <p className="text-sm text-muted-foreground">
-                                    ${parseFloat((product.salePrice || product.price) as string).toFixed(2)}
+                                    {formatCurrency(product.salePrice || product.price)}
                                   </p>
                                 </div>
                               </button>
@@ -250,7 +251,7 @@ export default function GiftRegistryDetailPage() {
                             <div className="flex-1">
                               <p className="font-medium">{selectedProduct.title}</p>
                               <p className="text-muted-foreground">
-                                ${parseFloat((selectedProduct.salePrice || selectedProduct.price) as string).toFixed(2)}
+                                {formatCurrency(selectedProduct.salePrice || selectedProduct.price)}
                               </p>
                             </div>
                             <Button
@@ -354,7 +355,7 @@ export default function GiftRegistryDetailPage() {
                               </h4>
                             </Link>
                             <p className="text-muted-foreground text-sm">
-                              ${price.toFixed(2)}
+                              {formatCurrency(price)}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
 import { Package, ChevronRight, Clock, CheckCircle, Truck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -124,7 +125,7 @@ export default function AccountOrders() {
                       </p>
                       <p className="text-sm mt-1">
                         {order.items.length} item{order.items.length > 1 ? "s" : ""} • 
-                        <span className="font-medium"> ${parseFloat(order.total as string).toFixed(2)}</span>
+                        <span className="font-medium"> {formatCurrency(order.total)}</span>
                       </p>
                     </div>
 

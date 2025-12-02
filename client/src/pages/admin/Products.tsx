@@ -45,6 +45,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 import type { ProductWithDetails } from "@shared/schema";
 
 export default function AdminProducts() {
@@ -200,10 +201,10 @@ export default function AdminProducts() {
                     <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                     <TableCell>
                       <div>
-                        ${parseFloat(product.salePrice || product.price as string).toFixed(2)}
+                        {formatCurrency(product.salePrice || product.price)}
                         {product.salePrice && (
                           <span className="text-sm text-muted-foreground line-through ml-1">
-                            ${parseFloat(product.price as string).toFixed(2)}
+                            {formatCurrency(product.price)}
                           </span>
                         )}
                       </div>

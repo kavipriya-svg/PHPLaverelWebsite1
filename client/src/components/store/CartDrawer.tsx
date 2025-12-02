@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useStore } from "@/contexts/StoreContext";
+import { formatCurrency } from "@/lib/currency";
 import { useState } from "react";
 
 export function CartDrawer() {
@@ -70,7 +71,7 @@ export function CartDrawer() {
             <div className="pt-4 border-t space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Subtotal</span>
-                <span className="font-semibold">${cartTotal.toFixed(2)}</span>
+                <span className="font-semibold">{formatCurrency(cartTotal)}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 Shipping and taxes calculated at checkout
@@ -140,7 +141,7 @@ function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
           </p>
         )}
         <p className="font-semibold text-sm mt-1">
-          ${parseFloat(price).toFixed(2)}
+          {formatCurrency(price)}
         </p>
         <div className="flex items-center gap-2 mt-2">
           <div className="flex items-center border rounded-md">
