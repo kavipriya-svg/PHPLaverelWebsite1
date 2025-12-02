@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProductGrid } from "./ProductGrid";
 import { useQuery } from "@tanstack/react-query";
-import type { HomeBlock, ProductWithDetails, Category } from "@shared/schema";
+import type { HomeBlock, ProductWithDetails, Category, Banner } from "@shared/schema";
 
 interface HomeBlocksProps {
   blocks: HomeBlock[];
@@ -12,13 +12,112 @@ interface HomeBlocksProps {
 
 export function HomeBlocks({ blocks }: HomeBlocksProps) {
   const sortedBlocks = [...blocks].sort((a, b) => (a.position || 0) - (b.position || 0));
+  
+  // Fetch section banners with placement options
+  const { data: bannersData } = useQuery<{ banners: Banner[] }>({
+    queryKey: ["/api/banners"],
+  });
+  
+  const sectionBanners = (bannersData?.banners || []).filter(
+    b => b.type === "section" && b.isActive && b.targetBlockId
+  );
+  
+  // Group banners by target block and placement
+  const getBannersForBlock = (blockId: string, placement: "above" | "below") => {
+    return sectionBanners.filter(
+      b => b.targetBlockId === blockId && b.relativePlacement === placement
+    );
+  };
 
   return (
     <div className="space-y-16">
       {sortedBlocks.map((block) => (
-        <HomeBlockRenderer key={block.id} block={block} />
+        <div key={block.id}>
+          {/* Render banners positioned above this block */}
+          {getBannersForBlock(block.id, "above").map((banner) => (
+            <SectionBannerRenderer key={banner.id} banner={banner} />
+          ))}
+          
+          <HomeBlockRenderer block={block} />
+          
+          {/* Render banners positioned below this block */}
+          {getBannersForBlock(block.id, "below").map((banner) => (
+            <SectionBannerRenderer key={banner.id} banner={banner} />
+          ))}
+        </div>
       ))}
     </div>
+  );
+}
+
+function SectionBannerRenderer({ banner }: { banner: Banner }) {
+  // Don't render if no media
+  if (!banner.mediaUrl && !banner.videoUrl) return null;
+  
+  // Width classes - use w-* for actual sizing within container
+  // Default to 100% if displayWidth is undefined
+  const width = banner.displayWidth ?? 100;
+  const widthClass = 
+    width === 50 ? "w-full md:w-1/2" : 
+    width === 75 ? "w-full md:w-3/4" : 
+    "w-full";
+  
+  const alignmentClass = 
+    banner.alignment === "left" ? "mr-auto" : 
+    banner.alignment === "right" ? "ml-auto" : 
+    "mx-auto";
+
+  const bannerContent = (
+    <Card className="overflow-hidden hover-elevate">
+      <div className="relative">
+        {banner.mediaType === "video" && banner.videoUrl ? (
+          <video
+            src={banner.videoUrl}
+            className="w-full object-cover"
+            muted
+            loop
+            autoPlay={banner.autoplay !== false}
+            playsInline
+          />
+        ) : banner.mediaUrl ? (
+          <img
+            src={banner.mediaUrl}
+            alt={banner.title || "Promotional banner"}
+            className="w-full object-cover"
+          />
+        ) : null}
+        {(banner.title || banner.subtitle) && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4 md:p-6">
+            {banner.title && (
+              <h3 className="text-white font-bold text-lg md:text-xl">{banner.title}</h3>
+            )}
+            {banner.subtitle && (
+              <p className="text-white/90 text-sm md:text-base mt-1">{banner.subtitle}</p>
+            )}
+            {banner.ctaText && (
+              <Button variant="secondary" size="sm" className="mt-3 w-fit">
+                {banner.ctaText}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+
+  return (
+    <section 
+      className="container mx-auto px-4 py-8"
+      data-testid={`section-banner-${banner.id}`}
+    >
+      <div className={`${widthClass} ${alignmentClass}`}>
+        {banner.ctaLink ? (
+          <Link href={banner.ctaLink}>{bannerContent}</Link>
+        ) : (
+          bannerContent
+        )}
+      </div>
+    </section>
   );
 }
 
