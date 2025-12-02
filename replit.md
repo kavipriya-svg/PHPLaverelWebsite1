@@ -17,6 +17,9 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Email notifications (order confirmation, status updates, low stock alerts, restock notifications)
 - Wishlist sharing and gift registry functionality
 - Advanced inventory management with low stock alerts and restock notifications
+- Single-use coupon enforcement (one per customer/email per order)
+- Three-category coupon display system (product-specific, store-wide, bulk purchase)
+- Currency selection from Admin Settings (INR default)
 
 ## User Preferences
 
