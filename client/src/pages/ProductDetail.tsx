@@ -99,17 +99,24 @@ export default function ProductDetail() {
   const images = product?.images || [];
   const variants = product?.variants || [];
   
-  // Group coupons by type
-  const allCoupons = (couponsData?.coupons || []).filter((c) => c.isActive);
-  const productSpecificCoupons = allCoupons.filter(
+  // Group coupons by type - proper classification
+  const activeCoupons = (couponsData?.coupons || []).filter((c) => c.isActive);
+  
+  // Product-specific: has productId matching current product
+  const productSpecificCoupons = activeCoupons.filter(
     (c) => c.productId === product?.id
   );
-  const allProductCoupons = allCoupons.filter(
+  
+  // All-product (store-wide): no productId AND no minQuantity (or minQuantity <= 1)
+  const allProductCoupons = activeCoupons.filter(
     (c) => !c.productId && (!c.minQuantity || c.minQuantity <= 1)
   );
-  const bulkCoupons = allCoupons.filter(
+  
+  // Bulk purchase: no productId AND minQuantity > 1 (store-wide bulk discounts)
+  const bulkCoupons = activeCoupons.filter(
     (c) => !c.productId && c.minQuantity && c.minQuantity > 1
   );
+  
   const hasCoupons = productSpecificCoupons.length > 0 || allProductCoupons.length > 0 || bulkCoupons.length > 0;
   
   const selectedVariant = variants.find(v => v.id === selectedVariantId);
