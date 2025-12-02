@@ -881,7 +881,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       const tax = subtotal * 0.08;
-      const shippingCost = subtotal > 50 ? 0 : 9.99;
+      const shippingCost = subtotal > 500 ? 0 : 99;
       const total = subtotal - discount + tax + shippingCost;
 
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
