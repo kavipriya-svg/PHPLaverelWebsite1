@@ -19,8 +19,11 @@ export function HomeBlocks({ blocks }: HomeBlocksProps) {
   });
   
   const sectionBanners = (bannersData?.banners || []).filter(
-    b => b.type === "section" && b.isActive && b.targetBlockId
+    b => b.type === "section" && b.isActive
   );
+  
+  // Banners without targetBlockId show at top of page
+  const topOfPageBanners = sectionBanners.filter(b => !b.targetBlockId);
   
   // Group banners by target block and placement
   const getBannersForBlock = (blockId: string, placement: "above" | "below") => {
@@ -31,6 +34,11 @@ export function HomeBlocks({ blocks }: HomeBlocksProps) {
 
   return (
     <div className="space-y-16">
+      {/* Render banners positioned at top of page (no target block) */}
+      {topOfPageBanners.map((banner) => (
+        <SectionBannerRenderer key={banner.id} banner={banner} />
+      ))}
+      
       {sortedBlocks.map((block) => (
         <div key={block.id}>
           {/* Render banners positioned above this block */}
