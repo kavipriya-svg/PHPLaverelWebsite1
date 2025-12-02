@@ -77,15 +77,37 @@ export default function Checkout() {
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: CheckoutFormData) => {
-      const orderData = {
-        ...data,
-        items: cartItems.map(item => ({
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-        })),
+      const shippingAddress = {
+        name: `${data.firstName} ${data.lastName}`,
+        line1: data.address1,
+        line2: data.address2 || "",
+        city: data.city,
+        state: data.state,
+        postalCode: data.postalCode,
+        country: data.country,
       };
-      return await apiRequest("POST", "/api/orders", orderData);
+      
+      const orderData = {
+        guestEmail: !isAuthenticated ? data.email : undefined,
+        paymentMethod: data.paymentMethod,
+        shippingAddress,
+        billingAddress: data.sameAsBilling ? shippingAddress : shippingAddress,
+        items: cartItems.map(item => {
+          const price = item.variant?.price || item.product.salePrice || item.product.price;
+          const primaryImage = item.product.images?.find(img => img.isPrimary)?.url || item.product.images?.[0]?.url;
+          return {
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: item.quantity,
+            price: price,
+            title: item.product.title,
+            sku: item.product.sku,
+            imageUrl: primaryImage || "",
+          };
+        }),
+      };
+      const response = await apiRequest("POST", "/api/orders", orderData);
+      return await response.json();
     },
     onSuccess: async (data: any) => {
       await clearCart();
@@ -97,6 +119,7 @@ export default function Checkout() {
       setLocation(`/order-confirmation/${data.order.orderNumber}`);
     },
     onError: (error) => {
+      console.error("Order creation error:", error);
       toast({
         title: "Failed to place order",
         description: "Please try again or contact support.",
@@ -138,7 +161,7 @@ export default function Checkout() {
   }
 
   const subtotal = cartTotal;
-  const shipping = subtotal >= 50 ? 0 : 9.99;
+  const shipping = subtotal >= 500 ? 0 : 99;
   const total = subtotal + shipping;
 
   return (
