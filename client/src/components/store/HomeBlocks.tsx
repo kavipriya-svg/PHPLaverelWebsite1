@@ -66,6 +66,7 @@ function SectionBannerRenderer({ banner }: { banner: Banner }) {
   // Default to 100% if displayWidth is undefined
   const width = banner.displayWidth ?? 100;
   const widthClass = 
+    width === 25 ? "w-full md:w-1/4" :
     width === 50 ? "w-full md:w-1/2" : 
     width === 75 ? "w-full md:w-3/4" : 
     "w-full";
