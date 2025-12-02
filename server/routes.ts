@@ -1508,11 +1508,32 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/coupons", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const parsed = insertCouponSchema.parse(req.body);
+      console.log("[Coupon] Creating coupon with data:", JSON.stringify(req.body, null, 2));
+      
+      // Preprocess the body to handle empty strings and convert to proper types
+      const body = { ...req.body };
+      if (body.expiresAt === '' || body.expiresAt === undefined) body.expiresAt = null;
+      if (body.minCartTotal === '' || body.minCartTotal === undefined) body.minCartTotal = null;
+      if (body.minQuantity === '' || body.minQuantity === undefined) body.minQuantity = null;
+      if (body.maxUses === '' || body.maxUses === undefined) body.maxUses = null;
+      if (body.productId === '' || body.productId === undefined) body.productId = null;
+      
+      // Convert expiresAt string to Date if present
+      if (body.expiresAt && typeof body.expiresAt === 'string') {
+        body.expiresAt = new Date(body.expiresAt);
+      }
+      
+      console.log("[Coupon] Preprocessed data:", JSON.stringify(body, null, 2));
+      const parsed = insertCouponSchema.parse(body);
+      console.log("[Coupon] Parsed coupon data:", JSON.stringify(parsed, null, 2));
       const coupon = await storage.createCoupon(parsed);
       res.json({ coupon });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create coupon" });
+    } catch (error: any) {
+      console.error("[Coupon] Error creating coupon:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Validation error", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create coupon", details: error.message });
     }
   });
 
