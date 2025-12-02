@@ -296,11 +296,12 @@ export default function ProductForm() {
       console.log("[Upload] Starting upload for:", file.name, file.type);
       
       // Get presigned URL for upload
-      const { presignedUrl, objectPath } = await apiRequest("POST", "/api/upload/presigned-url", {
+      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
         filename: file.name,
         contentType: file.type,
         folder: "products",
       });
+      const { presignedUrl, objectPath } = await presignedResponse.json();
       console.log("[Upload] Got presigned URL:", presignedUrl);
       console.log("[Upload] Object path:", objectPath);
 
@@ -315,9 +316,10 @@ export default function ProductForm() {
       console.log("[Upload] Upload response status:", uploadResponse.status);
 
       // Finalize upload to set ACL policy for public access
-      const finalizedResult = await apiRequest("POST", "/api/admin/upload/finalize", {
+      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
         uploadURL: presignedUrl,
       });
+      const finalizedResult = await finalizeResponse.json();
       console.log("[Upload] Finalized result:", finalizedResult);
 
       // Add to media items using the finalized object path
