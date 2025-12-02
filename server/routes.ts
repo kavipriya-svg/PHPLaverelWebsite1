@@ -810,7 +810,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/orders", optionalAuth, async (req, res) => {
     try {
       const userInfo = getUserInfo(req);
-      const { items, shippingAddress, billingAddress, paymentMethod, couponCode, guestEmail } = req.body;
+      const { items, shippingAddress, billingAddress, paymentMethod, couponCode, guestEmail: rawGuestEmail } = req.body;
+      // Normalize guest email for consistent comparisons
+      const guestEmail = rawGuestEmail ? rawGuestEmail.toLowerCase().trim() : undefined;
 
       let subtotal = 0;
       const orderItems = items.map((item: any) => {
@@ -836,6 +838,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             const alreadyUsed = await storage.hasUserUsedCoupon(userInfo.id, couponCode);
             if (alreadyUsed) {
               return res.status(400).json({ error: "You have already used this coupon. Only one coupon use per customer is allowed." });
+            }
+          } else if (guestEmail) {
+            // Check if guest email has already used this coupon
+            const alreadyUsed = await storage.hasGuestUsedCoupon(guestEmail, couponCode);
+            if (alreadyUsed) {
+              return res.status(400).json({ error: "This email has already used this coupon. Only one coupon use per customer is allowed." });
             }
           }
           validatedCouponCode = coupon.code;

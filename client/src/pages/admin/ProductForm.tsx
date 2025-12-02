@@ -137,16 +137,22 @@ export default function ProductForm() {
     queryKey: ["/api/admin/coupons"],
   });
 
-  // Group coupons by type
-  const allCoupons = couponsData?.coupons || [];
+  // Group coupons by type - proper classification
+  const activeCoupons = (couponsData?.coupons || []).filter((c) => c.isActive);
+  
+  // Product-specific: has productId matching current product
   const productSpecificCoupons = productId 
-    ? allCoupons.filter((c) => c.productId === productId && c.isActive)
+    ? activeCoupons.filter((c) => c.productId === productId)
     : [];
-  const allProductCoupons = allCoupons.filter(
-    (c) => !c.productId && (!c.minQuantity || c.minQuantity <= 1) && c.isActive
+  
+  // All-product (store-wide): no productId AND no minQuantity (or minQuantity <= 1)
+  const allProductCoupons = activeCoupons.filter(
+    (c) => !c.productId && (!c.minQuantity || c.minQuantity <= 1)
   );
-  const bulkCoupons = allCoupons.filter(
-    (c) => !c.productId && c.minQuantity && c.minQuantity > 1 && c.isActive
+  
+  // Bulk purchase: no productId AND minQuantity > 1 (store-wide bulk discounts)
+  const bulkCoupons = activeCoupons.filter(
+    (c) => !c.productId && c.minQuantity && c.minQuantity > 1
   );
 
   const form = useForm<ProductFormData>({
