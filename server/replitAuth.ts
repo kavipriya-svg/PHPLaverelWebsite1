@@ -8,7 +8,7 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-const getOidcConfig = memoize(
+export const getOidcConfig = memoize(
   async () => {
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
@@ -17,6 +17,9 @@ const getOidcConfig = memoize(
   },
   { maxAge: 3600 * 1000 }
 );
+
+// Re-export client for token refresh operations
+export { client };
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
