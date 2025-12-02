@@ -8,7 +8,7 @@ import type { Banner } from "@shared/schema";
 
 export function HeroSection() {
   const { data: bannersData, isLoading } = useQuery<{ banners: Banner[] }>({
-    queryKey: ["/api/banners", "hero"],
+    queryKey: ["/api/banners"],
   });
 
   const banners = bannersData?.banners?.filter(b => b.type === "hero" && b.isActive) || [];
