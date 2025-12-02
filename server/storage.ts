@@ -106,6 +106,7 @@ export interface IStorage {
   updateCoupon(id: string, coupon: Partial<InsertCoupon>): Promise<Coupon | undefined>;
   deleteCoupon(id: string): Promise<void>;
   hasUserUsedCoupon(userId: string, couponCode: string): Promise<boolean>;
+  hasGuestUsedCoupon(guestEmail: string, couponCode: string): Promise<boolean>;
 
   getOrders(filters?: OrderFilters): Promise<{ orders: OrderWithItems[]; total: number }>;
   getOrderById(id: string): Promise<OrderWithItems | undefined>;
@@ -483,6 +484,21 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(orders.userId, userId),
           eq(orders.couponCode, couponCode.toUpperCase())
+        )
+      );
+    return Number(result?.count || 0) > 0;
+  }
+
+  async hasGuestUsedCoupon(guestEmail: string, couponCode: string): Promise<boolean> {
+    const normalizedEmail = guestEmail.toLowerCase().trim();
+    const normalizedCode = couponCode.toUpperCase();
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(orders)
+      .where(
+        and(
+          sql`lower(${orders.guestEmail}) = ${normalizedEmail}`,
+          eq(orders.couponCode, normalizedCode)
         )
       );
     return Number(result?.count || 0) > 0;
