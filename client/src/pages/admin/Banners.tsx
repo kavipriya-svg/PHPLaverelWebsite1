@@ -471,12 +471,15 @@ function BannerDialog({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Position Relative To</Label>
-                  <Select value={targetBlockId} onValueChange={setTargetBlockId}>
+                  <Select 
+                    value={targetBlockId || "_none"} 
+                    onValueChange={(val) => setTargetBlockId(val === "_none" ? "" : val)}
+                  >
                     <SelectTrigger data-testid="select-target-block">
                       <SelectValue placeholder="Select a Home Block" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Top of Page</SelectItem>
+                      <SelectItem value="_none">Top of Page</SelectItem>
                       {homeBlocks
                         .filter(b => b.isActive)
                         .sort((a, b) => (a.position || 0) - (b.position || 0))
