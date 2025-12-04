@@ -17,6 +17,7 @@ interface BrandingSettings {
   faviconUrl: string;
   topBarText: string;
   showTopBar: boolean;
+  showHomeButton: boolean;
 }
 
 const defaultSettings: BrandingSettings = {
@@ -26,6 +27,7 @@ const defaultSettings: BrandingSettings = {
   faviconUrl: "",
   topBarText: "Free shipping on orders over ₹500 | Shop Now",
   showTopBar: true,
+  showHomeButton: true,
 };
 
 export default function BrandingSettingsPage() {
@@ -288,6 +290,32 @@ export default function BrandingSettingsPage() {
                 <p className="text-xs text-muted-foreground">
                   This name appears in the header and footer
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Navigation Settings</CardTitle>
+              <CardDescription>
+                Control navigation elements in your store header
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <Label>Show Home Button</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Display a "Home" button in the main navigation menu
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.showHomeButton}
+                  onCheckedChange={(checked) => 
+                    setSettings(prev => ({ ...prev, showHomeButton: checked }))
+                  }
+                  data-testid="switch-show-home-button"
+                />
               </div>
             </CardContent>
           </Card>
