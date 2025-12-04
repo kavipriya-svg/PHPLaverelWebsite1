@@ -432,6 +432,8 @@ interface HomeCategorySectionItem {
   imageUrl?: string;
   position: number;
   isVisible: boolean;
+  displayWidth?: "25" | "50" | "75" | "100";
+  alignment?: "left" | "center" | "right";
 }
 
 interface HomeCategorySection {
@@ -440,6 +442,50 @@ interface HomeCategorySection {
   isVisible: boolean;
   position: number;
   categories: HomeCategorySectionItem[];
+}
+
+type CategoryItemRow = HomeCategorySectionItem[];
+
+function groupCategoryItemsIntoRows(items: HomeCategorySectionItem[]): CategoryItemRow[] {
+  if (items.length === 0) return [];
+  
+  const sortedItems = [...items].sort((a, b) => (a.position || 0) - (b.position || 0));
+  const rows: CategoryItemRow[] = [];
+  let currentRow: HomeCategorySectionItem[] = [];
+  let currentRowWidth = 0;
+  
+  for (const item of sortedItems) {
+    const itemWidth = parseInt(item.displayWidth || "50");
+    
+    if (itemWidth === 100) {
+      if (currentRow.length > 0) {
+        rows.push(currentRow);
+        currentRow = [];
+        currentRowWidth = 0;
+      }
+      rows.push([item]);
+    } else if (currentRowWidth + itemWidth <= 100) {
+      currentRow.push(item);
+      currentRowWidth += itemWidth;
+      if (currentRowWidth === 100) {
+        rows.push(currentRow);
+        currentRow = [];
+        currentRowWidth = 0;
+      }
+    } else {
+      if (currentRow.length > 0) {
+        rows.push(currentRow);
+      }
+      currentRow = [item];
+      currentRowWidth = itemWidth;
+    }
+  }
+  
+  if (currentRow.length > 0) {
+    rows.push(currentRow);
+  }
+  
+  return rows;
 }
 
 export function CategoryShowcase() {
@@ -456,10 +502,7 @@ export function CategoryShowcase() {
 
   if (!settings?.isVisible) return null;
 
-  const visibleItems = settings.categories
-    .filter(item => item.isVisible)
-    .sort((a, b) => a.position - b.position)
-    .slice(0, 6);
+  const visibleItems = settings.categories.filter(item => item.isVisible);
 
   if (visibleItems.length === 0) {
     const defaultCategories = allCategories.slice(0, 6);
@@ -498,44 +541,116 @@ export function CategoryShowcase() {
     );
   }
 
+  const rows = groupCategoryItemsIntoRows(visibleItems);
+
   return (
     <section className="container mx-auto px-4" data-testid="section-categories">
       <h2 className="text-2xl md:text-3xl font-bold mb-6" data-testid="text-categories-title">{settings?.title || "Shop by Category"}</h2>
       {settings?.subtitle && (
         <p className="text-muted-foreground mb-6" data-testid="text-categories-subtitle">{settings.subtitle}</p>
       )}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4" data-testid="grid-categories">
-        {visibleItems.map((item) => {
-          const category = allCategories.find(c => c.id === item.categoryId);
-          if (!category) return null;
-          
-          const displayImage = item.imageUrl || category.imageUrl || category.bannerUrl;
-          const displayLabel = item.customLabel || category.name;
-          
-          return (
-            <Link key={item.categoryId} href={`/category/${category.slug}`} data-testid={`link-category-${item.categoryId}`}>
-              <Card className="overflow-hidden hover-elevate group" data-testid={`card-category-${item.categoryId}`}>
-                <div className="aspect-square relative">
-                  {displayImage ? (
-                    <img
-                      src={displayImage}
-                      alt={displayLabel}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      data-testid={`img-category-${item.categoryId}`}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
-                    <h3 className="text-white font-semibold text-lg" data-testid={`text-category-name-${item.categoryId}`}>{displayLabel}</h3>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          );
-        })}
+      <div className="space-y-4" data-testid="grid-categories">
+        {rows.map((row, rowIndex) => (
+          <CategoryRow 
+            key={rowIndex} 
+            items={row} 
+            allCategories={allCategories} 
+          />
+        ))}
       </div>
     </section>
+  );
+}
+
+function CategoryRow({ items, allCategories }: { items: HomeCategorySectionItem[]; allCategories: Category[] }) {
+  if (items.length === 0) return null;
+  
+  const isSingleItem = items.length === 1;
+  
+  if (isSingleItem) {
+    const item = items[0];
+    const width = parseInt(item.displayWidth || "50");
+    
+    const widthClass = 
+      width === 100 ? "w-full" :
+      width === 25 ? "w-full md:w-1/4" :
+      width === 75 ? "w-full md:w-3/4" : 
+      "w-full md:w-1/2";
+    
+    const alignmentClass = width === 100 ? "" : 
+      item.alignment === "left" ? "mr-auto" : 
+      item.alignment === "right" ? "ml-auto" : 
+      "mx-auto";
+
+    return (
+      <div className={`${widthClass} ${alignmentClass}`}>
+        <CategoryCard item={item} allCategories={allCategories} />
+      </div>
+    );
+  }
+  
+  const totalWidth = items.reduce((sum, item) => sum + parseInt(item.displayWidth || "50"), 0);
+  const isPartialRow = totalWidth < 100;
+  
+  const widthToFr = (w: number) => {
+    if (w === 25) return '1fr';
+    if (w === 50) return '2fr';
+    if (w === 75) return '3fr';
+    return '4fr';
+  };
+  
+  const gridColsDesktop = items.map(item => widthToFr(parseInt(item.displayWidth || "50"))).join(' ');
+  
+  const gridStyle = {
+    '--category-grid-cols': gridColsDesktop,
+  } as React.CSSProperties;
+  
+  const rowJustify = isPartialRow ? 
+    (items[0]?.alignment === "right" ? "justify-end" : 
+     items[0]?.alignment === "center" ? "justify-center" : 
+     "justify-start") : "";
+  
+  return (
+    <div 
+      className={`grid grid-cols-1 gap-4 md:[grid-template-columns:var(--category-grid-cols)] ${rowJustify}`}
+      style={gridStyle}
+    >
+      {items.map((item) => (
+        <div key={item.categoryId} className="min-w-0">
+          <CategoryCard item={item} allCategories={allCategories} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CategoryCard({ item, allCategories }: { item: HomeCategorySectionItem; allCategories: Category[] }) {
+  const category = allCategories.find(c => c.id === item.categoryId);
+  if (!category) return null;
+  
+  const displayImage = item.imageUrl || category.imageUrl || category.bannerUrl;
+  const displayLabel = item.customLabel || category.name;
+  
+  return (
+    <Link href={`/category/${category.slug}`} data-testid={`link-category-${item.categoryId}`}>
+      <Card className="overflow-hidden hover-elevate group" data-testid={`card-category-${item.categoryId}`}>
+        <div className="aspect-square relative">
+          {displayImage ? (
+            <img
+              src={displayImage}
+              alt={displayLabel}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              data-testid={`img-category-${item.categoryId}`}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+            <h3 className="text-white font-semibold text-lg" data-testid={`text-category-name-${item.categoryId}`}>{displayLabel}</h3>
+          </div>
+        </div>
+      </Card>
+    </Link>
   );
 }
 
