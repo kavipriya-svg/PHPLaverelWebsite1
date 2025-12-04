@@ -10,6 +10,7 @@ import {
   XCircle,
   Clock,
   Package,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,8 +49,186 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import type { OrderWithItems } from "@shared/schema";
+
+const GST_PERCENTAGE = 8;
+
+function generateInvoiceHTML(order: OrderWithItems): string {
+  const itemsHTML = order.items.map((item, index) => `
+    <tr>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.title}<br><span style="color: #6b7280; font-size: 12px;">SKU: ${item.sku || 'N/A'}</span></td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${parseFloat(item.price as string).toFixed(2)}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${(parseFloat(item.price as string) * item.quantity).toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const orderDate = order.createdAt 
+    ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : 'N/A';
+
+  const shippingAddress = order.shippingAddress as any || {};
+  const billingAddress = order.billingAddress as any || shippingAddress;
+  
+  const subtotal = parseFloat(order.subtotal as string) || 0;
+  const discount = parseFloat(order.discount as string) || 0;
+  const tax = parseFloat(order.tax as string) || 0;
+  const shipping = parseFloat(order.shippingCost as string) || 0;
+  const total = parseFloat(order.total as string) || 0;
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Invoice - ${order.orderNumber}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1f2937; line-height: 1.5; }
+        .invoice { max-width: 800px; margin: 0 auto; padding: 40px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
+        .company-info h1 { font-size: 28px; color: #2563eb; margin-bottom: 5px; }
+        .invoice-details { text-align: right; }
+        .invoice-details h2 { font-size: 24px; color: #1f2937; margin-bottom: 10px; }
+        .invoice-details p { color: #6b7280; font-size: 14px; }
+        .addresses { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .address-block { width: 45%; }
+        .address-block h3 { font-size: 14px; color: #6b7280; text-transform: uppercase; margin-bottom: 10px; }
+        .address-block p { font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        thead { background-color: #f3f4f6; }
+        th { padding: 12px; text-align: left; font-weight: 600; font-size: 14px; color: #374151; }
+        th:nth-child(3), th:nth-child(4), th:nth-child(5) { text-align: right; }
+        th:nth-child(3) { text-align: center; }
+        .summary { display: flex; justify-content: flex-end; }
+        .summary-table { width: 300px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .summary-row.total { border-top: 2px solid #1f2937; padding-top: 12px; margin-top: 8px; font-size: 18px; font-weight: bold; }
+        .summary-row.discount { color: #16a34a; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px; }
+        .gst-note { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #0369a1; }
+        @media print {
+          body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          .no-print { display: none !important; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="invoice">
+        <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+            Print Invoice
+          </button>
+          <button onclick="window.close()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+            Close
+          </button>
+        </div>
+
+        <div class="header">
+          <div class="company-info">
+            <h1>Your Store</h1>
+            <p style="color: #6b7280; font-size: 14px;">Your trusted shopping destination</p>
+          </div>
+          <div class="invoice-details">
+            <h2>TAX INVOICE</h2>
+            <p><strong>Invoice #:</strong> ${order.orderNumber}</p>
+            <p><strong>Date:</strong> ${orderDate}</p>
+            <p><strong>Payment:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</p>
+          </div>
+        </div>
+
+        <div class="addresses">
+          <div class="address-block">
+            <h3>Bill To</h3>
+            <p><strong>${billingAddress.name || 'Customer'}</strong></p>
+            <p>${billingAddress.line1 || billingAddress.address1 || ''}</p>
+            ${billingAddress.line2 || billingAddress.address2 ? `<p>${billingAddress.line2 || billingAddress.address2}</p>` : ''}
+            <p>${billingAddress.city || ''}, ${billingAddress.state || ''} ${billingAddress.postalCode || ''}</p>
+            <p>${billingAddress.country || ''}</p>
+            ${billingAddress.phone ? `<p>Phone: ${billingAddress.phone}</p>` : ''}
+          </div>
+          <div class="address-block">
+            <h3>Ship To</h3>
+            <p><strong>${shippingAddress.name || 'Customer'}</strong></p>
+            <p>${shippingAddress.line1 || shippingAddress.address1 || ''}</p>
+            ${shippingAddress.line2 || shippingAddress.address2 ? `<p>${shippingAddress.line2 || shippingAddress.address2}</p>` : ''}
+            <p>${shippingAddress.city || ''}, ${shippingAddress.state || ''} ${shippingAddress.postalCode || ''}</p>
+            <p>${shippingAddress.country || ''}</p>
+            ${shippingAddress.phone ? `<p>Phone: ${shippingAddress.phone}</p>` : ''}
+          </div>
+        </div>
+
+        <div class="gst-note">
+          <strong>GST Note:</strong> GST @ ${GST_PERCENTAGE}% is included in the total amount. This is a computer-generated invoice.
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50px;">#</th>
+              <th>Item Description</th>
+              <th style="width: 80px;">Qty</th>
+              <th style="width: 100px;">Unit Price</th>
+              <th style="width: 120px;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHTML}
+          </tbody>
+        </table>
+
+        <div class="summary">
+          <div class="summary-table">
+            <div class="summary-row">
+              <span>Subtotal:</span>
+              <span>${CURRENCY_SYMBOL}${subtotal.toFixed(2)}</span>
+            </div>
+            ${discount > 0 ? `
+            <div class="summary-row discount">
+              <span>Discount:</span>
+              <span>-${CURRENCY_SYMBOL}${discount.toFixed(2)}</span>
+            </div>
+            ` : ''}
+            <div class="summary-row">
+              <span>GST (${GST_PERCENTAGE}%):</span>
+              <span>${CURRENCY_SYMBOL}${tax.toFixed(2)}</span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping:</span>
+              <span>${shipping === 0 ? 'Free' : CURRENCY_SYMBOL + shipping.toFixed(2)}</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total:</span>
+              <span>${CURRENCY_SYMBOL}${total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>Thank you for your business!</p>
+          <p style="margin-top: 5px;">Customer Email: ${order.user?.email || order.guestEmail || 'N/A'}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+function openInvoice(order: OrderWithItems) {
+  const invoiceHTML = generateInvoiceHTML(order);
+  const invoiceWindow = window.open('', '_blank');
+  if (invoiceWindow) {
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
+  }
+}
 
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
@@ -208,6 +387,10 @@ export default function AdminOrders() {
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openInvoice(order)} data-testid={`button-invoice-${order.id}`}>
+                            <FileText className="h-4 w-4 mr-2" />
+                            Download Invoice
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => {
                             setUpdateStatusOrder(order);
@@ -282,6 +465,17 @@ export default function AdminOrders() {
                     <span>Total</span>
                     <span>{formatCurrency(selectedOrder.total)}</span>
                   </div>
+                </div>
+
+                <div className="pt-4">
+                  <Button 
+                    onClick={() => openInvoice(selectedOrder)} 
+                    className="w-full"
+                    data-testid="button-dialog-invoice"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Download Invoice
+                  </Button>
                 </div>
               </div>
             )}
