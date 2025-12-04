@@ -20,6 +20,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
+import { type InvoiceSettings, defaultInvoiceSettings } from "@shared/schema";
 
 interface OrderItem {
   id: string;
@@ -54,12 +55,14 @@ interface Order {
   items: OrderItem[];
 }
 
-function generateInvoiceHTML(order: Order): string {
-  const GST_PERCENTAGE = 8;
+function generateInvoiceHTML(order: Order, settings: InvoiceSettings): string {
   const itemsHTML = order.items.map((item, index) => `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.title}<br><span style="color: #6b7280; font-size: 12px;">SKU: ${item.sku}</span></td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+        ${item.title}
+        ${settings.showSKU ? `<br><span style="color: #6b7280; font-size: 12px;">SKU: ${item.sku}</span>` : ''}
+      </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${parseFloat(item.price).toFixed(2)}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${(parseFloat(item.price) * item.quantity).toFixed(2)}</td>
@@ -71,6 +74,16 @@ function generateInvoiceHTML(order: Order): string {
     month: "long",
     day: "numeric",
   });
+
+  const sellerAddressLines = [
+    settings.sellerAddress,
+    [settings.sellerCity, settings.sellerState, settings.sellerPostalCode].filter(Boolean).join(", "),
+    settings.sellerCountry
+  ].filter(Boolean);
+
+  const logoSection = settings.logoUrl 
+    ? `<img src="${settings.logoUrl}" alt="${settings.sellerName}" style="max-height: 60px; max-width: 200px; object-fit: contain;" />`
+    : `<h1 style="font-size: 28px; color: #2563eb; margin-bottom: 5px;">${settings.sellerName}</h1>`;
 
   return `
     <!DOCTYPE html>
@@ -84,7 +97,9 @@ function generateInvoiceHTML(order: Order): string {
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1f2937; line-height: 1.5; }
         .invoice { max-width: 800px; margin: 0 auto; padding: 40px; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
+        .company-info { max-width: 50%; }
         .company-info h1 { font-size: 28px; color: #2563eb; margin-bottom: 5px; }
+        .company-info p { color: #6b7280; font-size: 13px; margin-top: 2px; }
         .invoice-details { text-align: right; }
         .invoice-details h2 { font-size: 24px; color: #1f2937; margin-bottom: 10px; }
         .invoice-details p { color: #6b7280; font-size: 14px; }
@@ -103,6 +118,7 @@ function generateInvoiceHTML(order: Order): string {
         .summary-row.total { border-top: 2px solid #1f2937; padding-top: 12px; margin-top: 8px; font-size: 18px; font-weight: bold; }
         .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px; }
         .gst-note { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #0369a1; }
+        .terms { background-color: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 20px; font-size: 12px; color: #6b7280; }
         @media print {
           body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
           .no-print { display: none !important; }
@@ -114,8 +130,12 @@ function generateInvoiceHTML(order: Order): string {
       <div class="invoice">
         <div class="header">
           <div class="company-info">
-            <h1>ShopHub</h1>
-            <p style="color: #6b7280; font-size: 14px;">Your One-Stop Shopping Destination</p>
+            ${logoSection}
+            ${settings.logoUrl ? `<p style="font-weight: 600; font-size: 16px; margin-top: 8px; color: #1f2937;">${settings.sellerName}</p>` : ''}
+            ${sellerAddressLines.map(line => `<p>${line}</p>`).join('')}
+            ${settings.sellerPhone ? `<p>Phone: ${settings.sellerPhone}</p>` : ''}
+            ${settings.sellerEmail ? `<p>Email: ${settings.sellerEmail}</p>` : ''}
+            ${settings.gstNumber ? `<p style="font-weight: 600; margin-top: 5px;">GSTIN: ${settings.gstNumber}</p>` : ''}
           </div>
           <div class="invoice-details">
             <h2>TAX INVOICE</h2>
@@ -127,18 +147,20 @@ function generateInvoiceHTML(order: Order): string {
 
         <div class="addresses">
           <div class="address-block">
-            <h3>Bill To / Ship To</h3>
+            <h3>${settings.buyerLabelName} / Ship To</h3>
             <p><strong>${order.shippingAddress.name}</strong></p>
             <p>${order.shippingAddress.line1}</p>
             ${order.shippingAddress.line2 ? `<p>${order.shippingAddress.line2}</p>` : ''}
             <p>${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}</p>
             <p>${order.shippingAddress.country}</p>
           </div>
+          ${settings.showPaymentMethod ? `
           <div class="address-block">
             <h3>Payment Information</h3>
             <p><strong>Method:</strong> ${order.paymentMethod === "cod" ? "Cash on Delivery" : "Card Payment"}</p>
             <p><strong>Payment Status:</strong> ${order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}</p>
           </div>
+          ` : ''}
         </div>
 
         <table>
@@ -156,9 +178,11 @@ function generateInvoiceHTML(order: Order): string {
           </tbody>
         </table>
 
+        ${settings.showTaxBreakdown ? `
         <div class="gst-note">
-          <strong>GST Note:</strong> GST @ ${GST_PERCENTAGE}% is included in the total amount as per Government of India regulations.
+          <strong>GST Note:</strong> GST @ ${settings.gstPercentage}% is included in the total amount as per Government of India regulations.${settings.gstNumber ? ` Seller GSTIN: ${settings.gstNumber}` : ''}
         </div>
+        ` : ''}
 
         <div class="summary">
           <div class="summary-table">
@@ -166,20 +190,24 @@ function generateInvoiceHTML(order: Order): string {
               <span>Subtotal</span>
               <span>${CURRENCY_SYMBOL}${parseFloat(order.subtotal).toFixed(2)}</span>
             </div>
-            ${parseFloat(order.discount) > 0 ? `
+            ${settings.showDiscountLine && parseFloat(order.discount) > 0 ? `
               <div class="summary-row" style="color: #16a34a;">
                 <span>Discount</span>
                 <span>-${CURRENCY_SYMBOL}${parseFloat(order.discount).toFixed(2)}</span>
               </div>
             ` : ''}
+            ${settings.showShippingCost ? `
             <div class="summary-row">
               <span>Shipping</span>
               <span>${parseFloat(order.shippingCost) === 0 ? 'Free' : `${CURRENCY_SYMBOL}${parseFloat(order.shippingCost).toFixed(2)}`}</span>
             </div>
+            ` : ''}
+            ${settings.showTaxBreakdown ? `
             <div class="summary-row">
-              <span>GST (${GST_PERCENTAGE}%)</span>
+              <span>GST (${settings.gstPercentage}%)</span>
               <span>${CURRENCY_SYMBOL}${parseFloat(order.tax).toFixed(2)}</span>
             </div>
+            ` : ''}
             <div class="summary-row total">
               <span>Total</span>
               <span>${CURRENCY_SYMBOL}${parseFloat(order.total).toFixed(2)}</span>
@@ -188,10 +216,17 @@ function generateInvoiceHTML(order: Order): string {
         </div>
 
         <div class="footer">
-          <p>Thank you for shopping with ShopHub!</p>
+          <p>${settings.footerNote || 'Thank you for your business!'}</p>
           <p style="margin-top: 5px;">This is a computer-generated invoice and does not require a signature.</p>
-          <p style="margin-top: 10px;">For any queries, please contact support@shophub.com</p>
+          ${settings.sellerEmail ? `<p style="margin-top: 10px;">For any queries, please contact ${settings.sellerEmail}</p>` : ''}
         </div>
+
+        ${settings.termsAndConditions ? `
+        <div class="terms">
+          <strong>Terms & Conditions:</strong><br>
+          ${settings.termsAndConditions.replace(/\n/g, '<br>')}
+        </div>
+        ` : ''}
 
         <div class="no-print" style="text-align: center; margin-top: 30px;">
           <button onclick="window.print()" style="background-color: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin-right: 10px;">
@@ -216,7 +251,13 @@ export default function AccountOrderDetail() {
     enabled: !!orderNumber && isAuthenticated,
   });
 
+  const { data: invoiceSettingsData, isLoading: invoiceSettingsLoading } = useQuery<{ settings: InvoiceSettings }>({
+    queryKey: ["/api/settings/invoice"],
+  });
+
   const order = data?.order;
+  const invoiceSettings = invoiceSettingsData?.settings || defaultInvoiceSettings;
+  const isInvoiceReady = !invoiceSettingsLoading && invoiceSettingsData?.settings;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -253,7 +294,7 @@ export default function AccountOrderDetail() {
   const handleExportInvoice = () => {
     if (!order) return;
     
-    const invoiceHTML = generateInvoiceHTML(order);
+    const invoiceHTML = generateInvoiceHTML(order, invoiceSettings);
     const invoiceWindow = window.open('', '_blank');
     if (invoiceWindow) {
       invoiceWindow.document.write(invoiceHTML);
@@ -328,10 +369,11 @@ export default function AccountOrderDetail() {
             variant="outline" 
             size="sm" 
             onClick={handleExportInvoice}
+            disabled={invoiceSettingsLoading}
             data-testid="button-export-invoice"
           >
             <FileText className="h-4 w-4 mr-1" />
-            Invoice
+            {invoiceSettingsLoading ? "Loading..." : "Invoice"}
           </Button>
         </div>
       </div>
