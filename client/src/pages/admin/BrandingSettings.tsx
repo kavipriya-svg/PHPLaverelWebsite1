@@ -70,39 +70,58 @@ export default function BrandingSettingsPage() {
     setUploading(true);
 
     try {
-      const uploadRes = await fetch("/api/admin/upload", {
-        method: "POST",
-        credentials: "include",
+      // Get presigned URL for upload
+      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
+        filename: file.name,
+        contentType: file.type,
+        folder: "branding",
       });
       
-      if (!uploadRes.ok) throw new Error("Failed to get upload URL");
-      const uploadData = await uploadRes.json();
+      if (!presignedResponse.ok) {
+        throw new Error("Failed to get upload URL");
+      }
+      
+      const { presignedUrl, objectPath } = await presignedResponse.json();
 
-      const formData = new FormData();
-      Object.entries(uploadData.fields || {}).forEach(([key, value]) => {
-        formData.append(key, value as string);
+      // Upload file directly to storage
+      const uploadResponse = await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
       });
-      formData.append("file", file);
+      
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to storage");
+      }
 
-      const putRes = await fetch(uploadData.url, {
-        method: "POST",
-        body: formData,
+      // Finalize upload to set ACL policy for public access
+      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
+        uploadURL: presignedUrl,
       });
-
-      if (!putRes.ok) throw new Error("Failed to upload image");
-
-      const resultData = await putRes.json();
-      const imageUrl = resultData.url || `${uploadData.url}/${uploadData.fields?.key}`;
+      
+      if (!finalizeResponse.ok) {
+        throw new Error("Failed to finalize upload");
+      }
+      
+      const finalizedResult = await finalizeResponse.json();
+      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
       
       if (type === "logo") {
-        setSettings(prev => ({ ...prev, logoUrl: imageUrl }));
+        setSettings(prev => ({ ...prev, logoUrl: finalUrl }));
       } else {
-        setSettings(prev => ({ ...prev, faviconUrl: imageUrl }));
+        setSettings(prev => ({ ...prev, faviconUrl: finalUrl }));
       }
       
       toast({ title: `${type === "logo" ? "Logo" : "Favicon"} uploaded successfully` });
     } catch (error) {
-      toast({ title: `Failed to upload ${type}`, variant: "destructive" });
+      console.error("Upload error:", error);
+      toast({ 
+        title: `Failed to upload ${type}`, 
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive" 
+      });
     } finally {
       setUploading(false);
     }
