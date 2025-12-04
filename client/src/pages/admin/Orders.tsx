@@ -50,15 +50,14 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
-import type { OrderWithItems } from "@shared/schema";
+import type { OrderWithItems, InvoiceSettings } from "@shared/schema";
+import { defaultInvoiceSettings } from "@shared/schema";
 
-const GST_PERCENTAGE = 8;
-
-function generateInvoiceHTML(order: OrderWithItems): string {
+function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): string {
   const itemsHTML = order.items.map((item, index) => `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.title}<br><span style="color: #6b7280; font-size: 12px;">SKU: ${item.sku || 'N/A'}</span></td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.title}${settings.showSKU ? `<br><span style="color: #6b7280; font-size: 12px;">SKU: ${item.sku || 'N/A'}</span>` : ''}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${parseFloat(item.price as string).toFixed(2)}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${(parseFloat(item.price as string) * item.quantity).toFixed(2)}</td>
@@ -81,6 +80,12 @@ function generateInvoiceHTML(order: OrderWithItems): string {
   const tax = parseFloat(order.tax as string) || 0;
   const shipping = parseFloat(order.shippingCost as string) || 0;
   const total = parseFloat(order.total as string) || 0;
+  
+  const sellerAddressLine = [
+    settings.sellerAddress,
+    [settings.sellerCity, settings.sellerState, settings.sellerPostalCode].filter(Boolean).join(', '),
+    settings.sellerCountry
+  ].filter(Boolean).join('<br>');
 
   return `
     <!DOCTYPE html>
@@ -95,6 +100,8 @@ function generateInvoiceHTML(order: OrderWithItems): string {
         .invoice { max-width: 800px; margin: 0 auto; padding: 40px; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
         .company-info h1 { font-size: 28px; color: #2563eb; margin-bottom: 5px; }
+        .company-info p { color: #6b7280; font-size: 13px; }
+        .company-logo { max-height: 60px; margin-bottom: 10px; }
         .invoice-details { text-align: right; }
         .invoice-details h2 { font-size: 24px; color: #1f2937; margin-bottom: 10px; }
         .invoice-details p { color: #6b7280; font-size: 14px; }
@@ -114,6 +121,8 @@ function generateInvoiceHTML(order: OrderWithItems): string {
         .summary-row.discount { color: #16a34a; }
         .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px; }
         .gst-note { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #0369a1; }
+        .terms { margin-top: 20px; padding: 12px; background-color: #f9fafb; border-radius: 6px; font-size: 12px; color: #6b7280; }
+        .terms h4 { margin-bottom: 8px; color: #374151; }
         @media print {
           body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
           .no-print { display: none !important; }
@@ -133,14 +142,18 @@ function generateInvoiceHTML(order: OrderWithItems): string {
 
         <div class="header">
           <div class="company-info">
-            <h1>Your Store</h1>
-            <p style="color: #6b7280; font-size: 14px;">Your trusted shopping destination</p>
+            ${settings.logoUrl ? `<img src="${settings.logoUrl}" alt="${settings.sellerName}" class="company-logo" />` : ''}
+            <h1>${settings.sellerName || 'Your Store'}</h1>
+            ${sellerAddressLine ? `<p>${sellerAddressLine}</p>` : ''}
+            ${settings.sellerPhone ? `<p>Phone: ${settings.sellerPhone}</p>` : ''}
+            ${settings.sellerEmail ? `<p>Email: ${settings.sellerEmail}</p>` : ''}
+            ${settings.gstNumber ? `<p><strong>GSTIN:</strong> ${settings.gstNumber}</p>` : ''}
           </div>
           <div class="invoice-details">
             <h2>TAX INVOICE</h2>
             <p><strong>Invoice #:</strong> ${order.orderNumber}</p>
             <p><strong>Date:</strong> ${orderDate}</p>
-            <p><strong>Payment:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</p>
+            ${settings.showPaymentMethod ? `<p><strong>Payment:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</p>` : ''}
           </div>
         </div>
 
@@ -152,7 +165,7 @@ function generateInvoiceHTML(order: OrderWithItems): string {
             ${billingAddress.line2 || billingAddress.address2 ? `<p>${billingAddress.line2 || billingAddress.address2}</p>` : ''}
             <p>${billingAddress.city || ''}, ${billingAddress.state || ''} ${billingAddress.postalCode || ''}</p>
             <p>${billingAddress.country || ''}</p>
-            ${billingAddress.phone ? `<p>Phone: ${billingAddress.phone}</p>` : ''}
+            ${billingAddress.phone ? `<p>${settings.buyerLabelPhone}: ${billingAddress.phone}</p>` : ''}
           </div>
           <div class="address-block">
             <h3>Ship To</h3>
@@ -161,13 +174,15 @@ function generateInvoiceHTML(order: OrderWithItems): string {
             ${shippingAddress.line2 || shippingAddress.address2 ? `<p>${shippingAddress.line2 || shippingAddress.address2}</p>` : ''}
             <p>${shippingAddress.city || ''}, ${shippingAddress.state || ''} ${shippingAddress.postalCode || ''}</p>
             <p>${shippingAddress.country || ''}</p>
-            ${shippingAddress.phone ? `<p>Phone: ${shippingAddress.phone}</p>` : ''}
+            ${shippingAddress.phone ? `<p>${settings.buyerLabelPhone}: ${shippingAddress.phone}</p>` : ''}
           </div>
         </div>
 
+        ${settings.showTaxBreakdown && settings.gstNumber ? `
         <div class="gst-note">
-          <strong>GST Note:</strong> GST @ ${GST_PERCENTAGE}% is included in the total amount. This is a computer-generated invoice.
+          <strong>GST Note:</strong> GST @ ${settings.gstPercentage}% is included in the total amount.${settings.gstNumber ? ` GSTIN: ${settings.gstNumber}` : ''} This is a computer-generated invoice.
         </div>
+        ` : ''}
 
         <table>
           <thead>
@@ -190,20 +205,24 @@ function generateInvoiceHTML(order: OrderWithItems): string {
               <span>Subtotal:</span>
               <span>${CURRENCY_SYMBOL}${subtotal.toFixed(2)}</span>
             </div>
-            ${discount > 0 ? `
+            ${settings.showDiscountLine && discount > 0 ? `
             <div class="summary-row discount">
               <span>Discount:</span>
               <span>-${CURRENCY_SYMBOL}${discount.toFixed(2)}</span>
             </div>
             ` : ''}
+            ${settings.showTaxBreakdown ? `
             <div class="summary-row">
-              <span>GST (${GST_PERCENTAGE}%):</span>
+              <span>GST (${settings.gstPercentage}%):</span>
               <span>${CURRENCY_SYMBOL}${tax.toFixed(2)}</span>
             </div>
+            ` : ''}
+            ${settings.showShippingCost ? `
             <div class="summary-row">
               <span>Shipping:</span>
               <span>${shipping === 0 ? 'Free' : CURRENCY_SYMBOL + shipping.toFixed(2)}</span>
             </div>
+            ` : ''}
             <div class="summary-row total">
               <span>Total:</span>
               <span>${CURRENCY_SYMBOL}${total.toFixed(2)}</span>
@@ -211,9 +230,16 @@ function generateInvoiceHTML(order: OrderWithItems): string {
           </div>
         </div>
 
+        ${settings.termsAndConditions ? `
+        <div class="terms">
+          <h4>Terms & Conditions</h4>
+          <p>${settings.termsAndConditions.replace(/\n/g, '<br>')}</p>
+        </div>
+        ` : ''}
+
         <div class="footer">
-          <p>Thank you for your business!</p>
-          <p style="margin-top: 5px;">Customer Email: ${order.user?.email || order.guestEmail || 'N/A'}</p>
+          <p>${settings.footerNote || 'Thank you for your business!'}</p>
+          <p style="margin-top: 5px;">${settings.buyerLabelEmail}: ${order.user?.email || order.guestEmail || 'N/A'}</p>
         </div>
       </div>
     </body>
@@ -221,8 +247,22 @@ function generateInvoiceHTML(order: OrderWithItems): string {
   `;
 }
 
-function openInvoice(order: OrderWithItems) {
-  const invoiceHTML = generateInvoiceHTML(order);
+async function fetchInvoiceSettings(): Promise<InvoiceSettings> {
+  try {
+    const response = await fetch('/api/settings/invoice');
+    if (response.ok) {
+      const data = await response.json();
+      return { ...defaultInvoiceSettings, ...data.settings };
+    }
+  } catch (error) {
+    console.error('Failed to fetch invoice settings:', error);
+  }
+  return defaultInvoiceSettings;
+}
+
+async function openInvoice(order: OrderWithItems) {
+  const settings = await fetchInvoiceSettings();
+  const invoiceHTML = generateInvoiceHTML(order, settings);
   const invoiceWindow = window.open('', '_blank');
   if (invoiceWindow) {
     invoiceWindow.document.write(invoiceHTML);
