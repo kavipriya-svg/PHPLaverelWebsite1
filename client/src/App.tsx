@@ -37,6 +37,8 @@ import AdminAnalytics from "@/pages/admin/Analytics";
 import AdminSEOSettings from "@/pages/admin/SEOSettings";
 import AdminInventory from "@/pages/admin/Inventory";
 import AdminInvoiceSettings from "@/pages/admin/InvoiceSettings";
+import AdminFooterSettings from "@/pages/admin/FooterSettings";
+import AdminBrandingSettings from "@/pages/admin/BrandingSettings";
 import GiftRegistry from "@/pages/GiftRegistry";
 import GiftRegistryDetail from "@/pages/GiftRegistryDetail";
 import PublicRegistry from "@/pages/PublicRegistry";
@@ -171,6 +173,8 @@ function Router() {
       <Route path="/admin/seo" component={AdminSEOSettings} />
       <Route path="/admin/inventory" component={AdminInventory} />
       <Route path="/admin/invoice" component={AdminInvoiceSettings} />
+      <Route path="/admin/footer" component={AdminFooterSettings} />
+      <Route path="/admin/branding" component={AdminBrandingSettings} />
 
       <Route>
         <StoreLayout>
