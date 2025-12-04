@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CreditCard, Truck, Package, Tag, X, MapPin, Plus, Check, Loader2 } from "lucide-react";
+import { CreditCard, Truck, Package, Tag, X, MapPin, Plus, Check, Loader2, FileText } from "lucide-react";
 
 interface AppliedCoupon {
   code: string;
@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
   Form,
@@ -42,8 +42,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Address } from "@shared/schema";
 
-const checkoutSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
+const addressSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   address1: z.string().min(1, "Address is required"),
@@ -53,8 +52,46 @@ const checkoutSchema = z.object({
   postalCode: z.string().min(1, "Postal code is required"),
   country: z.string().min(1, "Country is required"),
   phone: z.string().min(1, "Phone number is required"),
+  gstNumber: z.string().optional(),
+});
+
+const checkoutSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  // Shipping address fields
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  address1: z.string().min(1, "Address is required"),
+  address2: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  postalCode: z.string().min(1, "Postal code is required"),
+  country: z.string().min(1, "Country is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  gstNumber: z.string().optional(),
+  saveShippingAddress: z.boolean().default(true),
+  // Billing address fields (conditional)
   sameAsBilling: z.boolean().default(true),
+  billingFirstName: z.string().optional(),
+  billingLastName: z.string().optional(),
+  billingAddress1: z.string().optional(),
+  billingAddress2: z.string().optional(),
+  billingCity: z.string().optional(),
+  billingState: z.string().optional(),
+  billingPostalCode: z.string().optional(),
+  billingCountry: z.string().optional(),
+  billingPhone: z.string().optional(),
+  billingGstNumber: z.string().optional(),
+  saveBillingAddress: z.boolean().default(true),
   paymentMethod: z.enum(["stripe", "cod"]),
+}).refine((data) => {
+  if (!data.sameAsBilling) {
+    return data.billingFirstName && data.billingLastName && data.billingAddress1 && 
+           data.billingCity && data.billingState && data.billingPostalCode && data.billingCountry;
+  }
+  return true;
+}, {
+  message: "Billing address is required when different from shipping",
+  path: ["billingAddress1"],
 });
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>;
@@ -66,8 +103,12 @@ export default function Checkout() {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | "new" | null>(null);
-  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  // Shipping address selection
+  const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<string | "new" | null>(null);
+  const [showNewShippingForm, setShowNewShippingForm] = useState(false);
+  // Billing address selection
+  const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<string | "new" | null>(null);
+  const [showNewBillingForm, setShowNewBillingForm] = useState(false);
 
   // Fetch saved addresses for authenticated users
   const { data: addressData, isLoading: addressesLoading } = useQuery<{ addresses: Address[] }>({
@@ -138,13 +179,28 @@ export default function Checkout() {
       postalCode: "",
       country: "India",
       phone: "",
+      gstNumber: "",
+      saveShippingAddress: true,
       sameAsBilling: true,
+      billingFirstName: "",
+      billingLastName: "",
+      billingAddress1: "",
+      billingAddress2: "",
+      billingCity: "",
+      billingState: "",
+      billingPostalCode: "",
+      billingCountry: "India",
+      billingPhone: "",
+      billingGstNumber: "",
+      saveBillingAddress: true,
       paymentMethod: "cod",
     },
   });
 
-  // Function to fill form with address data
-  const fillFormWithAddress = (address: Address) => {
+  const sameAsBilling = form.watch("sameAsBilling");
+
+  // Function to fill shipping form with address data
+  const fillShippingFormWithAddress = (address: Address) => {
     form.setValue("firstName", address.firstName);
     form.setValue("lastName", address.lastName);
     form.setValue("address1", address.address1);
@@ -154,14 +210,28 @@ export default function Checkout() {
     form.setValue("postalCode", address.postalCode);
     form.setValue("country", address.country);
     form.setValue("phone", address.phone || "");
+    form.setValue("gstNumber", address.gstNumber || "");
   };
 
-  // Handle address selection
-  const handleSelectAddress = (addressId: string | "new") => {
-    setSelectedAddressId(addressId);
+  // Function to fill billing form with address data
+  const fillBillingFormWithAddress = (address: Address) => {
+    form.setValue("billingFirstName", address.firstName);
+    form.setValue("billingLastName", address.lastName);
+    form.setValue("billingAddress1", address.address1);
+    form.setValue("billingAddress2", address.address2 || "");
+    form.setValue("billingCity", address.city);
+    form.setValue("billingState", address.state || "");
+    form.setValue("billingPostalCode", address.postalCode);
+    form.setValue("billingCountry", address.country);
+    form.setValue("billingPhone", address.phone || "");
+    form.setValue("billingGstNumber", address.gstNumber || "");
+  };
+
+  // Handle shipping address selection
+  const handleSelectShippingAddress = (addressId: string | "new") => {
+    setSelectedShippingAddressId(addressId);
     if (addressId === "new") {
-      setShowNewAddressForm(true);
-      // Clear the form for new address entry
+      setShowNewShippingForm(true);
       form.setValue("firstName", user?.firstName || "");
       form.setValue("lastName", user?.lastName || "");
       form.setValue("address1", "");
@@ -171,28 +241,79 @@ export default function Checkout() {
       form.setValue("postalCode", "");
       form.setValue("country", "India");
       form.setValue("phone", "");
+      form.setValue("gstNumber", "");
     } else {
-      setShowNewAddressForm(false);
+      setShowNewShippingForm(false);
       const selectedAddress = savedAddresses.find(addr => addr.id === addressId);
       if (selectedAddress) {
-        fillFormWithAddress(selectedAddress);
+        fillShippingFormWithAddress(selectedAddress);
       }
     }
   };
 
-  // Auto-select default address when addresses load
+  // Handle billing address selection
+  const handleSelectBillingAddress = (addressId: string | "new") => {
+    setSelectedBillingAddressId(addressId);
+    if (addressId === "new") {
+      setShowNewBillingForm(true);
+      form.setValue("billingFirstName", "");
+      form.setValue("billingLastName", "");
+      form.setValue("billingAddress1", "");
+      form.setValue("billingAddress2", "");
+      form.setValue("billingCity", "");
+      form.setValue("billingState", "");
+      form.setValue("billingPostalCode", "");
+      form.setValue("billingCountry", "India");
+      form.setValue("billingPhone", "");
+      form.setValue("billingGstNumber", "");
+    } else {
+      setShowNewBillingForm(false);
+      const selectedAddress = savedAddresses.find(addr => addr.id === addressId);
+      if (selectedAddress) {
+        fillBillingFormWithAddress(selectedAddress);
+      }
+    }
+  };
+
+  // Auto-select default addresses when addresses load
   useEffect(() => {
-    if (isAuthenticated && savedAddresses.length > 0 && selectedAddressId === null) {
-      const defaultAddress = savedAddresses.find(addr => addr.isDefault) || savedAddresses[0];
-      if (defaultAddress) {
-        setSelectedAddressId(defaultAddress.id);
-        fillFormWithAddress(defaultAddress);
+    if (isAuthenticated && savedAddresses.length > 0 && selectedShippingAddressId === null) {
+      const defaultShipping = savedAddresses.find(addr => addr.isDefault && addr.type === "shipping") || 
+                              savedAddresses.find(addr => addr.isDefault) || 
+                              savedAddresses[0];
+      if (defaultShipping) {
+        setSelectedShippingAddressId(defaultShipping.id);
+        fillShippingFormWithAddress(defaultShipping);
       }
     } else if (isAuthenticated && savedAddresses.length === 0 && !addressesLoading) {
-      setShowNewAddressForm(true);
-      setSelectedAddressId("new");
+      setShowNewShippingForm(true);
+      setSelectedShippingAddressId("new");
     }
-  }, [isAuthenticated, savedAddresses, addressesLoading, selectedAddressId]);
+  }, [isAuthenticated, savedAddresses, addressesLoading, selectedShippingAddressId]);
+
+  // Mutation to save new address
+  const saveAddressMutation = useMutation({
+    mutationFn: async (addressData: {
+      type: string;
+      firstName: string;
+      lastName: string;
+      address1: string;
+      address2?: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+      phone?: string;
+      gstNumber?: string;
+      isDefault?: boolean;
+    }) => {
+      const response = await apiRequest("POST", "/api/addresses", addressData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/addresses"] });
+    },
+  });
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: CheckoutFormData) => {
@@ -205,13 +326,26 @@ export default function Checkout() {
         postalCode: data.postalCode,
         country: data.country,
         phone: data.phone,
+        gstNumber: data.gstNumber || "",
+      };
+
+      const billingAddress = data.sameAsBilling ? shippingAddress : {
+        name: `${data.billingFirstName} ${data.billingLastName}`,
+        line1: data.billingAddress1 || "",
+        line2: data.billingAddress2 || "",
+        city: data.billingCity || "",
+        state: data.billingState || "",
+        postalCode: data.billingPostalCode || "",
+        country: data.billingCountry || "",
+        phone: data.billingPhone || "",
+        gstNumber: data.billingGstNumber || "",
       };
       
       const orderData = {
         guestEmail: !isAuthenticated ? data.email : undefined,
         paymentMethod: data.paymentMethod,
         shippingAddress,
-        billingAddress: data.sameAsBilling ? shippingAddress : shippingAddress,
+        billingAddress,
         couponCode: appliedCoupon?.code,
         items: cartItems.map(item => {
           const price = item.variant?.price || item.product.salePrice || item.product.price;
@@ -224,7 +358,7 @@ export default function Checkout() {
             title: item.product.title,
             sku: item.product.sku,
             imageUrl: primaryImage || "",
-            gstRate: (item.product as any).gstRate || "18", // Include product GST rate
+            gstRate: (item.product as any).gstRate || "18",
           };
         }),
       };
@@ -233,7 +367,6 @@ export default function Checkout() {
     },
     onSuccess: async (data: any) => {
       await clearCart();
-      // Clear applied coupon after successful order
       localStorage.removeItem("appliedCoupon");
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({
@@ -264,6 +397,50 @@ export default function Checkout() {
       });
       setIsProcessing(false);
       return;
+    }
+
+    // Save new shipping address if authenticated and "save" is checked
+    if (isAuthenticated && selectedShippingAddressId === "new" && data.saveShippingAddress) {
+      try {
+        await saveAddressMutation.mutateAsync({
+          type: "shipping",
+          firstName: data.firstName,
+          lastName: data.lastName,
+          address1: data.address1,
+          address2: data.address2,
+          city: data.city,
+          state: data.state,
+          postalCode: data.postalCode,
+          country: data.country,
+          phone: data.phone,
+          gstNumber: data.gstNumber,
+          isDefault: savedAddresses.length === 0,
+        });
+      } catch (error) {
+        console.error("Failed to save shipping address:", error);
+      }
+    }
+
+    // Save new billing address if different from shipping and authenticated
+    if (isAuthenticated && !data.sameAsBilling && selectedBillingAddressId === "new" && data.saveBillingAddress) {
+      try {
+        await saveAddressMutation.mutateAsync({
+          type: "billing",
+          firstName: data.billingFirstName || "",
+          lastName: data.billingLastName || "",
+          address1: data.billingAddress1 || "",
+          address2: data.billingAddress2,
+          city: data.billingCity || "",
+          state: data.billingState || "",
+          postalCode: data.billingPostalCode || "",
+          country: data.billingCountry || "",
+          phone: data.billingPhone,
+          gstNumber: data.billingGstNumber,
+          isDefault: false,
+        });
+      } catch (error) {
+        console.error("Failed to save billing address:", error);
+      }
     }
 
     createOrderMutation.mutate(data);
@@ -339,7 +516,7 @@ export default function Checkout() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Address Selection for Authenticated Users */}
+                  {/* Shipping Address Selection for Authenticated Users */}
                   {isAuthenticated && (
                     <div className="space-y-3">
                       {addressesLoading ? (
@@ -354,13 +531,13 @@ export default function Checkout() {
                             {savedAddresses.map((address) => (
                               <div
                                 key={address.id}
-                                onClick={() => handleSelectAddress(address.id)}
+                                onClick={() => handleSelectShippingAddress(address.id)}
                                 className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
-                                  selectedAddressId === address.id
+                                  selectedShippingAddressId === address.id
                                     ? "border-primary bg-primary/5 ring-1 ring-primary"
                                     : "border-border"
                                 }`}
-                                data-testid={`address-option-${address.id}`}
+                                data-testid={`shipping-address-option-${address.id}`}
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1 min-w-0">
@@ -368,6 +545,9 @@ export default function Checkout() {
                                       <span className="font-medium">{address.firstName} {address.lastName}</span>
                                       {address.isDefault && (
                                         <Badge variant="secondary" className="text-xs">Default</Badge>
+                                      )}
+                                      {address.type && (
+                                        <Badge variant="outline" className="text-xs capitalize">{address.type}</Badge>
                                       )}
                                     </div>
                                     <p className="text-sm text-muted-foreground mt-1">
@@ -391,7 +571,7 @@ export default function Checkout() {
                                       </p>
                                     )}
                                   </div>
-                                  {selectedAddressId === address.id && (
+                                  {selectedShippingAddressId === address.id && (
                                     <div className="shrink-0">
                                       <Check className="h-5 w-5 text-primary" />
                                     </div>
@@ -400,15 +580,15 @@ export default function Checkout() {
                               </div>
                             ))}
                             
-                            {/* Option to add new address */}
+                            {/* Option to add new shipping address */}
                             <div
-                              onClick={() => handleSelectAddress("new")}
+                              onClick={() => handleSelectShippingAddress("new")}
                               className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
-                                selectedAddressId === "new"
+                                selectedShippingAddressId === "new"
                                   ? "border-primary bg-primary/5 ring-1 ring-primary"
                                   : "border-dashed border-border"
                               }`}
-                              data-testid="address-option-new"
+                              data-testid="shipping-address-option-new"
                             >
                               <div className="flex items-center gap-2">
                                 <Plus className="h-5 w-5 text-muted-foreground" />
@@ -417,7 +597,7 @@ export default function Checkout() {
                             </div>
                           </div>
                           
-                          {selectedAddressId !== "new" && (
+                          {selectedShippingAddressId !== "new" && (
                             <Separator className="my-4" />
                           )}
                         </>
@@ -430,8 +610,8 @@ export default function Checkout() {
                     </div>
                   )}
 
-                  {/* Show address form for: guests, or when "new address" is selected, or when no saved addresses */}
-                  {(!isAuthenticated || showNewAddressForm || savedAddresses.length === 0) && (
+                  {/* Show shipping address form for: guests, or when "new address" is selected, or when no saved addresses */}
+                  {(!isAuthenticated || showNewShippingForm || savedAddresses.length === 0) && (
                     <>
                       <div className="grid sm:grid-cols-2 gap-4">
                         <FormField
@@ -570,6 +750,311 @@ export default function Checkout() {
                           </FormItem>
                         )}
                       />
+
+                      <FormField
+                        control={form.control}
+                        name="gstNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>GST Number (optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} data-testid="input-gst-number" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {isAuthenticated && (
+                        <FormField
+                          control={form.control}
+                          name="saveShippingAddress"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  data-testid="switch-save-shipping"
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">Save this address to my account</FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Billing Address Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <FileText className="h-5 w-5" />
+                    Billing Address
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="sameAsBilling"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="font-medium">Same as shipping address</FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            Use the shipping address for billing
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            data-testid="switch-same-billing"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Show billing address selection/form when different from shipping */}
+                  {!sameAsBilling && (
+                    <>
+                      {/* Billing Address Selection for Authenticated Users */}
+                      {isAuthenticated && savedAddresses.length > 0 && (
+                        <div className="space-y-3">
+                          <p className="text-sm text-muted-foreground">Select a billing address or enter a new one:</p>
+                          <div className="grid gap-3">
+                            {savedAddresses.map((address) => (
+                              <div
+                                key={address.id}
+                                onClick={() => handleSelectBillingAddress(address.id)}
+                                className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
+                                  selectedBillingAddressId === address.id
+                                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                    : "border-border"
+                                }`}
+                                data-testid={`billing-address-option-${address.id}`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-medium">{address.firstName} {address.lastName}</span>
+                                      {address.type && (
+                                        <Badge variant="outline" className="text-xs capitalize">{address.type}</Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      {address.address1}, {address.city}, {address.state} {address.postalCode}
+                                    </p>
+                                    {address.gstNumber && (
+                                      <p className="text-sm text-muted-foreground">
+                                        <span className="font-medium">GST:</span> {address.gstNumber}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {selectedBillingAddressId === address.id && (
+                                    <Check className="h-5 w-5 text-primary shrink-0" />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            
+                            <div
+                              onClick={() => handleSelectBillingAddress("new")}
+                              className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
+                                selectedBillingAddressId === "new"
+                                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                  : "border-dashed border-border"
+                              }`}
+                              data-testid="billing-address-option-new"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Plus className="h-5 w-5 text-muted-foreground" />
+                                <span className="font-medium">Enter a new billing address</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Billing Address Form */}
+                      {(!isAuthenticated || showNewBillingForm || savedAddresses.length === 0) && (
+                        <>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="billingFirstName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>First Name</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} data-testid="input-billing-firstname" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="billingLastName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Last Name</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} data-testid="input-billing-lastname" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <FormField
+                            control={form.control}
+                            name="billingAddress1"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Address</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Street address" {...field} data-testid="input-billing-address1" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="billingAddress2"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Apartment, suite, etc. (optional)</FormLabel>
+                                <FormControl>
+                                  <Input {...field} data-testid="input-billing-address2" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <div className="grid sm:grid-cols-3 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="billingCity"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>City</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} data-testid="input-billing-city" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="billingState"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>State</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} data-testid="input-billing-state" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="billingPostalCode"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Postal Code</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} data-testid="input-billing-postal" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <FormField
+                            control={form.control}
+                            name="billingCountry"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Country</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger data-testid="select-billing-country">
+                                      <SelectValue placeholder="Select country" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="India">India</SelectItem>
+                                    <SelectItem value="US">United States</SelectItem>
+                                    <SelectItem value="CA">Canada</SelectItem>
+                                    <SelectItem value="GB">United Kingdom</SelectItem>
+                                    <SelectItem value="AU">Australia</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="billingPhone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Phone (optional)</FormLabel>
+                                <FormControl>
+                                  <Input type="tel" {...field} data-testid="input-billing-phone" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="billingGstNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>GST Number (optional)</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} data-testid="input-billing-gst" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {isAuthenticated && (
+                            <FormField
+                              control={form.control}
+                              name="saveBillingAddress"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center gap-2 space-y-0">
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      data-testid="switch-save-billing"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">Save this billing address to my account</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                 </CardContent>
