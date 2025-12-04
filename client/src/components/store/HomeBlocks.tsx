@@ -587,40 +587,42 @@ export function BlogShowcase() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-testid="grid-blog-posts">
         {visiblePosts.map((post) => (
-          <Card key={post.id} className="overflow-hidden hover-elevate group" data-testid={`card-blog-${post.id}`}>
-            <div className="aspect-video bg-muted overflow-hidden">
-              {post.imageUrl ? (
-                <img
-                  src={post.imageUrl}
-                  alt={post.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  data-testid={`img-blog-${post.id}`}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
-              )}
-            </div>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2" data-testid={`text-blog-meta-${post.id}`}>
-                {post.publishedAt && <span>{post.publishedAt}</span>}
-                {post.publishedAt && post.readTime && <span>•</span>}
-                {post.readTime && <span>{post.readTime}</span>}
+          <Link key={post.id} href={`/blog/${post.slug}`} data-testid={`link-blog-${post.id}`}>
+            <Card className="overflow-hidden hover-elevate group h-full" data-testid={`card-blog-${post.id}`}>
+              <div className="aspect-video bg-muted overflow-hidden">
+                {post.imageUrl ? (
+                  <img
+                    src={post.imageUrl}
+                    alt={post.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    data-testid={`img-blog-${post.id}`}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
+                )}
               </div>
-              <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-post-title-${post.id}`}>
-                {post.title}
-              </h3>
-              {post.excerpt && (
-                <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-blog-excerpt-${post.id}`}>
-                  {post.excerpt}
-                </p>
-              )}
-              {post.author && (
-                <div className="mt-3 pt-3 border-t text-xs text-muted-foreground" data-testid={`text-blog-author-${post.id}`}>
-                  By {post.author}
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2" data-testid={`text-blog-meta-${post.id}`}>
+                  {post.publishedAt && <span>{post.publishedAt}</span>}
+                  {post.publishedAt && post.readTime && <span>•</span>}
+                  {post.readTime && <span>{post.readTime}</span>}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-post-title-${post.id}`}>
+                  {post.title}
+                </h3>
+                {post.excerpt && (
+                  <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-blog-excerpt-${post.id}`}>
+                    {post.excerpt}
+                  </p>
+                )}
+                {post.author && (
+                  <div className="mt-3 pt-3 border-t text-xs text-muted-foreground" data-testid={`text-blog-author-${post.id}`}>
+                    By {post.author}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
     </section>
