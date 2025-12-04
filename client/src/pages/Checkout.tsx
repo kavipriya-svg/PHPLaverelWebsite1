@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CreditCard, Truck, Package } from "lucide-react";
+import { CreditCard, Truck, Package, Tag, X } from "lucide-react";
+
+interface AppliedCoupon {
+  code: string;
+  type: string;
+  amount: string;
+  productId?: string | null;
+}
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +63,55 @@ export default function Checkout() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  // Load applied coupon from localStorage
+  useEffect(() => {
+    const savedCoupon = localStorage.getItem("appliedCoupon");
+    if (savedCoupon) {
+      try {
+        setAppliedCoupon(JSON.parse(savedCoupon));
+      } catch (e) {
+        localStorage.removeItem("appliedCoupon");
+      }
+    }
+  }, []);
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    localStorage.removeItem("appliedCoupon");
+    toast({
+      title: "Coupon removed",
+      description: "The discount has been removed from your order.",
+    });
+  };
+
+  // Calculate discount based on applied coupon
+  const calculateDiscount = () => {
+    if (!appliedCoupon) return 0;
+    
+    // If coupon is product-specific, only apply to that product
+    if (appliedCoupon.productId) {
+      const applicableItem = cartItems.find(item => item.productId === appliedCoupon.productId);
+      if (!applicableItem) return 0;
+      
+      const itemPrice = applicableItem.variant?.price || applicableItem.product.salePrice || applicableItem.product.price;
+      const itemTotal = parseFloat(itemPrice as string) * applicableItem.quantity;
+      
+      if (appliedCoupon.type === 'percentage') {
+        return (itemTotal * parseFloat(appliedCoupon.amount)) / 100;
+      } else {
+        return Math.min(parseFloat(appliedCoupon.amount), itemTotal);
+      }
+    }
+    
+    // Store-wide coupon
+    if (appliedCoupon.type === 'percentage') {
+      return (cartTotal * parseFloat(appliedCoupon.amount)) / 100;
+    } else {
+      return Math.min(parseFloat(appliedCoupon.amount), cartTotal);
+    }
+  };
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -85,6 +141,7 @@ export default function Checkout() {
         state: data.state,
         postalCode: data.postalCode,
         country: data.country,
+        phone: data.phone,
       };
       
       const orderData = {
@@ -92,6 +149,7 @@ export default function Checkout() {
         paymentMethod: data.paymentMethod,
         shippingAddress,
         billingAddress: data.sameAsBilling ? shippingAddress : shippingAddress,
+        couponCode: appliedCoupon?.code,
         items: cartItems.map(item => {
           const price = item.variant?.price || item.product.salePrice || item.product.price;
           const primaryImage = item.product.images?.find(img => img.isPrimary)?.url || item.product.images?.[0]?.url;
@@ -111,6 +169,8 @@ export default function Checkout() {
     },
     onSuccess: async (data: any) => {
       await clearCart();
+      // Clear applied coupon after successful order
+      localStorage.removeItem("appliedCoupon");
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({
         title: "Order placed successfully!",
@@ -161,8 +221,9 @@ export default function Checkout() {
   }
 
   const subtotal = cartTotal;
+  const discount = calculateDiscount();
   const shipping = subtotal >= 500 ? 0 : 99;
-  const total = subtotal + shipping;
+  const total = subtotal - discount + shipping;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -439,11 +500,38 @@ export default function Checkout() {
 
                   <Separator />
 
+                  {appliedCoupon && (
+                    <div className="flex items-center justify-between bg-green-50 dark:bg-green-950/30 p-2 rounded-md border border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-2">
+                        <Tag className="h-3 w-3 text-green-600 dark:text-green-400" />
+                        <span className="text-xs font-medium text-green-700 dark:text-green-300" data-testid="text-checkout-coupon">
+                          {appliedCoupon.code}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-green-600 hover:text-destructive"
+                        onClick={removeCoupon}
+                        type="button"
+                        data-testid="button-checkout-remove-coupon"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span>{formatCurrency(subtotal)}</span>
                     </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                        <span>Discount</span>
+                        <span data-testid="text-checkout-discount">-{formatCurrency(discount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Shipping</span>
                       <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
@@ -454,7 +542,7 @@ export default function Checkout() {
 
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <span>{formatCurrency(total)}</span>
+                    <span data-testid="text-checkout-total">{formatCurrency(total)}</span>
                   </div>
 
                   <Button 
