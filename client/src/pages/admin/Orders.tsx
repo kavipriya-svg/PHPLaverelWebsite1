@@ -54,15 +54,64 @@ import type { OrderWithItems, InvoiceSettings } from "@shared/schema";
 import { defaultInvoiceSettings } from "@shared/schema";
 
 function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): string {
-  const itemsHTML = order.items.map((item, index) => `
+  const shippingAddress = order.shippingAddress as any || {};
+  const billingAddress = order.billingAddress as any || shippingAddress;
+  
+  // Determine GST type based on seller state vs buyer state
+  const sellerState = (settings.sellerState || "").toLowerCase().trim();
+  const buyerState = (shippingAddress.state || "").toLowerCase().trim();
+  const isInterState = sellerState && buyerState && sellerState !== buyerState;
+  const gstType = isInterState ? "IGST" : "CGST+SGST";
+  
+  // Calculate GST for each item
+  interface ItemGST {
+    gstRate: number;
+    taxableAmount: number;
+    igst: number;
+    cgst: number;
+    sgst: number;
+  }
+  
+  const itemGSTData: ItemGST[] = order.items.map((item) => {
+    const itemPrice = parseFloat(item.price as string) || 0;
+    const lineTotal = itemPrice * item.quantity;
+    const gstRate = parseFloat((item as any).gstRate as string) || settings.gstPercentage || 18;
+    const gstAmount = (lineTotal * gstRate) / 100;
+    
+    return {
+      gstRate,
+      taxableAmount: lineTotal,
+      igst: isInterState ? gstAmount : 0,
+      cgst: isInterState ? 0 : gstAmount / 2,
+      sgst: isInterState ? 0 : gstAmount / 2,
+    };
+  });
+  
+  // Calculate totals
+  const totalIGST = itemGSTData.reduce((sum, item) => sum + item.igst, 0);
+  const totalCGST = itemGSTData.reduce((sum, item) => sum + item.cgst, 0);
+  const totalSGST = itemGSTData.reduce((sum, item) => sum + item.sgst, 0);
+  
+  // Build items HTML with GST columns
+  const itemsHTML = order.items.map((item, index) => {
+    const gst = itemGSTData[index];
+    return `
     <tr>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.title}${settings.showSKU ? `<br><span style="color: #6b7280; font-size: 12px;">SKU: ${item.sku || 'N/A'}</span>` : ''}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${parseFloat(item.price as string).toFixed(2)}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${(parseFloat(item.price as string) * item.quantity).toFixed(2)}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${item.title}${settings.showSKU ? `<br><span style="color: #6b7280; font-size: 11px;">SKU: ${item.sku || 'N/A'}</span>` : ''}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${parseFloat(item.price as string).toFixed(2)}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${gst.taxableAmount.toFixed(2)}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${gst.gstRate}%</td>
+      ${isInterState ? `
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.igst.toFixed(2)}</td>
+      ` : `
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.cgst.toFixed(2)}</td>
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.sgst.toFixed(2)}</td>
+      `}
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">${CURRENCY_SYMBOL}${(gst.taxableAmount + gst.igst + gst.cgst + gst.sgst).toFixed(2)}</td>
     </tr>
-  `).join('');
+  `}).join('');
 
   const orderDate = order.createdAt 
     ? new Date(order.createdAt).toLocaleDateString("en-IN", {
@@ -71,9 +120,6 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
         day: "numeric",
       })
     : 'N/A';
-
-  const shippingAddress = order.shippingAddress as any || {};
-  const billingAddress = order.billingAddress as any || shippingAddress;
   
   const subtotal = parseFloat(order.subtotal as string) || 0;
   const discount = parseFloat(order.discount as string) || 0;
@@ -180,18 +226,30 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
 
         ${settings.showTaxBreakdown && settings.gstNumber ? `
         <div class="gst-note">
-          <strong>GST Note:</strong> GST @ ${settings.gstPercentage}% is included in the total amount.${settings.gstNumber ? ` GSTIN: ${settings.gstNumber}` : ''} This is a computer-generated invoice.
+          <strong>GST Note:</strong> ${isInterState 
+            ? 'This is an inter-state supply. IGST is applicable.' 
+            : 'This is an intra-state supply. CGST + SGST is applicable.'}
+          ${settings.gstNumber ? ` Seller GSTIN: ${settings.gstNumber}` : ''}<br>
+          <span style="font-size: 11px; color: #64748b;">This is a computer-generated invoice and does not require a signature.</span>
         </div>
         ` : ''}
 
         <table>
           <thead>
             <tr>
-              <th style="width: 50px;">#</th>
-              <th>Item Description</th>
-              <th style="width: 80px;">Qty</th>
-              <th style="width: 100px;">Unit Price</th>
-              <th style="width: 120px;">Amount</th>
+              <th style="width: 35px; font-size: 12px;">#</th>
+              <th style="font-size: 12px;">Item Description</th>
+              <th style="width: 50px; font-size: 12px; text-align: center;">Qty</th>
+              <th style="width: 80px; font-size: 12px; text-align: right;">Unit Price</th>
+              <th style="width: 80px; font-size: 12px; text-align: right;">Taxable</th>
+              <th style="width: 50px; font-size: 12px; text-align: center;">GST%</th>
+              ${isInterState ? `
+                <th style="width: 80px; font-size: 12px; text-align: right;">IGST</th>
+              ` : `
+                <th style="width: 70px; font-size: 12px; text-align: right;">CGST</th>
+                <th style="width: 70px; font-size: 12px; text-align: right;">SGST</th>
+              `}
+              <th style="width: 90px; font-size: 12px; text-align: right;">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -212,10 +270,21 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
             </div>
             ` : ''}
             ${settings.showTaxBreakdown ? `
-            <div class="summary-row">
-              <span>GST (${settings.gstPercentage}%):</span>
-              <span>${CURRENCY_SYMBOL}${tax.toFixed(2)}</span>
-            </div>
+              ${isInterState ? `
+              <div class="summary-row">
+                <span>IGST:</span>
+                <span>${CURRENCY_SYMBOL}${totalIGST.toFixed(2)}</span>
+              </div>
+              ` : `
+              <div class="summary-row">
+                <span>CGST:</span>
+                <span>${CURRENCY_SYMBOL}${totalCGST.toFixed(2)}</span>
+              </div>
+              <div class="summary-row">
+                <span>SGST:</span>
+                <span>${CURRENCY_SYMBOL}${totalSGST.toFixed(2)}</span>
+              </div>
+              `}
             ` : ''}
             ${settings.showShippingCost ? `
             <div class="summary-row">
@@ -474,8 +543,8 @@ export default function AdminOrders() {
                   <h4 className="font-medium mb-2">Shipping Address</h4>
                   {selectedOrder.shippingAddress && (
                     <p className="text-sm text-muted-foreground">
-                      {(selectedOrder.shippingAddress as any).address1}<br />
-                      {(selectedOrder.shippingAddress as any).city}, {(selectedOrder.shippingAddress as any).state} {(selectedOrder.shippingAddress as any).postalCode}
+                      {String((selectedOrder.shippingAddress as any).address1 || "")}<br />
+                      {String((selectedOrder.shippingAddress as any).city || "")}, {String((selectedOrder.shippingAddress as any).state || "")} {String((selectedOrder.shippingAddress as any).postalCode || "")}
                     </p>
                   )}
                 </div>
