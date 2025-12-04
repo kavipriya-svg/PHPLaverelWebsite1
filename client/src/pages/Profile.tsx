@@ -115,15 +115,15 @@ export default function Profile() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
+              <Avatar className="h-16 w-16" data-testid="avatar-profile">
                 <AvatarImage src={user?.profileImageUrl || undefined} />
                 <AvatarFallback className="text-lg">
                   {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle>Edit Profile</CardTitle>
-                <CardDescription>Update your personal information</CardDescription>
+                <CardTitle data-testid="text-profile-title">Edit Profile</CardTitle>
+                <CardDescription data-testid="text-profile-description">Update your personal information</CardDescription>
               </div>
             </div>
           </CardHeader>
