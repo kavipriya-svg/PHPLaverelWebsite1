@@ -161,6 +161,7 @@ export default function Checkout() {
             title: item.product.title,
             sku: item.product.sku,
             imageUrl: primaryImage || "",
+            gstRate: (item.product as any).gstRate || "18", // Include product GST rate
           };
         }),
       };

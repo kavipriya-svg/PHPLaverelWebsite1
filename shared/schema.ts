@@ -243,6 +243,7 @@ export const orderItems = pgTable("order_items", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   quantity: integer("quantity").notNull(),
   imageUrl: varchar("image_url"),
+  gstRate: decimal("gst_rate", { precision: 5, scale: 2 }).default("18"), // GST rate at time of purchase
   createdAt: timestamp("created_at").defaultNow(),
 });
 
