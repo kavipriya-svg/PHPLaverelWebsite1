@@ -642,16 +642,16 @@ function CategoryCard({ item, allCategories }: { item: HomeCategorySectionItem; 
   return (
     <Link href={`/category/${category.slug}`} data-testid={`link-category-${item.categoryId}`}>
       <Card className="overflow-hidden hover-elevate group" data-testid={`card-category-${item.categoryId}`}>
-        <div className="aspect-square relative">
+        <div className="relative w-full" style={{ maxHeight: '600px' }}>
           {displayImage ? (
             <img
               src={displayImage}
               alt={displayLabel}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-auto max-h-[600px] object-cover transition-transform duration-300 group-hover:scale-105"
               data-testid={`img-category-${item.categoryId}`}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+            <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
             <h3 className="text-white font-semibold text-lg" data-testid={`text-category-name-${item.categoryId}`}>{displayLabel}</h3>
