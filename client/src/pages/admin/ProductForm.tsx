@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Category, Brand, ProductWithDetails, ProductVariant, Coupon } from "@shared/schema";
+import type { Category, Brand, ProductWithDetails, ProductVariant, Coupon, InvoiceSettings } from "@shared/schema";
 import { Link } from "wouter";
 import { Ticket, Tag, Package } from "lucide-react";
 
@@ -68,6 +68,7 @@ const productSchema = z.object({
   weight: z.string().optional(),
   dimensions: z.string().optional(),
   expectedDeliveryDays: z.number().min(1).default(5),
+  gstRate: z.string().default("18"), // GST rate percentage
   isFeatured: z.boolean().default(false),
   isTrending: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
@@ -132,6 +133,14 @@ export default function ProductForm() {
     queryKey: ["/api/brands"],
   });
 
+  // Fetch invoice settings for GST rates
+  const { data: invoiceSettingsData } = useQuery<{ settings: InvoiceSettings }>({
+    queryKey: ["/api/settings/invoice"],
+  });
+
+  // Get available GST rates from invoice settings
+  const gstRates = invoiceSettingsData?.settings?.gstRates || [0, 5, 12, 18, 28];
+
   // Fetch all coupons for display
   const { data: couponsData } = useQuery<{ coupons: Coupon[] }>({
     queryKey: ["/api/admin/coupons"],
@@ -173,6 +182,7 @@ export default function ProductForm() {
       weight: "",
       dimensions: "",
       expectedDeliveryDays: 5,
+      gstRate: "18",
       isFeatured: false,
       isTrending: false,
       isNewArrival: false,
@@ -200,6 +210,7 @@ export default function ProductForm() {
         weight: p.weight as string || "",
         dimensions: p.dimensions || "",
         expectedDeliveryDays: (p as any).expectedDeliveryDays || 5,
+        gstRate: (p as any).gstRate as string || "18",
         isFeatured: p.isFeatured || false,
         isTrending: p.isTrending || false,
         isNewArrival: (p as any).isNewArrival || false,
@@ -665,6 +676,31 @@ export default function ProductForm() {
                         <FormControl>
                           <Input type="number" step="0.01" {...field} data-testid="input-product-sale-price" />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gstRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>GST Rate (%)</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-gst-rate">
+                              <SelectValue placeholder="Select GST Rate" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {gstRates.map((rate) => (
+                              <SelectItem key={rate} value={String(rate)} data-testid={`option-gst-rate-${rate}`}>
+                                {rate}%
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>GST rate applicable to this product</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

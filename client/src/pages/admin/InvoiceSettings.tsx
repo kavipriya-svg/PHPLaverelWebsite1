@@ -323,7 +323,7 @@ export default function InvoiceSettingsPage() {
                   name="gstPercentage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>GST Percentage (%)</FormLabel>
+                      <FormLabel>Default GST Percentage (%)</FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
@@ -335,7 +335,32 @@ export default function InvoiceSettingsPage() {
                           data-testid="input-gst-percentage" 
                         />
                       </FormControl>
-                      <FormDescription>Default GST rate applied to invoices (e.g., 18 for 18%)</FormDescription>
+                      <FormDescription>Default GST rate for new products (e.g., 18 for 18%)</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="gstRates"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Available GST Rates</FormLabel>
+                      <FormControl>
+                        <Input 
+                          value={field.value?.join(", ") || "0, 5, 12, 18, 28"}
+                          onChange={(e) => {
+                            const rates = e.target.value
+                              .split(",")
+                              .map((s) => parseFloat(s.trim()))
+                              .filter((n) => !isNaN(n) && n >= 0 && n <= 100);
+                            field.onChange(rates.length > 0 ? rates : [0, 5, 12, 18, 28]);
+                          }}
+                          placeholder="0, 5, 12, 18, 28"
+                          data-testid="input-gst-rates" 
+                        />
+                      </FormControl>
+                      <FormDescription>Comma-separated GST rates available for products (e.g., 0, 5, 12, 18, 28)</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
