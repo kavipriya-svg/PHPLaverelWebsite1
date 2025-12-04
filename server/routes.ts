@@ -15,6 +15,8 @@ import {
   insertHomeBlockSchema,
   insertAddressSchema,
   insertReviewSchema,
+  invoiceSettingsSchema,
+  defaultInvoiceSettings,
 } from "@shared/schema";
 
 function escapeHtml(str: string): string {
@@ -335,6 +337,44 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ settings: settingsObj });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  // Invoice Template Settings - GET
+  app.get("/api/settings/invoice", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("invoice_template");
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          // Merge with defaults to ensure all fields exist
+          const invoiceSettings = { ...defaultInvoiceSettings, ...parsed };
+          res.json({ settings: invoiceSettings });
+        } catch {
+          res.json({ settings: defaultInvoiceSettings });
+        }
+      } else {
+        res.json({ settings: defaultInvoiceSettings });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch invoice settings" });
+    }
+  });
+
+  // Invoice Template Settings - PUT (Admin only)
+  app.put("/api/settings/invoice", isAdmin, async (req, res) => {
+    try {
+      const validatedData = invoiceSettingsSchema.parse(req.body);
+      await storage.upsertSettings({
+        invoice_template: JSON.stringify(validatedData),
+      });
+      res.json({ success: true, settings: validatedData });
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        res.status(400).json({ error: "Invalid invoice settings", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update invoice settings" });
+      }
     }
   });
 
