@@ -39,11 +39,14 @@ import AdminInventory from "@/pages/admin/Inventory";
 import AdminInvoiceSettings from "@/pages/admin/InvoiceSettings";
 import AdminFooterSettings from "@/pages/admin/FooterSettings";
 import AdminBrandingSettings from "@/pages/admin/BrandingSettings";
+import AdminCategorySectionSettings from "@/pages/admin/CategorySectionSettings";
+import AdminBlogSettings from "@/pages/admin/BlogSettings";
 import GiftRegistry from "@/pages/GiftRegistry";
 import GiftRegistryDetail from "@/pages/GiftRegistryDetail";
 import PublicRegistry from "@/pages/PublicRegistry";
 import SharedWishlist from "@/pages/SharedWishlist";
 import OrderConfirmation from "@/pages/OrderConfirmation";
+import Signup from "@/pages/Signup";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -156,6 +159,8 @@ function Router() {
         </StoreLayout>
       </Route>
 
+      <Route path="/signup" component={Signup} />
+
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/products/:id" component={AdminProductForm} />
@@ -175,6 +180,8 @@ function Router() {
       <Route path="/admin/invoice" component={AdminInvoiceSettings} />
       <Route path="/admin/footer" component={AdminFooterSettings} />
       <Route path="/admin/branding" component={AdminBrandingSettings} />
+      <Route path="/admin/category-section" component={AdminCategorySectionSettings} />
+      <Route path="/admin/blog" component={AdminBlogSettings} />
 
       <Route>
         <StoreLayout>
