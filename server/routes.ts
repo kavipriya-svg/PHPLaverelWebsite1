@@ -490,6 +490,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Helper to generate unique IDs for category section items
+  const generateCategoryItemId = () => `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+  // Helper to normalize category section items (ensure all have IDs)
+  const normalizeCategoryItems = (categories: any[]) => {
+    return categories.map((cat, idx) => ({
+      ...cat,
+      id: cat.id || generateCategoryItemId()
+    }));
+  };
+
   // Home Category Section Settings - GET
   app.get("/api/settings/home-category-section", async (req, res) => {
     try {
@@ -498,6 +509,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         try {
           const parsed = JSON.parse(setting.value);
           const sectionSettings = { ...defaultHomeCategorySection, ...parsed };
+          // Normalize categories to ensure all have IDs
+          if (sectionSettings.categories) {
+            sectionSettings.categories = normalizeCategoryItems(sectionSettings.categories);
+          }
           res.json({ settings: sectionSettings });
         } catch {
           res.json({ settings: defaultHomeCategorySection });
@@ -514,6 +529,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.put("/api/settings/home-category-section", isAdmin, async (req, res) => {
     try {
       const validatedData = homeCategorySectionSchema.parse(req.body);
+      // Normalize categories to ensure all have IDs before saving
+      if (validatedData.categories) {
+        validatedData.categories = normalizeCategoryItems(validatedData.categories);
+      }
       await storage.upsertSettings({
         home_category_section: JSON.stringify(validatedData),
       });
