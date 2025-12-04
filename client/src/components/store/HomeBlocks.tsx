@@ -592,6 +592,17 @@ function CategoryRow({ items, allCategories }: { items: HomeCategorySectionItem[
   const totalWidth = items.reduce((sum, item) => sum + parseInt(item.displayWidth || "50"), 0);
   const isPartialRow = totalWidth < 100;
   
+  const widthClass = totalWidth === 100 ? "w-full" : 
+    totalWidth === 25 ? "w-full md:w-1/4" :
+    totalWidth === 50 ? "w-full md:w-1/2" :
+    totalWidth === 75 ? "w-full md:w-3/4" :
+    "w-full";
+    
+  const alignmentClass = !isPartialRow ? "" :
+    items[0]?.alignment === "left" ? "mr-auto" : 
+    items[0]?.alignment === "right" ? "ml-auto" : 
+    "mx-auto";
+  
   const widthToFr = (w: number) => {
     if (w === 25) return '1fr';
     if (w === 50) return '2fr';
@@ -605,21 +616,18 @@ function CategoryRow({ items, allCategories }: { items: HomeCategorySectionItem[
     '--category-grid-cols': gridColsDesktop,
   } as React.CSSProperties;
   
-  const rowJustify = isPartialRow ? 
-    (items[0]?.alignment === "right" ? "justify-end" : 
-     items[0]?.alignment === "center" ? "justify-center" : 
-     "justify-start") : "";
-  
   return (
-    <div 
-      className={`grid grid-cols-1 gap-4 md:[grid-template-columns:var(--category-grid-cols)] ${rowJustify}`}
-      style={gridStyle}
-    >
-      {items.map((item) => (
-        <div key={item.categoryId} className="min-w-0">
-          <CategoryCard item={item} allCategories={allCategories} />
-        </div>
-      ))}
+    <div className={`${widthClass} ${alignmentClass}`}>
+      <div 
+        className="grid grid-cols-1 gap-4 md:[grid-template-columns:var(--category-grid-cols)]"
+        style={gridStyle}
+      >
+        {items.map((item) => (
+          <div key={item.categoryId} className="min-w-0">
+            <CategoryCard item={item} allCategories={allCategories} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

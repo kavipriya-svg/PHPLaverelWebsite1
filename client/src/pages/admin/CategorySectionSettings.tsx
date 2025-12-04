@@ -635,42 +635,49 @@ export default function CategorySectionSettingsPage() {
                         const totalWidth = row.reduce((sum, r) => sum + parseInt(r.displayWidth || "50"), 0);
                         const isPartialRow = totalWidth < 100;
                         
+                        const widthClass = totalWidth === 100 ? "w-full" : 
+                          totalWidth === 25 ? "w-1/4" :
+                          totalWidth === 50 ? "w-1/2" :
+                          totalWidth === 75 ? "w-3/4" :
+                          "w-full";
+                          
+                        const alignClass = !isPartialRow ? "" :
+                          row[0]?.alignment === "left" ? "mr-auto" : 
+                          row[0]?.alignment === "right" ? "ml-auto" : 
+                          "mx-auto";
+                        
                         const gridCols = row.map(r => {
                           const w = parseInt(r.displayWidth || "50");
                           return w === 25 ? "1fr" : w === 50 ? "2fr" : w === 75 ? "3fr" : "4fr";
                         }).join(" ");
                         
-                        const rowJustify = isPartialRow ? 
-                          (row[0]?.alignment === "right" ? "justify-end" : 
-                           row[0]?.alignment === "center" ? "justify-center" : 
-                           "justify-start") : "";
-                        
                         return (
-                          <div 
-                            key={rowIndex}
-                            className={`grid gap-4 ${rowJustify}`}
-                            style={{ gridTemplateColumns: gridCols }}
-                          >
-                            {row.map((item) => {
-                              const category = getCategoryDetails(item.categoryId);
-                              const displayImage = item.imageUrl || category?.imageUrl || category?.bannerUrl;
-                              
-                              return (
-                                <div 
-                                  key={item.categoryId}
-                                  className="aspect-square rounded-lg overflow-hidden relative"
-                                >
-                                  {displayImage ? (
-                                    <img src={displayImage} alt={item.customLabel || category?.name} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
-                                  )}
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
-                                    <h4 className="text-white font-semibold">{item.customLabel || category?.name}</h4>
+                          <div key={rowIndex} className={`${widthClass} ${alignClass}`}>
+                            <div 
+                              className="grid gap-4"
+                              style={{ gridTemplateColumns: gridCols }}
+                            >
+                              {row.map((item) => {
+                                const category = getCategoryDetails(item.categoryId);
+                                const displayImage = item.imageUrl || category?.imageUrl || category?.bannerUrl;
+                                
+                                return (
+                                  <div 
+                                    key={item.categoryId}
+                                    className="aspect-square rounded-lg overflow-hidden relative"
+                                  >
+                                    {displayImage ? (
+                                      <img src={displayImage} alt={item.customLabel || category?.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                                      <h4 className="text-white font-semibold">{item.customLabel || category?.name}</h4>
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
                         );
                       });
