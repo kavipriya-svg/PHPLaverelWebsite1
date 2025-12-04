@@ -346,20 +346,41 @@ function CategoryDialog({
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Client-side validation
+      if (!name.trim()) {
+        throw new Error("Category name is required");
+      }
+      if (!slug.trim()) {
+        throw new Error("Category slug is required");
+      }
+      const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+      if (!slugRegex.test(slug)) {
+        throw new Error("Slug must contain only lowercase letters, numbers, and hyphens");
+      }
+      
       const payload = {
-        name,
-        slug,
+        name: name.trim(),
+        slug: slug.trim(),
         parentId: parentId === "none" ? null : parentId,
-        description,
+        description: description.trim(),
         isActive,
         iconUrl: iconUrl || null,
         bannerUrl: bannerUrl || null,
       };
+      
+      let response;
       if (category) {
-        return await apiRequest("PATCH", `/api/admin/categories/${category.id}`, payload);
+        response = await apiRequest("PATCH", `/api/admin/categories/${category.id}`, payload);
       } else {
-        return await apiRequest("POST", "/api/admin/categories", payload);
+        response = await apiRequest("POST", "/api/admin/categories", payload);
       }
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to save category");
+      }
+      
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
@@ -367,8 +388,12 @@ function CategoryDialog({
       onOpenChange(false);
       resetForm();
     },
-    onError: () => {
-      toast({ title: "Failed to save category", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to save category", 
+        description: error.message || "Please check your input and try again",
+        variant: "destructive" 
+      });
     },
   });
 

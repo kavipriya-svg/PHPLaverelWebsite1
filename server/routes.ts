@@ -1505,19 +1505,74 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/categories", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      const { name, slug } = req.body;
+      
+      // Validate required fields
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: "Category name is required" });
+      }
+      if (!slug || !slug.trim()) {
+        return res.status(400).json({ error: "Category slug is required" });
+      }
+      
+      // Validate slug format
+      const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+      if (!slugRegex.test(slug)) {
+        return res.status(400).json({ 
+          error: "Slug must contain only lowercase letters, numbers, and hyphens" 
+        });
+      }
+      
+      // Check for duplicate slug
+      const existing = await storage.getCategoryBySlug(slug);
+      if (existing) {
+        return res.status(400).json({ error: "A category with this slug already exists" });
+      }
+      
       const parsed = insertCategorySchema.parse(req.body);
       const category = await storage.createCategory(parsed);
       res.json({ category });
     } catch (error) {
+      console.error("Create category error:", error);
       res.status(500).json({ error: "Failed to create category" });
     }
   });
 
   app.patch("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      const { name, slug } = req.body;
+      
+      // Validate required fields if provided
+      if (name !== undefined && !name.trim()) {
+        return res.status(400).json({ error: "Category name cannot be empty" });
+      }
+      if (slug !== undefined && !slug.trim()) {
+        return res.status(400).json({ error: "Category slug cannot be empty" });
+      }
+      
+      // Validate slug format if provided
+      if (slug) {
+        const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+        if (!slugRegex.test(slug)) {
+          return res.status(400).json({ 
+            error: "Slug must contain only lowercase letters, numbers, and hyphens" 
+          });
+        }
+        
+        // Check for duplicate slug (excluding current category)
+        const existing = await storage.getCategoryBySlug(slug);
+        if (existing && existing.id !== req.params.id) {
+          return res.status(400).json({ error: "A category with this slug already exists" });
+        }
+      }
+      
       const category = await storage.updateCategory(req.params.id, req.body);
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
       res.json({ category });
     } catch (error) {
+      console.error("Update category error:", error);
       res.status(500).json({ error: "Failed to update category" });
     }
   });
