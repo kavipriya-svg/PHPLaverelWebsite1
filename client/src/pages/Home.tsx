@@ -23,7 +23,7 @@ export default function Home() {
         
         <NewArrivalsSection />
 
-        <section className="container mx-auto px-4">
+        <section className="w-full px-4">
           <div className="bg-card rounded-lg p-8 md:p-12 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
               Join Our Newsletter
@@ -49,7 +49,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="container mx-auto px-4">
+        <section className="w-full px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-center gap-4 p-6 bg-card rounded-lg">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
