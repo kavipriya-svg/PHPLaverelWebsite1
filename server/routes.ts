@@ -325,6 +325,29 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Combo Offers - Public endpoints
+  app.get("/api/combo-offers", async (req, res) => {
+    try {
+      const activeOnly = req.query.active === 'true';
+      const offers = await storage.getComboOffers(activeOnly);
+      res.json({ offers });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch combo offers" });
+    }
+  });
+
+  app.get("/api/combo-offers/:slug", async (req, res) => {
+    try {
+      const offer = await storage.getComboOfferBySlug(req.params.slug);
+      if (!offer) {
+        return res.status(404).json({ error: "Combo offer not found" });
+      }
+      res.json({ offer });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch combo offer" });
+    }
+  });
+
   // Public settings endpoint for frontend (currency, store name, etc.)
   app.get("/api/settings", async (req, res) => {
     try {
@@ -2062,6 +2085,113 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete home block" });
+    }
+  });
+
+  // Combo Offers - Admin endpoints
+  app.get("/api/admin/combo-offers", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const offers = await storage.getComboOffers(false);
+      res.json({ offers });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch combo offers" });
+    }
+  });
+
+  app.get("/api/admin/combo-offers/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const offer = await storage.getComboOfferById(req.params.id);
+      if (!offer) {
+        return res.status(404).json({ error: "Combo offer not found" });
+      }
+      res.json({ offer });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch combo offer" });
+    }
+  });
+
+  app.post("/api/admin/combo-offers", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { name, description, imageUrl, productIds, originalPrice, comboPrice, startDate, endDate, isActive, position } = req.body;
+      
+      // Generate slug from name
+      const slug = name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      
+      // Calculate discount percentage
+      const discount = originalPrice > 0 
+        ? ((parseFloat(originalPrice) - parseFloat(comboPrice)) / parseFloat(originalPrice) * 100).toFixed(2)
+        : "0";
+      
+      const offer = await storage.createComboOffer({
+        name,
+        slug,
+        description,
+        imageUrl,
+        productIds: productIds || [],
+        originalPrice,
+        comboPrice,
+        discountPercentage: discount,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        isActive: isActive ?? true,
+        position: position ?? 0,
+      });
+      
+      res.json({ offer });
+    } catch (error) {
+      console.error("Failed to create combo offer:", error);
+      res.status(500).json({ error: "Failed to create combo offer" });
+    }
+  });
+
+  app.patch("/api/admin/combo-offers/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { name, description, imageUrl, productIds, originalPrice, comboPrice, startDate, endDate, isActive, position } = req.body;
+      
+      const updateData: any = {};
+      
+      if (name !== undefined) {
+        updateData.name = name;
+        updateData.slug = name.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+      }
+      if (description !== undefined) updateData.description = description;
+      if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+      if (productIds !== undefined) updateData.productIds = productIds;
+      if (originalPrice !== undefined) updateData.originalPrice = originalPrice;
+      if (comboPrice !== undefined) updateData.comboPrice = comboPrice;
+      if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
+      if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      if (position !== undefined) updateData.position = position;
+      
+      // Recalculate discount if prices changed
+      if (originalPrice !== undefined || comboPrice !== undefined) {
+        const existing = await storage.getComboOfferById(req.params.id);
+        const origPrice = parseFloat(originalPrice ?? existing?.originalPrice ?? "0");
+        const cmbPrice = parseFloat(comboPrice ?? existing?.comboPrice ?? "0");
+        if (origPrice > 0) {
+          updateData.discountPercentage = ((origPrice - cmbPrice) / origPrice * 100).toFixed(2);
+        }
+      }
+      
+      const offer = await storage.updateComboOffer(req.params.id, updateData);
+      res.json({ offer });
+    } catch (error) {
+      console.error("Failed to update combo offer:", error);
+      res.status(500).json({ error: "Failed to update combo offer" });
+    }
+  });
+
+  app.delete("/api/admin/combo-offers/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteComboOffer(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete combo offer" });
     }
   });
 
