@@ -22,6 +22,7 @@ import {
   giftRegistries,
   giftRegistryItems,
   stockNotifications,
+  comboOffers,
   type User,
   type UpsertUser,
   type Category,
@@ -62,6 +63,8 @@ import {
   type InsertGiftRegistry,
   type GiftRegistryItem,
   type InsertGiftRegistryItem,
+  type ComboOffer,
+  type InsertComboOffer,
   type ProductWithDetails,
   type CategoryWithChildren,
   type OrderWithItems,
@@ -69,6 +72,11 @@ import {
   type ReviewWithUser,
   type GiftRegistryWithItems,
 } from "@shared/schema";
+
+// Extended type for combo offer with full product details
+export interface ComboOfferWithProducts extends ComboOffer {
+  products: ProductWithDetails[];
+}
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -179,6 +187,14 @@ export interface IStorage {
   deleteStockNotification(id: string): Promise<void>;
   markStockNotificationsNotified(productId: string): Promise<void>;
   getUnnotifiedStockNotifications(productId: string): Promise<any[]>;
+
+  // Combo Offers
+  getComboOffers(activeOnly?: boolean): Promise<ComboOfferWithProducts[]>;
+  getComboOfferById(id: string): Promise<ComboOfferWithProducts | undefined>;
+  getComboOfferBySlug(slug: string): Promise<ComboOfferWithProducts | undefined>;
+  createComboOffer(offer: InsertComboOffer): Promise<ComboOffer>;
+  updateComboOffer(id: string, offer: Partial<InsertComboOffer>): Promise<ComboOffer | undefined>;
+  deleteComboOffer(id: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -1254,6 +1270,92 @@ export class DatabaseStorage implements IStorage {
           eq(stockNotifications.isNotified, false)
         )
       );
+  }
+
+  // Combo Offers Methods
+  async getComboOffers(activeOnly: boolean = false): Promise<ComboOfferWithProducts[]> {
+    let query = db.select().from(comboOffers);
+    
+    if (activeOnly) {
+      const now = new Date();
+      query = query.where(
+        and(
+          eq(comboOffers.isActive, true),
+          or(
+            isNull(comboOffers.startDate),
+            lte(comboOffers.startDate, now)
+          ),
+          or(
+            isNull(comboOffers.endDate),
+            gte(comboOffers.endDate, now)
+          )
+        )
+      ) as any;
+    }
+    
+    const offers = await query.orderBy(asc(comboOffers.position));
+    
+    // Fetch products for all offers
+    return Promise.all(offers.map(async (offer) => {
+      const productsList = await this.getProductsByIds(offer.productIds);
+      return { ...offer, products: productsList };
+    }));
+  }
+
+  async getComboOfferById(id: string): Promise<ComboOfferWithProducts | undefined> {
+    const [offer] = await db.select().from(comboOffers).where(eq(comboOffers.id, id)).limit(1);
+    if (!offer) return undefined;
+    
+    const productsList = await this.getProductsByIds(offer.productIds);
+    return { ...offer, products: productsList };
+  }
+
+  async getComboOfferBySlug(slug: string): Promise<ComboOfferWithProducts | undefined> {
+    const [offer] = await db.select().from(comboOffers).where(eq(comboOffers.slug, slug)).limit(1);
+    if (!offer) return undefined;
+    
+    const productsList = await this.getProductsByIds(offer.productIds);
+    return { ...offer, products: productsList };
+  }
+
+  async createComboOffer(offer: InsertComboOffer): Promise<ComboOffer> {
+    const [created] = await db.insert(comboOffers).values(offer).returning();
+    return created;
+  }
+
+  async updateComboOffer(id: string, offer: Partial<InsertComboOffer>): Promise<ComboOffer | undefined> {
+    const [updated] = await db
+      .update(comboOffers)
+      .set({ ...offer, updatedAt: new Date() })
+      .where(eq(comboOffers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteComboOffer(id: string): Promise<void> {
+    await db.delete(comboOffers).where(eq(comboOffers.id, id));
+  }
+
+  private async getProductsByIds(productIds: string[]): Promise<ProductWithDetails[]> {
+    if (productIds.length === 0) return [];
+    
+    const result = await db
+      .select()
+      .from(products)
+      .leftJoin(brands, eq(products.brandId, brands.id))
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(inArray(products.id, productIds));
+    
+    const images = await db.select().from(productImages).where(inArray(productImages.productId, productIds));
+    const variants = await db.select().from(productVariants).where(inArray(productVariants.productId, productIds));
+    
+    return result.map((r) => ({
+      ...r.products,
+      brand: r.brands,
+      category: r.categories,
+      images: images.filter((img) => img.productId === r.products.id),
+      variants: variants.filter((v) => v.productId === r.products.id),
+    }));
   }
 }
 
