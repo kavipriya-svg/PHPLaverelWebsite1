@@ -345,10 +345,16 @@ export function Header() {
                 ) : (
                   <>
                     <DropdownMenuItem asChild>
-                      <a href="/api/login" className="w-full cursor-pointer flex items-center gap-2" data-testid="link-login">
+                      <Link href="/login" className="w-full cursor-pointer flex items-center gap-2" data-testid="link-login">
                         <LogIn className="h-4 w-4" />
                         Sign In
-                      </a>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/signup" className="w-full cursor-pointer flex items-center gap-2" data-testid="link-signup">
+                        <User className="h-4 w-4" />
+                        Create Account
+                      </Link>
                     </DropdownMenuItem>
                   </>
                 )}

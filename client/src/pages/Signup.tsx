@@ -73,13 +73,13 @@ export default function Signup() {
 
               <div className="text-center text-sm text-muted-foreground">
                 <span>Already have an account? </span>
-                <a 
-                  href="/api/login" 
+                <Link 
+                  href="/login" 
                   className="text-primary hover:underline"
                   data-testid="link-signin"
                 >
                   Sign in
-                </a>
+                </Link>
               </div>
             </CardContent>
           </Card>
