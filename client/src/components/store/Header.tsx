@@ -10,7 +10,8 @@ import {
   ChevronDown,
   Package,
   LogIn,
-  LogOut
+  LogOut,
+  Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ interface BrandingSettings {
   faviconUrl: string;
   topBarText: string;
   showTopBar: boolean;
+  showHomeButton: boolean;
 }
 
 const defaultBranding: BrandingSettings = {
@@ -51,6 +53,7 @@ const defaultBranding: BrandingSettings = {
   faviconUrl: "",
   topBarText: "Free shipping on orders over ₹500 | Shop Now",
   showTopBar: true,
+  showHomeButton: true,
 };
 
 export function Header() {
@@ -146,6 +149,17 @@ export function Header() {
                   <SheetTitle>Menu</SheetTitle>
                 </SheetHeader>
                 <nav className="mt-6 flex flex-col gap-2">
+                  {branding.showHomeButton && (
+                    <Link 
+                      href="/" 
+                      className="flex items-center gap-2 px-2 py-2 text-sm font-medium hover-elevate rounded-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                      data-testid="link-home-mobile"
+                    >
+                      <Home className="h-4 w-4" />
+                      Home
+                    </Link>
+                  )}
                   {categories.map((category) => (
                     <MobileCategoryItem 
                       key={category.id} 
@@ -210,6 +224,16 @@ export function Header() {
           </div>
 
           <nav className="hidden lg:flex items-center gap-1" ref={megaMenuRef}>
+            {branding.showHomeButton && (
+              <Link
+                href="/"
+                className="flex items-center gap-1 px-4 py-2 text-base font-semibold hover-elevate rounded-md"
+                data-testid="link-home"
+              >
+                <Home className="h-4 w-4" />
+                Home
+              </Link>
+            )}
             {categories.slice(0, 6).map((category) => (
               <div
                 key={category.id}
