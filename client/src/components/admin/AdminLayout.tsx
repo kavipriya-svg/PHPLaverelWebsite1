@@ -23,6 +23,7 @@ import {
   PanelBottom,
   Grid3X3,
   BookOpen,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -56,6 +57,7 @@ const adminMenuItems = [
   { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },
   { href: "/admin/blog", icon: BookOpen, label: "Blog" },
   { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
+  { href: "/admin/combo-offers", icon: Gift, label: "Combo Offers" },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/email", icon: Mail, label: "Email" },
   { href: "/admin/seo", icon: Search, label: "SEO" },
