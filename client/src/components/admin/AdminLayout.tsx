@@ -21,6 +21,8 @@ import {
   FileText,
   Paintbrush,
   PanelBottom,
+  Grid3X3,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -51,6 +53,8 @@ const adminMenuItems = [
   { href: "/admin/reviews", icon: Star, label: "Reviews" },
   { href: "/admin/banners", icon: Image, label: "Banners" },
   { href: "/admin/home-blocks", icon: LayoutGrid, label: "Home Blocks" },
+  { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },
+  { href: "/admin/blog", icon: BookOpen, label: "Blog" },
   { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/email", icon: Mail, label: "Email" },

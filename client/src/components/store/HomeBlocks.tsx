@@ -426,38 +426,201 @@ export function NewArrivalsSection() {
   );
 }
 
+interface HomeCategorySectionItem {
+  categoryId: string;
+  customLabel?: string;
+  imageUrl?: string;
+  position: number;
+  isVisible: boolean;
+}
+
+interface HomeCategorySection {
+  title: string;
+  subtitle: string;
+  isVisible: boolean;
+  position: number;
+  categories: HomeCategorySectionItem[];
+}
+
 export function CategoryShowcase() {
-  const { data } = useQuery<{ categories: Category[] }>({
-    queryKey: ["/api/categories", { level: 1, limit: 6 }],
+  const { data: settingsData } = useQuery<{ settings: HomeCategorySection }>({
+    queryKey: ["/api/settings/home-category-section"],
   });
 
-  const categories = data?.categories || [];
+  const { data: categoriesData } = useQuery<{ categories: Category[] }>({
+    queryKey: ["/api/categories", { level: 1 }],
+  });
 
-  if (!categories.length) return null;
+  const settings = settingsData?.settings;
+  const allCategories = categoriesData?.categories || [];
+
+  if (!settings?.isVisible) return null;
+
+  const visibleItems = settings.categories
+    .filter(item => item.isVisible)
+    .sort((a, b) => a.position - b.position)
+    .slice(0, 6);
+
+  if (visibleItems.length === 0) {
+    const defaultCategories = allCategories.slice(0, 6);
+    if (defaultCategories.length === 0) return null;
+
+    return (
+      <section className="container mx-auto px-4" data-testid="section-categories">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6" data-testid="text-categories-title">{settings?.title || "Shop by Category"}</h2>
+        {settings?.subtitle && (
+          <p className="text-muted-foreground mb-6" data-testid="text-categories-subtitle">{settings.subtitle}</p>
+        )}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4" data-testid="grid-categories">
+          {defaultCategories.map((category) => (
+            <Link key={category.id} href={`/category/${category.slug}`} data-testid={`link-category-${category.id}`}>
+              <Card className="overflow-hidden hover-elevate group" data-testid={`card-category-${category.id}`}>
+                <div className="aspect-square relative">
+                  {category.imageUrl || category.bannerUrl ? (
+                    <img
+                      src={category.imageUrl || category.bannerUrl || ""}
+                      alt={category.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      data-testid={`img-category-${category.id}`}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                    <h3 className="text-white font-semibold text-lg" data-testid={`text-category-name-${category.id}`}>{category.name}</h3>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="container mx-auto px-4" data-testid="section-categories">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6">Shop by Category</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {categories.map((category) => (
-          <Link key={category.id} href={`/category/${category.slug}`}>
-            <Card className="overflow-hidden hover-elevate group">
-              <div className="aspect-square relative">
-                {category.imageUrl ? (
-                  <img
-                    src={category.imageUrl}
-                    alt={category.name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
-                  <h3 className="text-white font-semibold text-lg">{category.name}</h3>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6" data-testid="text-categories-title">{settings?.title || "Shop by Category"}</h2>
+      {settings?.subtitle && (
+        <p className="text-muted-foreground mb-6" data-testid="text-categories-subtitle">{settings.subtitle}</p>
+      )}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4" data-testid="grid-categories">
+        {visibleItems.map((item) => {
+          const category = allCategories.find(c => c.id === item.categoryId);
+          if (!category) return null;
+          
+          const displayImage = item.imageUrl || category.imageUrl || category.bannerUrl;
+          const displayLabel = item.customLabel || category.name;
+          
+          return (
+            <Link key={item.categoryId} href={`/category/${category.slug}`} data-testid={`link-category-${item.categoryId}`}>
+              <Card className="overflow-hidden hover-elevate group" data-testid={`card-category-${item.categoryId}`}>
+                <div className="aspect-square relative">
+                  {displayImage ? (
+                    <img
+                      src={displayImage}
+                      alt={displayLabel}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      data-testid={`img-category-${item.categoryId}`}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                    <h3 className="text-white font-semibold text-lg" data-testid={`text-category-name-${item.categoryId}`}>{displayLabel}</h3>
+                  </div>
                 </div>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  imageUrl: string;
+  author: string;
+  readTime: string;
+  publishedAt: string;
+  position: number;
+  isVisible: boolean;
+}
+
+interface BlogSection {
+  title: string;
+  subtitle: string;
+  isVisible: boolean;
+  position: number;
+  posts: BlogPost[];
+}
+
+export function BlogShowcase() {
+  const { data } = useQuery<{ settings: BlogSection }>({
+    queryKey: ["/api/settings/blog-section"],
+  });
+
+  const settings = data?.settings;
+
+  if (!settings?.isVisible) return null;
+
+  const visiblePosts = settings.posts
+    .filter(post => post.isVisible)
+    .sort((a, b) => a.position - b.position)
+    .slice(0, 3);
+
+  if (visiblePosts.length === 0) return null;
+
+  return (
+    <section className="container mx-auto px-4" data-testid="section-blog">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl md:text-3xl font-bold" data-testid="text-blog-title">{settings.title || "From Our Blog"}</h2>
+        {settings.subtitle && (
+          <p className="text-muted-foreground mt-2" data-testid="text-blog-subtitle">{settings.subtitle}</p>
+        )}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-testid="grid-blog-posts">
+        {visiblePosts.map((post) => (
+          <Card key={post.id} className="overflow-hidden hover-elevate group" data-testid={`card-blog-${post.id}`}>
+            <div className="aspect-video bg-muted overflow-hidden">
+              {post.imageUrl ? (
+                <img
+                  src={post.imageUrl}
+                  alt={post.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  data-testid={`img-blog-${post.id}`}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10" />
+              )}
+            </div>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2" data-testid={`text-blog-meta-${post.id}`}>
+                {post.publishedAt && <span>{post.publishedAt}</span>}
+                {post.publishedAt && post.readTime && <span>•</span>}
+                {post.readTime && <span>{post.readTime}</span>}
               </div>
-            </Card>
-          </Link>
+              <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-post-title-${post.id}`}>
+                {post.title}
+              </h3>
+              {post.excerpt && (
+                <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-blog-excerpt-${post.id}`}>
+                  {post.excerpt}
+                </p>
+              )}
+              {post.author && (
+                <div className="mt-3 pt-3 border-t text-xs text-muted-foreground" data-testid={`text-blog-author-${post.id}`}>
+                  By {post.author}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         ))}
       </div>
     </section>

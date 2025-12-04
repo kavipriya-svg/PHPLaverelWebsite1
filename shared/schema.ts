@@ -729,3 +729,65 @@ export const defaultInvoiceSettings: InvoiceSettings = {
   footerNote: "Thank you for your business!",
   termsAndConditions: "",
 };
+
+// Home Category Section Settings Schema
+export const homeCategorySectionItemSchema = z.object({
+  categoryId: z.string(),
+  customLabel: z.string().optional(),
+  imageUrl: z.string().optional(),
+  position: z.number().default(0),
+  isVisible: z.boolean().default(true),
+});
+
+export const homeCategorySectionSchema = z.object({
+  title: z.string().default("Shop by Category"),
+  subtitle: z.string().default(""),
+  isVisible: z.boolean().default(true),
+  position: z.number().default(0),
+  categories: z.array(homeCategorySectionItemSchema).default([]),
+});
+
+export type HomeCategorySectionItem = z.infer<typeof homeCategorySectionItemSchema>;
+export type HomeCategorySection = z.infer<typeof homeCategorySectionSchema>;
+
+export const defaultHomeCategorySection: HomeCategorySection = {
+  title: "Shop by Category",
+  subtitle: "",
+  isVisible: true,
+  position: 0,
+  categories: [],
+};
+
+// Blog Section Settings Schema
+export const blogPostSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  slug: z.string(),
+  excerpt: z.string().default(""),
+  content: z.string().default(""),
+  imageUrl: z.string().default(""),
+  author: z.string().default(""),
+  readTime: z.string().default("5 min read"),
+  publishedAt: z.string().default(""),
+  position: z.number().default(0),
+  isVisible: z.boolean().default(true),
+});
+
+export const blogSectionSchema = z.object({
+  title: z.string().default("From Our Blog"),
+  subtitle: z.string().default("Latest news and updates"),
+  isVisible: z.boolean().default(true),
+  position: z.number().default(0),
+  posts: z.array(blogPostSchema).default([]),
+});
+
+export type BlogPost = z.infer<typeof blogPostSchema>;
+export type BlogSection = z.infer<typeof blogSectionSchema>;
+
+export const defaultBlogSection: BlogSection = {
+  title: "From Our Blog",
+  subtitle: "Latest news and updates",
+  isVisible: true,
+  position: 0,
+  posts: [],
+};
