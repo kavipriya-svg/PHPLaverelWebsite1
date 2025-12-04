@@ -40,6 +40,7 @@ const addressSchema = z.object({
   postalCode: z.string().min(6, "Valid pincode required").max(6),
   country: z.string().default("India"),
   company: z.string().optional(),
+  gstNumber: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GST number format").optional().or(z.literal("")),
   isDefault: z.boolean().default(false),
   type: z.enum(["shipping", "billing"]).default("shipping"),
 });
@@ -67,6 +68,7 @@ export default function Addresses() {
       postalCode: "",
       country: "India",
       company: "",
+      gstNumber: "",
       isDefault: false,
       type: "shipping",
     },
@@ -102,6 +104,7 @@ export default function Addresses() {
         phone: data.phone || null,
         address2: data.address2 || null,
         company: data.company || null,
+        gstNumber: data.gstNumber || null,
       };
       const response = await apiRequest("POST", "/api/addresses", payload);
       return response.json();
@@ -126,6 +129,7 @@ export default function Addresses() {
         phone: data.phone || null,
         address2: data.address2 || null,
         company: data.company || null,
+        gstNumber: data.gstNumber || null,
       };
       const response = await apiRequest("PUT", `/api/addresses/${id}`, payload);
       return response.json();
@@ -171,6 +175,7 @@ export default function Addresses() {
         postalCode: address.postalCode,
         country: address.country || "India",
         company: address.company || "",
+        gstNumber: address.gstNumber || "",
         isDefault: address.isDefault || false,
         type: (address.type as "shipping" | "billing") || "shipping",
       });
@@ -187,6 +192,7 @@ export default function Addresses() {
         postalCode: "",
         country: "India",
         company: "",
+        gstNumber: "",
         isDefault: addresses.length === 0,
         type: "shipping",
       });
@@ -292,6 +298,11 @@ export default function Addresses() {
                         </div>
                         {address.phone && <p className="text-sm text-muted-foreground" data-testid={`text-address-phone-${address.id}`}>{address.phone}</p>}
                         {address.company && <p className="text-sm text-muted-foreground" data-testid={`text-address-company-${address.id}`}>{address.company}</p>}
+                        {address.gstNumber && (
+                          <p className="text-sm text-muted-foreground" data-testid={`text-address-gst-${address.id}`}>
+                            <span className="font-medium">GST:</span> {address.gstNumber}
+                          </p>
+                        )}
                         <p className="text-sm mt-1" data-testid={`text-address-street-${address.id}`}>
                           {address.address1}
                           {address.address2 && `, ${address.address2}`}
@@ -390,6 +401,28 @@ export default function Addresses() {
                     <FormControl>
                       <Input placeholder="Company Name" data-testid="input-address-company" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gstNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>GST Number (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="22AAAAA0000A1Z5" 
+                        data-testid="input-address-gst" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      15-digit GST identification number for business invoicing
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
