@@ -51,24 +51,24 @@ export default function Account() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
-          <Avatar className="h-16 w-16">
+          <Avatar className="h-16 w-16" data-testid="avatar-user">
             <AvatarImage src={user?.profileImageUrl || undefined} />
             <AvatarFallback className="text-lg">
               {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold" data-testid="text-username">
               {user?.firstName ? `${user.firstName} ${user.lastName || ""}` : "My Account"}
             </h1>
-            <p className="text-muted-foreground">{user?.email}</p>
+            <p className="text-muted-foreground" data-testid="text-user-email">{user?.email}</p>
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
           {menuItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <Card className="hover-elevate cursor-pointer h-full">
+            <Link key={item.href} href={item.href} data-testid={`link-${item.label.toLowerCase()}`}>
+              <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-${item.label.toLowerCase()}`}>
                 <CardContent className="flex items-center gap-4 p-6">
                   <div className="p-3 bg-primary/10 rounded-lg">
                     <item.icon className="h-6 w-6 text-primary" />
@@ -84,8 +84,8 @@ export default function Account() {
         </div>
 
         <div className="mt-8">
-          <a href="/api/logout">
-            <Button variant="outline" className="w-full sm:w-auto">
+          <a href="/api/logout" data-testid="link-logout">
+            <Button variant="outline" className="w-full sm:w-auto" data-testid="button-logout">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
