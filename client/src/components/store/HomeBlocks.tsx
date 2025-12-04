@@ -128,7 +128,7 @@ function SectionBannerRow({ banners }: { banners: Banner[] }) {
 
     return (
       <section 
-        className="container mx-auto px-4 py-8"
+        className="w-full px-4 py-8"
         data-testid={`section-banner-${banner.id}`}
       >
         <div className={`${widthClass} ${alignmentClass}`}>
@@ -153,7 +153,7 @@ function SectionBannerRow({ banners }: { banners: Banner[] }) {
   
   return (
     <section 
-      className="container mx-auto px-4 py-8"
+      className="w-full px-4 py-8"
       data-testid="section-banner-row"
     >
       <div 
@@ -246,7 +246,7 @@ function FeaturedProductsBlock({ block }: { block: HomeBlock }) {
   const title = payload?.title || block.title || "Featured Products";
 
   return (
-    <section className="container mx-auto px-4" data-testid="section-featured-products">
+    <section className="w-full px-4" data-testid="section-featured-products">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
         <Button variant="ghost" asChild>
@@ -279,7 +279,7 @@ function CategoryProductsBlock({ block }: { block: HomeBlock }) {
   const title = payload?.title || block.title || categoryData?.category?.name || "Products";
 
   return (
-    <section className="container mx-auto px-4" data-testid={`section-category-${payload?.categoryId}`}>
+    <section className="w-full px-4" data-testid={`section-category-${payload?.categoryId}`}>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
         {categoryData?.category && (
@@ -305,7 +305,7 @@ function PromoHtmlBlock({ block }: { block: HomeBlock }) {
 
   return (
     <section 
-      className="container mx-auto px-4"
+      className="w-full px-4"
       data-testid={`section-promo-${block.id}`}
     >
       <Card style={{ backgroundColor: payload.backgroundColor }}>
@@ -333,7 +333,7 @@ function BannerCarouselBlock({ block }: { block: HomeBlock }) {
   if (!banners.length) return null;
 
   return (
-    <section className="container mx-auto px-4" data-testid={`section-banner-carousel-${block.id}`}>
+    <section className="w-full px-4" data-testid={`section-banner-carousel-${block.id}`}>
       {block.title && (
         <h2 className="text-2xl md:text-3xl font-bold mb-6">{block.title}</h2>
       )}
@@ -368,7 +368,7 @@ function CustomCodeBlock({ block }: { block: HomeBlock }) {
 
   return (
     <section 
-      className="container mx-auto px-4"
+      className="w-full px-4"
       data-testid={`section-custom-${block.id}`}
     >
       <div dangerouslySetInnerHTML={{ __html: payload.html }} />
@@ -382,7 +382,7 @@ export function SpecialOffersSection() {
   });
 
   return (
-    <section className="container mx-auto px-4" data-testid="section-special-offers">
+    <section className="w-full px-4" data-testid="section-special-offers">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-destructive">Special Offers</h2>
@@ -409,7 +409,7 @@ export function NewArrivalsSection() {
   });
 
   return (
-    <section className="container mx-auto px-4" data-testid="section-new-arrivals">
+    <section className="w-full px-4" data-testid="section-new-arrivals">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl md:text-3xl font-bold">New Arrivals</h2>
         <Button variant="ghost" asChild>
@@ -509,7 +509,7 @@ export function CategoryShowcase() {
     if (defaultCategories.length === 0) return null;
 
     return (
-      <section className="container mx-auto px-4" data-testid="section-categories">
+      <section className="w-full px-4" data-testid="section-categories">
         <h2 className="text-2xl md:text-3xl font-bold mb-6" data-testid="text-categories-title">{settings?.title || "Shop by Category"}</h2>
         {settings?.subtitle && (
           <p className="text-muted-foreground mb-6" data-testid="text-categories-subtitle">{settings.subtitle}</p>
@@ -518,16 +518,16 @@ export function CategoryShowcase() {
           {defaultCategories.map((category) => (
             <Link key={category.id} href={`/category/${category.slug}`} data-testid={`link-category-${category.id}`}>
               <Card className="overflow-hidden hover-elevate group" data-testid={`card-category-${category.id}`}>
-                <div className="aspect-square relative">
+                <div className="relative w-full" style={{ maxHeight: '600px' }}>
                   {category.imageUrl || category.bannerUrl ? (
                     <img
                       src={category.imageUrl || category.bannerUrl || ""}
                       alt={category.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-auto max-h-[600px] object-cover transition-transform duration-300 group-hover:scale-105"
                       data-testid={`img-category-${category.id}`}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                    <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20" />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
                     <h3 className="text-white font-semibold text-lg" data-testid={`text-category-name-${category.id}`}>{category.name}</h3>
@@ -544,7 +544,7 @@ export function CategoryShowcase() {
   const rows = groupCategoryItemsIntoRows(visibleItems);
 
   return (
-    <section className="container mx-auto px-4" data-testid="section-categories">
+    <section className="w-full px-4" data-testid="section-categories">
       <h2 className="text-2xl md:text-3xl font-bold mb-6" data-testid="text-categories-title">{settings?.title || "Shop by Category"}</h2>
       {settings?.subtitle && (
         <p className="text-muted-foreground mb-6" data-testid="text-categories-subtitle">{settings.subtitle}</p>
@@ -701,7 +701,7 @@ export function BlogShowcase() {
   if (visiblePosts.length === 0) return null;
 
   return (
-    <section className="container mx-auto px-4" data-testid="section-blog">
+    <section className="w-full px-4" data-testid="section-blog">
       <div className="text-center mb-8">
         <h2 className="text-2xl md:text-3xl font-bold" data-testid="text-blog-title">{settings.title || "From Our Blog"}</h2>
         {settings.subtitle && (
