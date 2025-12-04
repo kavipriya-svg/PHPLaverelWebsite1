@@ -35,6 +35,22 @@ import { useStore } from "@/contexts/StoreContext";
 import { useQuery } from "@tanstack/react-query";
 import type { CategoryWithChildren } from "@shared/schema";
 
+interface BrandingSettings {
+  logoUrl: string;
+  storeName: string;
+  faviconUrl: string;
+  topBarText: string;
+  showTopBar: boolean;
+}
+
+const defaultBranding: BrandingSettings = {
+  logoUrl: "",
+  storeName: "ShopHub",
+  faviconUrl: "",
+  topBarText: "Free shipping on orders over ₹500 | Shop Now",
+  showTopBar: true,
+};
+
 export function Header() {
   const [, setLocation] = useLocation();
   const { user, isAuthenticated, isAdmin } = useAuth();
@@ -48,7 +64,12 @@ export function Header() {
     queryKey: ["/api/categories/menu"],
   });
 
+  const { data: brandingData } = useQuery<{ settings: BrandingSettings }>({
+    queryKey: ["/api/settings/branding"],
+  });
+
   const categories = categoriesData?.categories || [];
+  const branding = brandingData?.settings ? { ...defaultBranding, ...brandingData.settings } : defaultBranding;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,9 +92,11 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="bg-primary text-primary-foreground py-1.5 text-center text-sm">
-        Free shipping on orders over ₹500 | Shop Now
-      </div>
+      {branding.showTopBar && branding.topBarText && (
+        <div className="bg-primary text-primary-foreground py-1.5 text-center text-sm" data-testid="text-top-bar">
+          {branding.topBarText}
+        </div>
+      )}
       
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
@@ -125,10 +148,18 @@ export function Header() {
             </Sheet>
             
             <Link href="/" className="flex items-center gap-2" data-testid="link-logo">
-              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
-                S
-              </div>
-              <span className="hidden font-bold text-xl sm:inline-block">ShopHub</span>
+              {branding.logoUrl ? (
+                <img 
+                  src={branding.logoUrl} 
+                  alt={branding.storeName} 
+                  className="h-9 w-auto object-contain"
+                />
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
+                  {branding.storeName.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="hidden font-bold text-xl sm:inline-block">{branding.storeName}</span>
             </Link>
           </div>
 
