@@ -622,8 +622,8 @@ function CategoryRow({ items, allCategories }: { items: HomeCategorySectionItem[
         className="grid grid-cols-1 gap-4 md:[grid-template-columns:var(--category-grid-cols)]"
         style={gridStyle}
       >
-        {items.map((item) => (
-          <div key={item.categoryId} className="min-w-0">
+        {items.map((item, idx) => (
+          <div key={item.id || `item_${item.categoryId}_${idx}`} className="min-w-0">
             <CategoryCard item={item} allCategories={allCategories} />
           </div>
         ))}
