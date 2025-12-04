@@ -482,9 +482,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const defaultBranding = {
         logoUrl: "",
         storeName: "ShopHub",
+        showStoreName: true,
         faviconUrl: "",
         topBarText: "Free shipping on orders over ₹500 | Shop Now",
         showTopBar: true,
+        showHomeButton: true,
       };
       if (setting?.value) {
         try {
