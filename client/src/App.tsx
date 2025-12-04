@@ -19,6 +19,9 @@ import SearchResults from "@/pages/SearchResults";
 import SpecialOffers from "@/pages/SpecialOffers";
 import Account from "@/pages/Account";
 import AccountOrders from "@/pages/AccountOrders";
+import Profile from "@/pages/Profile";
+import Addresses from "@/pages/Addresses";
+import AccountSettings from "@/pages/AccountSettings";
 import Wishlist from "@/pages/Wishlist";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminProducts from "@/pages/admin/Products";
@@ -136,6 +139,24 @@ function Router() {
       <Route path="/account/orders">
         <StoreLayout>
           <AccountOrders />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/account/profile">
+        <StoreLayout>
+          <Profile />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/account/addresses">
+        <StoreLayout>
+          <Addresses />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/account/settings">
+        <StoreLayout>
+          <AccountSettings />
         </StoreLayout>
       </Route>
       
