@@ -794,3 +794,31 @@ export const defaultBlogSection: BlogSection = {
   position: 0,
   posts: [],
 };
+
+// Combo Offers table
+export const comboOffers = pgTable("combo_offers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  slug: varchar("slug").notNull().unique(),
+  description: text("description"),
+  imageUrl: varchar("image_url"),
+  productIds: text("product_ids").array().notNull(), // Array of product IDs in the combo
+  originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(), // Sum of individual product prices
+  comboPrice: decimal("combo_price", { precision: 10, scale: 2 }).notNull(), // Discounted combo price
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }), // Calculated discount %
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  isActive: boolean("is_active").default(true),
+  position: integer("position").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertComboOfferSchema = createInsertSchema(comboOffers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertComboOffer = z.infer<typeof insertComboOfferSchema>;
+export type ComboOffer = typeof comboOffers.$inferSelect;
