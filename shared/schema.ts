@@ -732,6 +732,7 @@ export const defaultInvoiceSettings: InvoiceSettings = {
 
 // Home Category Section Settings Schema
 export const homeCategorySectionItemSchema = z.object({
+  id: z.string().optional(), // Unique ID for each entry (allows same category multiple times)
   categoryId: z.string(),
   customLabel: z.string().optional(),
   imageUrl: z.string().optional(),
