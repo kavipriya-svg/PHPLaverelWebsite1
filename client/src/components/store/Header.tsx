@@ -124,6 +124,14 @@ export function Header() {
               </Button>
             </form>
             <div className="flex items-center gap-1">
+              {isAuthenticated && (
+                <Link href="/wishlist">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1.5" data-testid="button-wishlist">
+                    <Heart className="h-5 w-5" />
+                    <span className="hidden md:inline text-sm">Wishlist</span>
+                  </Button>
+                </Link>
+              )}
               <Link href="/track-order">
                 <Button variant="ghost" size="sm" className="flex items-center gap-1.5" data-testid="button-track-order">
                   <Package className="h-5 w-5" />
@@ -275,15 +283,6 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1">
-            {isAuthenticated && (
-              <Link href="/wishlist">
-                <Button variant="ghost" size="sm" className="flex items-center gap-1.5" data-testid="button-wishlist">
-                  <Heart className="h-5 w-5" />
-                  <span className="hidden sm:inline text-sm">Wishlist</span>
-                </Button>
-              </Link>
-            )}
-
             <Link href="/cart" className="relative">
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5" data-testid="button-cart">
                 <ShoppingCart className="h-5 w-5" />
