@@ -72,10 +72,12 @@ export default function Addresses() {
     },
   });
 
-  const { data: addresses = [], isLoading: addressesLoading } = useQuery<Address[]>({
-    queryKey: ["/api/user/addresses"],
+  const { data: addressData, isLoading: addressesLoading, isError: addressesError } = useQuery<{ addresses: Address[] }>({
+    queryKey: ["/api/addresses"],
     enabled: isAuthenticated,
   });
+  
+  const addresses = addressData?.addresses || [];
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -92,11 +94,20 @@ export default function Addresses() {
 
   const createAddressMutation = useMutation({
     mutationFn: async (data: AddressFormData) => {
-      const response = await apiRequest("POST", "/api/user/addresses", data);
+      if (!isAuthenticated) {
+        throw new Error("You must be logged in to add an address");
+      }
+      const payload = {
+        ...data,
+        phone: data.phone || null,
+        address2: data.address2 || null,
+        company: data.company || null,
+      };
+      const response = await apiRequest("POST", "/api/addresses", payload);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/addresses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/addresses"] });
       toast({ title: "Address Added", description: "Your address has been added successfully." });
       handleCloseDialog();
     },
@@ -107,11 +118,20 @@ export default function Addresses() {
 
   const updateAddressMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: AddressFormData }) => {
-      const response = await apiRequest("PUT", `/api/user/addresses/${id}`, data);
+      if (!isAuthenticated) {
+        throw new Error("You must be logged in to update an address");
+      }
+      const payload = {
+        ...data,
+        phone: data.phone || null,
+        address2: data.address2 || null,
+        company: data.company || null,
+      };
+      const response = await apiRequest("PUT", `/api/addresses/${id}`, payload);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/addresses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/addresses"] });
       toast({ title: "Address Updated", description: "Your address has been updated successfully." });
       handleCloseDialog();
     },
@@ -122,10 +142,13 @@ export default function Addresses() {
 
   const deleteAddressMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/user/addresses/${id}`);
+      if (!isAuthenticated) {
+        throw new Error("You must be logged in to delete an address");
+      }
+      await apiRequest("DELETE", `/api/addresses/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/addresses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/addresses"] });
       toast({ title: "Address Deleted", description: "The address has been removed." });
       setDeleteConfirm(null);
     },
@@ -229,11 +252,24 @@ export default function Addresses() {
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
+            ) : addressesError ? (
+              <div className="text-center py-8">
+                <MapPin className="h-12 w-12 mx-auto text-destructive mb-4" />
+                <p className="text-destructive">Failed to load addresses</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4" 
+                  onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/addresses"] })}
+                  data-testid="button-retry-addresses"
+                >
+                  Retry
+                </Button>
+              </div>
             ) : addresses.length === 0 ? (
               <div className="text-center py-8">
                 <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No addresses saved yet</p>
-                <Button variant="outline" className="mt-4" onClick={() => handleOpenDialog()}>
+                <Button variant="outline" className="mt-4" onClick={() => handleOpenDialog()} data-testid="button-add-first-address">
                   Add Your First Address
                 </Button>
               </div>
@@ -248,22 +284,22 @@ export default function Addresses() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <span className="font-medium">{address.firstName} {address.lastName}</span>
+                          <span className="font-medium" data-testid={`text-address-name-${address.id}`}>{address.firstName} {address.lastName}</span>
                           {address.isDefault && (
-                            <Badge variant="secondary" className="text-xs">Default</Badge>
+                            <Badge variant="secondary" className="text-xs" data-testid={`badge-default-${address.id}`}>Default</Badge>
                           )}
-                          <Badge variant="outline" className="text-xs capitalize">{address.type}</Badge>
+                          <Badge variant="outline" className="text-xs capitalize" data-testid={`badge-type-${address.id}`}>{address.type}</Badge>
                         </div>
-                        {address.phone && <p className="text-sm text-muted-foreground">{address.phone}</p>}
-                        {address.company && <p className="text-sm text-muted-foreground">{address.company}</p>}
-                        <p className="text-sm mt-1">
+                        {address.phone && <p className="text-sm text-muted-foreground" data-testid={`text-address-phone-${address.id}`}>{address.phone}</p>}
+                        {address.company && <p className="text-sm text-muted-foreground" data-testid={`text-address-company-${address.id}`}>{address.company}</p>}
+                        <p className="text-sm mt-1" data-testid={`text-address-street-${address.id}`}>
                           {address.address1}
                           {address.address2 && `, ${address.address2}`}
                         </p>
-                        <p className="text-sm">
+                        <p className="text-sm" data-testid={`text-address-city-${address.id}`}>
                           {address.city}, {address.state} - {address.postalCode}
                         </p>
-                        <p className="text-sm text-muted-foreground">{address.country}</p>
+                        <p className="text-sm text-muted-foreground" data-testid={`text-address-country-${address.id}`}>{address.country}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
@@ -415,7 +451,7 @@ export default function Addresses() {
                         </FormControl>
                         <SelectContent>
                           {INDIAN_STATES.map((state) => (
-                            <SelectItem key={state} value={state}>{state}</SelectItem>
+                            <SelectItem key={state} value={state} data-testid={`option-state-${state.toLowerCase().replace(/\s+/g, '-')}`}>{state}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -452,8 +488,8 @@ export default function Addresses() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="shipping">Shipping</SelectItem>
-                          <SelectItem value="billing">Billing</SelectItem>
+                          <SelectItem value="shipping" data-testid="option-address-type-shipping">Shipping</SelectItem>
+                          <SelectItem value="billing" data-testid="option-address-type-billing">Billing</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -485,7 +521,7 @@ export default function Addresses() {
               />
 
               <DialogFooter className="gap-2">
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                <Button type="button" variant="outline" onClick={handleCloseDialog} data-testid="button-cancel-address">
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isPending} data-testid="button-save-address">
@@ -516,7 +552,7 @@ export default function Addresses() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete-address">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirm && deleteAddressMutation.mutate(deleteConfirm)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

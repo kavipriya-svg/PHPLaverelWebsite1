@@ -138,10 +138,10 @@ export default function AccountSettings() {
             <CardContent>
               <div className="text-center py-6">
                 <CreditCard className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-sm text-muted-foreground mb-4" data-testid="text-no-payment-methods">
                   No payment methods saved. Add a payment method during checkout for faster purchases.
                 </p>
-                <Button variant="outline" disabled>
+                <Button variant="outline" disabled data-testid="button-add-payment">
                   Add Payment Method
                 </Button>
               </div>
