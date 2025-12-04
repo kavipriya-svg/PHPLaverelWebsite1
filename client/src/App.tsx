@@ -41,6 +41,7 @@ import AdminFooterSettings from "@/pages/admin/FooterSettings";
 import AdminBrandingSettings from "@/pages/admin/BrandingSettings";
 import AdminCategorySectionSettings from "@/pages/admin/CategorySectionSettings";
 import AdminBlogSettings from "@/pages/admin/BlogSettings";
+import AdminComboOffers from "@/pages/admin/ComboOffers";
 import GiftRegistry from "@/pages/GiftRegistry";
 import GiftRegistryDetail from "@/pages/GiftRegistryDetail";
 import PublicRegistry from "@/pages/PublicRegistry";
@@ -189,6 +190,7 @@ function Router() {
       <Route path="/admin/branding" component={AdminBrandingSettings} />
       <Route path="/admin/category-section" component={AdminCategorySectionSettings} />
       <Route path="/admin/blog" component={AdminBlogSettings} />
+      <Route path="/admin/combo-offers" component={AdminComboOffers} />
 
       <Route>
         <StoreLayout>
