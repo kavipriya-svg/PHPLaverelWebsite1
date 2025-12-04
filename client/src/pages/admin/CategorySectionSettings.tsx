@@ -133,7 +133,7 @@ export default function CategorySectionSettingsPage() {
       setSettings(prev => ({
         ...prev,
         categories: prev.categories.map(cat => 
-          cat.categoryId === categoryId ? { ...cat, imageUrl: finalUrl } : cat
+          cat.id === categoryId ? { ...cat, imageUrl: finalUrl } : cat
         )
       }));
       
@@ -150,17 +150,16 @@ export default function CategorySectionSettingsPage() {
     }
   };
 
+  const generateUniqueId = () => {
+    return `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  };
+
   const addCategory = (categoryId: string) => {
     const category = allCategories.find(c => c.id === categoryId);
     if (!category) return;
-    
-    const exists = settings.categories.some(c => c.categoryId === categoryId);
-    if (exists) {
-      toast({ title: "Category already added", variant: "destructive" });
-      return;
-    }
 
     const newItem: HomeCategorySectionItem = {
+      id: generateUniqueId(),
       categoryId,
       customLabel: category.name,
       imageUrl: category.imageUrl || category.bannerUrl || "",
@@ -176,47 +175,47 @@ export default function CategorySectionSettingsPage() {
     }));
   };
 
-  const updateCategoryWidth = (categoryId: string, displayWidth: "25" | "50" | "75" | "100") => {
+  const updateCategoryWidth = (itemId: string, displayWidth: "25" | "50" | "75" | "100") => {
     setSettings(prev => ({
       ...prev,
       categories: prev.categories.map(c => 
-        c.categoryId === categoryId ? { ...c, displayWidth } : c
+        c.id === itemId ? { ...c, displayWidth } : c
       )
     }));
   };
 
-  const updateCategoryAlignment = (categoryId: string, alignment: "left" | "center" | "right") => {
+  const updateCategoryAlignment = (itemId: string, alignment: "left" | "center" | "right") => {
     setSettings(prev => ({
       ...prev,
       categories: prev.categories.map(c => 
-        c.categoryId === categoryId ? { ...c, alignment } : c
+        c.id === itemId ? { ...c, alignment } : c
       )
     }));
   };
 
-  const removeCategory = (categoryId: string) => {
+  const removeCategory = (itemId: string) => {
     setSettings(prev => ({
       ...prev,
       categories: prev.categories
-        .filter(c => c.categoryId !== categoryId)
+        .filter(c => c.id !== itemId)
         .map((c, idx) => ({ ...c, position: idx }))
     }));
   };
 
-  const toggleCategoryVisibility = (categoryId: string) => {
+  const toggleCategoryVisibility = (itemId: string) => {
     setSettings(prev => ({
       ...prev,
       categories: prev.categories.map(c => 
-        c.categoryId === categoryId ? { ...c, isVisible: !c.isVisible } : c
+        c.id === itemId ? { ...c, isVisible: !c.isVisible } : c
       )
     }));
   };
 
-  const updateCategoryLabel = (categoryId: string, customLabel: string) => {
+  const updateCategoryLabel = (itemId: string, customLabel: string) => {
     setSettings(prev => ({
       ...prev,
       categories: prev.categories.map(c => 
-        c.categoryId === categoryId ? { ...c, customLabel } : c
+        c.id === itemId ? { ...c, customLabel } : c
       )
     }));
   };
@@ -236,9 +235,8 @@ export default function CategorySectionSettingsPage() {
     return allCategories.find(c => c.id === categoryId);
   };
 
-  const availableCategories = allCategories.filter(
-    c => !settings.categories.some(sc => sc.categoryId === c.id)
-  );
+  // All categories are available since we allow duplicates now
+  const availableCategories = allCategories;
 
   if (isLoading) {
     return (
@@ -373,12 +371,13 @@ export default function CategorySectionSettingsPage() {
                     .map((item, index) => {
                       const category = getCategoryDetails(item.categoryId);
                       const displayImage = item.imageUrl || category?.imageUrl || category?.bannerUrl;
+                      const itemId = item.id || `legacy_${item.categoryId}_${index}`;
                       
                       return (
                         <div 
-                          key={item.categoryId}
+                          key={itemId}
                           className="flex items-center gap-3 p-3 border rounded-lg bg-card"
-                          data-testid={`category-item-${item.categoryId}`}
+                          data-testid={`category-item-${itemId}`}
                         >
                           <div className="flex flex-col gap-1">
                             <Button
@@ -418,9 +417,9 @@ export default function CategorySectionSettingsPage() {
                           <div className="flex-1 min-w-0 space-y-3">
                             <Input
                               value={item.customLabel || ""}
-                              onChange={(e) => updateCategoryLabel(item.categoryId, e.target.value)}
+                              onChange={(e) => updateCategoryLabel(itemId, e.target.value)}
                               placeholder={category?.name || "Category name"}
-                              data-testid={`input-category-label-${item.categoryId}`}
+                              data-testid={`input-category-label-${itemId}`}
                             />
                             
                             <div className="grid grid-cols-2 gap-2">
@@ -428,9 +427,9 @@ export default function CategorySectionSettingsPage() {
                                 <Label className="text-xs text-muted-foreground">Width</Label>
                                 <Select 
                                   value={item.displayWidth || "50"} 
-                                  onValueChange={(value) => updateCategoryWidth(item.categoryId, value as "25" | "50" | "75" | "100")}
+                                  onValueChange={(value) => updateCategoryWidth(itemId, value as "25" | "50" | "75" | "100")}
                                 >
-                                  <SelectTrigger className="h-8" data-testid={`select-width-${item.categoryId}`}>
+                                  <SelectTrigger className="h-8" data-testid={`select-width-${itemId}`}>
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -447,9 +446,9 @@ export default function CategorySectionSettingsPage() {
                                 <Label className="text-xs text-muted-foreground">Alignment</Label>
                                 <Select 
                                   value={item.alignment || "center"} 
-                                  onValueChange={(value) => updateCategoryAlignment(item.categoryId, value as "left" | "center" | "right")}
+                                  onValueChange={(value) => updateCategoryAlignment(itemId, value as "left" | "center" | "right")}
                                 >
-                                  <SelectTrigger className="h-8" data-testid={`select-alignment-${item.categoryId}`}>
+                                  <SelectTrigger className="h-8" data-testid={`select-alignment-${itemId}`}>
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -465,11 +464,11 @@ export default function CategorySectionSettingsPage() {
                             
                             <div className="flex items-center gap-2">
                               <Label 
-                                htmlFor={`upload-${item.categoryId}`}
+                                htmlFor={`upload-${itemId}`}
                                 className="cursor-pointer"
                               >
                                 <div className="flex items-center gap-1 text-xs text-primary hover:underline">
-                                  {uploadingId === item.categoryId ? (
+                                  {uploadingId === itemId ? (
                                     <Loader2 className="w-3 h-3 animate-spin" />
                                   ) : (
                                     <Upload className="w-3 h-3" />
@@ -477,12 +476,12 @@ export default function CategorySectionSettingsPage() {
                                   Custom Image
                                 </div>
                                 <input
-                                  id={`upload-${item.categoryId}`}
+                                  id={`upload-${itemId}`}
                                   type="file"
                                   accept="image/*"
                                   className="hidden"
-                                  onChange={(e) => handleImageUpload(e, item.categoryId)}
-                                  disabled={uploadingId === item.categoryId}
+                                  onChange={(e) => handleImageUpload(e, itemId)}
+                                  disabled={uploadingId === itemId}
                                 />
                               </Label>
                               {item.imageUrl && (
@@ -493,7 +492,7 @@ export default function CategorySectionSettingsPage() {
                                   onClick={() => setSettings(prev => ({
                                     ...prev,
                                     categories: prev.categories.map(c => 
-                                      c.categoryId === item.categoryId 
+                                      c.id === itemId 
                                         ? { ...c, imageUrl: "" } 
                                         : c
                                     )
@@ -509,8 +508,8 @@ export default function CategorySectionSettingsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => toggleCategoryVisibility(item.categoryId)}
-                              data-testid={`button-toggle-visibility-${item.categoryId}`}
+                              onClick={() => toggleCategoryVisibility(itemId)}
+                              data-testid={`button-toggle-visibility-${itemId}`}
                             >
                               {item.isVisible ? (
                                 <Eye className="w-4 h-4" />
@@ -521,8 +520,8 @@ export default function CategorySectionSettingsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => removeCategory(item.categoryId)}
-                              data-testid={`button-remove-category-${item.categoryId}`}
+                              onClick={() => removeCategory(itemId)}
+                              data-testid={`button-remove-category-${itemId}`}
                             >
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
@@ -657,13 +656,13 @@ export default function CategorySectionSettingsPage() {
                               className="grid gap-4"
                               style={{ gridTemplateColumns: gridCols }}
                             >
-                              {row.map((item) => {
+                              {row.map((item, idx) => {
                                 const category = getCategoryDetails(item.categoryId);
                                 const displayImage = item.imageUrl || category?.imageUrl || category?.bannerUrl;
                                 
                                 return (
                                   <div 
-                                    key={item.categoryId}
+                                    key={item.id || `preview_${item.categoryId}_${idx}`}
                                     className="aspect-square rounded-lg overflow-hidden relative"
                                   >
                                     {displayImage ? (
