@@ -17,6 +17,10 @@ import {
   insertReviewSchema,
   invoiceSettingsSchema,
   defaultInvoiceSettings,
+  homeCategorySectionSchema,
+  defaultHomeCategorySection,
+  blogSectionSchema,
+  defaultBlogSection,
 } from "@shared/schema";
 
 function escapeHtml(str: string): string {
@@ -483,6 +487,80 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ success: true, settings: req.body });
     } catch (error) {
       res.status(500).json({ error: "Failed to update branding settings" });
+    }
+  });
+
+  // Home Category Section Settings - GET
+  app.get("/api/settings/home-category-section", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("home_category_section");
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          const sectionSettings = { ...defaultHomeCategorySection, ...parsed };
+          res.json({ settings: sectionSettings });
+        } catch {
+          res.json({ settings: defaultHomeCategorySection });
+        }
+      } else {
+        res.json({ settings: defaultHomeCategorySection });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch home category section settings" });
+    }
+  });
+
+  // Home Category Section Settings - PUT (Admin only)
+  app.put("/api/settings/home-category-section", isAdmin, async (req, res) => {
+    try {
+      const validatedData = homeCategorySectionSchema.parse(req.body);
+      await storage.upsertSettings({
+        home_category_section: JSON.stringify(validatedData),
+      });
+      res.json({ success: true, settings: validatedData });
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        res.status(400).json({ error: "Invalid settings", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update home category section settings" });
+      }
+    }
+  });
+
+  // Blog Section Settings - GET
+  app.get("/api/settings/blog-section", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("blog_section");
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          const sectionSettings = { ...defaultBlogSection, ...parsed };
+          res.json({ settings: sectionSettings });
+        } catch {
+          res.json({ settings: defaultBlogSection });
+        }
+      } else {
+        res.json({ settings: defaultBlogSection });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch blog section settings" });
+    }
+  });
+
+  // Blog Section Settings - PUT (Admin only)
+  app.put("/api/settings/blog-section", isAdmin, async (req, res) => {
+    try {
+      const validatedData = blogSectionSchema.parse(req.body);
+      await storage.upsertSettings({
+        blog_section: JSON.stringify(validatedData),
+      });
+      res.json({ success: true, settings: validatedData });
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        res.status(400).json({ error: "Invalid settings", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update blog section settings" });
+      }
     }
   });
 

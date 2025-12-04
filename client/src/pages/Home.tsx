@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { HeroSection } from "@/components/store/HeroSection";
-import { HomeBlocks, SpecialOffersSection, NewArrivalsSection, CategoryShowcase } from "@/components/store/HomeBlocks";
+import { HomeBlocks, SpecialOffersSection, NewArrivalsSection, CategoryShowcase, BlogShowcase } from "@/components/store/HomeBlocks";
 import type { HomeBlock } from "@shared/schema";
 
 export default function Home() {
@@ -86,6 +86,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <BlogShowcase />
       </div>
     </div>
   );
