@@ -151,13 +151,15 @@ export function Header() {
             
             <Link href="/" className="flex items-center gap-2" data-testid="link-logo">
               {branding.logoUrl ? (
-                <img 
-                  src={branding.logoUrl} 
-                  alt={branding.storeName} 
-                  className="h-9 w-auto object-contain"
-                />
+                <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md">
+                  <img 
+                    src={branding.logoUrl} 
+                    alt={branding.storeName} 
+                    className="h-full w-full object-cover"
+                  />
+                </div>
               ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
                   {branding.storeName.charAt(0).toUpperCase()}
                 </div>
               )}
