@@ -49,6 +49,7 @@ import PublicRegistry from "@/pages/PublicRegistry";
 import SharedWishlist from "@/pages/SharedWishlist";
 import OrderConfirmation from "@/pages/OrderConfirmation";
 import Signup from "@/pages/Signup";
+import Login from "@/pages/Login";
 import BlogPost from "@/pages/BlogPost";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
@@ -169,6 +170,7 @@ function Router() {
       </Route>
 
       <Route path="/signup" component={Signup} />
+      <Route path="/login" component={Login} />
 
       <Route path="/blog/:slug">
         <StoreLayout>
