@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CreditCard, Truck, Package, Tag, X } from "lucide-react";
+import { CreditCard, Truck, Package, Tag, X, MapPin, Plus, Check, Loader2 } from "lucide-react";
 
 interface AppliedCoupon {
   code: string;
@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Form,
   FormControl,
@@ -37,8 +38,9 @@ import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Address } from "@shared/schema";
 
 const checkoutSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -64,6 +66,16 @@ export default function Checkout() {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "new" | null>(null);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+
+  // Fetch saved addresses for authenticated users
+  const { data: addressData, isLoading: addressesLoading } = useQuery<{ addresses: Address[] }>({
+    queryKey: ["/api/addresses"],
+    enabled: isAuthenticated,
+  });
+
+  const savedAddresses = addressData?.addresses || [];
 
   // Load applied coupon from localStorage
   useEffect(() => {
@@ -76,6 +88,22 @@ export default function Checkout() {
       }
     }
   }, []);
+
+  // Auto-select default address when addresses load
+  useEffect(() => {
+    if (isAuthenticated && savedAddresses.length > 0 && selectedAddressId === null) {
+      const defaultAddress = savedAddresses.find(addr => addr.isDefault) || savedAddresses[0];
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id);
+        // Pre-fill form with selected address
+        fillFormWithAddress(defaultAddress);
+      }
+    } else if (isAuthenticated && savedAddresses.length === 0 && !addressesLoading) {
+      // No saved addresses, show new address form
+      setShowNewAddressForm(true);
+      setSelectedAddressId("new");
+    }
+  }, [isAuthenticated, savedAddresses, addressesLoading]);
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
