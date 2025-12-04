@@ -1,14 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save, FileText, Building2, Receipt, Eye, Palette } from "lucide-react";
+import { Save, FileText, Building2, Receipt, Eye, Palette, Upload, X, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -25,6 +24,8 @@ import { invoiceSettingsSchema, defaultInvoiceSettings, type InvoiceSettings } f
 
 export default function InvoiceSettingsPage() {
   const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useQuery<{ settings: InvoiceSettings }>({
     queryKey: ["/api/settings/invoice"],
@@ -57,6 +58,84 @@ export default function InvoiceSettingsPage() {
 
   const onSubmit = (values: InvoiceSettings) => {
     saveMutation.mutate(values);
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      // Get presigned URL for upload
+      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
+        filename: file.name,
+        contentType: file.type,
+        folder: "invoice-logos",
+      });
+      
+      if (presignedResponse.status === 401) {
+        toast({ 
+          title: "Session expired", 
+          description: "Please log in again to upload files.",
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      if (!presignedResponse.ok) {
+        throw new Error("Failed to get upload URL");
+      }
+      
+      const { presignedUrl, objectPath } = await presignedResponse.json();
+
+      // Upload file directly to storage
+      const uploadResponse = await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to storage");
+      }
+
+      // Finalize upload to set ACL policy for public access
+      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
+        uploadURL: presignedUrl,
+      });
+      
+      if (finalizeResponse.status === 401) {
+        toast({ 
+          title: "Session expired", 
+          description: "Please log in again to complete the upload.",
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      if (!finalizeResponse.ok) {
+        throw new Error("Failed to finalize upload");
+      }
+      
+      const finalizedResult = await finalizeResponse.json();
+      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      
+      // Update the form with the new logo URL
+      form.setValue("logoUrl", finalUrl);
+      toast({ title: "Logo uploaded successfully" });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({ 
+        title: "Upload failed", 
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    form.setValue("logoUrl", "");
   };
 
   if (isLoading) {
@@ -433,11 +512,84 @@ export default function InvoiceSettingsPage() {
                   name="logoUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Logo URL</FormLabel>
+                      <FormLabel>Business Logo</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="https://your-store.com/logo.png" data-testid="input-logo-url" />
+                        <div className="space-y-3">
+                          {field.value ? (
+                            <div className="relative inline-block">
+                              <img 
+                                src={field.value} 
+                                alt="Business logo" 
+                                className="h-20 max-w-[200px] object-contain border rounded-md p-2"
+                                data-testid="img-logo-preview"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -top-2 -right-2 h-6 w-6"
+                                onClick={handleRemoveLogo}
+                                data-testid="button-remove-logo"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div 
+                              className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover-elevate"
+                              onClick={() => logoInputRef.current?.click()}
+                              data-testid="dropzone-logo"
+                            >
+                              <Image className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                              <p className="text-sm text-muted-foreground">Click to upload your business logo</p>
+                              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, or WebP (max 2MB)</p>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            ref={logoInputRef}
+                            className="hidden"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > 2 * 1024 * 1024) {
+                                  toast({ title: "Logo must be less than 2MB", variant: "destructive" });
+                                  return;
+                                }
+                                handleLogoUpload(file);
+                              }
+                            }}
+                            data-testid="input-logo-file"
+                          />
+                          {!field.value && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => logoInputRef.current?.click()}
+                              disabled={isUploading}
+                              data-testid="button-upload-logo"
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {isUploading ? "Uploading..." : "Upload Logo"}
+                            </Button>
+                          )}
+                          {field.value && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => logoInputRef.current?.click()}
+                              disabled={isUploading}
+                              size="sm"
+                              data-testid="button-change-logo"
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {isUploading ? "Uploading..." : "Change Logo"}
+                            </Button>
+                          )}
+                        </div>
                       </FormControl>
-                      <FormDescription>URL to your business logo (will appear on invoice header)</FormDescription>
+                      <FormDescription>Your business logo will appear on invoice headers</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
