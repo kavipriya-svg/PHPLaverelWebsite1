@@ -1,0 +1,235 @@
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { Package, Percent, ChevronRight, ShoppingCart, Calendar, ArrowRight, Gift } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useStore } from "@/contexts/StoreContext";
+import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
+import type { ProductWithDetails } from "@shared/schema";
+
+interface ComboOffer {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string | null;
+  productIds: string[];
+  originalPrice: string;
+  comboPrice: string;
+  discountPercentage: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  isActive: boolean | null;
+  position: number | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  products: ProductWithDetails[];
+}
+
+export default function ComboOffers() {
+  const { data, isLoading } = useQuery<{ offers: ComboOffer[] }>({
+    queryKey: ["/api/combo-offers", { active: "true" }],
+  });
+
+  const offers = data?.offers || [];
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Gift className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold">Combo Offers</h1>
+        </div>
+        <p className="text-muted-foreground">
+          Save more when you buy together! Check out our specially curated product bundles.
+        </p>
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="w-full h-48" />
+              <CardContent className="p-4 space-y-3">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : offers.length === 0 ? (
+        <div className="text-center py-16">
+          <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-2xl font-semibold mb-2">No Combo Offers Available</h2>
+          <p className="text-muted-foreground mb-6">
+            Check back soon for exciting product bundles!
+          </p>
+          <Button asChild>
+            <Link href="/">
+              Continue Shopping
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {offers.map((offer) => (
+            <ComboOfferCard key={offer.id} offer={offer} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ComboOfferCard({ offer }: { offer: ComboOffer }) {
+  const { addToCart } = useStore();
+  const { toast } = useToast();
+
+  const savings = parseFloat(offer.originalPrice) - parseFloat(offer.comboPrice);
+  const discountPercent = offer.discountPercentage 
+    ? parseFloat(offer.discountPercentage).toFixed(0) 
+    : ((savings / parseFloat(offer.originalPrice)) * 100).toFixed(0);
+
+  const hasEnded = offer.endDate && new Date(offer.endDate) < new Date();
+  const timeRemaining = offer.endDate ? getTimeRemaining(new Date(offer.endDate)) : null;
+
+  const handleAddComboToCart = async () => {
+    try {
+      for (const product of offer.products) {
+        await addToCart(product.id, 1);
+      }
+      toast({
+        title: "Combo added to cart!",
+        description: `${offer.name} - All ${offer.products.length} items added`,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to add combo",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Card className="overflow-hidden group" data-testid={`card-combo-${offer.id}`}>
+      <div className="relative">
+        {offer.imageUrl ? (
+          <img
+            src={offer.imageUrl}
+            alt={offer.name}
+            className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            <div className="grid grid-cols-2 gap-2 p-4">
+              {offer.products.slice(0, 4).map((product, idx) => (
+                <div key={idx} className="relative">
+                  {product.images?.[0]?.url ? (
+                    <img
+                      src={product.images[0].url}
+                      alt={product.title}
+                      className="w-16 h-16 rounded object-cover border bg-background"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded bg-muted flex items-center justify-center">
+                      <Package className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        <Badge className="absolute top-3 left-3 bg-green-600">
+          <Percent className="h-3 w-3 mr-1" />
+          {discountPercent}% OFF
+        </Badge>
+
+        {timeRemaining && !hasEnded && (
+          <Badge variant="secondary" className="absolute top-3 right-3">
+            <Calendar className="h-3 w-3 mr-1" />
+            {timeRemaining}
+          </Badge>
+        )}
+      </div>
+
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl line-clamp-1">{offer.name}</CardTitle>
+        {offer.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {offer.description}
+          </p>
+        )}
+      </CardHeader>
+
+      <CardContent className="pb-4">
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-1 max-h-20 overflow-hidden">
+            {offer.products.slice(0, 4).map((product) => (
+              <Link key={product.id} href={`/product/${product.slug}`}>
+                <Badge variant="outline" className="text-xs hover-elevate cursor-pointer">
+                  {product.title.length > 20 ? product.title.substring(0, 20) + '...' : product.title}
+                </Badge>
+              </Link>
+            ))}
+            {offer.products.length > 4 && (
+              <Badge variant="secondary" className="text-xs">
+                +{offer.products.length - 4} more
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex items-baseline gap-3">
+            <span className="text-2xl font-bold text-primary">
+              {formatCurrency(parseFloat(offer.comboPrice))}
+            </span>
+            <span className="text-lg text-muted-foreground line-through">
+              {formatCurrency(parseFloat(offer.originalPrice))}
+            </span>
+          </div>
+
+          <p className="text-sm text-green-600 font-medium">
+            You save {formatCurrency(savings)}!
+          </p>
+        </div>
+      </CardContent>
+
+      <CardFooter className="pt-0">
+        <Button 
+          className="w-full" 
+          onClick={handleAddComboToCart}
+          disabled={!!hasEnded}
+          data-testid={`button-add-combo-${offer.id}`}
+        >
+          <ShoppingCart className="h-4 w-4 mr-2" />
+          {hasEnded ? 'Offer Ended' : 'Add Combo to Cart'}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function getTimeRemaining(endDate: Date): string | null {
+  const now = new Date();
+  const diff = endDate.getTime() - now.getTime();
+  
+  if (diff <= 0) return null;
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  
+  if (days > 7) return `${days} days left`;
+  if (days > 0) return `${days}d ${hours}h left`;
+  if (hours > 0) return `${hours}h left`;
+  
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `${minutes}m left`;
+}
