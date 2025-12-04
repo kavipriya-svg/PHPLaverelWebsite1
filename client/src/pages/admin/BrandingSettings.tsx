@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 interface BrandingSettings {
   logoUrl: string;
   storeName: string;
+  showStoreName: boolean;
   faviconUrl: string;
   topBarText: string;
   showTopBar: boolean;
@@ -21,6 +22,7 @@ interface BrandingSettings {
 const defaultSettings: BrandingSettings = {
   logoUrl: "",
   storeName: "ShopHub",
+  showStoreName: true,
   faviconUrl: "",
   topBarText: "Free shipping on orders over ₹500 | Shop Now",
   showTopBar: true,
@@ -220,7 +222,9 @@ export default function BrandingSettingsPage() {
                         {settings.storeName.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <span className="font-bold text-xl">{settings.storeName}</span>
+                    {settings.showStoreName && (
+                      <span className="font-bold text-xl">{settings.storeName}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -237,7 +241,23 @@ export default function BrandingSettingsPage() {
                 The name displayed next to your logo
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <Label>Show Store Name</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Display the store name next to the logo in the header
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.showStoreName}
+                  onCheckedChange={(checked) => 
+                    setSettings(prev => ({ ...prev, showStoreName: checked }))
+                  }
+                  data-testid="switch-show-store-name"
+                />
+              </div>
+              
               <div className="space-y-2">
                 <Label>Store Name</Label>
                 <Input
