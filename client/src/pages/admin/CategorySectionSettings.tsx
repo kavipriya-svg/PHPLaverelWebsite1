@@ -64,15 +64,33 @@ export default function CategorySectionSettingsPage() {
 
   const allCategories = categoriesData?.categories || [];
 
+  const generateUniqueId = () => {
+    return `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  };
+
   useEffect(() => {
     if (data?.settings) {
-      setSettings({ ...defaultSettings, ...data.settings });
+      const normalizedSettings = { ...defaultSettings, ...data.settings };
+      // Ensure all category items have unique IDs (migrate legacy data)
+      normalizedSettings.categories = normalizedSettings.categories.map((cat, idx) => ({
+        ...cat,
+        id: cat.id || `legacy_${cat.categoryId}_${idx}_${Date.now()}`
+      }));
+      setSettings(normalizedSettings);
     }
   }, [data]);
 
   const saveMutation = useMutation({
     mutationFn: async (newSettings: HomeCategorySection) => {
-      const response = await apiRequest("PUT", "/api/settings/home-category-section", newSettings);
+      // Ensure all categories have unique IDs before saving
+      const normalizedSettings = {
+        ...newSettings,
+        categories: newSettings.categories.map((cat, idx) => ({
+          ...cat,
+          id: cat.id || generateUniqueId()
+        }))
+      };
+      const response = await apiRequest("PUT", "/api/settings/home-category-section", normalizedSettings);
       if (!response.ok) throw new Error("Failed to save");
       return response.json();
     },
@@ -148,10 +166,6 @@ export default function CategorySectionSettingsPage() {
     } finally {
       setUploadingId(null);
     }
-  };
-
-  const generateUniqueId = () => {
-    return `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   };
 
   const addCategory = (categoryId: string) => {
