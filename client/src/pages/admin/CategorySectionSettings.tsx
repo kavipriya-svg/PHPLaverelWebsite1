@@ -36,6 +36,19 @@ const defaultSettings: HomeCategorySection = {
   categories: [],
 };
 
+const widthOptions = [
+  { value: "25", label: "25%", description: "Quarter width" },
+  { value: "50", label: "50%", description: "Half width" },
+  { value: "75", label: "75%", description: "Three-quarter width" },
+  { value: "100", label: "100%", description: "Full width" },
+];
+
+const alignmentOptions = [
+  { value: "left", label: "Left" },
+  { value: "center", label: "Center" },
+  { value: "right", label: "Right" },
+];
+
 export default function CategorySectionSettingsPage() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<HomeCategorySection>(defaultSettings);
@@ -153,11 +166,31 @@ export default function CategorySectionSettingsPage() {
       imageUrl: category.imageUrl || category.bannerUrl || "",
       position: settings.categories.length,
       isVisible: true,
+      displayWidth: "50",
+      alignment: "center",
     };
 
     setSettings(prev => ({
       ...prev,
       categories: [...prev.categories, newItem]
+    }));
+  };
+
+  const updateCategoryWidth = (categoryId: string, displayWidth: "25" | "50" | "75" | "100") => {
+    setSettings(prev => ({
+      ...prev,
+      categories: prev.categories.map(c => 
+        c.categoryId === categoryId ? { ...c, displayWidth } : c
+      )
+    }));
+  };
+
+  const updateCategoryAlignment = (categoryId: string, alignment: "left" | "center" | "right") => {
+    setSettings(prev => ({
+      ...prev,
+      categories: prev.categories.map(c => 
+        c.categoryId === categoryId ? { ...c, alignment } : c
+      )
     }));
   };
 
@@ -382,14 +415,54 @@ export default function CategorySectionSettingsPage() {
                             )}
                           </div>
 
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 space-y-3">
                             <Input
                               value={item.customLabel || ""}
                               onChange={(e) => updateCategoryLabel(item.categoryId, e.target.value)}
                               placeholder={category?.name || "Category name"}
-                              className="mb-2"
                               data-testid={`input-category-label-${item.categoryId}`}
                             />
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs text-muted-foreground">Width</Label>
+                                <Select 
+                                  value={item.displayWidth || "50"} 
+                                  onValueChange={(value) => updateCategoryWidth(item.categoryId, value as "25" | "50" | "75" | "100")}
+                                >
+                                  <SelectTrigger className="h-8" data-testid={`select-width-${item.categoryId}`}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {widthOptions.map((option) => (
+                                      <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-xs text-muted-foreground">Alignment</Label>
+                                <Select 
+                                  value={item.alignment || "center"} 
+                                  onValueChange={(value) => updateCategoryAlignment(item.categoryId, value as "left" | "center" | "right")}
+                                >
+                                  <SelectTrigger className="h-8" data-testid={`select-alignment-${item.categoryId}`}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {alignmentOptions.map((option) => (
+                                      <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            
                             <div className="flex items-center gap-2">
                               <Label 
                                 htmlFor={`upload-${item.categoryId}`}
@@ -483,37 +556,125 @@ export default function CategorySectionSettingsPage() {
                       <p className="text-muted-foreground">{settings.subtitle}</p>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {settings.categories
-                      .filter(c => c.isVisible)
-                      .sort((a, b) => a.position - b.position)
-                      .slice(0, 6)
-                      .map((item) => {
-                        const category = getCategoryDetails(item.categoryId);
-                        const displayImage = item.imageUrl || category?.imageUrl || category?.bannerUrl;
+                  <div className="space-y-4">
+                    {(() => {
+                      const visibleItems = settings.categories
+                        .filter(c => c.isVisible)
+                        .sort((a, b) => a.position - b.position);
+                      
+                      const rows: typeof visibleItems[] = [];
+                      let currentRow: typeof visibleItems = [];
+                      let currentRowWidth = 0;
+                      
+                      for (const item of visibleItems) {
+                        const width = parseInt(item.displayWidth || "50");
+                        
+                        if (width === 100) {
+                          if (currentRow.length > 0) {
+                            rows.push(currentRow);
+                            currentRow = [];
+                            currentRowWidth = 0;
+                          }
+                          rows.push([item]);
+                        } else if (currentRowWidth + width <= 100) {
+                          currentRow.push(item);
+                          currentRowWidth += width;
+                          if (currentRowWidth === 100) {
+                            rows.push(currentRow);
+                            currentRow = [];
+                            currentRowWidth = 0;
+                          }
+                        } else {
+                          if (currentRow.length > 0) {
+                            rows.push(currentRow);
+                          }
+                          currentRow = [item];
+                          currentRowWidth = width;
+                        }
+                      }
+                      
+                      if (currentRow.length > 0) {
+                        rows.push(currentRow);
+                      }
+                      
+                      return rows.map((row, rowIndex) => {
+                        const isSingleItem = row.length === 1;
+                        const item = row[0];
+                        
+                        if (isSingleItem) {
+                          const width = parseInt(item.displayWidth || "50");
+                          const widthClass = 
+                            width === 100 ? "w-full" :
+                            item.displayWidth === "25" ? "w-1/4" :
+                            item.displayWidth === "75" ? "w-3/4" :
+                            "w-1/2";
+                          const alignClass = width === 100 ? "" :
+                            item.alignment === "left" ? "mr-auto" :
+                            item.alignment === "right" ? "ml-auto" :
+                            "mx-auto";
+                          
+                          const category = getCategoryDetails(item.categoryId);
+                          const displayImage = item.imageUrl || category?.imageUrl || category?.bannerUrl;
+                          
+                          return (
+                            <div key={rowIndex} className={`${widthClass} ${alignClass}`}>
+                              <div className="aspect-square rounded-lg overflow-hidden relative">
+                                {displayImage ? (
+                                  <img src={displayImage} alt={item.customLabel || category?.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                                  <h4 className="text-white font-semibold">{item.customLabel || category?.name}</h4>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        const totalWidth = row.reduce((sum, r) => sum + parseInt(r.displayWidth || "50"), 0);
+                        const isPartialRow = totalWidth < 100;
+                        
+                        const gridCols = row.map(r => {
+                          const w = parseInt(r.displayWidth || "50");
+                          return w === 25 ? "1fr" : w === 50 ? "2fr" : w === 75 ? "3fr" : "4fr";
+                        }).join(" ");
+                        
+                        const rowJustify = isPartialRow ? 
+                          (row[0]?.alignment === "right" ? "justify-end" : 
+                           row[0]?.alignment === "center" ? "justify-center" : 
+                           "justify-start") : "";
                         
                         return (
                           <div 
-                            key={item.categoryId}
-                            className="aspect-square rounded-lg overflow-hidden relative group"
+                            key={rowIndex}
+                            className={`grid gap-4 ${rowJustify}`}
+                            style={{ gridTemplateColumns: gridCols }}
                           >
-                            {displayImage ? (
-                              <img 
-                                src={displayImage} 
-                                alt={item.customLabel || category?.name} 
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
-                              <h4 className="text-white font-semibold">
-                                {item.customLabel || category?.name}
-                              </h4>
-                            </div>
+                            {row.map((item) => {
+                              const category = getCategoryDetails(item.categoryId);
+                              const displayImage = item.imageUrl || category?.imageUrl || category?.bannerUrl;
+                              
+                              return (
+                                <div 
+                                  key={item.categoryId}
+                                  className="aspect-square rounded-lg overflow-hidden relative"
+                                >
+                                  {displayImage ? (
+                                    <img src={displayImage} alt={item.customLabel || category?.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                                  )}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                                    <h4 className="text-white font-semibold">{item.customLabel || category?.name}</h4>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         );
-                      })}
+                      });
+                    })()}
                   </div>
                   {settings.categories.filter(c => c.isVisible).length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">

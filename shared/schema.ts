@@ -737,6 +737,8 @@ export const homeCategorySectionItemSchema = z.object({
   imageUrl: z.string().optional(),
   position: z.number().default(0),
   isVisible: z.boolean().default(true),
+  displayWidth: z.enum(["25", "50", "75", "100"]).default("50"),
+  alignment: z.enum(["left", "center", "right"]).default("center"),
 });
 
 export const homeCategorySectionSchema = z.object({
