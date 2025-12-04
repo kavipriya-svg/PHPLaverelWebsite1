@@ -27,7 +27,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - State-based GST calculation: same state = CGST+SGST (split 50/50), different state = IGST
 - Dynamic site branding from admin panel (logo upload, store name, announcement bar with visibility toggle)
 - Fully dynamic footer management (store info, social links, contact info, quick links, newsletter settings, section visibility toggles)
-- Dynamic Shop by Category section on homepage with admin controls (category selection, custom images/labels, ordering, visibility)
+- Dynamic Shop by Category section on homepage with admin controls (category selection, custom images/labels, ordering, visibility, width percentage 25/50/75/100%, alignment left/center/right) - uses banner-style row grouping where complementary widths display side-by-side on desktop
 - Blog section above footer with admin controls for creating/editing blog posts (title, excerpt, author, images, visibility)
 - Customer sign-up page using Replit OIDC authentication
 
