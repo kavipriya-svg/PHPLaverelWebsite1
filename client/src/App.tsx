@@ -47,6 +47,7 @@ import PublicRegistry from "@/pages/PublicRegistry";
 import SharedWishlist from "@/pages/SharedWishlist";
 import OrderConfirmation from "@/pages/OrderConfirmation";
 import Signup from "@/pages/Signup";
+import BlogPost from "@/pages/BlogPost";
 
 function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -160,6 +161,12 @@ function Router() {
       </Route>
 
       <Route path="/signup" component={Signup} />
+
+      <Route path="/blog/:slug">
+        <StoreLayout>
+          <BlogPost />
+        </StoreLayout>
+      </Route>
 
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/products" component={AdminProducts} />
