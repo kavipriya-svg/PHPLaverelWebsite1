@@ -81,6 +81,7 @@ export interface ComboOfferWithProducts extends ComboOffer {
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUser(id: string, data: Partial<UpsertUser>): Promise<User | undefined>;
   updateUserRole(id: string, role: string): Promise<User | undefined>;
   getUsers(search?: string): Promise<{ users: User[]; total: number }>;
 
@@ -270,6 +271,15 @@ export class DatabaseStorage implements IStorage {
     
     const [created] = await db.insert(users).values(userData).returning();
     return created;
+  }
+
+  async updateUser(id: string, data: Partial<UpsertUser>): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
   }
 
   async updateUserRole(id: string, role: string): Promise<User | undefined> {
