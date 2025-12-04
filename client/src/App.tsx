@@ -42,6 +42,7 @@ import AdminBrandingSettings from "@/pages/admin/BrandingSettings";
 import AdminCategorySectionSettings from "@/pages/admin/CategorySectionSettings";
 import AdminBlogSettings from "@/pages/admin/BlogSettings";
 import AdminComboOffers from "@/pages/admin/ComboOffers";
+import ComboOffers from "@/pages/ComboOffers";
 import GiftRegistry from "@/pages/GiftRegistry";
 import GiftRegistryDetail from "@/pages/GiftRegistryDetail";
 import PublicRegistry from "@/pages/PublicRegistry";
@@ -116,6 +117,12 @@ function Router() {
       <Route path="/special-offers">
         <StoreLayout>
           <SpecialOffers />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/combo-offers">
+        <StoreLayout>
+          <ComboOffers />
         </StoreLayout>
       </Route>
       
