@@ -119,6 +119,7 @@ export const products = pgTable("products", {
   isActive: boolean("is_active").default(true),
   averageRating: decimal("average_rating", { precision: 2, scale: 1 }).default("0"),
   reviewCount: integer("review_count").default(0),
+  gstRate: decimal("gst_rate", { precision: 5, scale: 2 }).default("18"), // GST percentage for this product
   metaTitle: varchar("meta_title"),
   metaDescription: text("meta_description"),
   metaKeywords: varchar("meta_keywords"),
@@ -677,7 +678,8 @@ export const invoiceSettingsSchema = z.object({
   
   // GST Settings
   gstNumber: z.string().default(""),
-  gstPercentage: z.number().min(0).max(100).default(8),
+  gstPercentage: z.number().min(0).max(100).default(18), // Default GST rate
+  gstRates: z.array(z.number()).default([0, 5, 12, 18, 28]), // Available GST rates for products
   
   // Buyer Label Customization
   buyerLabelName: z.string().default("Customer Name"),
@@ -711,7 +713,8 @@ export const defaultInvoiceSettings: InvoiceSettings = {
   sellerPhone: "",
   sellerEmail: "",
   gstNumber: "",
-  gstPercentage: 8,
+  gstPercentage: 18,
+  gstRates: [0, 5, 12, 18, 28],
   buyerLabelName: "Customer Name",
   buyerLabelAddress: "Address",
   buyerLabelPhone: "Phone",
