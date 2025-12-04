@@ -19,6 +19,7 @@ import SearchResults from "@/pages/SearchResults";
 import SpecialOffers from "@/pages/SpecialOffers";
 import Account from "@/pages/Account";
 import AccountOrders from "@/pages/AccountOrders";
+import AccountOrderDetail from "@/pages/AccountOrderDetail";
 import Profile from "@/pages/Profile";
 import Addresses from "@/pages/Addresses";
 import AccountSettings from "@/pages/AccountSettings";
@@ -133,6 +134,12 @@ function Router() {
       <Route path="/account">
         <StoreLayout>
           <Account />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/account/orders/:orderNumber">
+        <StoreLayout>
+          <AccountOrderDetail />
         </StoreLayout>
       </Route>
       
