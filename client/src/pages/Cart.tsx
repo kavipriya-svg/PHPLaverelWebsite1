@@ -1,39 +1,100 @@
 import { Link } from "wouter";
-import { ShoppingCart, Minus, Plus, Trash2, ArrowRight } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/contexts/StoreContext";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+interface AppliedCoupon {
+  code: string;
+  type: string;
+  amount: string;
+  productId?: string | null;
+}
 
 export default function Cart() {
   const { cartItems, cartTotal, updateCartItem, removeFromCart, isCartLoading } = useStore();
   const { toast } = useToast();
   const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  // Load any previously applied coupon from localStorage on mount
+  useEffect(() => {
+    const savedCoupon = localStorage.getItem("appliedCoupon");
+    if (savedCoupon) {
+      try {
+        setAppliedCoupon(JSON.parse(savedCoupon));
+      } catch (e) {
+        localStorage.removeItem("appliedCoupon");
+      }
+    }
+  }, []);
 
   const applyCouponMutation = useMutation({
     mutationFn: async (code: string) => {
-      return await apiRequest("POST", "/api/cart/coupon", { code });
+      const response = await apiRequest("GET", `/api/coupons/validate/${encodeURIComponent(code)}`);
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: { coupon: AppliedCoupon }) => {
+      const coupon = data.coupon;
+      setAppliedCoupon(coupon);
+      localStorage.setItem("appliedCoupon", JSON.stringify(coupon));
+      setCouponCode("");
       toast({
         title: "Coupon applied",
-        description: "Your discount has been applied to the order.",
+        description: `Discount of ${coupon.type === 'percentage' ? `${coupon.amount}%` : formatCurrency(parseFloat(coupon.amount))} has been applied.`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Invalid coupon",
-        description: "This coupon code is invalid or expired.",
+        description: error.message || "This coupon code is invalid or expired.",
         variant: "destructive",
       });
     },
   });
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    localStorage.removeItem("appliedCoupon");
+    toast({
+      title: "Coupon removed",
+      description: "The discount has been removed from your order.",
+    });
+  };
+
+  // Calculate discount based on applied coupon
+  const calculateDiscount = () => {
+    if (!appliedCoupon) return 0;
+    
+    // If coupon is product-specific, only apply to that product
+    if (appliedCoupon.productId) {
+      const applicableItem = cartItems.find(item => item.productId === appliedCoupon.productId);
+      if (!applicableItem) return 0;
+      
+      const itemPrice = applicableItem.variant?.price || applicableItem.product.salePrice || applicableItem.product.price;
+      const itemTotal = parseFloat(itemPrice as string) * applicableItem.quantity;
+      
+      if (appliedCoupon.type === 'percentage') {
+        return (itemTotal * parseFloat(appliedCoupon.amount)) / 100;
+      } else {
+        return Math.min(parseFloat(appliedCoupon.amount), itemTotal);
+      }
+    }
+    
+    // Store-wide coupon
+    if (appliedCoupon.type === 'percentage') {
+      return (cartTotal * parseFloat(appliedCoupon.amount)) / 100;
+    } else {
+      return Math.min(parseFloat(appliedCoupon.amount), cartTotal);
+    }
+  };
 
   if (isCartLoading) {
     return (
@@ -65,8 +126,9 @@ export default function Cart() {
   }
 
   const subtotal = cartTotal;
-  const shipping = subtotal >= 50 ? 0 : 9.99;
-  const total = subtotal + shipping;
+  const discount = calculateDiscount();
+  const shipping = subtotal >= 500 ? 0 : 99;
+  const total = subtotal - discount + shipping;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -157,22 +219,49 @@ export default function Cart() {
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Coupon code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  data-testid="input-coupon"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => applyCouponMutation.mutate(couponCode)}
-                  disabled={!couponCode || applyCouponMutation.isPending}
-                  data-testid="button-apply-coupon"
-                >
-                  Apply
-                </Button>
-              </div>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between bg-green-50 dark:bg-green-950/30 p-3 rounded-md border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <div>
+                      <p className="text-sm font-medium text-green-700 dark:text-green-300" data-testid="text-applied-coupon">
+                        {appliedCoupon.code}
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400" data-testid="text-discount-amount">
+                        {appliedCoupon.type === 'percentage' 
+                          ? `${appliedCoupon.amount}% off` 
+                          : `${formatCurrency(parseFloat(appliedCoupon.amount))} off`}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-green-600 hover:text-destructive"
+                    onClick={removeCoupon}
+                    data-testid="button-remove-coupon"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    data-testid="input-coupon"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => applyCouponMutation.mutate(couponCode)}
+                    disabled={!couponCode || applyCouponMutation.isPending}
+                    data-testid="button-apply-coupon"
+                  >
+                    {applyCouponMutation.isPending ? "..." : "Apply"}
+                  </Button>
+                </div>
+              )}
 
               <Separator />
 
@@ -181,6 +270,12 @@ export default function Cart() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                    <span>Discount</span>
+                    <span data-testid="text-cart-discount">-{formatCurrency(discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
                   <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
@@ -196,7 +291,7 @@ export default function Cart() {
 
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>
-                <span>{formatCurrency(total)}</span>
+                <span data-testid="text-cart-total">{formatCurrency(total)}</span>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
