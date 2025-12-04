@@ -378,6 +378,114 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Default footer settings
+  const defaultFooterSettings = {
+    storeName: "ShopHub",
+    storeDescription: "Your one-stop destination for quality products at great prices. Shop with confidence.",
+    logoUrl: "",
+    socialLinks: {
+      facebook: "",
+      twitter: "",
+      instagram: "",
+      youtube: "",
+    },
+    contactInfo: {
+      phone: "1-800-SHOPHUB",
+      email: "support@shophub.com",
+      address: "123 Commerce Street\nNew York, NY 10001",
+    },
+    quickLinks: [
+      { label: "About Us", url: "/about" },
+      { label: "Contact Us", url: "/contact" },
+      { label: "FAQ", url: "/faq" },
+      { label: "Track Order", url: "/track-order" },
+      { label: "Shipping Info", url: "/shipping" },
+      { label: "Returns & Exchanges", url: "/returns" },
+    ],
+    legalLinks: [
+      { label: "Privacy Policy", url: "/privacy" },
+      { label: "Terms of Service", url: "/terms" },
+    ],
+    newsletterEnabled: true,
+    newsletterTitle: "Newsletter",
+    newsletterDescription: "Subscribe for exclusive deals, new arrivals, and more.",
+    copyrightText: "All rights reserved.",
+    showSocialLinks: true,
+    showContactInfo: true,
+    showQuickLinks: true,
+    showNewsletter: true,
+  };
+
+  // Footer Settings - GET
+  app.get("/api/settings/footer", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("footer_settings");
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          const footerSettings = { ...defaultFooterSettings, ...parsed };
+          res.json({ settings: footerSettings });
+        } catch {
+          res.json({ settings: defaultFooterSettings });
+        }
+      } else {
+        res.json({ settings: defaultFooterSettings });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch footer settings" });
+    }
+  });
+
+  // Footer Settings - PUT (Admin only)
+  app.put("/api/settings/footer", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({
+        footer_settings: JSON.stringify(req.body),
+      });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update footer settings" });
+    }
+  });
+
+  // Site Branding Settings - GET
+  app.get("/api/settings/branding", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("branding_settings");
+      const defaultBranding = {
+        logoUrl: "",
+        storeName: "ShopHub",
+        faviconUrl: "",
+        topBarText: "Free shipping on orders over ₹500 | Shop Now",
+        showTopBar: true,
+      };
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          res.json({ settings: { ...defaultBranding, ...parsed } });
+        } catch {
+          res.json({ settings: defaultBranding });
+        }
+      } else {
+        res.json({ settings: defaultBranding });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch branding settings" });
+    }
+  });
+
+  // Site Branding Settings - PUT (Admin only)
+  app.put("/api/settings/branding", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({
+        branding_settings: JSON.stringify(req.body),
+      });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update branding settings" });
+    }
+  });
+
   app.get("/api/cart", optionalAuth, async (req, res) => {
     try {
       const userInfo = getUserInfo(req);

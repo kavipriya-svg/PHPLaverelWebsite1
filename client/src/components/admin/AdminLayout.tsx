@@ -19,6 +19,8 @@ import {
   Search,
   Warehouse,
   FileText,
+  Paintbrush,
+  PanelBottom,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -54,6 +56,8 @@ const adminMenuItems = [
   { href: "/admin/email", icon: Mail, label: "Email" },
   { href: "/admin/seo", icon: Search, label: "SEO" },
   { href: "/admin/invoice", icon: FileText, label: "Invoice" },
+  { href: "/admin/branding", icon: Paintbrush, label: "Branding" },
+  { href: "/admin/footer", icon: PanelBottom, label: "Footer" },
   { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
