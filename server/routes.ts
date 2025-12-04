@@ -211,6 +211,126 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(user || null);
   });
 
+  // Update user profile
+  app.put("/api/profile", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { firstName, lastName, phone } = req.body;
+      const updatedUser = await storage.updateUser(userInfo.id, {
+        firstName,
+        lastName,
+        phone,
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Get user addresses
+  app.get("/api/addresses", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const addresses = await storage.getUserAddresses(userInfo.id);
+      res.json({ addresses });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch addresses" });
+    }
+  });
+
+  // Create new address
+  app.post("/api/addresses", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const address = await storage.createAddress({
+        ...req.body,
+        userId: userInfo.id,
+      });
+      res.json(address);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create address" });
+    }
+  });
+
+  // Update address
+  app.put("/api/addresses/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Verify ownership
+      const addresses = await storage.getUserAddresses(userInfo.id);
+      const ownsAddress = addresses.some(a => a.id === req.params.id);
+      if (!ownsAddress) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const address = await storage.updateAddress(req.params.id, req.body);
+      res.json(address);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update address" });
+    }
+  });
+
+  // Delete address
+  app.delete("/api/addresses/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Verify ownership
+      const addresses = await storage.getUserAddresses(userInfo.id);
+      const ownsAddress = addresses.some(a => a.id === req.params.id);
+      if (!ownsAddress) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      await storage.deleteAddress(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete address" });
+    }
+  });
+
+  // Set default address
+  app.put("/api/addresses/:id/default", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Verify ownership
+      const addresses = await storage.getUserAddresses(userInfo.id);
+      const ownsAddress = addresses.some(a => a.id === req.params.id);
+      if (!ownsAddress) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const address = await storage.updateAddress(req.params.id, { isDefault: true });
+      res.json(address);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to set default address" });
+    }
+  });
+
   app.get("/api/categories", async (req, res) => {
     try {
       const categories = await storage.getCategories();
