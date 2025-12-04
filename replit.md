@@ -22,7 +22,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Single-use coupon enforcement (one per customer/email per order)
 - Three-category coupon display system (product-specific, store-wide, bulk purchase)
 - Currency selection from Admin Settings (INR default)
-- GST-compliant invoice generation with customizable templates (seller details, GST number/percentage, display toggles, branding)
+- GST-compliant invoice generation with customizable templates (seller details, GST number/percentage, display toggles, branding with direct logo upload)
 
 ## User Preferences
 
