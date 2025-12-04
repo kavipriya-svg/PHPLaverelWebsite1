@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Package, Percent, ChevronRight, ShoppingCart, Calendar, ArrowRight, Gift } from "lucide-react";
+import { Package, Percent, ChevronRight, ShoppingCart, Calendar, ArrowRight, Gift, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +30,7 @@ interface ComboOffer {
 }
 
 export default function ComboOffers() {
-  const { data, isLoading } = useQuery<{ offers: ComboOffer[] }>({
+  const { data, isLoading, isError, refetch } = useQuery<{ offers: ComboOffer[] }>({
     queryKey: ["/api/combo-offers", { active: "true" }],
   });
 
@@ -62,6 +62,18 @@ export default function ComboOffers() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      ) : isError ? (
+        <div className="text-center py-16">
+          <AlertCircle className="h-16 w-16 mx-auto mb-4 text-destructive" />
+          <h2 className="text-2xl font-semibold mb-2">Failed to Load Offers</h2>
+          <p className="text-muted-foreground mb-6">
+            Something went wrong while loading combo offers. Please try again.
+          </p>
+          <Button onClick={() => refetch()} data-testid="button-retry-combo-offers">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
         </div>
       ) : offers.length === 0 ? (
         <div className="text-center py-16">

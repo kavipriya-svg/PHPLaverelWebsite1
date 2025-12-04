@@ -170,6 +170,14 @@ export function Header() {
                       Special Offers
                     </Link>
                     <Link 
+                      href="/combo-offers" 
+                      className="flex items-center gap-2 px-2 py-2 text-sm hover-elevate rounded-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                      data-testid="link-combo-offers-mobile"
+                    >
+                      Combo Offers
+                    </Link>
+                    <Link 
                       href="/featured" 
                       className="flex items-center gap-2 px-2 py-2 text-sm hover-elevate rounded-md"
                       onClick={() => setMobileMenuOpen(false)}
@@ -231,6 +239,13 @@ export function Header() {
               data-testid="link-special-offers"
             >
               Sale
+            </Link>
+            <Link
+              href="/combo-offers"
+              className="px-4 py-2 text-base font-semibold text-primary hover-elevate rounded-md"
+              data-testid="link-combo-offers"
+            >
+              Combos
             </Link>
           </nav>
 
