@@ -8,16 +8,22 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon"
+      size="sm"
+      className="flex items-center gap-1.5"
       onClick={toggleTheme}
       data-testid="button-theme-toggle"
     >
       {theme === "dark" ? (
-        <Sun className="h-5 w-5" />
+        <>
+          <Sun className="h-5 w-5" />
+          <span className="hidden md:inline text-sm">Light</span>
+        </>
       ) : (
-        <Moon className="h-5 w-5" />
+        <>
+          <Moon className="h-5 w-5" />
+          <span className="hidden md:inline text-sm">Dark</span>
+        </>
       )}
-      <span className="sr-only">Toggle theme</span>
     </Button>
   );
 }
