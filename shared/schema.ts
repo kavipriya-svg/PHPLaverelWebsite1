@@ -309,6 +309,7 @@ export const addresses = pgTable("addresses", {
   firstName: varchar("first_name").notNull(),
   lastName: varchar("last_name").notNull(),
   company: varchar("company"),
+  gstNumber: varchar("gst_number"), // Optional GST number for business invoicing
   address1: varchar("address1").notNull(),
   address2: varchar("address2"),
   city: varchar("city").notNull(),
