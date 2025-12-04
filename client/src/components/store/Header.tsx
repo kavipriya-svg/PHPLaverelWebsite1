@@ -38,6 +38,7 @@ import type { CategoryWithChildren } from "@shared/schema";
 interface BrandingSettings {
   logoUrl: string;
   storeName: string;
+  showStoreName: boolean;
   faviconUrl: string;
   topBarText: string;
   showTopBar: boolean;
@@ -46,6 +47,7 @@ interface BrandingSettings {
 const defaultBranding: BrandingSettings = {
   logoUrl: "",
   storeName: "ShopHub",
+  showStoreName: true,
   faviconUrl: "",
   topBarText: "Free shipping on orders over ₹500 | Shop Now",
   showTopBar: true,
@@ -159,7 +161,9 @@ export function Header() {
                   {branding.storeName.charAt(0).toUpperCase()}
                 </div>
               )}
-              <span className="hidden font-bold text-xl sm:inline-block">{branding.storeName}</span>
+              {branding.showStoreName && (
+                <span className="hidden font-bold text-xl sm:inline-block">{branding.storeName}</span>
+              )}
             </Link>
           </div>
 
