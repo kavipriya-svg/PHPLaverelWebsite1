@@ -40,7 +40,7 @@ export default function Account() {
   }
 
   const menuItems = [
-    { href: "/account", icon: User, label: "Profile", description: "Manage your personal information" },
+    { href: "/account/profile", icon: User, label: "Profile", description: "Manage your personal information" },
     { href: "/account/orders", icon: Package, label: "Orders", description: "View your order history" },
     { href: "/wishlist", icon: Heart, label: "Wishlist", description: "Products you've saved" },
     { href: "/account/addresses", icon: MapPin, label: "Addresses", description: "Manage shipping addresses" },
