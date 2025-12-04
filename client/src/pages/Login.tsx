@@ -85,7 +85,7 @@ export default function Login() {
           </Card>
 
           <div className="grid grid-cols-3 gap-4 mb-8">
-            <Card className="p-4">
+            <Card className="p-4" data-testid="card-feature-orders">
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <ShoppingBag className="w-5 h-5 text-primary" />
@@ -96,7 +96,7 @@ export default function Login() {
                 </div>
               </div>
             </Card>
-            <Card className="p-4">
+            <Card className="p-4" data-testid="card-feature-wishlist">
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Heart className="w-5 h-5 text-primary" />
@@ -107,7 +107,7 @@ export default function Login() {
                 </div>
               </div>
             </Card>
-            <Card className="p-4">
+            <Card className="p-4" data-testid="card-feature-tracking">
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Package className="w-5 h-5 text-primary" />
