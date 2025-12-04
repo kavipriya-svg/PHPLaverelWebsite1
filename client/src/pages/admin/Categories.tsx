@@ -9,6 +9,8 @@ import {
   Trash2,
   GripVertical,
   Upload,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +48,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -175,6 +178,24 @@ function CategoryItem({
   level: number;
 }) {
   const [expanded, setExpanded] = useState(level < 1);
+  const { toast } = useToast();
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("PATCH", `/api/admin/categories/${category.id}`, {
+        isActive: !category.isActive,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
+      toast({ 
+        title: `Category ${!category.isActive ? "activated" : "deactivated"} successfully` 
+      });
+    },
+    onError: () => {
+      toast({ title: "Failed to update category status", variant: "destructive" });
+    },
+  });
 
   // Use nested children from the category object (tree structure from API)
   const children = category.children || [];
@@ -234,6 +255,23 @@ function CategoryItem({
             <DropdownMenuItem onClick={() => onEdit(category)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => toggleStatusMutation.mutate()}
+              disabled={toggleStatusMutation.isPending}
+              data-testid={`button-toggle-status-${category.id}`}
+            >
+              {category.isActive ? (
+                <>
+                  <EyeOff className="h-4 w-4 mr-2" />
+                  Deactivate
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Activate
+                </>
+              )}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
@@ -492,6 +530,21 @@ function CategoryDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
+            />
+          </div>
+
+          <div className="flex items-center justify-between border rounded-lg p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="category-active">Active Status</Label>
+              <p className="text-sm text-muted-foreground">
+                {isActive ? "Category is visible to customers" : "Category is hidden from customers"}
+              </p>
+            </div>
+            <Switch
+              id="category-active"
+              checked={isActive}
+              onCheckedChange={setIsActive}
+              data-testid="switch-category-active"
             />
           </div>
 
