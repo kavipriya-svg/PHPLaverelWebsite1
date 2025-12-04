@@ -377,8 +377,18 @@ export default function Checkout() {
                                     <p className="text-sm text-muted-foreground">
                                       {address.city}, {address.state} {address.postalCode}
                                     </p>
-                                    {address.phone && (
-                                      <p className="text-sm text-muted-foreground">{address.phone}</p>
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                                      {user?.email && (
+                                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                                      )}
+                                      {address.phone && (
+                                        <p className="text-sm text-muted-foreground">{address.phone}</p>
+                                      )}
+                                    </div>
+                                    {address.gstNumber && (
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        <span className="font-medium">GST:</span> {address.gstNumber}
+                                      </p>
                                     )}
                                   </div>
                                   {selectedAddressId === address.id && (
