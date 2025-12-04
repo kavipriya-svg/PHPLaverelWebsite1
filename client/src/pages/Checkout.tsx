@@ -89,22 +89,6 @@ export default function Checkout() {
     }
   }, []);
 
-  // Auto-select default address when addresses load
-  useEffect(() => {
-    if (isAuthenticated && savedAddresses.length > 0 && selectedAddressId === null) {
-      const defaultAddress = savedAddresses.find(addr => addr.isDefault) || savedAddresses[0];
-      if (defaultAddress) {
-        setSelectedAddressId(defaultAddress.id);
-        // Pre-fill form with selected address
-        fillFormWithAddress(defaultAddress);
-      }
-    } else if (isAuthenticated && savedAddresses.length === 0 && !addressesLoading) {
-      // No saved addresses, show new address form
-      setShowNewAddressForm(true);
-      setSelectedAddressId("new");
-    }
-  }, [isAuthenticated, savedAddresses, addressesLoading]);
-
   const removeCoupon = () => {
     setAppliedCoupon(null);
     localStorage.removeItem("appliedCoupon");
@@ -152,12 +136,63 @@ export default function Checkout() {
       city: "",
       state: "",
       postalCode: "",
-      country: "US",
+      country: "India",
       phone: "",
       sameAsBilling: true,
-      paymentMethod: "stripe",
+      paymentMethod: "cod",
     },
   });
+
+  // Function to fill form with address data
+  const fillFormWithAddress = (address: Address) => {
+    form.setValue("firstName", address.firstName);
+    form.setValue("lastName", address.lastName);
+    form.setValue("address1", address.address1);
+    form.setValue("address2", address.address2 || "");
+    form.setValue("city", address.city);
+    form.setValue("state", address.state || "");
+    form.setValue("postalCode", address.postalCode);
+    form.setValue("country", address.country);
+    form.setValue("phone", address.phone || "");
+  };
+
+  // Handle address selection
+  const handleSelectAddress = (addressId: string | "new") => {
+    setSelectedAddressId(addressId);
+    if (addressId === "new") {
+      setShowNewAddressForm(true);
+      // Clear the form for new address entry
+      form.setValue("firstName", user?.firstName || "");
+      form.setValue("lastName", user?.lastName || "");
+      form.setValue("address1", "");
+      form.setValue("address2", "");
+      form.setValue("city", "");
+      form.setValue("state", "");
+      form.setValue("postalCode", "");
+      form.setValue("country", "India");
+      form.setValue("phone", "");
+    } else {
+      setShowNewAddressForm(false);
+      const selectedAddress = savedAddresses.find(addr => addr.id === addressId);
+      if (selectedAddress) {
+        fillFormWithAddress(selectedAddress);
+      }
+    }
+  };
+
+  // Auto-select default address when addresses load
+  useEffect(() => {
+    if (isAuthenticated && savedAddresses.length > 0 && selectedAddressId === null) {
+      const defaultAddress = savedAddresses.find(addr => addr.isDefault) || savedAddresses[0];
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id);
+        fillFormWithAddress(defaultAddress);
+      }
+    } else if (isAuthenticated && savedAddresses.length === 0 && !addressesLoading) {
+      setShowNewAddressForm(true);
+      setSelectedAddressId("new");
+    }
+  }, [isAuthenticated, savedAddresses, addressesLoading, selectedAddressId]);
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: CheckoutFormData) => {
@@ -304,142 +339,229 @@ export default function Checkout() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>First Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} data-testid="input-firstname" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                  {/* Address Selection for Authenticated Users */}
+                  {isAuthenticated && (
+                    <div className="space-y-3">
+                      {addressesLoading ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                          <span className="ml-2 text-sm text-muted-foreground">Loading saved addresses...</span>
+                        </div>
+                      ) : savedAddresses.length > 0 ? (
+                        <>
+                          <p className="text-sm text-muted-foreground mb-2">Select a saved address or enter a new one:</p>
+                          <div className="grid gap-3">
+                            {savedAddresses.map((address) => (
+                              <div
+                                key={address.id}
+                                onClick={() => handleSelectAddress(address.id)}
+                                className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
+                                  selectedAddressId === address.id
+                                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                    : "border-border"
+                                }`}
+                                data-testid={`address-option-${address.id}`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-medium">{address.firstName} {address.lastName}</span>
+                                      {address.isDefault && (
+                                        <Badge variant="secondary" className="text-xs">Default</Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      {address.address1}
+                                      {address.address2 && `, ${address.address2}`}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {address.city}, {address.state} {address.postalCode}
+                                    </p>
+                                    {address.phone && (
+                                      <p className="text-sm text-muted-foreground">{address.phone}</p>
+                                    )}
+                                  </div>
+                                  {selectedAddressId === address.id && (
+                                    <div className="shrink-0">
+                                      <Check className="h-5 w-5 text-primary" />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            
+                            {/* Option to add new address */}
+                            <div
+                              onClick={() => handleSelectAddress("new")}
+                              className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
+                                selectedAddressId === "new"
+                                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                  : "border-dashed border-border"
+                              }`}
+                              data-testid="address-option-new"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Plus className="h-5 w-5 text-muted-foreground" />
+                                <span className="font-medium">Use a different address</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {selectedAddressId !== "new" && (
+                            <Separator className="my-4" />
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-sm text-muted-foreground mb-4">
+                          <MapPin className="h-4 w-4 inline mr-1" />
+                          No saved addresses. Enter your shipping address below.
+                        </div>
                       )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Last Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} data-testid="input-lastname" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                    </div>
+                  )}
 
-                  <FormField
-                    control={form.control}
-                    name="address1"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Street address" {...field} data-testid="input-address1" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Show address form for: guests, or when "new address" is selected, or when no saved addresses */}
+                  {(!isAuthenticated || showNewAddressForm || savedAddresses.length === 0) && (
+                    <>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>First Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} data-testid="input-firstname" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Last Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} data-testid="input-lastname" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
-                  <FormField
-                    control={form.control}
-                    name="address2"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Apartment, suite, etc. (optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} data-testid="input-address2" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="address1"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Street address" {...field} data-testid="input-address1" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <FormControl>
-                            <Input {...field} data-testid="input-city" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <FormControl>
-                            <Input {...field} data-testid="input-state" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="postalCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Postal Code</FormLabel>
-                          <FormControl>
-                            <Input {...field} data-testid="input-postal" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                      <FormField
+                        control={form.control}
+                        name="address2"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Apartment, suite, etc. (optional)</FormLabel>
+                            <FormControl>
+                              <Input {...field} data-testid="input-address2" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Country</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-country">
-                              <SelectValue placeholder="Select country" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="US">United States</SelectItem>
-                            <SelectItem value="CA">Canada</SelectItem>
-                            <SelectItem value="GB">United Kingdom</SelectItem>
-                            <SelectItem value="AU">Australia</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <div className="grid sm:grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>City</FormLabel>
+                              <FormControl>
+                                <Input {...field} data-testid="input-city" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>State</FormLabel>
+                              <FormControl>
+                                <Input {...field} data-testid="input-state" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="postalCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Postal Code</FormLabel>
+                              <FormControl>
+                                <Input {...field} data-testid="input-postal" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input type="tel" {...field} data-testid="input-phone" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-country">
+                                  <SelectValue placeholder="Select country" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="India">India</SelectItem>
+                                <SelectItem value="US">United States</SelectItem>
+                                <SelectItem value="CA">Canada</SelectItem>
+                                <SelectItem value="GB">United Kingdom</SelectItem>
+                                <SelectItem value="AU">Australia</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone</FormLabel>
+                            <FormControl>
+                              <Input type="tel" {...field} data-testid="input-phone" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
