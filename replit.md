@@ -25,6 +25,8 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - GST-compliant invoice generation with customizable templates (seller details, GST number/percentage, display toggles, branding with direct logo upload)
 - Per-product GST rates (0%, 5%, 12%, 18%, 28%) with rate captured at order time for accurate historical invoicing
 - State-based GST calculation: same state = CGST+SGST (split 50/50), different state = IGST
+- Dynamic site branding from admin panel (logo upload, store name, announcement bar with visibility toggle)
+- Fully dynamic footer management (store info, social links, contact info, quick links, newsletter settings, section visibility toggles)
 
 ## User Preferences
 
