@@ -890,6 +890,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           price: item.price,
           quantity: item.quantity,
           imageUrl: item.imageUrl,
+          gstRate: item.gstRate || "18", // Capture GST rate at time of purchase
         };
       });
 
