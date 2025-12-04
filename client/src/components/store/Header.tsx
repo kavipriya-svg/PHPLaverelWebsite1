@@ -101,24 +101,34 @@ export function Header() {
       {/* Search Bar Row - Between Top Banner and Main Menu */}
       <div className="bg-muted/30 border-b py-2">
         <div className="container mx-auto px-4">
-          <form onSubmit={handleSearch} className="relative flex items-center max-w-2xl mx-auto">
-            <Search className="absolute left-3 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 h-11 text-base"
-              data-testid="input-search"
-            />
-            <Button
-              type="submit"
-              className="absolute right-1 h-9"
-              data-testid="button-search-submit"
-            >
-              Search
-            </Button>
-          </form>
+          <div className="flex items-center gap-4 max-w-4xl mx-auto">
+            <form onSubmit={handleSearch} className="relative flex items-center flex-1">
+              <Search className="absolute left-3 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-24 h-11 text-base"
+                data-testid="input-search"
+              />
+              <Button
+                type="submit"
+                className="absolute right-1 h-9"
+                data-testid="button-search-submit"
+              >
+                Search
+              </Button>
+            </form>
+            <div className="flex items-center gap-1">
+              <Link href="/track-order">
+                <Button variant="ghost" size="icon" data-testid="button-track-order">
+                  <Package className="h-5 w-5" />
+                </Button>
+              </Link>
+              <ThemeToggle />
+            </div>
+          </div>
         </div>
       </div>
       
@@ -225,14 +235,6 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link href="/track-order" className="hidden sm:block">
-              <Button variant="ghost" size="icon" data-testid="button-track-order">
-                <Package className="h-6 w-6" />
-              </Button>
-            </Link>
-
-            <ThemeToggle />
-
             {isAuthenticated && (
               <Link href="/wishlist">
                 <Button variant="ghost" size="icon" data-testid="button-wishlist">
