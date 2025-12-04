@@ -58,7 +58,6 @@ export function Header() {
   const { user, isAuthenticated, isAdmin } = useAuth();
   const { cartCount, searchQuery, setSearchQuery } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
 
@@ -88,7 +87,6 @@ export function Header() {
     e.preventDefault();
     if (searchQuery.trim()) {
       setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchOpen(false);
     }
   };
 
@@ -100,13 +98,37 @@ export function Header() {
         </div>
       )}
       
+      {/* Search Bar Row - Between Top Banner and Main Menu */}
+      <div className="bg-muted/30 border-b py-2">
+        <div className="container mx-auto px-4">
+          <form onSubmit={handleSearch} className="relative flex items-center max-w-2xl mx-auto">
+            <Search className="absolute left-3 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 h-11 text-base"
+              data-testid="input-search"
+            />
+            <Button
+              type="submit"
+              className="absolute right-1 h-9"
+              data-testid="button-search-submit"
+            >
+              Search
+            </Button>
+          </form>
+        </div>
+      </div>
+      
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-20 items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild className="lg:hidden">
                 <Button variant="ghost" size="icon" data-testid="button-mobile-menu">
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-80 overflow-y-auto">
@@ -149,9 +171,9 @@ export function Header() {
               </SheetContent>
             </Sheet>
             
-            <Link href="/" className="flex items-center gap-2" data-testid="link-logo">
+            <Link href="/" className="flex items-center gap-3" data-testid="link-logo">
               {branding.logoUrl ? (
-                <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md">
+                <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md">
                   <img 
                     src={branding.logoUrl} 
                     alt={branding.storeName} 
@@ -159,12 +181,12 @@ export function Header() {
                   />
                 </div>
               ) : (
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-2xl">
                   {branding.storeName.charAt(0).toUpperCase()}
                 </div>
               )}
               {branding.showStoreName && (
-                <span className="hidden font-bold text-xl sm:inline-block">{branding.storeName}</span>
+                <span className="hidden font-bold text-2xl sm:inline-block">{branding.storeName}</span>
               )}
             </Link>
           </div>
@@ -179,7 +201,7 @@ export function Header() {
               >
                 <Link
                   href={`/category/${category.slug}`}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium hover-elevate rounded-md"
+                  className="flex items-center gap-1 px-4 py-2 text-base font-semibold hover-elevate rounded-md"
                   data-testid={`link-category-${category.slug}`}
                 >
                   {category.name}
@@ -195,7 +217,7 @@ export function Header() {
             ))}
             <Link
               href="/special-offers"
-              className="px-3 py-2 text-sm font-medium text-destructive hover-elevate rounded-md"
+              className="px-4 py-2 text-base font-semibold text-destructive hover-elevate rounded-md"
               data-testid="link-special-offers"
             >
               Sale
@@ -203,41 +225,9 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {searchOpen ? (
-              <form onSubmit={handleSearch} className="relative flex items-center">
-                <Input
-                  type="search"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-48 sm:w-64 pr-8"
-                  autoFocus
-                  data-testid="input-search"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0"
-                  onClick={() => setSearchOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </form>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSearchOpen(true)}
-                data-testid="button-search"
-              >
-                <Search className="h-5 w-5" />
-              </Button>
-            )}
-
             <Link href="/track-order" className="hidden sm:block">
               <Button variant="ghost" size="icon" data-testid="button-track-order">
-                <Package className="h-5 w-5" />
+                <Package className="h-6 w-6" />
               </Button>
             </Link>
 
@@ -246,14 +236,14 @@ export function Header() {
             {isAuthenticated && (
               <Link href="/wishlist">
                 <Button variant="ghost" size="icon" data-testid="button-wishlist">
-                  <Heart className="h-5 w-5" />
+                  <Heart className="h-6 w-6" />
                 </Button>
               </Link>
             )}
 
             <Link href="/cart" className="relative">
               <Button variant="ghost" size="icon" data-testid="button-cart">
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-6 w-6" />
                 {cartCount > 0 && (
                   <Badge 
                     className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
@@ -268,7 +258,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" data-testid="button-account">
-                  <User className="h-5 w-5" />
+                  <User className="h-6 w-6" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
