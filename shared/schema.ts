@@ -662,3 +662,66 @@ export type GiftRegistryWithItems = GiftRegistry & {
   user?: User | null;
   shippingAddress?: Address | null;
 };
+
+// Invoice Template Settings Schema
+export const invoiceSettingsSchema = z.object({
+  // Seller Details
+  sellerName: z.string().default("Your Store"),
+  sellerAddress: z.string().default(""),
+  sellerCity: z.string().default(""),
+  sellerState: z.string().default(""),
+  sellerPostalCode: z.string().default(""),
+  sellerCountry: z.string().default("India"),
+  sellerPhone: z.string().default(""),
+  sellerEmail: z.string().default(""),
+  
+  // GST Settings
+  gstNumber: z.string().default(""),
+  gstPercentage: z.number().min(0).max(100).default(8),
+  
+  // Buyer Label Customization
+  buyerLabelName: z.string().default("Customer Name"),
+  buyerLabelAddress: z.string().default("Address"),
+  buyerLabelPhone: z.string().default("Phone"),
+  buyerLabelEmail: z.string().default("Email"),
+  
+  // Display Options
+  showDiscountLine: z.boolean().default(true),
+  showTaxBreakdown: z.boolean().default(true),
+  showShippingCost: z.boolean().default(true),
+  showPaymentMethod: z.boolean().default(true),
+  showSKU: z.boolean().default(true),
+  
+  // Branding
+  logoUrl: z.string().default(""),
+  footerNote: z.string().default("Thank you for your business!"),
+  termsAndConditions: z.string().default(""),
+});
+
+export type InvoiceSettings = z.infer<typeof invoiceSettingsSchema>;
+
+// Default invoice settings
+export const defaultInvoiceSettings: InvoiceSettings = {
+  sellerName: "Your Store",
+  sellerAddress: "",
+  sellerCity: "",
+  sellerState: "",
+  sellerPostalCode: "",
+  sellerCountry: "India",
+  sellerPhone: "",
+  sellerEmail: "",
+  gstNumber: "",
+  gstPercentage: 8,
+  buyerLabelName: "Customer Name",
+  buyerLabelAddress: "Address",
+  buyerLabelPhone: "Phone",
+  buyerLabelEmail: "Email",
+  showDiscountLine: true,
+  showTaxBreakdown: true,
+  showShippingCost: true,
+  showPaymentMethod: true,
+  showSKU: true,
+  logoUrl: "",
+  footerNote: "Thank you for your business!",
+  termsAndConditions: "",
+};
