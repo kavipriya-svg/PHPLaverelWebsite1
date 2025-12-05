@@ -709,21 +709,29 @@ export default function ProductDetail() {
           {variants.length > 0 && (
             <div className="space-y-3">
               <label className="text-sm font-medium">
-                Select {variants[0]?.optionName || "Option"}
+                {variants[0]?.optionName || "Option"}
               </label>
-              <Select value={selectedVariantId} onValueChange={setSelectedVariantId}>
-                <SelectTrigger data-testid="select-variant">
-                  <SelectValue placeholder="Choose an option" />
-                </SelectTrigger>
-                <SelectContent>
-                  {variants.map((variant) => (
-                    <SelectItem key={variant.id} value={variant.id}>
-                      {variant.optionValue}
-                      {variant.price && ` - ${formatCurrency(variant.price)}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-wrap gap-2">
+                {variants.map((variant) => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedVariantId(variant.id)}
+                    className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                      selectedVariantId === variant.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50 hover:bg-muted"
+                    }`}
+                    data-testid={`button-variant-${variant.id}`}
+                  >
+                    {variant.optionValue}
+                    {variant.price && (
+                      <span className="ml-1 text-muted-foreground">
+                        ({formatCurrency(variant.price)})
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
