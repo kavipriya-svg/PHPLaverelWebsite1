@@ -1271,29 +1271,74 @@ export default function ProductForm() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="bannerUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Banner Image URL</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="https://example.com/banner.jpg or /objects/uploads/..." data-testid="input-banner-url" />
-                      </FormControl>
-                      <FormDescription>Upload image via Media section first, then paste the URL here</FormDescription>
-                    </FormItem>
-                  )}
-                />
-                {form.watch("bannerUrl") && (
-                  <div className="space-y-4">
-                    <div className="rounded-lg overflow-hidden border">
+                {/* Banner Upload */}
+                <div className="space-y-3">
+                  <FormLabel>Banner Image</FormLabel>
+                  {form.watch("bannerUrl") ? (
+                    <div className="relative rounded-lg overflow-hidden border">
                       <img
                         src={form.watch("bannerUrl")}
                         alt="Banner preview"
-                        className="w-full max-h-40 object-cover"
+                        className="w-full max-h-48 object-cover"
                         onError={(e) => (e.currentTarget.style.display = "none")}
                       />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={() => form.setValue("bannerUrl", "")}
+                        data-testid="button-remove-banner"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
+                  ) : (
+                    <div
+                      className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                      onClick={() => document.getElementById("banner-upload")?.click()}
+                    >
+                      <input
+                        id="banner-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              const presignedRes = await apiRequest("POST", "/api/upload/presigned-url", {
+                                filename: file.name,
+                                contentType: file.type,
+                              });
+                              const presignedData = await presignedRes.json();
+                              const { uploadId, uploadUrl } = presignedData;
+                              await fetch(uploadUrl, {
+                                method: "PUT",
+                                body: file,
+                                headers: { "Content-Type": file.type },
+                              });
+                              const finalizeRes = await apiRequest("POST", "/api/upload/finalize", { uploadId });
+                              const finalizeData = await finalizeRes.json();
+                              form.setValue("bannerUrl", finalizeData.url);
+                              toast({ title: "Banner uploaded successfully" });
+                            } catch (error) {
+                              toast({ title: "Failed to upload banner", variant: "destructive" });
+                            }
+                          }
+                          e.target.value = "";
+                        }}
+                        data-testid="input-banner-file"
+                      />
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Click to upload banner image</p>
+                      <p className="text-xs text-muted-foreground mt-1">Recommended: 1200x400px or similar wide aspect ratio</p>
+                    </div>
+                  )}
+                </div>
+
+                {form.watch("bannerUrl") && (
+                  <div className="space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
