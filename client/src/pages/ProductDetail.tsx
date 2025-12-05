@@ -288,18 +288,66 @@ export default function ProductDetail() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-        <div className="flex gap-4">
+      <div className="grid lg:grid-cols-[1fr,400px] gap-8 lg:gap-12">
+        {/* Product Image Gallery - Main image with thumbnails below */}
+        <div className="space-y-4">
+          {/* Main Image - Large 1:1 format */}
+          <div className="relative aspect-square overflow-hidden rounded-lg bg-muted max-w-[600px] mx-auto lg:max-w-none">
+            {images[selectedImageIndex]?.mediaType === "video" ? (
+              <video
+                src={images[selectedImageIndex]?.url || ""}
+                controls
+                className="w-full h-full object-cover"
+                data-testid="video-product-main"
+              />
+            ) : (
+              <img
+                src={primaryImage}
+                alt={product.title}
+                className="w-full h-full object-cover"
+                data-testid="img-product-main"
+              />
+            )}
+            {hasDiscount && (
+              <Badge variant="destructive" className="absolute top-4 left-4">
+                -{discountPercentage}%
+              </Badge>
+            )}
+            {images.length > 1 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80"
+                  onClick={() => setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+                  data-testid="button-prev-image"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80"
+                  onClick={() => setSelectedImageIndex((prev) => (prev + 1) % images.length)}
+                  data-testid="button-next-image"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+          
+          {/* Thumbnails - Below main image */}
           {images.length > 1 && (
-            <div className="hidden md:flex flex-col gap-2 max-h-[500px] overflow-y-auto">
+            <div className="flex gap-2 overflow-x-auto pb-2 justify-center max-w-[600px] mx-auto lg:max-w-none">
               {images.map((image, index) => {
                 const isVideo = image.mediaType === "video";
                 return (
                   <button
                     key={image.id}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors relative ${
-                      index === selectedImageIndex ? "border-primary" : "border-muted hover:border-primary/50"
+                    className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 transition-colors relative ${
+                      index === selectedImageIndex ? "border-primary ring-2 ring-primary/20" : "border-muted hover:border-primary/50"
                     }`}
                     data-testid={`button-thumbnail-${index}`}
                   >
@@ -307,7 +355,7 @@ export default function ProductDetail() {
                       <>
                         <video src={image.url} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <Play className="h-6 w-6 text-white fill-white" />
+                          <Play className="h-5 w-5 text-white fill-white" />
                         </div>
                       </>
                     ) : (
@@ -322,84 +370,6 @@ export default function ProductDetail() {
               })}
             </div>
           )}
-          
-          <div className="flex-1 space-y-4">
-            <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-              {images[selectedImageIndex]?.mediaType === "video" ? (
-                <video
-                  src={images[selectedImageIndex]?.url || ""}
-                  controls
-                  className="w-full h-full object-cover"
-                  data-testid="video-product-main"
-                />
-              ) : (
-                <img
-                  src={primaryImage}
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                  data-testid="img-product-main"
-                />
-              )}
-              {hasDiscount && (
-                <Badge variant="destructive" className="absolute top-4 left-4">
-                  -{discountPercentage}%
-                </Badge>
-              )}
-              {images.length > 1 && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80"
-                    onClick={() => setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80"
-                    onClick={() => setSelectedImageIndex((prev) => (prev + 1) % images.length)}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-            
-            {images.length > 1 && (
-              <div className="flex md:hidden gap-2 overflow-x-auto pb-2">
-                {images.map((image, index) => {
-                  const isVideo = image.mediaType === "video";
-                  return (
-                    <button
-                      key={image.id}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors relative ${
-                        index === selectedImageIndex ? "border-primary" : "border-transparent"
-                      }`}
-                      data-testid={`button-thumbnail-mobile-${index}`}
-                    >
-                      {isVideo ? (
-                        <>
-                          <video src={image.url} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                            <Play className="h-6 w-6 text-white fill-white" />
-                          </div>
-                        </>
-                      ) : (
-                        <img
-                          src={image.url}
-                          alt={`${product.title} ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="space-y-6">
