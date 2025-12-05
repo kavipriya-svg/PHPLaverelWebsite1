@@ -1312,15 +1312,15 @@ export default function ProductForm() {
                                 contentType: file.type,
                               });
                               const presignedData = await presignedRes.json();
-                              const { uploadId, uploadUrl } = presignedData;
-                              await fetch(uploadUrl, {
+                              const { presignedUrl, objectPath } = presignedData;
+                              await fetch(presignedUrl, {
                                 method: "PUT",
                                 body: file,
                                 headers: { "Content-Type": file.type },
                               });
-                              const finalizeRes = await apiRequest("POST", "/api/upload/finalize", { uploadId });
+                              const finalizeRes = await apiRequest("POST", "/api/admin/upload/finalize", { uploadURL: presignedUrl });
                               const finalizeData = await finalizeRes.json();
-                              form.setValue("bannerUrl", finalizeData.url);
+                              form.setValue("bannerUrl", finalizeData.objectPath || `/objects/${objectPath}`);
                               toast({ title: "Banner uploaded successfully" });
                             } catch (error) {
                               toast({ title: "Failed to upload banner", variant: "destructive" });
