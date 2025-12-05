@@ -808,10 +808,6 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          <div className="text-sm text-muted-foreground">
-            <p>SKU: {product.sku}</p>
-            {product.category && <p>Category: {product.category.name}</p>}
-          </div>
         </div>
       </div>
 
@@ -832,6 +828,26 @@ export default function ProductDetail() {
         </TabsContent>
         <TabsContent value="details" className="mt-6">
           <div className="grid sm:grid-cols-2 gap-4">
+            <div className="flex justify-between py-2 border-b">
+              <span className="text-muted-foreground">SKU</span>
+              <span>{product.sku}</span>
+            </div>
+            {product.category && (
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-muted-foreground">Category</span>
+                <Link href={`/category/${product.category.slug}`} className="text-primary hover:underline">
+                  {product.category.name}
+                </Link>
+              </div>
+            )}
+            {product.brand && (
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-muted-foreground">Brand</span>
+                <Link href={`/brand/${product.brand.slug}`} className="text-primary hover:underline">
+                  {product.brand.name}
+                </Link>
+              </div>
+            )}
             {product.weight && (
               <div className="flex justify-between py-2 border-b">
                 <span className="text-muted-foreground">Weight</span>
@@ -842,16 +858,6 @@ export default function ProductDetail() {
               <div className="flex justify-between py-2 border-b">
                 <span className="text-muted-foreground">Dimensions</span>
                 <span>{product.dimensions}</span>
-              </div>
-            )}
-            <div className="flex justify-between py-2 border-b">
-              <span className="text-muted-foreground">SKU</span>
-              <span>{product.sku}</span>
-            </div>
-            {product.brand && (
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-muted-foreground">Brand</span>
-                <span>{product.brand.name}</span>
               </div>
             )}
           </div>
