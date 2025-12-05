@@ -853,7 +853,7 @@ export default function ProductDetail() {
             {((product as any).returnDays ?? 30) > 0 && (
               <div className="flex flex-col items-center text-center p-3 bg-muted/50 rounded-lg">
                 <RotateCcw className="h-5 w-5 mb-2 text-primary" />
-                <span className="text-xs">{(product as any).returnText || `${(product as any).returnDays || 30}-Day Returns`}</span>
+                <span className="text-xs">{(product as any).returnDays || 30}-Day {(product as any).returnText || "Returns"}</span>
               </div>
             )}
             {(product as any).secureCheckout !== false && (
