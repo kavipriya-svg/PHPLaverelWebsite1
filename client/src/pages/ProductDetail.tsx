@@ -157,6 +157,13 @@ export default function ProductDetail() {
   const isSaleActive = isOnSale && salePriceEnd && new Date(salePriceEnd) > new Date() && 
     (!salePriceStart || new Date(salePriceStart) <= new Date());
 
+  // Auto-select first variant when product loads
+  useEffect(() => {
+    if (variants.length > 0 && !selectedVariantId) {
+      setSelectedVariantId(variants[0].id);
+    }
+  }, [variants, selectedVariantId]);
+
   useEffect(() => {
     if (!isSaleActive || !salePriceEnd) {
       setSaleCountdown(null);
@@ -774,11 +781,6 @@ export default function ProductDetail() {
                     data-testid={`button-variant-${variant.id}`}
                   >
                     {variant.optionValue}
-                    {variant.price && (
-                      <span className="ml-1 text-muted-foreground">
-                        ({formatCurrency(variant.price)})
-                      </span>
-                    )}
                   </button>
                 ))}
               </div>
