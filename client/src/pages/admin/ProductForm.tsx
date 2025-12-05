@@ -280,7 +280,8 @@ export default function ProductForm() {
   // Set parent categories when editing existing product
   useEffect(() => {
     if (productData?.product?.categoryId && categoriesData?.categories) {
-      const allCats = categoriesData.categories;
+      // Flatten the category tree to find nested categories
+      const allCats = flattenCategories(categoriesData.categories as CategoryWithChildren[]);
       const selectedCat = allCats.find(c => c.id === productData.product.categoryId);
       
       if (selectedCat) {
