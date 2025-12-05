@@ -52,7 +52,7 @@ import { ProductGrid } from "@/components/store/ProductGrid";
 import { ReviewSection } from "@/components/store/ReviewSection";
 import { ShareButtons } from "@/components/store/ShareButtons";
 import { SEOHead } from "@/components/SEOHead";
-import type { ProductWithDetails, Coupon } from "@shared/schema";
+import type { ProductWithDetails, Coupon, Banner } from "@shared/schema";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:slug");
@@ -96,7 +96,16 @@ export default function ProductDetail() {
     enabled: !!product?.categoryId,
   });
 
+  const { data: bannersData } = useQuery<{ banners: Banner[] }>({
+    queryKey: ["/api/banners"],
+  });
+
   const relatedProducts = relatedData?.products || [];
+  
+  // Get product page banners (section banners marked for product pages)
+  const productPageBanners = (bannersData?.banners || []).filter(
+    b => b.type === "product" && b.isActive && (b.mediaUrl || b.videoUrl)
+  );
   const images = product?.images || [];
   const variants = product?.variants || [];
   
@@ -617,6 +626,82 @@ export default function ProductDetail() {
                 </div>
               )}
             </Card>
+          )}
+
+          {/* Product Page Promotional Banner */}
+          {productPageBanners.length > 0 && (
+            <div className="space-y-3">
+              {productPageBanners.slice(0, 2).map((banner) => (
+                <Card key={banner.id} className="overflow-hidden hover-elevate" data-testid={`product-banner-${banner.id}`}>
+                  {banner.ctaLink ? (
+                    <Link href={banner.ctaLink} className="block">
+                      <div className="relative">
+                        {banner.mediaType === "video" && banner.videoUrl ? (
+                          <video
+                            src={banner.videoUrl}
+                            className="w-full h-auto object-cover max-h-[200px]"
+                            muted
+                            loop
+                            autoPlay={banner.autoplay !== false}
+                            playsInline
+                          />
+                        ) : banner.mediaUrl ? (
+                          <img
+                            src={banner.mediaUrl}
+                            alt={banner.title || "Promotional banner"}
+                            className="w-full h-auto object-cover max-h-[200px]"
+                          />
+                        ) : null}
+                        {(banner.title || banner.subtitle) && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
+                            {banner.title && (
+                              <h3 className="text-white font-bold text-base">{banner.title}</h3>
+                            )}
+                            {banner.subtitle && (
+                              <p className="text-white/90 text-sm mt-0.5">{banner.subtitle}</p>
+                            )}
+                            {banner.ctaText && (
+                              <Button variant="secondary" size="sm" className="mt-2 w-fit">
+                                {banner.ctaText}
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="relative">
+                      {banner.mediaType === "video" && banner.videoUrl ? (
+                        <video
+                          src={banner.videoUrl}
+                          className="w-full h-auto object-cover max-h-[200px]"
+                          muted
+                          loop
+                          autoPlay={banner.autoplay !== false}
+                          playsInline
+                        />
+                      ) : banner.mediaUrl ? (
+                        <img
+                          src={banner.mediaUrl}
+                          alt={banner.title || "Promotional banner"}
+                          className="w-full h-auto object-cover max-h-[200px]"
+                        />
+                      ) : null}
+                      {(banner.title || banner.subtitle) && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
+                          {banner.title && (
+                            <h3 className="text-white font-bold text-base">{banner.title}</h3>
+                          )}
+                          {banner.subtitle && (
+                            <p className="text-white/90 text-sm mt-0.5">{banner.subtitle}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
           )}
 
           <Separator />
