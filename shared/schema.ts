@@ -119,6 +119,12 @@ export const products = pgTable("products", {
   returnText: varchar("return_text").default("Easy Returns"),
   secureCheckout: boolean("secure_checkout").default(true),
   secureCheckoutText: varchar("secure_checkout_text").default("Secure Checkout"),
+  // Product-specific banner
+  bannerUrl: varchar("banner_url"),
+  bannerTitle: varchar("banner_title"),
+  bannerSubtitle: varchar("banner_subtitle"),
+  bannerCtaText: varchar("banner_cta_text"),
+  bannerCtaLink: varchar("banner_cta_link"),
   isFeatured: boolean("is_featured").default(false),
   isTrending: boolean("is_trending").default(false),
   isNewArrival: boolean("is_new_arrival").default(false),
