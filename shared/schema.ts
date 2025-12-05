@@ -112,6 +112,13 @@ export const products = pgTable("products", {
   weight: decimal("weight", { precision: 8, scale: 2 }),
   dimensions: varchar("dimensions"),
   expectedDeliveryDays: integer("expected_delivery_days").default(5), // Expected delivery in days
+  // Product badges/features
+  freeShipping: boolean("free_shipping").default(true),
+  shippingText: varchar("shipping_text").default("Free Shipping"),
+  returnDays: integer("return_days").default(30),
+  returnText: varchar("return_text").default("Easy Returns"),
+  secureCheckout: boolean("secure_checkout").default(true),
+  secureCheckoutText: varchar("secure_checkout_text").default("Secure Checkout"),
   isFeatured: boolean("is_featured").default(false),
   isTrending: boolean("is_trending").default(false),
   isNewArrival: boolean("is_new_arrival").default(false),
