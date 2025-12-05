@@ -1768,6 +1768,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         body.salePriceEnd = new Date(body.salePriceEnd);
       }
       
+      // Convert empty strings to null for numeric fields
+      const numericFields = ['price', 'salePrice', 'weight', 'gstRate', 'stock', 'lowStockThreshold', 'returnDays', 'expectedDeliveryDays'];
+      for (const field of numericFields) {
+        if (body[field] === '' || body[field] === undefined) {
+          body[field] = null;
+        }
+      }
+      
+      // Convert empty strings to null for optional text fields
+      const optionalTextFields = ['shippingText', 'returnText', 'secureCheckoutText', 'bannerUrl', 'bannerTitle', 'bannerSubtitle', 'bannerCtaText', 'bannerCtaLink'];
+      for (const field of optionalTextFields) {
+        if (body[field] === '') {
+          body[field] = null;
+        }
+      }
+      
       const parsed = insertProductSchema.parse(body);
       const product = await storage.createProduct(parsed);
       
@@ -1803,6 +1819,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       if (productData.salePriceEnd && typeof productData.salePriceEnd === 'string') {
         productData.salePriceEnd = new Date(productData.salePriceEnd);
+      }
+      
+      // Convert empty strings to null for numeric fields
+      const numericFields = ['price', 'salePrice', 'weight', 'gstRate', 'stock', 'lowStockThreshold', 'returnDays', 'expectedDeliveryDays'];
+      for (const field of numericFields) {
+        if (productData[field] === '' || productData[field] === undefined) {
+          productData[field] = null;
+        }
+      }
+      
+      // Convert empty strings to null for optional text fields
+      const optionalTextFields = ['shippingText', 'returnText', 'secureCheckoutText', 'bannerUrl', 'bannerTitle', 'bannerSubtitle', 'bannerCtaText', 'bannerCtaLink'];
+      for (const field of optionalTextFields) {
+        if (productData[field] === '') {
+          productData[field] = null;
+        }
       }
       
       const product = await storage.updateProduct(req.params.id, productData);

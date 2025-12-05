@@ -32,7 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Category, Brand, ProductWithDetails, ProductVariant, Coupon, InvoiceSettings } from "@shared/schema";
 import { Link } from "wouter";
-import { Ticket, Tag, Package } from "lucide-react";
+import { Ticket, Tag, Package, Truck, Image as ImageIcon } from "lucide-react";
 
 interface MediaItem {
   id?: string;
@@ -76,6 +76,12 @@ const productSchema = z.object({
   returnText: z.string().default("Easy Returns"),
   secureCheckout: z.boolean().default(true),
   secureCheckoutText: z.string().default("Secure Checkout"),
+  // Product-specific banner
+  bannerUrl: z.string().optional(),
+  bannerTitle: z.string().optional(),
+  bannerSubtitle: z.string().optional(),
+  bannerCtaText: z.string().optional(),
+  bannerCtaLink: z.string().optional(),
   isFeatured: z.boolean().default(false),
   isTrending: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
@@ -196,6 +202,11 @@ export default function ProductForm() {
       returnText: "Easy Returns",
       secureCheckout: true,
       secureCheckoutText: "Secure Checkout",
+      bannerUrl: "",
+      bannerTitle: "",
+      bannerSubtitle: "",
+      bannerCtaText: "",
+      bannerCtaLink: "",
       isFeatured: false,
       isTrending: false,
       isNewArrival: false,
@@ -224,6 +235,17 @@ export default function ProductForm() {
         dimensions: p.dimensions || "",
         expectedDeliveryDays: (p as any).expectedDeliveryDays || 5,
         gstRate: (p as any).gstRate as string || "18",
+        freeShipping: (p as any).freeShipping !== false,
+        shippingText: (p as any).shippingText || "Free Shipping",
+        returnDays: (p as any).returnDays ?? 30,
+        returnText: (p as any).returnText || "Easy Returns",
+        secureCheckout: (p as any).secureCheckout !== false,
+        secureCheckoutText: (p as any).secureCheckoutText || "Secure Checkout",
+        bannerUrl: (p as any).bannerUrl || "",
+        bannerTitle: (p as any).bannerTitle || "",
+        bannerSubtitle: (p as any).bannerSubtitle || "",
+        bannerCtaText: (p as any).bannerCtaText || "",
+        bannerCtaLink: (p as any).bannerCtaLink || "",
         isFeatured: p.isFeatured || false,
         isTrending: p.isTrending || false,
         isNewArrival: (p as any).isNewArrival || false,
@@ -1108,6 +1130,221 @@ export default function ProductForm() {
                         </FormItem>
                       )}
                     />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Shipping, Returns & Checkout Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="h-5 w-5" />
+                  Shipping, Returns & Checkout
+                </CardTitle>
+                <CardDescription>
+                  Configure product-specific shipping, return policy, and checkout information badges
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Free Shipping */}
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <FormField
+                    control={form.control}
+                    name="freeShipping"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between">
+                        <div>
+                          <FormLabel className="text-base">Free Shipping</FormLabel>
+                          <FormDescription>Show free shipping badge on product page</FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-free-shipping" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch("freeShipping") && (
+                    <FormField
+                      control={form.control}
+                      name="shippingText"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Shipping Badge Text</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Free Shipping" data-testid="input-shipping-text" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
+                {/* Returns */}
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-base font-medium">Return Policy</label>
+                      <p className="text-sm text-muted-foreground">Configure return days and display text</p>
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="returnDays"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Return Days</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={field.value}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              data-testid="input-return-days"
+                            />
+                          </FormControl>
+                          <FormDescription>Set to 0 for no returns</FormDescription>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="returnText"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Return Badge Text</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Easy Returns" data-testid="input-return-text" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Secure Checkout */}
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <FormField
+                    control={form.control}
+                    name="secureCheckout"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between">
+                        <div>
+                          <FormLabel className="text-base">Secure Checkout</FormLabel>
+                          <FormDescription>Show secure checkout badge on product page</FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-secure-checkout" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch("secureCheckout") && (
+                    <FormField
+                      control={form.control}
+                      name="secureCheckoutText"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Secure Checkout Badge Text</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Secure Checkout" data-testid="input-secure-checkout-text" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Product Banner Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Product Banner
+                </CardTitle>
+                <CardDescription>
+                  Add a promotional banner that will appear on this product's page (below coupons section)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="bannerUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Banner Image URL</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="https://example.com/banner.jpg or /objects/uploads/..." data-testid="input-banner-url" />
+                      </FormControl>
+                      <FormDescription>Upload image via Media section first, then paste the URL here</FormDescription>
+                    </FormItem>
+                  )}
+                />
+                {form.watch("bannerUrl") && (
+                  <div className="space-y-4">
+                    <div className="rounded-lg overflow-hidden border">
+                      <img
+                        src={form.watch("bannerUrl")}
+                        alt="Banner preview"
+                        className="w-full max-h-40 object-cover"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="bannerTitle"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Banner Title</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Special Offer!" data-testid="input-banner-title" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bannerSubtitle"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Banner Subtitle</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Limited time only" data-testid="input-banner-subtitle" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="bannerCtaText"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Button Text</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Shop Now" data-testid="input-banner-cta-text" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bannerCtaLink"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Button Link</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="/shop or https://..." data-testid="input-banner-cta-link" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 )}
               </CardContent>
