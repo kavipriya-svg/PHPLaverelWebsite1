@@ -628,8 +628,58 @@ export default function ProductDetail() {
             </Card>
           )}
 
-          {/* Product Page Promotional Banner */}
-          {productPageBanners.length > 0 && (
+          {/* Product-Specific Banner (takes priority) */}
+          {(product as any).bannerUrl && (
+            <Card className="overflow-hidden hover-elevate" data-testid="product-specific-banner">
+              {(product as any).bannerCtaLink ? (
+                <Link href={(product as any).bannerCtaLink} className="block">
+                  <div className="relative">
+                    <img
+                      src={(product as any).bannerUrl}
+                      alt={(product as any).bannerTitle || "Promotional banner"}
+                      className="w-full h-auto object-cover max-h-[200px]"
+                    />
+                    {((product as any).bannerTitle || (product as any).bannerSubtitle) && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
+                        {(product as any).bannerTitle && (
+                          <h3 className="text-white font-bold text-base">{(product as any).bannerTitle}</h3>
+                        )}
+                        {(product as any).bannerSubtitle && (
+                          <p className="text-white/90 text-sm mt-0.5">{(product as any).bannerSubtitle}</p>
+                        )}
+                        {(product as any).bannerCtaText && (
+                          <Button variant="secondary" size="sm" className="mt-2 w-fit">
+                            {(product as any).bannerCtaText}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                <div className="relative">
+                  <img
+                    src={(product as any).bannerUrl}
+                    alt={(product as any).bannerTitle || "Promotional banner"}
+                    className="w-full h-auto object-cover max-h-[200px]"
+                  />
+                  {((product as any).bannerTitle || (product as any).bannerSubtitle) && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
+                      {(product as any).bannerTitle && (
+                        <h3 className="text-white font-bold text-base">{(product as any).bannerTitle}</h3>
+                      )}
+                      {(product as any).bannerSubtitle && (
+                        <p className="text-white/90 text-sm mt-0.5">{(product as any).bannerSubtitle}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Global Product Page Banners (fallback when no product-specific banner) */}
+          {!(product as any).bannerUrl && productPageBanners.length > 0 && (
             <div className="space-y-3">
               {productPageBanners.slice(0, 2).map((banner) => (
                 <Card key={banner.id} className="overflow-hidden hover-elevate" data-testid={`product-banner-${banner.id}`}>
@@ -794,18 +844,24 @@ export default function ProductDetail() {
           </div>
 
           <div className="grid grid-cols-3 gap-4 pt-4">
-            <div className="flex flex-col items-center text-center p-3 bg-muted/50 rounded-lg">
-              <Truck className="h-5 w-5 mb-2 text-primary" />
-              <span className="text-xs">Free Shipping</span>
-            </div>
-            <div className="flex flex-col items-center text-center p-3 bg-muted/50 rounded-lg">
-              <RotateCcw className="h-5 w-5 mb-2 text-primary" />
-              <span className="text-xs">30-Day Returns</span>
-            </div>
-            <div className="flex flex-col items-center text-center p-3 bg-muted/50 rounded-lg">
-              <Shield className="h-5 w-5 mb-2 text-primary" />
-              <span className="text-xs">Secure Checkout</span>
-            </div>
+            {(product as any).freeShipping !== false && (
+              <div className="flex flex-col items-center text-center p-3 bg-muted/50 rounded-lg">
+                <Truck className="h-5 w-5 mb-2 text-primary" />
+                <span className="text-xs">{(product as any).shippingText || "Free Shipping"}</span>
+              </div>
+            )}
+            {((product as any).returnDays ?? 30) > 0 && (
+              <div className="flex flex-col items-center text-center p-3 bg-muted/50 rounded-lg">
+                <RotateCcw className="h-5 w-5 mb-2 text-primary" />
+                <span className="text-xs">{(product as any).returnText || `${(product as any).returnDays || 30}-Day Returns`}</span>
+              </div>
+            )}
+            {(product as any).secureCheckout !== false && (
+              <div className="flex flex-col items-center text-center p-3 bg-muted/50 rounded-lg">
+                <Shield className="h-5 w-5 mb-2 text-primary" />
+                <span className="text-xs">{(product as any).secureCheckoutText || "Secure Checkout"}</span>
+              </div>
+            )}
           </div>
 
         </div>
