@@ -438,6 +438,7 @@ function BannerDialog({
                 <SelectContent>
                   <SelectItem value="hero">Hero</SelectItem>
                   <SelectItem value="section">Section</SelectItem>
+                  <SelectItem value="product">Product Page</SelectItem>
                 </SelectContent>
               </Select>
             </div>
