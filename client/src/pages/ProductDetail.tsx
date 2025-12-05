@@ -337,16 +337,16 @@ export default function ProductDetail() {
             )}
           </div>
           
-          {/* Thumbnails - Below main image */}
+          {/* Thumbnails - Below main image, 4 per row */}
           {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2 justify-center max-w-[600px] mx-auto lg:max-w-none">
+            <div className="grid grid-cols-4 gap-3 max-w-[600px] mx-auto lg:max-w-none">
               {images.map((image, index) => {
                 const isVideo = image.mediaType === "video";
                 return (
                   <button
                     key={image.id}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 transition-colors relative ${
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors relative ${
                       index === selectedImageIndex ? "border-primary ring-2 ring-primary/20" : "border-muted hover:border-primary/50"
                     }`}
                     data-testid={`button-thumbnail-${index}`}
@@ -355,7 +355,7 @@ export default function ProductDetail() {
                       <>
                         <video src={image.url} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <Play className="h-5 w-5 text-white fill-white" />
+                          <Play className="h-6 w-6 text-white fill-white" />
                         </div>
                       </>
                     ) : (
