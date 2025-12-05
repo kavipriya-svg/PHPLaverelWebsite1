@@ -709,7 +709,7 @@ export default function ProductDetail() {
           {variants.length > 0 && (
             <div className="space-y-3">
               <label className="text-sm font-medium">
-                {variants[0]?.optionName || "Option"}
+                {(variants[0]?.optionName || "Option").charAt(0).toUpperCase() + (variants[0]?.optionName || "Option").slice(1)}
               </label>
               <div className="flex flex-wrap gap-2">
                 {variants.map((variant) => (
