@@ -15,6 +15,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Multi-banner row layout: banners with complementary widths (e.g., 50%+50%, 75%+25%) display side-by-side on desktop with equal heights, stacking vertically on mobile
 - Coupon and promotional offer system
 - Multi-variant product support with variant-level sale pricing and discount display
+- Rich text editor for product descriptions (bold, italic, headings, lists, links, alignment)
 - Product reviews and ratings with moderation
 - Email notifications (order confirmation, status updates, low stock alerts, restock notifications)
 - Wishlist sharing and gift registry functionality
