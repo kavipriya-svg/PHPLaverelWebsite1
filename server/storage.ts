@@ -459,11 +459,57 @@ export class DatabaseStorage implements IStorage {
 
     const productList = await query;
 
-    const productsWithDetails = await Promise.all(
-      productList.map(async (product: Product) => this.loadProductDetails(product))
-    );
+    if (productList.length === 0) {
+      return { products: [], total };
+    }
+
+    const productsWithDetails = await this.batchLoadProductDetails(productList);
 
     return { products: productsWithDetails, total };
+  }
+
+  private async batchLoadProductDetails(productList: Product[]): Promise<ProductWithDetails[]> {
+    const productIds = productList.map(p => p.id);
+    const brandIds = Array.from(new Set(productList.map(p => p.brandId).filter((id): id is string => id !== null)));
+    const categoryIds = Array.from(new Set(productList.map(p => p.categoryId).filter((id): id is string => id !== null)));
+
+    const [allBrands, allCategories, allImages, allVariants] = await Promise.all([
+      brandIds.length > 0 
+        ? db.select().from(brands).where(inArray(brands.id, brandIds))
+        : Promise.resolve([]),
+      categoryIds.length > 0 
+        ? db.select().from(categories).where(inArray(categories.id, categoryIds))
+        : Promise.resolve([]),
+      db.select().from(productImages).where(inArray(productImages.productId, productIds)).orderBy(asc(productImages.position)),
+      db.select().from(productVariants).where(inArray(productVariants.productId, productIds)),
+    ]);
+
+    const brandMap = new Map(allBrands.map(b => [b.id, b]));
+    const categoryMap = new Map(allCategories.map(c => [c.id, c]));
+    const imageMap = new Map<string, ProductImage[]>();
+    const variantMap = new Map<string, ProductVariant[]>();
+
+    allImages.forEach(img => {
+      if (!imageMap.has(img.productId)) {
+        imageMap.set(img.productId, []);
+      }
+      imageMap.get(img.productId)!.push(img);
+    });
+
+    allVariants.forEach(v => {
+      if (!variantMap.has(v.productId)) {
+        variantMap.set(v.productId, []);
+      }
+      variantMap.get(v.productId)!.push(v);
+    });
+
+    return productList.map(product => ({
+      ...product,
+      brand: product.brandId ? brandMap.get(product.brandId) || null : null,
+      category: product.categoryId ? categoryMap.get(product.categoryId) || null : null,
+      images: imageMap.get(product.id) || [],
+      variants: variantMap.get(product.id) || [],
+    }));
   }
 
   private async loadProductDetails(product: Product): Promise<ProductWithDetails> {
