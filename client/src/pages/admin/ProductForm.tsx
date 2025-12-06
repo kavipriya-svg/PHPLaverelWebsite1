@@ -8,6 +8,7 @@ import { ArrowLeft, Plus, Trash2, Upload, Loader2, Video, Image, X, GripVertical
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -678,8 +679,15 @@ export default function ProductForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Long Description</FormLabel>
+                      <FormDescription>
+                        Use the toolbar to format text with bold, italic, headings, lists, and more.
+                      </FormDescription>
                       <FormControl>
-                        <Textarea {...field} rows={5} data-testid="input-product-long-desc" />
+                        <RichTextEditor 
+                          value={field.value || ""} 
+                          onChange={field.onChange}
+                          placeholder="Enter detailed product description..."
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
