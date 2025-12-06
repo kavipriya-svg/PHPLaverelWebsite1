@@ -939,6 +939,49 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Special Offers Page Settings - GET
+  app.get("/api/settings/special-offers", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("special_offers_settings");
+      const defaultSettings = {
+        bannerUrl: "",
+        bannerTitle: "Special Offers",
+        bannerSubtitle: "Don't miss out on these amazing deals!",
+        bannerCtaText: "Shop Now",
+        bannerCtaLink: "/special-offers",
+        showBanner: true,
+        sectionImageUrl: "",
+        sectionTitle: "Hot Deals",
+        sectionDescription: "Limited time offers on your favorite products",
+        showSectionImage: true,
+      };
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          res.json({ settings: { ...defaultSettings, ...parsed } });
+        } catch {
+          res.json({ settings: defaultSettings });
+        }
+      } else {
+        res.json({ settings: defaultSettings });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch special offers settings" });
+    }
+  });
+
+  // Special Offers Page Settings - PUT (Admin only)
+  app.put("/api/settings/special-offers", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({
+        special_offers_settings: JSON.stringify(req.body),
+      });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update special offers settings" });
+    }
+  });
+
   // Helper to generate unique IDs for category section items
   const generateCategoryItemId = () => `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
