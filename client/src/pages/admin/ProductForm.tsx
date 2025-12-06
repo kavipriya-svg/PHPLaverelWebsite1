@@ -639,7 +639,7 @@ export default function ProductForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Brand</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger data-testid="select-product-brand">
                               <SelectValue placeholder="Select brand" />
