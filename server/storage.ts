@@ -80,9 +80,11 @@ export interface ComboOfferWithProducts extends ComboOffer {
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, data: Partial<UpsertUser>): Promise<User | undefined>;
   updateUserRole(id: string, role: string): Promise<User | undefined>;
+  updateUserPassword(id: string, passwordHash: string): Promise<User | undefined>;
   getUsers(search?: string): Promise<{ users: User[]; total: number }>;
 
   getCategories(): Promise<CategoryWithChildren[]>;
@@ -239,6 +241,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase().trim())).limit(1);
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     // First check if user exists by ID
     const [existingById] = await db.select().from(users).where(eq(users.id, userData.id)).limit(1);
@@ -288,6 +295,15 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(users)
       .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateUserPassword(id: string, passwordHash: string): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({ passwordHash, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return updated;
