@@ -11,6 +11,8 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Admin dashboard for complete store management
 - Responsive design optimized for mobile and desktop
 - Dynamic home page with customizable content blocks
+- Dynamic product visibility based on Status & Visibility settings (Featured, Trending, New Arrival, On Sale) with dedicated homepage sections
+- On Sale products support scheduled sale dates (start/end) with live countdown timers on homepage
 - Section banner placement system with dynamic controls (position relative to home blocks, width percentage 25/50/75/100%, alignment)
 - Multi-banner row layout: banners with complementary widths (e.g., 50%+50%, 75%+25%) display side-by-side on desktop with equal heights, stacking vertically on mobile
 - Coupon and promotional offer system
