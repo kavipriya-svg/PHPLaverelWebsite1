@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Plus,
@@ -222,6 +222,19 @@ function HomeBlockDialog({
   const [categoryId, setCategoryId] = useState("");
   const [html, setHtml] = useState("");
   const { toast } = useToast();
+
+  // Reset form state when block changes (opening edit dialog or switching blocks)
+  useEffect(() => {
+    if (open) {
+      const payload = block?.payload as { categoryId?: string; html?: string } | null;
+      setType(block?.type || "featured_products");
+      setTitle(block?.title || "");
+      setPosition(block?.position?.toString() || "0");
+      setIsActive(block?.isActive !== false);
+      setCategoryId(payload?.categoryId || "");
+      setHtml(payload?.html || "");
+    }
+  }, [open, block]);
 
   const { data: categoriesData } = useQuery<{ categories: Category[] }>({
     queryKey: ["/api/categories"],
