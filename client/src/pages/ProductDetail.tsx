@@ -130,12 +130,42 @@ export default function ProductDetail() {
   const hasCoupons = productSpecificCoupons.length > 0 || allProductCoupons.length > 0 || bulkCoupons.length > 0;
   
   const selectedVariant = variants.find(v => v.id === selectedVariantId);
-  const currentPrice = selectedVariant?.price || product?.salePrice || product?.price;
-  const originalPrice = product?.price;
-  const hasDiscount = product?.salePrice && parseFloat(product.salePrice as string) < parseFloat(product.price as string);
-  const discountPercentage = hasDiscount 
-    ? Math.round((1 - parseFloat(product.salePrice as string) / parseFloat(product.price as string)) * 100)
-    : 0;
+  
+  // Calculate pricing based on variant or product
+  const variantSalePrice = selectedVariant?.salePrice;
+  const variantRegularPrice = selectedVariant?.price;
+  
+  // Determine current price and original price for discount calculation
+  let currentPrice: string | number | null;
+  let originalPrice: string | number | null;
+  let hasDiscount: boolean;
+  let discountPercentage: number;
+  
+  if (selectedVariant && variantRegularPrice) {
+    // Variant has its own pricing - use variant prices
+    if (variantSalePrice && parseFloat(variantSalePrice as string) < parseFloat(variantRegularPrice as string)) {
+      // Variant has a sale price
+      currentPrice = variantSalePrice;
+      originalPrice = variantRegularPrice;
+      hasDiscount = true;
+      discountPercentage = Math.round((1 - parseFloat(variantSalePrice as string) / parseFloat(variantRegularPrice as string)) * 100);
+    } else {
+      // Variant has no sale, use regular variant price
+      currentPrice = variantRegularPrice;
+      originalPrice = variantRegularPrice;
+      hasDiscount = false;
+      discountPercentage = 0;
+    }
+  } else {
+    // No variant price set OR no variant selected - use product pricing
+    // This handles both cases: 1) no variant selected, 2) variant selected but has no price override
+    currentPrice = product?.salePrice || product?.price || null;
+    originalPrice = product?.price || null;
+    hasDiscount = !!(product?.salePrice && parseFloat(product.salePrice as string) < parseFloat(product.price as string));
+    discountPercentage = hasDiscount 
+      ? Math.round((1 - parseFloat(product!.salePrice as string) / parseFloat(product!.price as string)) * 100)
+      : 0;
+  }
   
   const copyToClipboard = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -274,7 +304,7 @@ export default function ProductDetail() {
     <div className="container mx-auto px-4 py-8">
       <SEOHead
         title={product.metaTitle || product.title}
-        description={product.metaDescription || product.shortDesc || product.description || ""}
+        description={product.metaDescription || product.shortDesc || product.longDesc || ""}
         image={primaryImage}
         type="product"
         price={currentPrice?.toString()}
@@ -424,9 +454,9 @@ export default function ProductDetail() {
 
           <div className="flex items-baseline gap-3 flex-wrap">
             <span className="text-3xl font-bold text-primary" data-testid="text-product-price">
-              {formatCurrency(currentPrice)}
+              {formatCurrency(currentPrice || 0)}
             </span>
-            {hasDiscount && (
+            {hasDiscount && originalPrice && (
               <>
                 <span className="text-xl text-muted-foreground line-through" data-testid="text-original-price">
                   {formatCurrency(originalPrice)}
@@ -769,20 +799,37 @@ export default function ProductDetail() {
                 {(variants[0]?.optionName || "Option").charAt(0).toUpperCase() + (variants[0]?.optionName || "Option").slice(1)}
               </label>
               <div className="flex flex-wrap gap-2">
-                {variants.map((variant) => (
-                  <button
-                    key={variant.id}
-                    onClick={() => setSelectedVariantId(variant.id)}
-                    className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
-                      selectedVariantId === variant.id
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-primary/50 hover:bg-muted"
-                    }`}
-                    data-testid={`button-variant-${variant.id}`}
-                  >
-                    {variant.optionValue}
-                  </button>
-                ))}
+                {variants.map((variant) => {
+                  const vSalePrice = (variant as any)?.salePrice;
+                  const vRegularPrice = variant?.price;
+                  const vHasDiscount = vSalePrice && vRegularPrice && 
+                    parseFloat(vSalePrice as string) < parseFloat(vRegularPrice as string);
+                  const vDiscountPct = vHasDiscount 
+                    ? Math.round((1 - parseFloat(vSalePrice as string) / parseFloat(vRegularPrice as string)) * 100)
+                    : 0;
+                  
+                  return (
+                    <button
+                      key={variant.id}
+                      onClick={() => setSelectedVariantId(variant.id)}
+                      className={`relative px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                        selectedVariantId === variant.id
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-primary/50 hover:bg-muted"
+                      }`}
+                      data-testid={`button-variant-${variant.id}`}
+                    >
+                      <span className="flex items-center gap-2">
+                        {variant.optionValue}
+                        {vHasDiscount && (
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                            {vDiscountPct}% OFF
+                          </Badge>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -840,7 +887,7 @@ export default function ProductDetail() {
             </Button>
             <ShareButtons
               title={product.title}
-              description={product.shortDesc || product.description || ""}
+              description={product.shortDesc || product.longDesc || ""}
               imageUrl={primaryImage}
             />
           </div>
