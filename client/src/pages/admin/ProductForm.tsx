@@ -35,6 +35,15 @@ import type { Category, Brand, ProductWithDetails, ProductVariant, Coupon, Invoi
 import { Link } from "wouter";
 import { Ticket, Tag, Package, Truck, Image as ImageIcon } from "lucide-react";
 
+function formatDateTimeLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 interface MediaItem {
   id?: string;
   url: string;
@@ -232,8 +241,8 @@ export default function ProductForm() {
         longDesc: p.longDesc || "",
         price: p.price as string,
         salePrice: p.salePrice as string || "",
-        salePriceStart: (p as any).salePriceStart ? new Date((p as any).salePriceStart).toISOString().split("T")[0] : "",
-        salePriceEnd: (p as any).salePriceEnd ? new Date((p as any).salePriceEnd).toISOString().split("T")[0] : "",
+        salePriceStart: (p as any).salePriceStart ? formatDateTimeLocal(new Date((p as any).salePriceStart)) : "",
+        salePriceEnd: (p as any).salePriceEnd ? formatDateTimeLocal(new Date((p as any).salePriceEnd)) : "",
         stock: p.stock || 0,
         weight: p.weight as string || "",
         dimensions: p.dimensions || "",
@@ -1135,11 +1144,11 @@ export default function ProductForm() {
                       name="salePriceStart"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Sale Start Date</FormLabel>
+                          <FormLabel>Sale Start Date & Time</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} data-testid="input-sale-start" />
+                            <Input type="datetime-local" {...field} data-testid="input-sale-start" />
                           </FormControl>
-                          <FormDescription>When the sale begins</FormDescription>
+                          <FormDescription>When the sale begins (date and time)</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -1149,11 +1158,11 @@ export default function ProductForm() {
                       name="salePriceEnd"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Sale End Date</FormLabel>
+                          <FormLabel>Sale End Date & Time</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} data-testid="input-sale-end" />
+                            <Input type="datetime-local" {...field} data-testid="input-sale-end" />
                           </FormControl>
-                          <FormDescription>When the sale ends</FormDescription>
+                          <FormDescription>When the sale ends (countdown timer shows on homepage)</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
