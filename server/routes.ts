@@ -285,6 +285,138 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // Customer signup with email/password
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ error: "An account with this email already exists" });
+      }
+      
+      // Validate password strength
+      const validation = validatePasswordStrength(password);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.message });
+      }
+      
+      // Hash password and create user
+      const passwordHash = await hashPassword(password);
+      const newUser = await storage.createUser({
+        email,
+        passwordHash,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        role: "customer",
+      });
+      
+      // Create session for the new user
+      const sessionUser = {
+        claims: { sub: newUser.id },
+        dbUser: newUser,
+      };
+      
+      req.login(sessionUser, (err) => {
+        if (err) {
+          return res.status(500).json({ error: "Failed to create session" });
+        }
+        res.json({ 
+          success: true, 
+          user: {
+            id: newUser.id,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            role: newUser.role,
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Signup error:", error);
+      res.status(500).json({ error: "Signup failed" });
+    }
+  });
+
+  // Customer login with email/password
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+      
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      
+      if (!user.passwordHash) {
+        return res.status(401).json({ error: "Please set a password for your account" });
+      }
+      
+      const isValid = await verifyPassword(password, user.passwordHash);
+      
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      
+      // Create session for the user
+      const sessionUser = {
+        claims: { sub: user.id },
+        dbUser: user,
+      };
+      
+      req.login(sessionUser, (err) => {
+        if (err) {
+          return res.status(500).json({ error: "Failed to create session" });
+        }
+        res.json({ 
+          success: true, 
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  // Customer logout
+  app.post("/api/auth/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      req.session?.destroy((err) => {
+        if (err) {
+          console.error("Session destroy error:", err);
+        }
+        res.clearCookie("connect.sid");
+        res.json({ success: true });
+      });
+    });
+  });
+
   // Admin password setup/change (for existing admins)
   app.post("/api/admin/set-password", isAuthenticated, isAdmin, async (req, res) => {
     try {
