@@ -49,6 +49,7 @@ interface VariantItem {
   optionValue: string;
   sku?: string;
   price?: string;
+  salePrice?: string;
   stock: number;
 }
 
@@ -271,6 +272,7 @@ export default function ProductForm() {
           optionValue: v.optionValue,
           sku: v.sku || "",
           price: v.price as string || "",
+          salePrice: (v as any).salePrice as string || "",
           stock: v.stock || 0,
         })) || []
       );
@@ -337,6 +339,7 @@ export default function ProductForm() {
           optionValue: v.optionValue,
           sku: v.sku || undefined,
           price: v.price || undefined,
+          salePrice: v.salePrice || undefined,
           stock: v.stock || 0,
         })),
       };
@@ -424,6 +427,7 @@ export default function ProductForm() {
         optionValue: "",
         sku: "",
         price: "",
+        salePrice: "",
         stock: 0,
       },
     ]);
@@ -939,7 +943,7 @@ export default function ProductForm() {
                   <div className="space-y-4">
                     {variants.map((variant, index) => (
                       <div key={index} className="flex items-start gap-3 p-4 border rounded-lg">
-                        <div className="flex-1 grid sm:grid-cols-5 gap-3">
+                        <div className="flex-1 grid sm:grid-cols-3 lg:grid-cols-6 gap-3">
                           <div>
                             <label className="text-sm font-medium mb-1 block">Option Type</label>
                             <Select
@@ -976,13 +980,25 @@ export default function ProductForm() {
                             />
                           </div>
                           <div>
-                            <label className="text-sm font-medium mb-1 block">Price Override</label>
+                            <label className="text-sm font-medium mb-1 block">Regular Price</label>
                             <Input
                               type="number"
                               step="0.01"
-                              placeholder="Leave empty for default"
+                              placeholder="e.g., 999"
                               value={variant.price}
                               onChange={(e) => updateVariant(index, "price", e.target.value)}
+                              data-testid={`input-variant-price-${index}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Sale Price</label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="Discounted price"
+                              value={variant.salePrice}
+                              onChange={(e) => updateVariant(index, "salePrice", e.target.value)}
+                              data-testid={`input-variant-sale-price-${index}`}
                             />
                           </div>
                           <div>

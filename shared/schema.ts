@@ -183,6 +183,7 @@ export const productVariants = pgTable("product_variants", {
   optionValue: varchar("option_value").notNull(),
   sku: varchar("sku"),
   price: decimal("price", { precision: 10, scale: 2 }),
+  salePrice: decimal("sale_price", { precision: 10, scale: 2 }), // Sale price for discount display
   stock: integer("stock").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
