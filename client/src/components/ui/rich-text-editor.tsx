@@ -22,11 +22,18 @@ import {
   Undo,
   Redo,
   Code,
-  Minus
+  Minus,
+  ChevronsUpDown
 } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface RichTextEditorProps {
   value: string;
@@ -35,9 +42,26 @@ interface RichTextEditorProps {
   className?: string;
 }
 
+type SpacingOption = 'compact' | 'normal' | 'relaxed' | 'loose';
+
+const SPACING_OPTIONS: { value: SpacingOption; label: string; description: string }[] = [
+  { value: 'compact', label: 'Compact', description: 'Minimal spacing' },
+  { value: 'normal', label: 'Normal', description: 'Default spacing' },
+  { value: 'relaxed', label: 'Relaxed', description: 'More breathing room' },
+  { value: 'loose', label: 'Loose', description: 'Maximum spacing' },
+];
+
+const SPACING_CLASSES: Record<SpacingOption, string> = {
+  compact: 'prose-p:mb-1 prose-p:leading-snug prose-headings:mb-1 prose-headings:mt-2 prose-li:my-0.5',
+  normal: 'prose-p:mb-3 prose-p:leading-normal prose-headings:mb-2 prose-headings:mt-4 prose-li:my-1',
+  relaxed: 'prose-p:mb-4 prose-p:leading-relaxed prose-headings:mb-3 prose-headings:mt-5 prose-li:my-1.5',
+  loose: 'prose-p:mb-6 prose-p:leading-loose prose-headings:mb-4 prose-headings:mt-6 prose-li:my-2',
+};
+
 export function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
   const isInternalChange = useRef(false);
   const prevValueRef = useRef(value);
+  const [spacing, setSpacing] = useState<SpacingOption>('normal');
   
   const editor = useEditor({
     extensions: [
@@ -136,6 +160,8 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
       {children}
     </Button>
   );
+
+  const currentSpacingLabel = SPACING_OPTIONS.find(s => s.value === spacing)?.label || 'Normal';
 
   return (
     <div className={cn("border rounded-md bg-background", className)}>
@@ -277,6 +303,41 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
 
         <div className="w-px h-6 bg-border mx-1 self-center" />
 
+        {/* Paragraph Spacing Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-xs gap-1"
+              title="Paragraph Spacing"
+              data-testid="dropdown-paragraph-spacing"
+            >
+              <ChevronsUpDown className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{currentSpacingLabel}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {SPACING_OPTIONS.map((option) => (
+              <DropdownMenuItem
+                key={option.value}
+                onClick={() => setSpacing(option.value)}
+                className={cn(
+                  "flex flex-col items-start gap-0.5",
+                  spacing === option.value && "bg-muted"
+                )}
+                data-testid={`option-spacing-${option.value}`}
+              >
+                <span className="font-medium">{option.label}</span>
+                <span className="text-xs text-muted-foreground">{option.description}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <div className="w-px h-6 bg-border mx-1 self-center" />
+
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
@@ -294,7 +355,12 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
         </ToolbarButton>
       </div>
       
-      <EditorContent editor={editor} data-testid="input-rich-text-editor" />
+      <div className={cn(SPACING_CLASSES[spacing])}>
+        <EditorContent editor={editor} data-testid="input-rich-text-editor" />
+      </div>
     </div>
   );
 }
+
+export { SPACING_CLASSES };
+export type { SpacingOption };

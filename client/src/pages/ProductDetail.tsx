@@ -522,11 +522,17 @@ export default function ProductDetail() {
           )}
 
           {hasCoupons && (
-            <Card className="p-4 space-y-4">
+            <Card 
+              className="p-4 space-y-4 border"
+              style={{ 
+                backgroundColor: (product as any)?.couponBoxBgColor || '#f0fdf4',
+              }}
+              data-testid="card-coupons"
+            >
               <div className="flex items-center gap-2">
                 <Ticket className="h-4 w-4 text-primary" />
                 <span className="font-medium text-sm">Available Coupons</span>
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs bg-background/80">
                   <Info className="h-3 w-3 mr-1" />
                   One per order
                 </Badge>
