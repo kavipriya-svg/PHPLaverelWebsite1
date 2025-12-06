@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock, Flame, Sparkles, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ProductGrid } from "./ProductGrid";
 import { useQuery } from "@tanstack/react-query";
 import type { HomeBlock, ProductWithDetails, Category, Banner } from "@shared/schema";
@@ -376,17 +378,116 @@ function CustomCodeBlock({ block }: { block: HomeBlock }) {
   );
 }
 
+function useCountdown(endDate: Date | null) {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!endDate) {
+      setTimeLeft(null);
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const end = new Date(endDate).getTime();
+      const difference = end - now;
+
+      if (difference <= 0) {
+        setTimeLeft(null);
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((difference % (1000 * 60)) / 1000),
+      });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [endDate]);
+
+  return timeLeft;
+}
+
+function CountdownTimer({ endDate }: { endDate: Date | null }) {
+  const timeLeft = useCountdown(endDate);
+
+  if (!timeLeft) return null;
+
+  return (
+    <div className="flex items-center gap-2 bg-destructive/10 px-3 py-1.5 rounded-md" data-testid="countdown-timer">
+      <Clock className="h-4 w-4 text-destructive" />
+      <div className="flex items-center gap-1 text-sm font-medium">
+        {timeLeft.days > 0 && (
+          <span className="text-destructive">{timeLeft.days}d</span>
+        )}
+        <span className="text-destructive">{String(timeLeft.hours).padStart(2, '0')}h</span>
+        <span className="text-muted-foreground">:</span>
+        <span className="text-destructive">{String(timeLeft.minutes).padStart(2, '0')}m</span>
+        <span className="text-muted-foreground">:</span>
+        <span className="text-destructive">{String(timeLeft.seconds).padStart(2, '0')}s</span>
+      </div>
+    </div>
+  );
+}
+
+function SaleProductCard({ product }: { product: ProductWithDetails }) {
+  const endDate = product.salePriceEnd ? new Date(product.salePriceEnd) : null;
+  
+  return (
+    <div className="relative">
+      {endDate && (
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
+          <CountdownTimer endDate={endDate} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SpecialOffersSection() {
   const { data, isLoading } = useQuery<{ products: ProductWithDetails[] }>({
     queryKey: ["/api/products", { onSale: true, limit: 8 }],
   });
 
+  const products = data?.products || [];
+  const earliestEndDate = products.length > 0 
+    ? products.reduce((earliest, p) => {
+        if (!p.salePriceEnd) return earliest;
+        const pEnd = new Date(p.salePriceEnd);
+        return earliest ? (pEnd < earliest ? pEnd : earliest) : pEnd;
+      }, null as Date | null)
+    : null;
+
+  if (products.length === 0 && !isLoading) return null;
+
   return (
     <section className="w-full px-4" data-testid="section-special-offers">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-destructive">Special Offers</h2>
-          <p className="text-muted-foreground mt-1">Limited time deals you don't want to miss</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Tag className="h-6 w-6 text-destructive" />
+              <h2 className="text-2xl md:text-3xl font-bold text-destructive">On Sale</h2>
+            </div>
+            <p className="text-muted-foreground mt-1">Limited time deals you don't want to miss</p>
+          </div>
+          {earliestEndDate && (
+            <div className="hidden md:block">
+              <p className="text-xs text-muted-foreground mb-1">Sale ends in:</p>
+              <CountdownTimer endDate={earliestEndDate} />
+            </div>
+          )}
         </div>
         <Button variant="ghost" asChild>
           <Link href="/special-offers" className="flex items-center gap-1">
@@ -394,8 +495,14 @@ export function SpecialOffersSection() {
           </Link>
         </Button>
       </div>
+      {earliestEndDate && (
+        <div className="md:hidden mb-4">
+          <p className="text-xs text-muted-foreground mb-1">Sale ends in:</p>
+          <CountdownTimer endDate={earliestEndDate} />
+        </div>
+      )}
       <ProductGrid 
-        products={data?.products || []} 
+        products={products} 
         isLoading={isLoading}
         emptyMessage="No special offers available right now"
       />
@@ -405,13 +512,20 @@ export function SpecialOffersSection() {
 
 export function NewArrivalsSection() {
   const { data, isLoading } = useQuery<{ products: ProductWithDetails[] }>({
-    queryKey: ["/api/products", { sort: "newest", limit: 8 }],
+    queryKey: ["/api/products", { newArrival: true, limit: 8 }],
   });
+
+  const products = data?.products || [];
+
+  if (products.length === 0 && !isLoading) return null;
 
   return (
     <section className="w-full px-4" data-testid="section-new-arrivals">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold">New Arrivals</h2>
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl md:text-3xl font-bold">New Arrivals</h2>
+        </div>
         <Button variant="ghost" asChild>
           <Link href="/new-arrivals" className="flex items-center gap-1">
             View All <ChevronRight className="h-4 w-4" />
@@ -419,14 +533,75 @@ export function NewArrivalsSection() {
         </Button>
       </div>
       <ProductGrid 
-        products={data?.products || []} 
-        isLoading={isLoading} 
+        products={products} 
+        isLoading={isLoading}
+        emptyMessage="No new arrivals right now"
+      />
+    </section>
+  );
+}
+
+export function TrendingSection() {
+  const { data, isLoading } = useQuery<{ products: ProductWithDetails[] }>({
+    queryKey: ["/api/products", { trending: true, limit: 8 }],
+  });
+
+  const products = data?.products || [];
+
+  if (products.length === 0 && !isLoading) return null;
+
+  return (
+    <section className="w-full px-4" data-testid="section-trending">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Flame className="h-6 w-6 text-orange-500" />
+          <h2 className="text-2xl md:text-3xl font-bold">Trending Now</h2>
+        </div>
+        <Button variant="ghost" asChild>
+          <Link href="/trending" className="flex items-center gap-1">
+            View All <ChevronRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
+      <ProductGrid 
+        products={products} 
+        isLoading={isLoading}
+        emptyMessage="No trending products right now"
+      />
+    </section>
+  );
+}
+
+export function FeaturedSection() {
+  const { data, isLoading } = useQuery<{ products: ProductWithDetails[] }>({
+    queryKey: ["/api/products", { featured: true, limit: 8 }],
+  });
+
+  const products = data?.products || [];
+
+  if (products.length === 0 && !isLoading) return null;
+
+  return (
+    <section className="w-full px-4" data-testid="section-featured">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold">Featured Products</h2>
+        <Button variant="ghost" asChild>
+          <Link href="/featured" className="flex items-center gap-1">
+            View All <ChevronRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
+      <ProductGrid 
+        products={products} 
+        isLoading={isLoading}
+        emptyMessage="No featured products right now"
       />
     </section>
   );
 }
 
 interface HomeCategorySectionItem {
+  id?: string;
   categoryId: string;
   customLabel?: string;
   imageUrl?: string;
