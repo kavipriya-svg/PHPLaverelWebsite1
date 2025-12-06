@@ -381,6 +381,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         maxPrice: req.query.maxPrice ? parseFloat(req.query.maxPrice as string) : undefined,
         isFeatured: req.query.featured === "true" ? true : undefined,
         isTrending: req.query.trending === "true" ? true : undefined,
+        isNewArrival: req.query.newArrival === "true" ? true : undefined,
+        isOnSale: req.query.onSale === "true" ? true : undefined,
         isActive: true,
         limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
         offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
