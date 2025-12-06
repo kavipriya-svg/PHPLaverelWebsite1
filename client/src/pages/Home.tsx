@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { HeroSection } from "@/components/store/HeroSection";
-import { HomeBlocks, SpecialOffersSection, NewArrivalsSection, CategoryShowcase, BlogShowcase } from "@/components/store/HomeBlocks";
+import { HomeBlocks, SpecialOffersSection, NewArrivalsSection, TrendingSection, FeaturedSection, CategoryShowcase, BlogShowcase } from "@/components/store/HomeBlocks";
 import type { HomeBlock } from "@shared/schema";
 
 export default function Home() {
@@ -17,7 +17,11 @@ export default function Home() {
       <div className="py-16 space-y-16">
         <CategoryShowcase />
         
+        <FeaturedSection />
+        
         <SpecialOffersSection />
+        
+        <TrendingSection />
         
         {blocks.length > 0 && <HomeBlocks blocks={blocks} />}
         
