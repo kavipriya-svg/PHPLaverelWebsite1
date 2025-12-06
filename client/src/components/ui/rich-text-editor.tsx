@@ -42,16 +42,24 @@ interface RichTextEditorProps {
   className?: string;
 }
 
-type SpacingOption = 'compact' | 'normal' | 'relaxed' | 'loose';
+type SpacingOption = 'none' | 'compact' | 'normal' | 'relaxed' | 'loose';
 
 const SPACING_OPTIONS: { value: SpacingOption; label: string; description: string }[] = [
+  { value: 'none', label: 'None', description: 'No extra spacing' },
   { value: 'compact', label: 'Compact', description: 'Minimal spacing' },
-  { value: 'normal', label: 'Normal', description: 'Default spacing' },
+  { value: 'normal', label: 'Normal', description: 'Standard spacing' },
   { value: 'relaxed', label: 'Relaxed', description: 'More breathing room' },
   { value: 'loose', label: 'Loose', description: 'Maximum spacing' },
 ];
 
 const SPACING_STYLES: Record<SpacingOption, Record<string, string>> = {
+  none: {
+    '--p-margin': '0',
+    '--p-line-height': '1.25',
+    '--heading-margin-top': '0',
+    '--heading-margin-bottom': '0',
+    '--li-margin': '0',
+  },
   compact: {
     '--p-margin': '0.25rem',
     '--p-line-height': '1.375',
@@ -85,7 +93,7 @@ const SPACING_STYLES: Record<SpacingOption, Record<string, string>> = {
 export function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
   const isInternalChange = useRef(false);
   const prevValueRef = useRef(value);
-  const [spacing, setSpacing] = useState<SpacingOption>('normal');
+  const [spacing, setSpacing] = useState<SpacingOption>('none');
   
   const editor = useEditor({
     extensions: [
