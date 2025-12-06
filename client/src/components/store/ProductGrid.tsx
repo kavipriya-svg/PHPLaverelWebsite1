@@ -6,9 +6,10 @@ interface ProductGridProps {
   products: ProductWithDetails[];
   isLoading?: boolean;
   emptyMessage?: string;
+  showSaleCountdown?: boolean;
 }
 
-export function ProductGrid({ products, isLoading, emptyMessage = "No products found" }: ProductGridProps) {
+export function ProductGrid({ products, isLoading, emptyMessage = "No products found", showSaleCountdown = false }: ProductGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -30,7 +31,7 @@ export function ProductGrid({ products, isLoading, emptyMessage = "No products f
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" data-testid="grid-products">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} showSaleCountdown={showSaleCountdown} />
       ))}
     </div>
   );

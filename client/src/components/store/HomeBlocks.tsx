@@ -441,20 +441,6 @@ function CountdownTimer({ endDate }: { endDate: Date | null }) {
   );
 }
 
-function SaleProductCard({ product }: { product: ProductWithDetails }) {
-  const endDate = product.salePriceEnd ? new Date(product.salePriceEnd) : null;
-  
-  return (
-    <div className="relative">
-      {endDate && (
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
-          <CountdownTimer endDate={endDate} />
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function SpecialOffersSection() {
   const { data, isLoading } = useQuery<{ products: ProductWithDetails[] }>({
     queryKey: ["/api/products", { onSale: true, limit: 8 }],
@@ -505,6 +491,7 @@ export function SpecialOffersSection() {
         products={products} 
         isLoading={isLoading}
         emptyMessage="No special offers available right now"
+        showSaleCountdown={true}
       />
     </section>
   );

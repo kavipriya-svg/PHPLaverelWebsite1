@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Heart, ShoppingCart, Star, Eye } from "lucide-react";
+import { Heart, ShoppingCart, Star, Eye, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,9 +12,75 @@ import type { ProductWithDetails } from "@shared/schema";
 
 interface ProductCardProps {
   product: ProductWithDetails;
+  showSaleCountdown?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+function calculateTimeLeft(endDate: Date | null): {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+} | null {
+  if (!endDate) return null;
+  
+  const now = new Date().getTime();
+  const end = new Date(endDate).getTime();
+  const difference = end - now;
+
+  if (difference <= 0) return null;
+
+  return {
+    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((difference % (1000 * 60)) / 1000),
+  };
+}
+
+function useCountdown(endDate: Date | null) {
+  const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft(endDate));
+
+  useEffect(() => {
+    if (!endDate) {
+      setTimeLeft(null);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft(endDate));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endDate]);
+
+  return timeLeft;
+}
+
+function ProductCountdownTimer({ endDate }: { endDate: Date }) {
+  const timeLeft = useCountdown(endDate);
+
+  if (!timeLeft) return null;
+
+  return (
+    <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-20" data-testid="product-countdown-timer">
+      <div className="flex items-center gap-1.5 bg-destructive text-white px-3 py-1.5 rounded-full shadow-lg">
+        <Clock className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-0.5 text-xs font-bold whitespace-nowrap">
+          {timeLeft.days > 0 && (
+            <span>{timeLeft.days}d </span>
+          )}
+          <span>{String(timeLeft.hours).padStart(2, '0')}</span>
+          <span className="opacity-75">:</span>
+          <span>{String(timeLeft.minutes).padStart(2, '0')}</span>
+          <span className="opacity-75">:</span>
+          <span>{String(timeLeft.seconds).padStart(2, '0')}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProductCard({ product, showSaleCountdown = false }: ProductCardProps) {
   const { addToCart, isInWishlist, toggleWishlist } = useStore();
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -126,6 +192,10 @@ export function ProductCard({ product }: ProductCardProps) {
               className={`h-4 w-4 ${isInWishlist(product.id) ? "fill-destructive text-destructive" : ""}`} 
             />
           </Button>
+
+          {showSaleCountdown && product.salePriceEnd && (
+            <ProductCountdownTimer endDate={new Date(product.salePriceEnd)} />
+          )}
 
           <div 
             className={`absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent transition-opacity ${
