@@ -51,11 +51,35 @@ const SPACING_OPTIONS: { value: SpacingOption; label: string; description: strin
   { value: 'loose', label: 'Loose', description: 'Maximum spacing' },
 ];
 
-const SPACING_CLASSES: Record<SpacingOption, string> = {
-  compact: 'prose-p:mb-1 prose-p:leading-snug prose-headings:mb-1 prose-headings:mt-2 prose-li:my-0.5',
-  normal: 'prose-p:mb-3 prose-p:leading-normal prose-headings:mb-2 prose-headings:mt-4 prose-li:my-1',
-  relaxed: 'prose-p:mb-4 prose-p:leading-relaxed prose-headings:mb-3 prose-headings:mt-5 prose-li:my-1.5',
-  loose: 'prose-p:mb-6 prose-p:leading-loose prose-headings:mb-4 prose-headings:mt-6 prose-li:my-2',
+const SPACING_STYLES: Record<SpacingOption, Record<string, string>> = {
+  compact: {
+    '--p-margin': '0.25rem',
+    '--p-line-height': '1.375',
+    '--heading-margin-top': '0.5rem',
+    '--heading-margin-bottom': '0.25rem',
+    '--li-margin': '0.125rem',
+  },
+  normal: {
+    '--p-margin': '0.75rem',
+    '--p-line-height': '1.5',
+    '--heading-margin-top': '1rem',
+    '--heading-margin-bottom': '0.5rem',
+    '--li-margin': '0.25rem',
+  },
+  relaxed: {
+    '--p-margin': '1rem',
+    '--p-line-height': '1.625',
+    '--heading-margin-top': '1.25rem',
+    '--heading-margin-bottom': '0.75rem',
+    '--li-margin': '0.375rem',
+  },
+  loose: {
+    '--p-margin': '1.5rem',
+    '--p-line-height': '1.75',
+    '--heading-margin-top': '1.5rem',
+    '--heading-margin-bottom': '1rem',
+    '--li-margin': '0.5rem',
+  },
 };
 
 export function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
@@ -162,6 +186,7 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
   );
 
   const currentSpacingLabel = SPACING_OPTIONS.find(s => s.value === spacing)?.label || 'Normal';
+  const currentSpacingStyles = SPACING_STYLES[spacing];
 
   return (
     <div className={cn("border rounded-md bg-background", className)}>
@@ -355,12 +380,37 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
         </ToolbarButton>
       </div>
       
-      <div className={cn(SPACING_CLASSES[spacing])}>
+      <style>
+        {`
+          .rich-text-editor-content .ProseMirror p {
+            margin-bottom: var(--p-margin, 0.75rem);
+            line-height: var(--p-line-height, 1.5);
+          }
+          .rich-text-editor-content .ProseMirror h1,
+          .rich-text-editor-content .ProseMirror h2,
+          .rich-text-editor-content .ProseMirror h3 {
+            margin-top: var(--heading-margin-top, 1rem);
+            margin-bottom: var(--heading-margin-bottom, 0.5rem);
+          }
+          .rich-text-editor-content .ProseMirror li {
+            margin-top: var(--li-margin, 0.25rem);
+            margin-bottom: var(--li-margin, 0.25rem);
+          }
+          .rich-text-editor-content .ProseMirror ul,
+          .rich-text-editor-content .ProseMirror ol {
+            margin-bottom: var(--p-margin, 0.75rem);
+          }
+        `}
+      </style>
+      <div 
+        className="rich-text-editor-content"
+        style={currentSpacingStyles as React.CSSProperties}
+      >
         <EditorContent editor={editor} data-testid="input-rich-text-editor" />
       </div>
     </div>
   );
 }
 
-export { SPACING_CLASSES };
+export { SPACING_STYLES };
 export type { SpacingOption };
