@@ -125,6 +125,7 @@ export const products = pgTable("products", {
   bannerSubtitle: varchar("banner_subtitle"),
   bannerCtaText: varchar("banner_cta_text"),
   bannerCtaLink: varchar("banner_cta_link"),
+  couponBoxBgColor: varchar("coupon_box_bg_color").default("#f0fdf4"), // Background color for coupon box on product page
   isFeatured: boolean("is_featured").default(false),
   isTrending: boolean("is_trending").default(false),
   isNewArrival: boolean("is_new_arrival").default(false),

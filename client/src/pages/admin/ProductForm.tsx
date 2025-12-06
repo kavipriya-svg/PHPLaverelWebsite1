@@ -84,6 +84,7 @@ const productSchema = z.object({
   bannerSubtitle: z.string().optional(),
   bannerCtaText: z.string().optional(),
   bannerCtaLink: z.string().optional(),
+  couponBoxBgColor: z.string().default("#f0fdf4"),
   isFeatured: z.boolean().default(false),
   isTrending: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
@@ -209,6 +210,7 @@ export default function ProductForm() {
       bannerSubtitle: "",
       bannerCtaText: "",
       bannerCtaLink: "",
+      couponBoxBgColor: "#f0fdf4",
       isFeatured: false,
       isTrending: false,
       isNewArrival: false,
@@ -248,6 +250,7 @@ export default function ProductForm() {
         bannerSubtitle: (p as any).bannerSubtitle || "",
         bannerCtaText: (p as any).bannerCtaText || "",
         bannerCtaLink: (p as any).bannerCtaLink || "",
+        couponBoxBgColor: (p as any).couponBoxBgColor || "#f0fdf4",
         isFeatured: p.isFeatured || false,
         isTrending: p.isTrending || false,
         isNewArrival: (p as any).isNewArrival || false,
@@ -1432,6 +1435,65 @@ export default function ProductForm() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Coupon Box Background Color */}
+                <FormField
+                  control={form.control}
+                  name="couponBoxBgColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        Coupon Box Background Color
+                        <span className="text-xs text-muted-foreground">(shown on product page)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={field.value || "#f0fdf4"}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              className="w-10 h-10 rounded-md border cursor-pointer"
+                              data-testid="input-coupon-box-color"
+                            />
+                            <Input
+                              value={field.value || "#f0fdf4"}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              placeholder="#f0fdf4"
+                              className="w-28 font-mono text-sm"
+                              data-testid="input-coupon-box-color-text"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-muted-foreground mr-1">Presets:</span>
+                            {[
+                              { color: "#f0fdf4", label: "Green" },
+                              { color: "#fef3c7", label: "Amber" },
+                              { color: "#fce7f3", label: "Pink" },
+                              { color: "#e0f2fe", label: "Sky" },
+                              { color: "#f3e8ff", label: "Purple" },
+                              { color: "#fff7ed", label: "Orange" },
+                              { color: "#f1f5f9", label: "Slate" },
+                            ].map((preset) => (
+                              <button
+                                key={preset.color}
+                                type="button"
+                                onClick={() => field.onChange(preset.color)}
+                                className="w-6 h-6 rounded-md border border-border hover:ring-2 hover:ring-offset-1 hover:ring-primary transition-all"
+                                style={{ backgroundColor: preset.color }}
+                                title={preset.label}
+                                data-testid={`button-preset-color-${preset.label.toLowerCase()}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Choose a background color for the coupon box displayed on the product page
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+
                 {/* Product-Specific Coupons */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-sm font-medium">
