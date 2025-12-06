@@ -378,13 +378,30 @@ function CustomCodeBlock({ block }: { block: HomeBlock }) {
   );
 }
 
+function calculateTimeLeft(endDate: Date | null): {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+} | null {
+  if (!endDate) return null;
+  
+  const now = new Date().getTime();
+  const end = new Date(endDate).getTime();
+  const difference = end - now;
+
+  if (difference <= 0) return null;
+
+  return {
+    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((difference % (1000 * 60)) / 1000),
+  };
+}
+
 function useCountdown(endDate: Date | null) {
-  const [timeLeft, setTimeLeft] = useState<{
-    days: number;
-    hours: number;
-    minutes: number;
-    seconds: number;
-  } | null>(null);
+  const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft(endDate));
 
   useEffect(() => {
     if (!endDate) {
@@ -392,26 +409,9 @@ function useCountdown(endDate: Date | null) {
       return;
     }
 
-    const calculateTimeLeft = () => {
-      const now = new Date().getTime();
-      const end = new Date(endDate).getTime();
-      const difference = end - now;
-
-      if (difference <= 0) {
-        setTimeLeft(null);
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((difference % (1000 * 60)) / 1000),
-      });
-    };
-
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft(endDate));
+    }, 1000);
 
     return () => clearInterval(timer);
   }, [endDate]);
