@@ -153,6 +153,18 @@ function Router() {
         </StoreLayout>
       </Route>
       
+      <Route path="/special-offers">
+        <StoreLayout>
+          <SpecialOffers />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/sale">
+        <StoreLayout>
+          <SpecialOffers />
+        </StoreLayout>
+      </Route>
+      
       <Route path="/combo-offers">
         <StoreLayout>
           <ComboOffers />
