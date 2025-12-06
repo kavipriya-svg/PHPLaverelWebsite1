@@ -32,7 +32,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Fully dynamic footer management (store info, social links, contact info, quick links, newsletter settings, section visibility toggles)
 - Dynamic Shop by Category section on homepage with admin controls (category selection, custom images/labels, ordering, visibility, width percentage 25/50/75/100%, alignment left/center/right) - uses banner-style row grouping where complementary widths display side-by-side on desktop
 - Blog section above footer with admin controls for creating/editing blog posts (title, excerpt, author, images, visibility)
-- Customer sign-up page using Replit OIDC authentication
+- Unified email/password authentication for customers and admins (no external OAuth dependencies)
 
 ## User Preferences
 
@@ -81,11 +81,14 @@ Preferred communication style: Simple, everyday language.
 - Role-based access control (admin, manager, support, customer)
 
 **Authentication:**
-- Replit Auth integration using OpenID Connect
-- Passport.js for authentication strategy
+- Unified email/password authentication for both customers and admins
+- Bcrypt password hashing (12 rounds) for secure password storage
+- Password strength validation (min 8 chars, uppercase, lowercase, number)
 - Session-based authentication with PostgreSQL session store
 - Cookie-based session management with httpOnly and secure flags
 - Optional authentication for guest browsing with session ID cookies
+- Customer auth endpoints: /api/auth/signup, /api/auth/login, /api/auth/logout
+- Admin auth endpoints: /api/admin/login, /api/admin/logout
 
 **Authorization:**
 - Role-based middleware (`isAdmin`) for protecting admin routes
