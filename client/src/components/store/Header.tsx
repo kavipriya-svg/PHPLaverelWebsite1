@@ -33,7 +33,8 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { useStore } from "@/contexts/StoreContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { CategoryWithChildren } from "@shared/schema";
 
 interface BrandingSettings {
@@ -74,6 +75,21 @@ export function Header() {
 
   const categories = categoriesData?.categories || [];
   const branding = brandingData?.settings ? { ...defaultBranding, ...brandingData.settings } : defaultBranding;
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/auth/logout");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation("/");
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -338,11 +354,13 @@ export function Header() {
                       </>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <a href="/api/logout" className="w-full cursor-pointer flex items-center gap-2" data-testid="link-logout">
-                        <LogOut className="h-4 w-4" />
-                        Sign Out
-                      </a>
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="cursor-pointer flex items-center gap-2" 
+                      data-testid="button-logout"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
                     </DropdownMenuItem>
                   </>
                 ) : (
