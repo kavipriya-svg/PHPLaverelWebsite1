@@ -206,6 +206,8 @@ export interface ProductFilters {
   maxPrice?: number;
   isFeatured?: boolean;
   isTrending?: boolean;
+  isNewArrival?: boolean;
+  isOnSale?: boolean;
   isActive?: boolean;
   limit?: number;
   offset?: number;
@@ -385,6 +387,25 @@ export class DatabaseStorage implements IStorage {
     if (filters.maxPrice) conditions.push(lte(products.price, filters.maxPrice.toString()));
     if (filters.isFeatured !== undefined) conditions.push(eq(products.isFeatured, filters.isFeatured));
     if (filters.isTrending !== undefined) conditions.push(eq(products.isTrending, filters.isTrending));
+    if (filters.isNewArrival !== undefined) conditions.push(eq(products.isNewArrival, filters.isNewArrival));
+    if (filters.isOnSale !== undefined) {
+      conditions.push(eq(products.isOnSale, filters.isOnSale));
+      if (filters.isOnSale) {
+        const now = new Date();
+        conditions.push(
+          or(
+            isNull(products.salePriceStart),
+            lte(products.salePriceStart, now)
+          )
+        );
+        conditions.push(
+          or(
+            isNull(products.salePriceEnd),
+            gte(products.salePriceEnd, now)
+          )
+        );
+      }
+    }
     if (filters.isActive !== undefined) conditions.push(eq(products.isActive, filters.isActive));
 
     const baseQuery = conditions.length > 0 
