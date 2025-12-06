@@ -56,6 +56,7 @@ const AdminInventory = lazy(() => import("@/pages/admin/Inventory"));
 const AdminInvoiceSettings = lazy(() => import("@/pages/admin/InvoiceSettings"));
 const AdminFooterSettings = lazy(() => import("@/pages/admin/FooterSettings"));
 const AdminBrandingSettings = lazy(() => import("@/pages/admin/BrandingSettings"));
+const AdminSpecialOffersSettings = lazy(() => import("@/pages/admin/SpecialOffersSettings"));
 const AdminCategorySectionSettings = lazy(() => import("@/pages/admin/CategorySectionSettings"));
 const AdminBlogSettings = lazy(() => import("@/pages/admin/BlogSettings"));
 const AdminComboOffers = lazy(() => import("@/pages/admin/ComboOffers"));
@@ -353,6 +354,11 @@ function Router() {
       <Route path="/admin/branding">
         <AdminLayout>
           <AdminBrandingSettings />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/special-offers">
+        <AdminLayout>
+          <AdminSpecialOffersSettings />
         </AdminLayout>
       </Route>
       <Route path="/admin/category-section">
