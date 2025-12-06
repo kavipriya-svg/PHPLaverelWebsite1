@@ -46,6 +46,7 @@ import AdminBrandingSettings from "@/pages/admin/BrandingSettings";
 import AdminCategorySectionSettings from "@/pages/admin/CategorySectionSettings";
 import AdminBlogSettings from "@/pages/admin/BlogSettings";
 import AdminComboOffers from "@/pages/admin/ComboOffers";
+import AdminLogin from "@/pages/admin/AdminLogin";
 import ComboOffers from "@/pages/ComboOffers";
 import GiftRegistry from "@/pages/GiftRegistry";
 import GiftRegistryDetail from "@/pages/GiftRegistryDetail";
@@ -206,6 +207,7 @@ function Router() {
         </StoreLayout>
       </Route>
 
+      <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/products/:id" component={AdminProductForm} />

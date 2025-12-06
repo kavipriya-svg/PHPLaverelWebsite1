@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated, getUserInfo, getOidcConfig, client } from "
 import { emailService } from "./email";
 import { randomUUID } from "crypto";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { hashPassword, verifyPassword, validatePasswordStrength } from "./password";
 import {
   insertProductSchema,
   insertCategorySchema,
@@ -209,6 +210,175 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     
     const user = await storage.getUser(userInfo.id);
     res.json(user || null);
+  });
+
+  // Admin email/password login
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+      
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      if (!["admin", "manager"].includes(user.role)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      if (!user.passwordHash) {
+        return res.status(401).json({ error: "Password not set. Please contact administrator." });
+      }
+      
+      const isValid = await verifyPassword(password, user.passwordHash);
+      
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      // Create session for the admin user
+      const sessionUser = {
+        claims: { sub: user.id },
+        dbUser: user,
+        isAdminAuth: true, // Flag to identify admin password-based auth
+      };
+      
+      req.login(sessionUser, (err) => {
+        if (err) {
+          return res.status(500).json({ error: "Failed to create session" });
+        }
+        res.json({ 
+          success: true, 
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Admin login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  // Admin logout
+  app.post("/api/admin/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      req.session?.destroy((err) => {
+        if (err) {
+          console.error("Session destroy error:", err);
+        }
+        res.clearCookie("connect.sid");
+        res.json({ success: true });
+      });
+    });
+  });
+
+  // Admin password setup/change (for existing admins)
+  app.post("/api/admin/set-password", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userInfo = getUserInfo(req);
+      
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const user = await storage.getUser(userInfo.id);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // If user already has a password, verify current password
+      if (user.passwordHash) {
+        if (!currentPassword) {
+          return res.status(400).json({ error: "Current password is required" });
+        }
+        const isValid = await verifyPassword(currentPassword, user.passwordHash);
+        if (!isValid) {
+          return res.status(401).json({ error: "Current password is incorrect" });
+        }
+      }
+      
+      // Validate new password strength
+      const validation = validatePasswordStrength(newPassword);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.message });
+      }
+      
+      // Hash and save new password
+      const passwordHash = await hashPassword(newPassword);
+      await storage.updateUserPassword(user.id, passwordHash);
+      
+      res.json({ success: true, message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Set password error:", error);
+      res.status(500).json({ error: "Failed to update password" });
+    }
+  });
+
+  // Create admin user with password (super admin only)
+  app.post("/api/admin/create-admin", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email, password, firstName, lastName, role } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+      
+      if (role && !["admin", "manager", "support"].includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User with this email already exists" });
+      }
+      
+      // Validate password strength
+      const validation = validatePasswordStrength(password);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.message });
+      }
+      
+      // Hash password and create user
+      const passwordHash = await hashPassword(password);
+      const newUser = await storage.upsertUser({
+        id: randomUUID(),
+        email: email.toLowerCase().trim(),
+        firstName: firstName || null,
+        lastName: lastName || null,
+        role: role || "admin",
+        passwordHash,
+      });
+      
+      res.json({ 
+        success: true, 
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role,
+        }
+      });
+    } catch (error) {
+      console.error("Create admin error:", error);
+      res.status(500).json({ error: "Failed to create admin user" });
+    }
   });
 
   // Update user profile
