@@ -21,6 +21,7 @@ interface FooterSettings {
   storeName: string;
   storeDescription: string;
   logoUrl: string;
+  showStoreName: boolean;
   socialLinks: {
     facebook: string;
     twitter: string;
@@ -48,6 +49,7 @@ const defaultSettings: FooterSettings = {
   storeName: "ShopHub",
   storeDescription: "Your one-stop destination for quality products at great prices.",
   logoUrl: "",
+  showStoreName: true,
   socialLinks: {
     facebook: "",
     twitter: "",
@@ -114,34 +116,50 @@ export default function FooterSettingsPage() {
 
     setIsUploading(true);
     try {
-      const uploadRes = await fetch("/api/admin/upload", {
-        method: "POST",
-        credentials: "include",
+      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
+        filename: file.name,
+        contentType: file.type,
+        folder: "footer",
       });
       
-      if (!uploadRes.ok) throw new Error("Failed to get upload URL");
-      const uploadData = await uploadRes.json();
-
-      const formData = new FormData();
-      Object.entries(uploadData.fields || {}).forEach(([key, value]) => {
-        formData.append(key, value as string);
-      });
-      formData.append("file", file);
-
-      const putRes = await fetch(uploadData.url, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!putRes.ok) throw new Error("Failed to upload image");
-
-      const resultData = await putRes.json();
-      const imageUrl = resultData.url || `${uploadData.url}/${uploadData.fields?.key}`;
+      if (!presignedResponse.ok) {
+        throw new Error("Failed to get upload URL");
+      }
       
-      setSettings(prev => ({ ...prev, logoUrl: imageUrl }));
+      const { presignedUrl, objectPath } = await presignedResponse.json();
+
+      const uploadResponse = await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to storage");
+      }
+
+      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
+        uploadURL: presignedUrl,
+      });
+      
+      if (!finalizeResponse.ok) {
+        throw new Error("Failed to finalize upload");
+      }
+      
+      const finalizedResult = await finalizeResponse.json();
+      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      
+      setSettings(prev => ({ ...prev, logoUrl: finalUrl }));
       toast({ title: "Logo uploaded successfully" });
     } catch (error) {
-      toast({ title: "Failed to upload logo", variant: "destructive" });
+      console.error("Upload error:", error);
+      toast({ 
+        title: "Failed to upload logo", 
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive" 
+      });
     } finally {
       setIsUploading(false);
     }
@@ -300,13 +318,30 @@ export default function FooterSettingsPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Store Name</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Store Name</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="show-store-name" className="text-sm text-muted-foreground">
+                        Show in footer
+                      </Label>
+                      <Switch
+                        id="show-store-name"
+                        checked={settings.showStoreName}
+                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showStoreName: checked }))}
+                        data-testid="switch-show-store-name"
+                      />
+                    </div>
+                  </div>
                   <Input
                     value={settings.storeName}
                     onChange={(e) => setSettings(prev => ({ ...prev, storeName: e.target.value }))}
                     placeholder="ShopHub"
+                    disabled={!settings.showStoreName}
                     data-testid="input-footer-store-name"
                   />
+                  <p className="text-sm text-muted-foreground">
+                    {settings.showStoreName ? "Store name will be displayed in the footer" : "Store name is hidden from footer"}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
