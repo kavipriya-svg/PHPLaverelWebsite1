@@ -13,6 +13,7 @@ interface FooterSettings {
   storeName: string;
   storeDescription: string;
   logoUrl: string;
+  showStoreName: boolean;
   socialLinks: {
     facebook: string;
     twitter: string;
@@ -40,6 +41,7 @@ const defaultSettings: FooterSettings = {
   storeName: "ShopHub",
   storeDescription: "Your one-stop destination for quality products at great prices. Shop with confidence.",
   logoUrl: "",
+  showStoreName: true,
   socialLinks: {
     facebook: "",
     twitter: "",
@@ -97,12 +99,14 @@ export function Footer() {
                   alt={settings.storeName} 
                   className="h-9 w-auto object-contain"
                 />
-              ) : (
+              ) : settings.showStoreName ? (
                 <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-lg">
                   {settings.storeName.charAt(0).toUpperCase()}
                 </div>
+              ) : null}
+              {settings.showStoreName && (
+                <span className="font-bold text-xl">{settings.storeName}</span>
               )}
-              <span className="font-bold text-xl">{settings.storeName}</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               {settings.storeDescription}
@@ -235,7 +239,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground" data-testid="text-copyright">
-              &copy; {new Date().getFullYear()} {settings.storeName}. {settings.copyrightText}
+              &copy; {new Date().getFullYear()}{settings.showStoreName && ` ${settings.storeName}`}. {settings.copyrightText}
             </p>
             {settings.legalLinks.length > 0 && (
               <div className="flex gap-4 text-sm text-muted-foreground">
