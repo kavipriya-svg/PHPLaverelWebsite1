@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, MoreHorizontal, Edit, Trash2, Tag } from "lucide-react";
+import { Plus, MoreHorizontal, Edit, Trash2, Tag, Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -199,7 +199,54 @@ function BrandDialog({
   const [logoUrl, setLogoUrl] = useState(brand?.logoUrl || "");
   const [description, setDescription] = useState(brand?.description || "");
   const [isActive, setIsActive] = useState(brand?.isActive !== false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      setName(brand?.name || "");
+      setSlug(brand?.slug || "");
+      setLogoUrl(brand?.logoUrl || "");
+      setDescription(brand?.description || "");
+      setIsActive(brand?.isActive !== false);
+    }
+  }, [open, brand]);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Please select an image file", variant: "destructive" });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
+        filename: file.name,
+        contentType: file.type,
+        folder: "brands"
+      });
+      const { presignedUrl, publicUrl } = await presignedResponse.json() as { presignedUrl: string; publicUrl: string };
+
+      await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type }
+      });
+
+      await apiRequest("POST", "/api/admin/upload/finalize", { publicUrl });
+      
+      setLogoUrl(publicUrl);
+      toast({ title: "Logo uploaded successfully" });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({ title: "Failed to upload logo", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -253,12 +300,58 @@ function BrandDialog({
             <Input value={slug} onChange={(e) => setSlug(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Logo URL</Label>
-            <Input
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://..."
+            <Label>Brand Logo</Label>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              id="brand-logo-upload"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleLogoUpload(file);
+              }}
             />
+            {logoUrl ? (
+              <div className="relative inline-block">
+                <img 
+                  src={logoUrl} 
+                  alt="Brand logo" 
+                  className="h-20 w-20 object-contain rounded border"
+                  data-testid="img-brand-logo-preview"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-6 w-6"
+                  onClick={() => setLogoUrl("")}
+                  data-testid="button-remove-brand-logo"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                data-testid="button-upload-brand-logo"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Logo
+                  </>
+                )}
+              </Button>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Description</Label>
