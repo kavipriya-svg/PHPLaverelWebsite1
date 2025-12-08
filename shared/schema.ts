@@ -819,6 +819,7 @@ export const comboOffers = pgTable("combo_offers", {
   slug: varchar("slug").notNull().unique(),
   description: text("description"),
   imageUrl: varchar("image_url"),
+  mediaUrls: text("media_urls").array(), // Array of image/video URLs
   productIds: text("product_ids").array().notNull(), // Array of product IDs in the combo
   originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(), // Sum of individual product prices
   comboPrice: decimal("combo_price", { precision: 10, scale: 2 }).notNull(), // Discounted combo price
