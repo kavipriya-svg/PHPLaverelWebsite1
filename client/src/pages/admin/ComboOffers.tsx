@@ -11,6 +11,8 @@ import {
   Image as ImageIcon,
   Search,
   X,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -313,6 +315,7 @@ function ComboOfferDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [comboPrice, setComboPrice] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -321,6 +324,62 @@ function ComboOfferDialog({
   const [position, setPosition] = useState("0");
   const [productSearch, setProductSearch] = useState("");
   const { toast } = useToast();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+
+    try {
+      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
+        filename: file.name,
+        contentType: file.type,
+        folder: "combo-offers",
+      });
+      
+      if (!presignedResponse.ok) {
+        throw new Error("Failed to get upload URL");
+      }
+      
+      const { presignedUrl, objectPath } = await presignedResponse.json();
+
+      const uploadResponse = await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to storage");
+      }
+
+      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
+        uploadURL: presignedUrl,
+      });
+      
+      if (!finalizeResponse.ok) {
+        throw new Error("Failed to finalize upload");
+      }
+      
+      const finalizedResult = await finalizeResponse.json();
+      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      
+      setImageUrl(finalUrl);
+      toast({ title: "Image uploaded successfully" });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({ 
+        title: "Failed to upload image", 
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   useEffect(() => {
     if (offer) {
@@ -433,16 +492,54 @@ function ComboOfferDialog({
               </div>
 
               <div className="space-y-2 col-span-2">
-                <Label>Image URL</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://..."
-                  />
-                  {imageUrl && (
-                    <img src={imageUrl} alt="Preview" className="w-10 h-10 rounded object-cover" />
+                <Label>Combo Image</Label>
+                <div className="flex items-start gap-4">
+                  {imageUrl ? (
+                    <div className="relative">
+                      <img 
+                        src={imageUrl} 
+                        alt="Combo" 
+                        className="w-20 h-20 rounded object-cover border"
+                      />
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setImageUrl("")}
+                        type="button"
+                        data-testid="button-remove-combo-image"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 border-2 border-dashed rounded flex items-center justify-center text-muted-foreground">
+                      <ImageIcon className="h-6 w-6 opacity-50" />
+                    </div>
                   )}
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="combo-image-upload"
+                      disabled={isUploadingImage}
+                    />
+                    <Button asChild variant="outline" disabled={isUploadingImage} type="button">
+                      <label htmlFor="combo-image-upload" className="cursor-pointer">
+                        {isUploadingImage ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        {isUploadingImage ? "Uploading..." : "Upload Image"}
+                      </label>
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Recommended: 400x400 pixels. PNG or JPG.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
