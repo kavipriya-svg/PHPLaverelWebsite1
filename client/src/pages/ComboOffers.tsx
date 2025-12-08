@@ -90,7 +90,7 @@ export default function ComboOffers() {
       )}
 
       <div className="container mx-auto px-4 py-8">
-        {!settings?.showBanner && (
+        {(!settings?.showBanner || !settings?.bannerUrl) && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-primary/10 rounded-lg">

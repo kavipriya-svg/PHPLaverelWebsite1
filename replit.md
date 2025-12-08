@@ -15,6 +15,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - On Sale products support scheduled sale dates (start/end) with live countdown timers on homepage
 - Section banner placement system with dynamic controls (position relative to home blocks, width percentage 25/50/75/100%, alignment)
 - Special Offers page section image with row-based positioning (target row 1-5, before/after placement), width control (25/50/75/100%), and alignment (left/center/right)
+- Combo Offers page with banner and section image controls matching Special Offers page functionality (banner with text overlay, section image with positioning/width/alignment)
 - Multi-banner row layout: banners with complementary widths (e.g., 50%+50%, 75%+25%) display side-by-side on desktop with equal heights, stacking vertically on mobile
 - Coupon and promotional offer system
 - Multi-variant product support with variant-level sale pricing and discount display
