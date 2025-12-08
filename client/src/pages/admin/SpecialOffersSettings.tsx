@@ -1,12 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Save, Upload, Trash2, Loader2, Image, Percent, Link as LinkIcon } from "lucide-react";
+import { Save, Upload, Trash2, Loader2, Image, Percent, Link as LinkIcon, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -22,6 +29,10 @@ interface SpecialOffersPageSettings {
   sectionTitle: string;
   sectionDescription: string;
   showSectionImage: boolean;
+  sectionImageTargetRow: number;
+  sectionImagePlacement: "before" | "after";
+  sectionImageWidth: "25" | "50" | "75" | "100";
+  sectionImageAlignment: "left" | "center" | "right";
 }
 
 const defaultSettings: SpecialOffersPageSettings = {
@@ -35,6 +46,10 @@ const defaultSettings: SpecialOffersPageSettings = {
   sectionTitle: "Hot Deals",
   sectionDescription: "Limited time offers on your favorite products",
   showSectionImage: true,
+  sectionImageTargetRow: 1,
+  sectionImagePlacement: "before",
+  sectionImageWidth: "100",
+  sectionImageAlignment: "left",
 };
 
 export default function SpecialOffersSettingsPage() {
@@ -367,6 +382,84 @@ export default function SpecialOffersSettingsPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+
+              <div className="p-4 bg-muted/30 rounded-lg border">
+                <div className="flex items-center gap-2 mb-4">
+                  <LayoutGrid className="h-4 w-4" />
+                  <Label className="font-medium">Placement & Size</Label>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="section-target-row">Target Row</Label>
+                    <Select
+                      value={settings.sectionImageTargetRow.toString()}
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, sectionImageTargetRow: parseInt(value) }))}
+                    >
+                      <SelectTrigger data-testid="select-section-target-row">
+                        <SelectValue placeholder="Select row" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Row 1</SelectItem>
+                        <SelectItem value="2">Row 2</SelectItem>
+                        <SelectItem value="3">Row 3</SelectItem>
+                        <SelectItem value="4">Row 4</SelectItem>
+                        <SelectItem value="5">Row 5</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="section-placement">Position</Label>
+                    <Select
+                      value={settings.sectionImagePlacement}
+                      onValueChange={(value: "before" | "after") => setSettings(prev => ({ ...prev, sectionImagePlacement: value }))}
+                    >
+                      <SelectTrigger data-testid="select-section-placement">
+                        <SelectValue placeholder="Select position" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="before">Before Row</SelectItem>
+                        <SelectItem value="after">After Row</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="section-width">Width</Label>
+                    <Select
+                      value={settings.sectionImageWidth}
+                      onValueChange={(value: "25" | "50" | "75" | "100") => setSettings(prev => ({ ...prev, sectionImageWidth: value }))}
+                    >
+                      <SelectTrigger data-testid="select-section-width">
+                        <SelectValue placeholder="Select width" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="25">25%</SelectItem>
+                        <SelectItem value="50">50%</SelectItem>
+                        <SelectItem value="75">75%</SelectItem>
+                        <SelectItem value="100">100%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="section-alignment">Alignment</Label>
+                    <Select
+                      value={settings.sectionImageAlignment}
+                      onValueChange={(value: "left" | "center" | "right") => setSettings(prev => ({ ...prev, sectionImageAlignment: value }))}
+                    >
+                      <SelectTrigger data-testid="select-section-alignment">
+                        <SelectValue placeholder="Select alignment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Left</SelectItem>
+                        <SelectItem value="center">Center</SelectItem>
+                        <SelectItem value="right">Right</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Position the section image relative to product rows. Each row displays 4 products on desktop.
+                </p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
