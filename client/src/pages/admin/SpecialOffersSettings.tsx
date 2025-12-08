@@ -557,21 +557,23 @@ export default function SpecialOffersSettingsPage() {
                         settings.sectionImageWidth === "25" ? "w-1/4" : 
                         settings.sectionImageWidth === "50" ? "w-1/2" : 
                         settings.sectionImageWidth === "75" ? "w-3/4" : "w-full"
-                      } flex flex-col md:flex-row items-center gap-4 p-4 bg-gradient-to-r from-destructive/5 to-transparent rounded-xl border`}
+                      } relative overflow-hidden rounded-xl`}
                     >
                       <img 
                         src={settings.sectionImageUrl} 
                         alt={settings.sectionTitle || "Section"} 
-                        className="w-20 h-20 object-cover rounded-lg shadow-lg flex-shrink-0"
+                        className="w-full h-32 object-cover"
                         data-testid="img-section-preview"
                       />
-                      <div className="text-center md:text-left">
-                        <h3 className="text-lg font-bold text-destructive mb-1">
-                          {settings.sectionTitle || "Hot Deals"}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {settings.sectionDescription || "Limited time offers on your favorite products"}
-                        </p>
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent flex items-center">
+                        <div className="p-4 text-white max-w-lg">
+                          <h3 className="text-lg font-bold mb-1">
+                            {settings.sectionTitle || "Hot Deals"}
+                          </h3>
+                          <p className="text-sm text-white/90">
+                            {settings.sectionDescription || "Limited time offers on your favorite products"}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
