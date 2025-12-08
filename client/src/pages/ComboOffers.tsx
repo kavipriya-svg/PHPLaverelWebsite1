@@ -29,69 +29,223 @@ interface ComboOffer {
   products: ProductWithDetails[];
 }
 
+interface ComboOffersPageSettings {
+  bannerUrl: string;
+  bannerTitle: string;
+  bannerSubtitle: string;
+  bannerCtaText: string;
+  bannerCtaLink: string;
+  showBanner: boolean;
+  sectionImageUrl: string;
+  sectionTitle: string;
+  sectionDescription: string;
+  showSectionImage: boolean;
+  sectionImageTargetRow: number;
+  sectionImagePlacement: "before" | "after";
+  sectionImageWidth: "25" | "50" | "75" | "100";
+  sectionImageAlignment: "left" | "center" | "right";
+}
+
 export default function ComboOffers() {
   const { data, isLoading, isError, refetch } = useQuery<{ offers: ComboOffer[] }>({
     queryKey: ["/api/combo-offers", { active: "true" }],
   });
 
+  const { data: settingsData } = useQuery<{ settings: ComboOffersPageSettings }>({
+    queryKey: ["/api/settings/combo-offers"],
+  });
+
+  const settings = settingsData?.settings;
   const offers = data?.offers || [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Gift className="h-6 w-6 text-primary" />
+    <div>
+      {settings?.showBanner && settings?.bannerUrl && (
+        <div className="relative overflow-hidden">
+          <img 
+            src={settings.bannerUrl} 
+            alt={settings.bannerTitle || "Combo Offers"} 
+            className="w-full h-48 md:h-64 lg:h-80 object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent flex items-center">
+            <div className="container mx-auto px-4">
+              <div className="max-w-lg text-white">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3" data-testid="text-combo-banner-title">
+                  {settings.bannerTitle || "Combo Offers"}
+                </h1>
+                <p className="text-lg text-white/90 mb-6" data-testid="text-combo-banner-subtitle">
+                  {settings.bannerSubtitle || "Save more when you buy together!"}
+                </p>
+                {settings.bannerCtaText && settings.bannerCtaLink && (
+                  <Link href={settings.bannerCtaLink}>
+                    <Button size="lg" variant="secondary" data-testid="button-combo-banner-cta">
+                      {settings.bannerCtaText}
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold">Combo Offers</h1>
         </div>
-        <p className="text-muted-foreground">
-          Save more when you buy together! Check out our specially curated product bundles.
-        </p>
-      </div>
+      )}
 
-      {isLoading ? (
+      <div className="container mx-auto px-4 py-8">
+        {!settings?.showBanner && (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Gift className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold" data-testid="text-combo-page-title">Combo Offers</h1>
+            </div>
+            <p className="text-muted-foreground">
+              Save more when you buy together! Check out our specially curated product bundles.
+            </p>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <Skeleton className="w-full h-48" />
+                <CardContent className="p-4 space-y-3">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="text-center py-16">
+            <AlertCircle className="h-16 w-16 mx-auto mb-4 text-destructive" />
+            <h2 className="text-2xl font-semibold mb-2">Failed to Load Offers</h2>
+            <p className="text-muted-foreground mb-6">
+              Something went wrong while loading combo offers. Please try again.
+            </p>
+            <Button onClick={() => refetch()} data-testid="button-retry-combo-offers">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </div>
+        ) : offers.length === 0 ? (
+          <div className="text-center py-16">
+            <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-semibold mb-2">No Combo Offers Available</h2>
+            <p className="text-muted-foreground mb-6">
+              Check back soon for exciting product bundles!
+            </p>
+            <Button asChild>
+              <Link href="/">
+                Continue Shopping
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <SectionImageOfferGrid 
+            offers={offers}
+            settings={settings}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SectionImageBanner({ 
+  settings,
+  className 
+}: { 
+  settings: ComboOffersPageSettings | undefined;
+  className?: string;
+}) {
+  if (!settings?.showSectionImage || !settings?.sectionImageUrl) return null;
+
+  const width = String(settings.sectionImageWidth || "100");
+  const alignment = String(settings.sectionImageAlignment || "left");
+
+  const widthClass = {
+    "25": "w-full md:w-1/4",
+    "50": "w-full md:w-1/2",
+    "75": "w-full md:w-3/4",
+    "100": "w-full",
+  }[width] || "w-full";
+
+  const alignmentClass = {
+    "left": "justify-start",
+    "center": "justify-center",
+    "right": "justify-end",
+  }[alignment] || "justify-start";
+
+  return (
+    <div 
+      className={`flex ${alignmentClass} ${className || ""}`} 
+      data-testid="combo-section-image-container"
+      data-width={width}
+      data-alignment={alignment}
+    >
+      <div className={`${widthClass} relative overflow-hidden rounded-xl`}>
+        <img 
+          src={settings.sectionImageUrl} 
+          alt={settings.sectionTitle || "Bundle & Save"} 
+          className="w-full h-40 md:h-48 object-cover"
+          data-testid="img-combo-section"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent flex items-center">
+          <div className="p-6 text-white max-w-lg">
+            <h2 className="text-xl md:text-2xl font-bold mb-2" data-testid="text-combo-section-title">
+              {settings.sectionTitle || "Bundle & Save"}
+            </h2>
+            <p className="text-sm md:text-base text-white/90" data-testid="text-combo-section-description">
+              {settings.sectionDescription || "Get the best value with our specially curated bundles"}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionImageOfferGrid({ 
+  offers, 
+  settings 
+}: { 
+  offers: ComboOffer[];
+  settings: ComboOffersPageSettings | undefined;
+}) {
+  const itemsPerRow = 3;
+  const targetRow = settings?.sectionImageTargetRow || 1;
+  const placement = settings?.sectionImagePlacement || "before";
+  const showSectionImage = settings?.showSectionImage && settings?.sectionImageUrl;
+
+  const insertIndex = placement === "before" 
+    ? (targetRow - 1) * itemsPerRow 
+    : targetRow * itemsPerRow;
+
+  const clampedInsertIndex = Math.min(insertIndex, offers.length);
+
+  const beforeOffers = offers.slice(0, clampedInsertIndex);
+  const afterOffers = offers.slice(clampedInsertIndex);
+
+  return (
+    <div className="space-y-6">
+      {beforeOffers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="w-full h-48" />
-              <CardContent className="p-4 space-y-3">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardContent>
-            </Card>
+          {beforeOffers.map((offer) => (
+            <ComboOfferCard key={offer.id} offer={offer} />
           ))}
         </div>
-      ) : isError ? (
-        <div className="text-center py-16">
-          <AlertCircle className="h-16 w-16 mx-auto mb-4 text-destructive" />
-          <h2 className="text-2xl font-semibold mb-2">Failed to Load Offers</h2>
-          <p className="text-muted-foreground mb-6">
-            Something went wrong while loading combo offers. Please try again.
-          </p>
-          <Button onClick={() => refetch()} data-testid="button-retry-combo-offers">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      ) : offers.length === 0 ? (
-        <div className="text-center py-16">
-          <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-semibold mb-2">No Combo Offers Available</h2>
-          <p className="text-muted-foreground mb-6">
-            Check back soon for exciting product bundles!
-          </p>
-          <Button asChild>
-            <Link href="/">
-              Continue Shopping
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      ) : (
+      )}
+
+      {showSectionImage && (
+        <SectionImageBanner settings={settings} className="my-6" />
+      )}
+
+      {afterOffers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {offers.map((offer) => (
+          {afterOffers.map((offer) => (
             <ComboOfferCard key={offer.id} offer={offer} />
           ))}
         </div>
