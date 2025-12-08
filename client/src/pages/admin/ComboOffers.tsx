@@ -66,6 +66,7 @@ interface ComboOffer {
   slug: string;
   description: string | null;
   imageUrl: string | null;
+  mediaUrls: string[] | null;
   productIds: string[];
   originalPrice: string;
   comboPrice: string;
@@ -77,6 +78,11 @@ interface ComboOffer {
   createdAt: string | null;
   updatedAt: string | null;
   products: ProductWithDetails[];
+}
+
+interface MediaItem {
+  url: string;
+  type: "image" | "video";
 }
 
 export default function AdminComboOffers() {
@@ -315,7 +321,8 @@ function ComboOfferDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [comboPrice, setComboPrice] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -325,60 +332,103 @@ function ComboOfferDialog({
   const [productSearch, setProductSearch] = useState("");
   const { toast } = useToast();
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const isVideoFile = (filename: string, contentType: string): boolean => {
+    return contentType.startsWith("video/") || 
+      /\.(mp4|webm|ogg|mov|avi)$/i.test(filename);
+  };
 
-    setIsUploadingImage(true);
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingMedia(true);
 
     try {
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "combo-offers",
-      });
-      
-      if (!presignedResponse.ok) {
-        throw new Error("Failed to get upload URL");
-      }
-      
-      const { presignedUrl, objectPath } = await presignedResponse.json();
+      const uploadedItems: MediaItem[] = [];
 
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage");
+      for (const file of Array.from(files)) {
+        const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
+          filename: file.name,
+          contentType: file.type,
+          folder: "combo-offers",
+        });
+        
+        if (!presignedResponse.ok) {
+          throw new Error(`Failed to get upload URL for ${file.name}`);
+        }
+        
+        const { presignedUrl, objectPath } = await presignedResponse.json();
+
+        const uploadResponse = await fetch(presignedUrl, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
+          },
+        });
+        
+        if (!uploadResponse.ok) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+
+        const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
+          uploadURL: presignedUrl,
+        });
+        
+        if (!finalizeResponse.ok) {
+          throw new Error(`Failed to finalize upload for ${file.name}`);
+        }
+        
+        const finalizedResult = await finalizeResponse.json();
+        const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+        
+        uploadedItems.push({
+          url: finalUrl,
+          type: isVideoFile(file.name, file.type) ? "video" : "image",
+        });
       }
 
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
+      setMediaItems((prev) => [...prev, ...uploadedItems]);
       
-      if (!finalizeResponse.ok) {
-        throw new Error("Failed to finalize upload");
+      if (uploadedItems.length > 0 && !imageUrl) {
+        const firstImage = uploadedItems.find((item) => item.type === "image");
+        if (firstImage) {
+          setImageUrl(firstImage.url);
+        }
       }
       
-      const finalizedResult = await finalizeResponse.json();
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
-      
-      setImageUrl(finalUrl);
-      toast({ title: "Image uploaded successfully" });
+      toast({ title: `${uploadedItems.length} file(s) uploaded successfully` });
     } catch (error) {
       console.error("Upload error:", error);
       toast({ 
-        title: "Failed to upload image", 
+        title: "Failed to upload files", 
         description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive" 
       });
     } finally {
-      setIsUploadingImage(false);
+      setIsUploadingMedia(false);
+      if (e.target) {
+        e.target.value = "";
+      }
     }
+  };
+
+  const removeMediaItem = (index: number) => {
+    setMediaItems((prev) => {
+      const newItems = prev.filter((_, i) => i !== index);
+      if (prev[index]?.url === imageUrl && newItems.length > 0) {
+        const firstImage = newItems.find((item) => item.type === "image");
+        setImageUrl(firstImage?.url || "");
+      } else if (newItems.length === 0) {
+        setImageUrl("");
+      }
+      return newItems;
+    });
+  };
+
+  const setAsPrimaryImage = (url: string) => {
+    setImageUrl(url);
+    toast({ title: "Primary image updated" });
   };
 
   useEffect(() => {
@@ -386,6 +436,11 @@ function ComboOfferDialog({
       setName(offer.name || "");
       setDescription(offer.description || "");
       setImageUrl(offer.imageUrl || "");
+      const existingMedia: MediaItem[] = (offer.mediaUrls || []).map((url) => ({
+        url,
+        type: /\.(mp4|webm|ogg|mov|avi)$/i.test(url) ? "video" as const : "image" as const,
+      }));
+      setMediaItems(existingMedia);
       setSelectedProductIds(offer.productIds || []);
       setComboPrice(offer.comboPrice || "");
       setStartDate(offer.startDate ? new Date(offer.startDate).toISOString().split("T")[0] : "");
@@ -396,6 +451,7 @@ function ComboOfferDialog({
       setName("");
       setDescription("");
       setImageUrl("");
+      setMediaItems([]);
       setSelectedProductIds([]);
       setComboPrice("");
       setStartDate("");
@@ -435,6 +491,7 @@ function ComboOfferDialog({
         name,
         description: description || null,
         imageUrl: imageUrl || null,
+        mediaUrls: mediaItems.map((item) => item.url),
         productIds: selectedProductIds,
         originalPrice: originalPrice.toString(),
         comboPrice,
@@ -492,52 +549,89 @@ function ComboOfferDialog({
               </div>
 
               <div className="space-y-2 col-span-2">
-                <Label>Combo Image</Label>
-                <div className="flex items-start gap-4">
-                  {imageUrl ? (
-                    <div className="relative">
-                      <img 
-                        src={imageUrl} 
-                        alt="Combo" 
-                        className="w-20 h-20 rounded object-cover border"
-                      />
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-6 w-6"
-                        onClick={() => setImageUrl("")}
-                        type="button"
-                        data-testid="button-remove-combo-image"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 border-2 border-dashed rounded flex items-center justify-center text-muted-foreground">
-                      <ImageIcon className="h-6 w-6 opacity-50" />
+                <Label>Images & Videos</Label>
+                <div className="space-y-3">
+                  {mediaItems.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {mediaItems.map((item, index) => (
+                        <div key={index} className="relative group">
+                          {item.type === "video" ? (
+                            <video
+                              src={item.url}
+                              className={`w-full h-20 rounded object-cover border ${
+                                item.url === imageUrl ? "ring-2 ring-primary" : ""
+                              }`}
+                            />
+                          ) : (
+                            <img
+                              src={item.url}
+                              alt={`Media ${index + 1}`}
+                              className={`w-full h-20 rounded object-cover border cursor-pointer ${
+                                item.url === imageUrl ? "ring-2 ring-primary" : ""
+                              }`}
+                              onClick={() => setAsPrimaryImage(item.url)}
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-1">
+                            {item.type === "image" && item.url !== imageUrl && (
+                              <Button
+                                size="icon"
+                                variant="secondary"
+                                className="h-6 w-6"
+                                onClick={() => setAsPrimaryImage(item.url)}
+                                type="button"
+                                title="Set as primary"
+                              >
+                                <ImageIcon className="h-3 w-3" />
+                              </Button>
+                            )}
+                            <Button
+                              size="icon"
+                              variant="destructive"
+                              className="h-6 w-6"
+                              onClick={() => removeMediaItem(index)}
+                              type="button"
+                              data-testid={`button-remove-media-${index}`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          {item.url === imageUrl && (
+                            <Badge className="absolute -top-2 -left-2 text-xs px-1">
+                              Primary
+                            </Badge>
+                          )}
+                          {item.type === "video" && (
+                            <Badge variant="secondary" className="absolute bottom-1 left-1 text-xs px-1">
+                              Video
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
-                  <div>
+                  <div className="flex items-center gap-3">
                     <input
                       type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
+                      accept="image/*,video/*"
+                      onChange={handleMediaUpload}
                       className="hidden"
-                      id="combo-image-upload"
-                      disabled={isUploadingImage}
+                      id="combo-media-upload"
+                      disabled={isUploadingMedia}
+                      multiple
                     />
-                    <Button asChild variant="outline" disabled={isUploadingImage} type="button">
-                      <label htmlFor="combo-image-upload" className="cursor-pointer">
-                        {isUploadingImage ? (
+                    <Button asChild variant="outline" disabled={isUploadingMedia} type="button">
+                      <label htmlFor="combo-media-upload" className="cursor-pointer">
+                        {isUploadingMedia ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : (
                           <Upload className="h-4 w-4 mr-2" />
                         )}
-                        {isUploadingImage ? "Uploading..." : "Upload Image"}
+                        {isUploadingMedia ? "Uploading..." : "Upload Images/Videos"}
                       </label>
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Recommended: 400x400 pixels. PNG or JPG.
+                    <p className="text-xs text-muted-foreground">
+                      Select multiple files. First image becomes primary.
                     </p>
                   </div>
                 </div>
@@ -588,6 +682,7 @@ function ComboOfferDialog({
                       >
                         <Checkbox
                           checked={selectedProductIds.includes(product.id)}
+                          onClick={(e) => e.stopPropagation()}
                           onCheckedChange={() => toggleProduct(product.id)}
                         />
                         {product.images?.[0]?.url ? (
