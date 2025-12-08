@@ -204,25 +204,27 @@ function SectionImageBanner({
 
   return (
     <div 
-      className={`flex ${alignmentClass} ${widthClass} ${className || ""}`} 
+      className={`flex ${alignmentClass} ${className || ""}`} 
       data-testid="section-image-container"
       data-width={width}
       data-alignment={alignment}
     >
-      <div className="w-full flex flex-col md:flex-row items-center gap-6 p-6 bg-gradient-to-r from-destructive/5 to-transparent rounded-xl border">
+      <div className={`${widthClass} relative overflow-hidden rounded-xl`}>
         <img 
           src={settings.sectionImageUrl} 
           alt={settings.sectionTitle || "Hot Deals"} 
-          className="w-32 h-32 object-cover rounded-lg shadow-lg flex-shrink-0"
+          className="w-full h-40 md:h-48 object-cover"
           data-testid="img-section"
         />
-        <div className="text-center md:text-left">
-          <h2 className="text-2xl font-bold text-destructive mb-2" data-testid="text-section-title">
-            {settings.sectionTitle || "Hot Deals"}
-          </h2>
-          <p className="text-muted-foreground" data-testid="text-section-description">
-            {settings.sectionDescription || "Limited time offers on your favorite products"}
-          </p>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent flex items-center">
+          <div className="p-6 text-white max-w-lg">
+            <h2 className="text-xl md:text-2xl font-bold mb-2" data-testid="text-section-title">
+              {settings.sectionTitle || "Hot Deals"}
+            </h2>
+            <p className="text-sm md:text-base text-white/90" data-testid="text-section-description">
+              {settings.sectionDescription || "Limited time offers on your favorite products"}
+            </p>
+          </div>
         </div>
       </div>
     </div>
