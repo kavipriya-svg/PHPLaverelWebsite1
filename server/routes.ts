@@ -991,6 +991,53 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Combo Offers Page Settings - GET
+  app.get("/api/settings/combo-offers", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("combo_offers_settings");
+      const defaultSettings = {
+        bannerUrl: "",
+        bannerTitle: "Combo Offers",
+        bannerSubtitle: "Save more when you buy together!",
+        bannerCtaText: "View Combos",
+        bannerCtaLink: "/combo-offers",
+        showBanner: true,
+        sectionImageUrl: "",
+        sectionTitle: "Bundle & Save",
+        sectionDescription: "Get the best value with our specially curated bundles",
+        showSectionImage: true,
+        sectionImageTargetRow: 1,
+        sectionImagePlacement: "before",
+        sectionImageWidth: "100",
+        sectionImageAlignment: "left",
+      };
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          res.json({ settings: { ...defaultSettings, ...parsed } });
+        } catch {
+          res.json({ settings: defaultSettings });
+        }
+      } else {
+        res.json({ settings: defaultSettings });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch combo offers settings" });
+    }
+  });
+
+  // Combo Offers Page Settings - PUT (Admin only)
+  app.put("/api/settings/combo-offers", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({
+        combo_offers_settings: JSON.stringify(req.body),
+      });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update combo offers settings" });
+    }
+  });
+
   // Helper to generate unique IDs for category section items
   const generateCategoryItemId = () => `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
