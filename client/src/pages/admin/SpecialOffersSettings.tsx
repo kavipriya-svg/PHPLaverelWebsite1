@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Save, Upload, Trash2, Loader2, Image, Percent, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,12 @@ export default function SpecialOffersSettingsPage() {
   const [settings, setSettings] = useState<SpecialOffersPageSettings>(defaultSettings);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [isUploadingSectionImage, setIsUploadingSectionImage] = useState(false);
+  
+  // Use a ref to always have access to the latest settings for save
+  const settingsRef = useRef(settings);
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   const { data, isLoading } = useQuery<{ settings: SpecialOffersPageSettings }>({
     queryKey: ["/api/settings/special-offers"],
@@ -54,8 +60,11 @@ export default function SpecialOffersSettingsPage() {
   }, [data]);
 
   const saveMutation = useMutation({
-    mutationFn: async (newSettings: SpecialOffersPageSettings) => {
-      const response = await apiRequest("PUT", "/api/settings/special-offers", newSettings);
+    mutationFn: async () => {
+      // Always use the ref to get the latest settings
+      const currentSettings = settingsRef.current;
+      console.log("[Save] Saving settings:", currentSettings);
+      const response = await apiRequest("PUT", "/api/settings/special-offers", currentSettings);
       if (!response.ok) throw new Error("Failed to save");
       return response.json();
     },
@@ -152,7 +161,7 @@ export default function SpecialOffersSettingsPage() {
             <p className="text-muted-foreground">Customize the banner and images on the special offers page</p>
           </div>
           <Button 
-            onClick={() => saveMutation.mutate(settings)} 
+            onClick={() => saveMutation.mutate()} 
             disabled={saveMutation.isPending}
             data-testid="button-save-special-offers"
           >
