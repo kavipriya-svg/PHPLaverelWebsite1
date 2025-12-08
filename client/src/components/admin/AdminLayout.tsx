@@ -64,7 +64,8 @@ const adminMenuItems = [
   { href: "/admin/seo", icon: Search, label: "SEO" },
   { href: "/admin/invoice", icon: FileText, label: "Invoice" },
   { href: "/admin/branding", icon: Paintbrush, label: "Branding" },
-  { href: "/admin/special-offers", icon: Percent, label: "Special Offers" },
+  { href: "/admin/special-offers", icon: Percent, label: "Special Offers Page" },
+  { href: "/admin/combo-offers-settings", icon: Gift, label: "Combo Offers Page" },
   { href: "/admin/footer", icon: PanelBottom, label: "Footer" },
   { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];
