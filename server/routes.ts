@@ -675,10 +675,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get("/api/products", async (req, res) => {
     try {
+      // Parse brandIds - can be a comma-separated string or array
+      let brandIds: string[] | undefined;
+      if (req.query.brandIds) {
+        const brandIdsParam = req.query.brandIds as string;
+        brandIds = brandIdsParam.split(',').filter(Boolean);
+      } else if (req.query.brandId) {
+        brandIds = [req.query.brandId as string];
+      }
+
       const filters = {
         search: req.query.search as string,
         categoryId: req.query.categoryId as string,
-        brandId: req.query.brandId as string,
+        brandIds,
         minPrice: req.query.minPrice ? parseFloat(req.query.minPrice as string) : undefined,
         maxPrice: req.query.maxPrice ? parseFloat(req.query.maxPrice as string) : undefined,
         isFeatured: req.query.featured === "true" ? true : undefined,
