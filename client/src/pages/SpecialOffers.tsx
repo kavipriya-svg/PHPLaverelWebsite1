@@ -177,25 +177,39 @@ export default function SpecialOffers() {
   );
 }
 
-function SectionImageBanner({ settings }: { settings: SpecialOffersPageSettings | undefined }) {
+function SectionImageBanner({ 
+  settings,
+  className 
+}: { 
+  settings: SpecialOffersPageSettings | undefined;
+  className?: string;
+}) {
   if (!settings?.showSectionImage || !settings?.sectionImageUrl) return null;
+
+  const width = String(settings.sectionImageWidth || "100");
+  const alignment = String(settings.sectionImageAlignment || "left");
 
   const widthClass = {
     "25": "w-full md:w-1/4",
     "50": "w-full md:w-1/2",
     "75": "w-full md:w-3/4",
     "100": "w-full",
-  }[settings.sectionImageWidth || "100"];
+  }[width] || "w-full";
 
   const alignmentClass = {
     "left": "justify-start",
     "center": "justify-center",
     "right": "justify-end",
-  }[settings.sectionImageAlignment || "left"];
+  }[alignment] || "justify-start";
 
   return (
-    <div className={`flex mb-6 ${alignmentClass}`} data-testid="section-image-container">
-      <div className={`${widthClass} flex flex-col md:flex-row items-center gap-6 p-6 bg-gradient-to-r from-destructive/5 to-transparent rounded-xl border`}>
+    <div 
+      className={`flex ${alignmentClass} ${widthClass} ${className || ""}`} 
+      data-testid="section-image-container"
+      data-width={width}
+      data-alignment={alignment}
+    >
+      <div className="w-full flex flex-col md:flex-row items-center gap-6 p-6 bg-gradient-to-r from-destructive/5 to-transparent rounded-xl border">
         <img 
           src={settings.sectionImageUrl} 
           alt={settings.sectionTitle || "Hot Deals"} 
@@ -247,16 +261,34 @@ function SectionImageProductGrid({
   }
 
   const productsPerRow = 4;
-  const targetRow = settings?.sectionImageTargetRow || 1;
-  const placement = settings?.sectionImagePlacement || "before";
+  const targetRow = Number(settings?.sectionImageTargetRow) || 1;
+  const placement = String(settings?.sectionImagePlacement || "before");
+  
   const insertIndex = placement === "before" 
     ? (targetRow - 1) * productsPerRow 
     : targetRow * productsPerRow;
 
-  const beforeProducts = products.slice(0, Math.min(insertIndex, products.length));
-  const afterProducts = products.slice(Math.min(insertIndex, products.length));
-
   const showSectionImage = settings?.showSectionImage && settings?.sectionImageUrl;
+  const shouldShowBanner = showSectionImage && products.length > 0;
+
+  if (insertIndex === 0 && placement === "before") {
+    return (
+      <>
+        {shouldShowBanner && (
+          <SectionImageBanner settings={settings} className="mb-6" />
+        )}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  const clampedIndex = Math.min(insertIndex, products.length);
+  const beforeProducts = products.slice(0, clampedIndex);
+  const afterProducts = products.slice(clampedIndex);
 
   return (
     <>
@@ -268,8 +300,8 @@ function SectionImageProductGrid({
         </div>
       )}
       
-      {showSectionImage && (insertIndex <= products.length || beforeProducts.length === products.length) && (
-        <SectionImageBanner settings={settings} />
+      {shouldShowBanner && (
+        <SectionImageBanner settings={settings} className="mb-6" />
       )}
       
       {afterProducts.length > 0 && (
@@ -277,12 +309,6 @@ function SectionImageProductGrid({
           {afterProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
-        </div>
-      )}
-
-      {!showSectionImage && beforeProducts.length === 0 && afterProducts.length === 0 && (
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">No special offers available right now</p>
         </div>
       )}
     </>
