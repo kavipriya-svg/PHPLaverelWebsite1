@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Percent, Loader2 } from "lucide-react";
 import { Link } from "wouter";
-import { ProductGrid } from "@/components/store/ProductGrid";
+import { ProductCard } from "@/components/store/ProductCard";
 import { ProductFilters, SortSelect, type ProductFiltersState } from "@/components/store/ProductFilters";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { ProductWithDetails } from "@shared/schema";
 
 interface SpecialOffersPageSettings {
@@ -18,6 +19,10 @@ interface SpecialOffersPageSettings {
   sectionTitle: string;
   sectionDescription: string;
   showSectionImage: boolean;
+  sectionImageTargetRow: number;
+  sectionImagePlacement: "before" | "after";
+  sectionImageWidth: "25" | "50" | "75" | "100";
+  sectionImageAlignment: "left" | "center" | "right";
 }
 
 export default function SpecialOffers() {
@@ -95,25 +100,6 @@ export default function SpecialOffers() {
           </div>
         )}
 
-        {settings?.showSectionImage && settings?.sectionImageUrl && (
-          <div className="mb-8 flex flex-col md:flex-row items-center gap-6 p-6 bg-gradient-to-r from-destructive/5 to-transparent rounded-xl border">
-            <img 
-              src={settings.sectionImageUrl} 
-              alt={settings.sectionTitle || "Hot Deals"} 
-              className="w-32 h-32 object-cover rounded-lg shadow-lg"
-              data-testid="img-section"
-            />
-            <div>
-              <h2 className="text-2xl font-bold text-destructive mb-2" data-testid="text-section-title">
-                {settings.sectionTitle || "Hot Deals"}
-              </h2>
-              <p className="text-muted-foreground" data-testid="text-section-description">
-                {settings.sectionDescription || "Limited time offers on your favorite products"}
-              </p>
-            </div>
-          </div>
-        )}
-
         <div className="flex gap-8">
           <ProductFilters
             filters={filters}
@@ -134,10 +120,10 @@ export default function SpecialOffers() {
               />
             </div>
 
-            <ProductGrid
+            <SectionImageProductGrid 
               products={products}
               isLoading={isLoading}
-              emptyMessage="No special offers available right now"
+              settings={settings}
             />
 
             {totalPages > 1 && (
@@ -188,5 +174,117 @@ export default function SpecialOffers() {
         </div>
       </div>
     </div>
+  );
+}
+
+function SectionImageBanner({ settings }: { settings: SpecialOffersPageSettings | undefined }) {
+  if (!settings?.showSectionImage || !settings?.sectionImageUrl) return null;
+
+  const widthClass = {
+    "25": "w-full md:w-1/4",
+    "50": "w-full md:w-1/2",
+    "75": "w-full md:w-3/4",
+    "100": "w-full",
+  }[settings.sectionImageWidth || "100"];
+
+  const alignmentClass = {
+    "left": "justify-start",
+    "center": "justify-center",
+    "right": "justify-end",
+  }[settings.sectionImageAlignment || "left"];
+
+  return (
+    <div className={`flex mb-6 ${alignmentClass}`} data-testid="section-image-container">
+      <div className={`${widthClass} flex flex-col md:flex-row items-center gap-6 p-6 bg-gradient-to-r from-destructive/5 to-transparent rounded-xl border`}>
+        <img 
+          src={settings.sectionImageUrl} 
+          alt={settings.sectionTitle || "Hot Deals"} 
+          className="w-32 h-32 object-cover rounded-lg shadow-lg flex-shrink-0"
+          data-testid="img-section"
+        />
+        <div className="text-center md:text-left">
+          <h2 className="text-2xl font-bold text-destructive mb-2" data-testid="text-section-title">
+            {settings.sectionTitle || "Hot Deals"}
+          </h2>
+          <p className="text-muted-foreground" data-testid="text-section-description">
+            {settings.sectionDescription || "Limited time offers on your favorite products"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionImageProductGrid({ 
+  products, 
+  isLoading, 
+  settings 
+}: { 
+  products: ProductWithDetails[];
+  isLoading: boolean;
+  settings: SpecialOffersPageSettings | undefined;
+}) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="space-y-3">
+            <Skeleton className="aspect-square w-full rounded-lg" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-muted-foreground">No special offers available right now</p>
+      </div>
+    );
+  }
+
+  const productsPerRow = 4;
+  const targetRow = settings?.sectionImageTargetRow || 1;
+  const placement = settings?.sectionImagePlacement || "before";
+  const insertIndex = placement === "before" 
+    ? (targetRow - 1) * productsPerRow 
+    : targetRow * productsPerRow;
+
+  const beforeProducts = products.slice(0, Math.min(insertIndex, products.length));
+  const afterProducts = products.slice(Math.min(insertIndex, products.length));
+
+  const showSectionImage = settings?.showSectionImage && settings?.sectionImageUrl;
+
+  return (
+    <>
+      {beforeProducts.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+          {beforeProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
+      
+      {showSectionImage && (insertIndex <= products.length || beforeProducts.length === products.length) && (
+        <SectionImageBanner settings={settings} />
+      )}
+      
+      {afterProducts.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {afterProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
+
+      {!showSectionImage && beforeProducts.length === 0 && afterProducts.length === 0 && (
+        <div className="py-12 text-center">
+          <p className="text-muted-foreground">No special offers available right now</p>
+        </div>
+      )}
+    </>
   );
 }
