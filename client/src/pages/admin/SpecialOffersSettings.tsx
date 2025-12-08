@@ -492,7 +492,7 @@ export default function SpecialOffersSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <LinkIcon className="h-5 w-5" />
-                Preview
+                Banner Preview
               </CardTitle>
               <CardDescription>
                 Preview how the banner will appear on the page
@@ -523,6 +523,64 @@ export default function SpecialOffersSettingsPage() {
                   <div className="text-center">
                     <Percent className="h-12 w-12 mx-auto mb-2 text-destructive/50" />
                     <p className="text-muted-foreground">Upload a banner image to see preview</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LayoutGrid className="h-5 w-5" />
+                Section Image Preview
+              </CardTitle>
+              <CardDescription>
+                Preview how the section image will appear on the page (Width: {settings.sectionImageWidth}%, Alignment: {settings.sectionImageAlignment})
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {settings.showSectionImage && settings.sectionImageUrl ? (
+                <div className="bg-muted/30 p-4 rounded-lg border">
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Position: {settings.sectionImagePlacement === "before" ? "Before" : "After"} Row {settings.sectionImageTargetRow}
+                  </p>
+                  <div 
+                    className={`flex ${
+                      settings.sectionImageAlignment === "center" ? "justify-center" : 
+                      settings.sectionImageAlignment === "right" ? "justify-end" : "justify-start"
+                    }`}
+                    data-testid="section-image-preview-container"
+                  >
+                    <div 
+                      className={`${
+                        settings.sectionImageWidth === "25" ? "w-1/4" : 
+                        settings.sectionImageWidth === "50" ? "w-1/2" : 
+                        settings.sectionImageWidth === "75" ? "w-3/4" : "w-full"
+                      } flex flex-col md:flex-row items-center gap-4 p-4 bg-gradient-to-r from-destructive/5 to-transparent rounded-xl border`}
+                    >
+                      <img 
+                        src={settings.sectionImageUrl} 
+                        alt={settings.sectionTitle || "Section"} 
+                        className="w-20 h-20 object-cover rounded-lg shadow-lg flex-shrink-0"
+                        data-testid="img-section-preview"
+                      />
+                      <div className="text-center md:text-left">
+                        <h3 className="text-lg font-bold text-destructive mb-1">
+                          {settings.sectionTitle || "Hot Deals"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {settings.sectionDescription || "Limited time offers on your favorite products"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-32 bg-muted/30 rounded-lg flex items-center justify-center border-2 border-dashed">
+                  <div className="text-center">
+                    <Image className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                    <p className="text-muted-foreground text-sm">Upload a section image to see preview</p>
                   </div>
                 </div>
               )}
