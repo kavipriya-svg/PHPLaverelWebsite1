@@ -205,6 +205,7 @@ export interface ProductFilters {
   search?: string;
   categoryId?: string;
   brandId?: string;
+  brandIds?: string[];
   minPrice?: number;
   maxPrice?: number;
   isFeatured?: boolean;
@@ -410,7 +411,11 @@ export class DatabaseStorage implements IStorage {
       );
     }
     if (filters.categoryId) conditions.push(eq(products.categoryId, filters.categoryId));
-    if (filters.brandId) conditions.push(eq(products.brandId, filters.brandId));
+    if (filters.brandIds && filters.brandIds.length > 0) {
+      conditions.push(inArray(products.brandId, filters.brandIds));
+    } else if (filters.brandId) {
+      conditions.push(eq(products.brandId, filters.brandId));
+    }
     if (filters.minPrice) conditions.push(gte(products.price, filters.minPrice.toString()));
     if (filters.maxPrice) conditions.push(lte(products.price, filters.maxPrice.toString()));
     if (filters.isFeatured !== undefined) conditions.push(eq(products.isFeatured, filters.isFeatured));
