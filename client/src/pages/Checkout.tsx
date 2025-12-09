@@ -82,7 +82,7 @@ const checkoutSchema = z.object({
   billingPhone: z.string().optional(),
   billingGstNumber: z.string().optional(),
   saveBillingAddress: z.boolean().default(true),
-  paymentMethod: z.enum(["stripe", "cod"]),
+  paymentMethod: z.enum(["stripe", "cod", "razorpay"]),
 }).refine((data) => {
   if (!data.sameAsBilling) {
     return data.billingFirstName && data.billingLastName && data.billingAddress1 && 
@@ -117,6 +117,13 @@ export default function Checkout() {
   });
 
   const savedAddresses = addressData?.addresses || [];
+
+  // Fetch Razorpay config
+  const { data: razorpayConfig } = useQuery<{ enabled: boolean; keyId: string; storeName: string }>({
+    queryKey: ["/api/razorpay/config"],
+  });
+
+  const isRazorpayEnabled = razorpayConfig?.enabled && razorpayConfig?.keyId;
 
   // Load applied coupon from localStorage
   useEffect(() => {
@@ -386,16 +393,145 @@ export default function Checkout() {
     },
   });
 
+  // Razorpay payment handler - amount is computed server-side for security
+  const handleRazorpayPayment = async (data: CheckoutFormData) => {
+    try {
+      // Check Razorpay config is available
+      if (!isRazorpayEnabled || !razorpayConfig?.keyId) {
+        throw new Error("Razorpay is not configured");
+      }
+
+      // Load Razorpay script first if not already loaded
+      if (!(window as any).Razorpay) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error("Failed to load Razorpay. Please check your internet connection."));
+          document.body.appendChild(script);
+        });
+      }
+
+      // Create Razorpay order - server computes amount from cart
+      const orderResponse = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          currency: "INR",
+          couponCode: appliedCoupon?.code,
+        }),
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (!orderData.success) {
+        throw new Error(orderData.error || "Failed to create payment order");
+      }
+
+      // Open Razorpay checkout
+      const options = {
+        key: razorpayConfig.keyId,
+        amount: orderData.amount, // Already in paise from server
+        currency: orderData.currency,
+        name: razorpayConfig.storeName || "19Dogs",
+        description: "Order Payment",
+        order_id: orderData.orderId,
+        handler: async function (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) {
+          try {
+            // Verify payment
+            const verifyResponse = await fetch("/api/razorpay/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(response),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.success) {
+              // Payment verified, create the order with Razorpay payment info
+              await createOrderMutation.mutateAsync({
+                ...data,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+              } as any);
+            } else {
+              toast({
+                title: "Payment verification failed",
+                description: "Please contact support if amount was deducted.",
+                variant: "destructive",
+              });
+              setIsProcessing(false);
+            }
+          } catch (error) {
+            toast({
+              title: "Payment verification error",
+              description: "Please contact support.",
+              variant: "destructive",
+            });
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: `${data.firstName} ${data.lastName}`,
+          email: user?.email || data.email,
+          contact: data.phone,
+        },
+        theme: {
+          color: "#000000",
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+            toast({
+              title: "Payment cancelled",
+              description: "You can try again when ready.",
+            });
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        toast({
+          title: "Payment failed",
+          description: response.error?.description || "Please try again.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+      });
+      rzp.open();
+    } catch (error: any) {
+      toast({
+        title: "Payment error",
+        description: error.message || "Failed to initialize payment.",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+    }
+  };
+
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
     
     if (data.paymentMethod === "stripe") {
       toast({
         title: "Stripe Payment",
-        description: "Stripe integration coming soon. Please use Cash on Delivery for now.",
+        description: "Stripe integration coming soon. Please use Cash on Delivery or Razorpay.",
         variant: "destructive",
       });
       setIsProcessing(false);
+      return;
+    }
+
+    if (data.paymentMethod === "razorpay") {
+      // Handle Razorpay payment - amount computed server-side
+      await handleRazorpayPayment(data);
       return;
     }
 
@@ -1097,6 +1233,17 @@ export default function Checkout() {
                                 </p>
                               </Label>
                             </div>
+                            {isRazorpayEnabled && (
+                              <div className="flex items-center space-x-3 p-4 border rounded-lg hover-elevate cursor-pointer">
+                                <RadioGroupItem value="razorpay" id="razorpay" data-testid="radio-razorpay" />
+                                <Label htmlFor="razorpay" className="flex-1 cursor-pointer">
+                                  <div className="font-medium">Razorpay</div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Pay via UPI, Cards, Net Banking, Wallets
+                                  </p>
+                                </Label>
+                              </div>
+                            )}
                           </RadioGroup>
                         </FormControl>
                         <FormMessage />

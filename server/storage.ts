@@ -1,4 +1,4 @@
-import { eq, and, or, like, desc, asc, sql, isNull, inArray, gte, lte, ne } from "drizzle-orm";
+import { eq, and, or, like, desc, asc, sql, isNull, inArray, gte, lte, lt, ne } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -65,6 +65,7 @@ import {
   type InsertGiftRegistryItem,
   type ComboOffer,
   type InsertComboOffer,
+  verifiedRazorpayPayments,
   type ProductWithDetails,
   type CategoryWithChildren,
   type OrderWithItems,
@@ -199,6 +200,23 @@ export interface IStorage {
   createComboOffer(offer: InsertComboOffer): Promise<ComboOffer>;
   updateComboOffer(id: string, offer: Partial<InsertComboOffer>): Promise<ComboOffer | undefined>;
   deleteComboOffer(id: string): Promise<void>;
+
+  // Verified Razorpay Payments
+  createVerifiedRazorpayPayment(payment: {
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    userId?: string | null;
+    guestSessionId?: string | null;
+    amount: string;
+    currency?: string;
+  }): Promise<any>;
+  getVerifiedRazorpayPayment(
+    razorpayPaymentId: string,
+    userId?: string | null,
+    guestSessionId?: string | null
+  ): Promise<any | undefined>;
+  consumeVerifiedRazorpayPayment(id: string): Promise<void>;
+  cleanupExpiredRazorpayPayments(): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -1448,6 +1466,89 @@ export class DatabaseStorage implements IStorage {
 
   async deleteComboOffer(id: string): Promise<void> {
     await db.delete(comboOffers).where(eq(comboOffers.id, id));
+  }
+
+  // Verified Razorpay Payments
+  async createVerifiedRazorpayPayment(payment: {
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    userId?: string | null;
+    guestSessionId?: string | null;
+    amount: string;
+    currency?: string;
+  }): Promise<any> {
+    // Set expiry to 10 minutes from now
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    
+    const [created] = await db.insert(verifiedRazorpayPayments).values({
+      razorpayOrderId: payment.razorpayOrderId,
+      razorpayPaymentId: payment.razorpayPaymentId,
+      userId: payment.userId || null,
+      guestSessionId: payment.guestSessionId || null,
+      amount: payment.amount,
+      currency: payment.currency || "INR",
+      status: "verified",
+      expiresAt,
+    }).returning();
+    return created;
+  }
+
+  async getVerifiedRazorpayPayment(
+    razorpayPaymentId: string,
+    userId?: string | null,
+    guestSessionId?: string | null
+  ): Promise<any | undefined> {
+    const now = new Date();
+    
+    // Base conditions: payment ID, status, and not expired
+    const baseConditions = [
+      eq(verifiedRazorpayPayments.razorpayPaymentId, razorpayPaymentId),
+      eq(verifiedRazorpayPayments.status, "verified"),
+      gte(verifiedRazorpayPayments.expiresAt, now),
+    ];
+    
+    // For authenticated users: match by userId (must match exactly)
+    // For guest users: match by sessionId (must match exactly)
+    // This prevents cross-account payment reuse
+    if (userId) {
+      // Authenticated user: must match userId
+      const [payment] = await db
+        .select()
+        .from(verifiedRazorpayPayments)
+        .where(and(...baseConditions, eq(verifiedRazorpayPayments.userId, userId)))
+        .limit(1);
+      return payment;
+    } else if (guestSessionId) {
+      // Guest user: must match sessionId
+      const [payment] = await db
+        .select()
+        .from(verifiedRazorpayPayments)
+        .where(and(...baseConditions, eq(verifiedRazorpayPayments.guestSessionId, guestSessionId)))
+        .limit(1);
+      return payment;
+    }
+    
+    // No valid identifier provided - cannot verify
+    return undefined;
+  }
+
+  async consumeVerifiedRazorpayPayment(id: string): Promise<void> {
+    await db
+      .update(verifiedRazorpayPayments)
+      .set({ status: "consumed" })
+      .where(eq(verifiedRazorpayPayments.id, id));
+  }
+
+  async cleanupExpiredRazorpayPayments(): Promise<void> {
+    const now = new Date();
+    await db
+      .delete(verifiedRazorpayPayments)
+      .where(
+        or(
+          lt(verifiedRazorpayPayments.expiresAt, now),
+          eq(verifiedRazorpayPayments.status, "consumed")
+        )
+      );
   }
 
   private async getProductsByIds(productIds: string[]): Promise<ProductWithDetails[]> {
