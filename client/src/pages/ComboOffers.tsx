@@ -343,11 +343,13 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
                   {isVideoUrl(url) ? (
                     <video
                       src={getMediaUrl(url)}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover bg-muted"
                       muted
                       loop
                       autoPlay
                       playsInline
+                      preload="auto"
+                      onLoadedData={(e) => (e.currentTarget as HTMLVideoElement).play()}
                     />
                   ) : (
                     <img
