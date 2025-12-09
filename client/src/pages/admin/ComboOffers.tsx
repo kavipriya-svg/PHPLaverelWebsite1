@@ -337,6 +337,10 @@ function ComboOfferDialog({
       /\.(mp4|webm|ogg|mov|avi)$/i.test(filename);
   };
 
+  const getMediaUrl = (url: string): string => {
+    return url.startsWith("video::") ? url.replace("video::", "") : url;
+  };
+
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -382,9 +386,10 @@ function ComboOfferDialog({
         const finalizedResult = await finalizeResponse.json();
         const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
         
+        const isVideo = isVideoFile(file.name, file.type);
         uploadedItems.push({
-          url: finalUrl,
-          type: isVideoFile(file.name, file.type) ? "video" : "image",
+          url: isVideo ? `video::${finalUrl}` : finalUrl,
+          type: isVideo ? "video" : "image",
         });
       }
 
@@ -393,7 +398,7 @@ function ComboOfferDialog({
       if (uploadedItems.length > 0 && !imageUrl) {
         const firstImage = uploadedItems.find((item) => item.type === "image");
         if (firstImage) {
-          setImageUrl(firstImage.url);
+          setImageUrl(getMediaUrl(firstImage.url));
         }
       }
       
@@ -416,9 +421,9 @@ function ComboOfferDialog({
   const removeMediaItem = (index: number) => {
     setMediaItems((prev) => {
       const newItems = prev.filter((_, i) => i !== index);
-      if (prev[index]?.url === imageUrl && newItems.length > 0) {
+      if (getMediaUrl(prev[index]?.url || "") === imageUrl && newItems.length > 0) {
         const firstImage = newItems.find((item) => item.type === "image");
-        setImageUrl(firstImage?.url || "");
+        setImageUrl(firstImage ? getMediaUrl(firstImage.url) : "");
       } else if (newItems.length === 0) {
         setImageUrl("");
       }
@@ -436,10 +441,13 @@ function ComboOfferDialog({
       setName(offer.name || "");
       setDescription(offer.description || "");
       setImageUrl(offer.imageUrl || "");
-      const existingMedia: MediaItem[] = (offer.mediaUrls || []).map((url) => ({
-        url,
-        type: /\.(mp4|webm|ogg|mov|avi)$/i.test(url) ? "video" as const : "image" as const,
-      }));
+      const existingMedia: MediaItem[] = (offer.mediaUrls || []).map((url) => {
+        const isVideo = url.startsWith("video::") || /\.(mp4|webm|ogg|mov|avi)$/i.test(url);
+        return {
+          url: url,
+          type: isVideo ? "video" as const : "image" as const,
+        };
+      });
       setMediaItems(existingMedia);
       setSelectedProductIds(offer.productIds || []);
       setComboPrice(offer.comboPrice || "");
@@ -557,28 +565,28 @@ function ComboOfferDialog({
                         <div key={index} className="relative group">
                           {item.type === "video" ? (
                             <video
-                              src={item.url}
+                              src={getMediaUrl(item.url)}
                               className={`w-full h-20 rounded object-cover border ${
-                                item.url === imageUrl ? "ring-2 ring-primary" : ""
+                                getMediaUrl(item.url) === imageUrl ? "ring-2 ring-primary" : ""
                               }`}
                             />
                           ) : (
                             <img
-                              src={item.url}
+                              src={getMediaUrl(item.url)}
                               alt={`Media ${index + 1}`}
                               className={`w-full h-20 rounded object-cover border cursor-pointer ${
-                                item.url === imageUrl ? "ring-2 ring-primary" : ""
+                                getMediaUrl(item.url) === imageUrl ? "ring-2 ring-primary" : ""
                               }`}
-                              onClick={() => setAsPrimaryImage(item.url)}
+                              onClick={() => setAsPrimaryImage(getMediaUrl(item.url))}
                             />
                           )}
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-1">
-                            {item.type === "image" && item.url !== imageUrl && (
+                            {item.type === "image" && getMediaUrl(item.url) !== imageUrl && (
                               <Button
                                 size="icon"
                                 variant="secondary"
                                 className="h-6 w-6"
-                                onClick={() => setAsPrimaryImage(item.url)}
+                                onClick={() => setAsPrimaryImage(getMediaUrl(item.url))}
                                 type="button"
                                 title="Set as primary"
                               >
@@ -596,7 +604,7 @@ function ComboOfferDialog({
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
-                          {item.url === imageUrl && (
+                          {getMediaUrl(item.url) === imageUrl && (
                             <Badge className="absolute -top-2 -left-2 text-xs px-1">
                               Primary
                             </Badge>
