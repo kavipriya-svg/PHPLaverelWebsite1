@@ -281,7 +281,7 @@ function SectionImageProductGrid({
         )}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} showSaleCountdown />
           ))}
         </div>
       </>
@@ -297,7 +297,7 @@ function SectionImageProductGrid({
       {beforeProducts.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
           {beforeProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} showSaleCountdown />
           ))}
         </div>
       )}
@@ -309,7 +309,7 @@ function SectionImageProductGrid({
       {afterProducts.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {afterProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} showSaleCountdown />
           ))}
         </div>
       )}
