@@ -270,7 +270,11 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
   const timeRemaining = offer.endDate ? getTimeRemaining(new Date(offer.endDate)) : null;
 
   const isVideoUrl = (url: string) => {
-    return /\.(mp4|webm|ogg|mov|avi)$/i.test(url) || url.includes('video');
+    return url.startsWith("video::") || /\.(mp4|webm|ogg|mov|avi)$/i.test(url);
+  };
+
+  const getMediaUrl = (url: string) => {
+    return url.startsWith("video::") ? url.replace("video::", "") : url;
   };
 
   const getProductPrimaryImage = (product: ProductWithDetails) => {
@@ -338,7 +342,7 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
                 <div key={idx} className="w-full flex-shrink-0 h-full relative">
                   {isVideoUrl(url) ? (
                     <video
-                      src={url}
+                      src={getMediaUrl(url)}
                       className="w-full h-full object-cover"
                       muted
                       loop
@@ -347,7 +351,7 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
                     />
                   ) : (
                     <img
-                      src={url}
+                      src={getMediaUrl(url)}
                       alt={`${offer.name} - ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
