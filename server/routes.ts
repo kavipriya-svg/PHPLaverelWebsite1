@@ -2669,7 +2669,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/combo-offers", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const { name, description, imageUrl, productIds, originalPrice, comboPrice, startDate, endDate, isActive, position } = req.body;
+      const { name, description, imageUrl, mediaUrls, productIds, originalPrice, comboPrice, startDate, endDate, isActive, position } = req.body;
       
       // Generate slug from name
       const slug = name.toLowerCase()
@@ -2686,6 +2686,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         slug,
         description,
         imageUrl,
+        mediaUrls: mediaUrls || [],
         productIds: productIds || [],
         originalPrice,
         comboPrice,
@@ -2705,7 +2706,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.patch("/api/admin/combo-offers/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const { name, description, imageUrl, productIds, originalPrice, comboPrice, startDate, endDate, isActive, position } = req.body;
+      const { name, description, imageUrl, mediaUrls, productIds, originalPrice, comboPrice, startDate, endDate, isActive, position } = req.body;
       
       const updateData: any = {};
       
@@ -2717,6 +2718,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       if (description !== undefined) updateData.description = description;
       if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+      if (mediaUrls !== undefined) updateData.mediaUrls = mediaUrls;
       if (productIds !== undefined) updateData.productIds = productIds;
       if (originalPrice !== undefined) updateData.originalPrice = originalPrice;
       if (comboPrice !== undefined) updateData.comboPrice = comboPrice;
