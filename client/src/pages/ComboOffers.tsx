@@ -17,6 +17,7 @@ interface ComboOffer {
   slug: string;
   description: string | null;
   imageUrl: string | null;
+  mediaUrls: string[] | null;
   productIds: string[];
   originalPrice: string;
   comboPrice: string;
@@ -268,28 +269,21 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
   const hasEnded = offer.endDate && new Date(offer.endDate) < new Date();
   const timeRemaining = offer.endDate ? getTimeRemaining(new Date(offer.endDate)) : null;
 
-  const getProductPrimaryImage = (product: ProductWithDetails) => {
-    const primaryImg = product.images?.find(img => img.isPrimary);
-    return primaryImg?.url || product.images?.[0]?.url || null;
+  const isVideoUrl = (url: string) => {
+    return /\.(mp4|webm|ogg|mov|avi)$/i.test(url) || url.includes('video');
   };
 
-  const productImages = offer.products
-    .map(product => ({
-      url: getProductPrimaryImage(product),
-      title: product.title
-    }))
-    .filter(img => img.url !== null);
-
-  const hasImages = productImages.length > 0;
+  const mediaItems = offer.mediaUrls?.filter(url => url) || [];
+  const hasMedia = mediaItems.length > 0;
 
   useEffect(() => {
-    if (hasImages && productImages.length > 1) {
+    if (hasMedia && mediaItems.length > 1) {
       const interval = setInterval(() => {
-        setCurrentSlide(prev => (prev + 1) % productImages.length);
+        setCurrentSlide(prev => (prev + 1) % mediaItems.length);
       }, 3000);
       return () => clearInterval(interval);
     }
-  }, [hasImages, productImages.length]);
+  }, [hasMedia, mediaItems.length]);
 
   const handleAddComboToCart = async () => {
     try {
@@ -313,39 +307,45 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
   };
 
   const goToPrev = () => {
-    setCurrentSlide(prev => (prev - 1 + productImages.length) % productImages.length);
+    setCurrentSlide(prev => (prev - 1 + mediaItems.length) % mediaItems.length);
   };
 
   const goToNext = () => {
-    setCurrentSlide(prev => (prev + 1) % productImages.length);
+    setCurrentSlide(prev => (prev + 1) % mediaItems.length);
   };
 
   return (
     <Card className="overflow-hidden group" data-testid={`card-combo-${offer.id}`}>
       <div className="relative aspect-square overflow-hidden">
-        {hasImages ? (
+        {hasMedia ? (
           <>
             <div 
               className="flex transition-transform duration-500 ease-in-out h-full"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
-              {productImages.map((img, idx) => (
+              {mediaItems.map((url, idx) => (
                 <div key={idx} className="w-full flex-shrink-0 h-full relative">
-                  <img
-                    src={img.url!}
-                    alt={img.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-                    <span className="text-white text-sm font-medium line-clamp-1">
-                      {img.title}
-                    </span>
-                  </div>
+                  {isVideoUrl(url) ? (
+                    <video
+                      src={url}
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      autoPlay
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={url}
+                      alt={`${offer.name} - ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </div>
               ))}
             </div>
             
-            {productImages.length > 1 && (
+            {mediaItems.length > 1 && (
               <>
                 <Button
                   variant="secondary"
@@ -366,8 +366,8 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
 
-                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {productImages.map((_, idx) => (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {mediaItems.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={(e) => { e.stopPropagation(); goToSlide(idx); }}
@@ -383,6 +383,12 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
               </>
             )}
           </>
+        ) : offer.imageUrl ? (
+          <img
+            src={offer.imageUrl}
+            alt={offer.name}
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
             <div className="grid grid-cols-2 gap-2 p-4">
