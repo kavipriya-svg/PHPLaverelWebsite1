@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Package, Percent, ChevronRight, ShoppingCart, Calendar, ArrowRight, Gift, AlertCircle, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Package, Percent, ChevronRight, ShoppingCart, Calendar, ArrowRight, Gift, AlertCircle, RefreshCw, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -257,6 +258,7 @@ function SectionImageOfferGrid({
 function ComboOfferCard({ offer }: { offer: ComboOffer }) {
   const { addToCart } = useStore();
   const { toast } = useToast();
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const savings = parseFloat(offer.originalPrice) - parseFloat(offer.comboPrice);
   const discountPercent = offer.discountPercentage 
@@ -265,6 +267,29 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
 
   const hasEnded = offer.endDate && new Date(offer.endDate) < new Date();
   const timeRemaining = offer.endDate ? getTimeRemaining(new Date(offer.endDate)) : null;
+
+  const getProductPrimaryImage = (product: ProductWithDetails) => {
+    const primaryImg = product.images?.find(img => img.isPrimary);
+    return primaryImg?.url || product.images?.[0]?.url || null;
+  };
+
+  const productImages = offer.products
+    .map(product => ({
+      url: getProductPrimaryImage(product),
+      title: product.title
+    }))
+    .filter(img => img.url !== null);
+
+  const hasImages = productImages.length > 0;
+
+  useEffect(() => {
+    if (hasImages && productImages.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlide(prev => (prev + 1) % productImages.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [hasImages, productImages.length]);
 
   const handleAddComboToCart = async () => {
     try {
@@ -283,44 +308,102 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
     }
   };
 
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  const goToPrev = () => {
+    setCurrentSlide(prev => (prev - 1 + productImages.length) % productImages.length);
+  };
+
+  const goToNext = () => {
+    setCurrentSlide(prev => (prev + 1) % productImages.length);
+  };
+
   return (
     <Card className="overflow-hidden group" data-testid={`card-combo-${offer.id}`}>
-      <div className="relative">
-        {offer.imageUrl ? (
-          <img
-            src={offer.imageUrl}
-            alt={offer.name}
-            className="w-full h-48 object-cover transition-transform group-hover:scale-105"
-          />
+      <div className="relative aspect-square overflow-hidden">
+        {hasImages ? (
+          <>
+            <div 
+              className="flex transition-transform duration-500 ease-in-out h-full"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {productImages.map((img, idx) => (
+                <div key={idx} className="w-full flex-shrink-0 h-full relative">
+                  <img
+                    src={img.url!}
+                    alt={img.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                    <span className="text-white text-sm font-medium line-clamp-1">
+                      {img.title}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {productImages.length > 1 && (
+              <>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80"
+                  onClick={(e) => { e.stopPropagation(); goToPrev(); }}
+                  data-testid="button-carousel-prev"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80"
+                  onClick={(e) => { e.stopPropagation(); goToNext(); }}
+                  data-testid="button-carousel-next"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+
+                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {productImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => { e.stopPropagation(); goToSlide(idx); }}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        idx === currentSlide 
+                          ? 'bg-white scale-110' 
+                          : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                      data-testid={`button-carousel-dot-${idx}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
-          <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
             <div className="grid grid-cols-2 gap-2 p-4">
               {offer.products.slice(0, 4).map((product, idx) => (
                 <div key={idx} className="relative">
-                  {product.images?.[0]?.url ? (
-                    <img
-                      src={product.images[0].url}
-                      alt={product.title}
-                      className="w-16 h-16 rounded object-cover border bg-background"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded bg-muted flex items-center justify-center">
-                      <Package className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                  )}
+                  <div className="aspect-square w-20 rounded bg-muted flex items-center justify-center">
+                    <Package className="h-6 w-6 text-muted-foreground" />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
         
-        <Badge className="absolute top-3 left-3 bg-green-600">
+        <Badge className="absolute top-3 left-3 bg-green-600 z-10">
           <Percent className="h-3 w-3 mr-1" />
           {discountPercent}% OFF
         </Badge>
 
         {timeRemaining && !hasEnded && (
-          <Badge variant="secondary" className="absolute top-3 right-3">
+          <Badge variant="secondary" className="absolute top-3 right-3 z-10">
             <Calendar className="h-3 w-3 mr-1" />
             {timeRemaining}
           </Badge>
