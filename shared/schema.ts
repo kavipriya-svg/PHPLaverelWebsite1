@@ -227,8 +227,10 @@ export const orders = pgTable("orders", {
   shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }).default("0"),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   status: varchar("status").default("pending").notNull(), // pending, processing, shipped, delivered, cancelled
-  paymentMethod: varchar("payment_method"), // stripe, cod
+  paymentMethod: varchar("payment_method"), // stripe, cod, razorpay
   paymentStatus: varchar("payment_status").default("pending"), // pending, paid, failed
+  razorpayOrderId: varchar("razorpay_order_id"),
+  razorpayPaymentId: varchar("razorpay_payment_id"),
   shippingAddress: jsonb("shipping_address"),
   billingAddress: jsonb("billing_address"),
   trackingNumber: varchar("tracking_number"),
@@ -421,6 +423,23 @@ export const reviewsRelations = relations(reviews, ({ one, many }) => ({
   }),
   votes: many(reviewVotes),
 }));
+
+// Verified Razorpay Payments - Server-side verification ledger
+export const verifiedRazorpayPayments = pgTable("verified_razorpay_payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  razorpayOrderId: varchar("razorpay_order_id").notNull(),
+  razorpayPaymentId: varchar("razorpay_payment_id").notNull(),
+  userId: varchar("user_id"),
+  guestSessionId: varchar("guest_session_id"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency").default("INR"),
+  status: varchar("status").default("verified").notNull(), // verified, consumed, expired
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type VerifiedRazorpayPayment = typeof verifiedRazorpayPayments.$inferSelect;
+export type InsertVerifiedRazorpayPayment = typeof verifiedRazorpayPayments.$inferInsert;
 
 // Review Helpful Votes
 export const reviewVotes = pgTable("review_votes", {

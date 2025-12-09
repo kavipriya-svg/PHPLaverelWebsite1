@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { storage } from "./storage";
 
 const app = express();
 const httpServer = createServer(app);
@@ -63,6 +64,15 @@ app.use((req, res, next) => {
 
 (async () => {
   await registerRoutes(httpServer, app);
+
+  // Cleanup expired Razorpay payments every 5 minutes (runs once per process)
+  setInterval(async () => {
+    try {
+      await storage.cleanupExpiredRazorpayPayments();
+    } catch (error) {
+      console.error("Failed to cleanup expired Razorpay payments:", error);
+    }
+  }, 5 * 60 * 1000);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
