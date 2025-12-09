@@ -273,8 +273,19 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
     return /\.(mp4|webm|ogg|mov|avi)$/i.test(url) || url.includes('video');
   };
 
-  const mediaItems = offer.mediaUrls?.filter(url => url) || [];
+  const getProductPrimaryImage = (product: ProductWithDetails) => {
+    const primaryImg = product.images?.find(img => img.isPrimary);
+    return primaryImg?.url || product.images?.[0]?.url || null;
+  };
+
+  const uploadedMedia = offer.mediaUrls?.filter(url => url) || [];
+  const productImages = offer.products
+    .map(product => getProductPrimaryImage(product))
+    .filter((url): url is string => url !== null);
+
+  const mediaItems = uploadedMedia.length > 0 ? uploadedMedia : productImages;
   const hasMedia = mediaItems.length > 0;
+  const isProductImages = uploadedMedia.length === 0 && productImages.length > 0;
 
   useEffect(() => {
     if (hasMedia && mediaItems.length > 1) {
@@ -340,6 +351,13 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
                       alt={`${offer.name} - ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
+                  )}
+                  {isProductImages && offer.products[idx] && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                      <span className="text-white text-sm font-medium line-clamp-1">
+                        {offer.products[idx].title}
+                      </span>
+                    </div>
                   )}
                 </div>
               ))}
