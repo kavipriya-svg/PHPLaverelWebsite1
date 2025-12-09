@@ -278,6 +278,106 @@ export default function AdminSettings() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Razorpay Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Razorpay Payment Gateway
+                </CardTitle>
+                <CardDescription>
+                  Configure Razorpay for UPI, cards, net banking, and wallet payments (Popular in India)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <Label>Enable Razorpay</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Accept payments via Razorpay (UPI, Cards, Net Banking, Wallets)
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.enable_razorpay === "true"}
+                    onCheckedChange={(checked) =>
+                      updateSetting("enable_razorpay", checked ? "true" : "false")
+                    }
+                    data-testid="switch-enable-razorpay"
+                  />
+                </div>
+                
+                {settings.enable_razorpay === "true" && (
+                  <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                    <div className="space-y-2">
+                      <Label>Razorpay Key ID</Label>
+                      <Input
+                        value={settings.razorpay_key_id || ""}
+                        onChange={(e) => updateSetting("razorpay_key_id", e.target.value)}
+                        placeholder="rzp_test_xxxxxxxxxxxx"
+                        data-testid="input-razorpay-key-id"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Get your Key ID from Razorpay Dashboard → Settings → API Keys
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Razorpay Key Secret</Label>
+                      <Input
+                        type="password"
+                        value={settings.razorpay_key_secret || ""}
+                        onChange={(e) => updateSetting("razorpay_key_secret", e.target.value)}
+                        placeholder="••••••••••••••••"
+                        data-testid="input-razorpay-key-secret"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Your secret key (never share this publicly)
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-background">
+                      <div>
+                        <Label>Test Mode</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Use test keys for sandbox environment
+                        </p>
+                      </div>
+                      <Switch
+                        checked={settings.razorpay_test_mode !== "false"}
+                        onCheckedChange={(checked) =>
+                          updateSetting("razorpay_test_mode", checked ? "true" : "false")
+                        }
+                        data-testid="switch-razorpay-test-mode"
+                      />
+                    </div>
+
+                    <div className="p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20 text-sm">
+                      <p className="font-medium text-blue-800 dark:text-blue-200">Setup Instructions:</p>
+                      <ol className="list-decimal list-inside mt-2 space-y-1 text-blue-700 dark:text-blue-300">
+                        <li>Sign up at <a href="https://dashboard.razorpay.com/signup" target="_blank" rel="noopener noreferrer" className="underline">dashboard.razorpay.com</a></li>
+                        <li>Go to Settings → API Keys</li>
+                        <li>Generate new key pair (use Test keys for testing)</li>
+                        <li>Copy Key ID and Key Secret above</li>
+                        <li>Enable Razorpay toggle and save settings</li>
+                      </ol>
+                    </div>
+
+                    <div className="p-3 border rounded-lg bg-amber-50 dark:bg-amber-950/20 text-sm">
+                      <p className="font-medium text-amber-800 dark:text-amber-200">Supported Payment Methods:</p>
+                      <ul className="mt-2 grid grid-cols-2 gap-1 text-amber-700 dark:text-amber-300">
+                        <li>• UPI (GPay, PhonePe, etc.)</li>
+                        <li>• Credit/Debit Cards</li>
+                        <li>• Net Banking</li>
+                        <li>• Digital Wallets</li>
+                        <li>• EMI Options</li>
+                        <li>• PayLater</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="email" className="space-y-6 mt-6">
