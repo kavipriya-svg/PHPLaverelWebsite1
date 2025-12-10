@@ -168,6 +168,16 @@ export default function Login() {
                   )}
                 </Button>
 
+                <div className="text-center">
+                  <Link 
+                    href="/forgot-password" 
+                    className="text-sm text-primary hover:underline"
+                    data-testid="link-forgot-password"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+
                 <div className="text-center text-sm text-muted-foreground">
                   <span>Don't have an account? </span>
                   <Link 
