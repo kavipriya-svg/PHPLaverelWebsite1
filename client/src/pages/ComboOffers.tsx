@@ -347,7 +347,7 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
   const handleAddComboToCart = async () => {
     try {
       for (const product of offer.products) {
-        await addToCart(product.id, 1);
+        await addToCart(product.id, 1, undefined, offer.id);
       }
       toast({
         title: "Combo added to cart!",
