@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
-import { Package, Percent, ChevronRight, ShoppingCart, Calendar, ArrowRight, Gift, AlertCircle, RefreshCw, ChevronLeft } from "lucide-react";
+import { Package, Percent, ChevronRight, ShoppingCart, Calendar, ArrowRight, Gift, AlertCircle, RefreshCw, ChevronLeft, Clock, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -260,6 +260,7 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
   const { addToCart } = useStore();
   const { toast } = useToast();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
 
   const savings = parseFloat(offer.originalPrice) - parseFloat(offer.comboPrice);
   const discountPercent = offer.discountPercentage 
@@ -267,7 +268,50 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
     : ((savings / parseFloat(offer.originalPrice)) * 100).toFixed(0);
 
   const hasEnded = offer.endDate && new Date(offer.endDate) < new Date();
+  const hasStarted = !offer.startDate || new Date(offer.startDate) <= new Date();
   const timeRemaining = offer.endDate ? getTimeRemaining(new Date(offer.endDate)) : null;
+
+  // Live countdown timer
+  useEffect(() => {
+    if (!offer.endDate || hasEnded) {
+      setCountdown(null);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const end = new Date(offer.endDate!);
+      const diff = end.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setCountdown(null);
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setCountdown({ days, hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [offer.endDate, hasEnded]);
+
+  const formatDateTime = (dateStr: string | null) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const isVideoUrl = (url: string) => {
     return url.startsWith("video::") || /\.(mp4|webm|ogg|mov|avi)$/i.test(url);
@@ -432,11 +476,76 @@ function ComboOfferCard({ offer }: { offer: ComboOffer }) {
           {discountPercent}% OFF
         </Badge>
 
-        {timeRemaining && !hasEnded && (
-          <Badge variant="secondary" className="absolute top-3 right-3 z-10">
-            <Calendar className="h-3 w-3 mr-1" />
-            {timeRemaining}
-          </Badge>
+        {/* Date and Countdown Overlay */}
+        {(offer.startDate || offer.endDate) && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-3 pt-8 z-10">
+            {/* Countdown Timer */}
+            {countdown && hasStarted && !hasEnded && (
+              <div className="mb-2">
+                <div className="flex items-center justify-center gap-1 text-white">
+                  <Timer className="h-4 w-4 text-yellow-400" />
+                  <span className="text-xs text-yellow-400 font-medium">Ends in:</span>
+                </div>
+                <div className="flex items-center justify-center gap-2 mt-1">
+                  <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 text-center min-w-[40px]">
+                    <span className="text-lg font-bold text-white">{countdown.days}</span>
+                    <span className="text-[10px] text-white/80 block">Days</span>
+                  </div>
+                  <span className="text-white text-lg font-bold">:</span>
+                  <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 text-center min-w-[40px]">
+                    <span className="text-lg font-bold text-white">{String(countdown.hours).padStart(2, '0')}</span>
+                    <span className="text-[10px] text-white/80 block">Hrs</span>
+                  </div>
+                  <span className="text-white text-lg font-bold">:</span>
+                  <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 text-center min-w-[40px]">
+                    <span className="text-lg font-bold text-white">{String(countdown.minutes).padStart(2, '0')}</span>
+                    <span className="text-[10px] text-white/80 block">Min</span>
+                  </div>
+                  <span className="text-white text-lg font-bold">:</span>
+                  <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 text-center min-w-[40px]">
+                    <span className="text-lg font-bold text-white">{String(countdown.seconds).padStart(2, '0')}</span>
+                    <span className="text-[10px] text-white/80 block">Sec</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Start and End Dates */}
+            <div className="flex items-center justify-between text-xs text-white/90 gap-2">
+              {offer.startDate && (
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-green-400" />
+                  <span className="text-green-400">Start:</span>
+                  <span>{formatDateTime(offer.startDate)}</span>
+                </div>
+              )}
+              {offer.endDate && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-red-400" />
+                  <span className="text-red-400">End:</span>
+                  <span>{formatDateTime(offer.endDate)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Offer Ended Badge */}
+            {hasEnded && (
+              <div className="mt-2 text-center">
+                <Badge variant="destructive" className="text-sm">
+                  Offer Ended
+                </Badge>
+              </div>
+            )}
+
+            {/* Not Started Yet */}
+            {!hasStarted && offer.startDate && (
+              <div className="mt-2 text-center">
+                <Badge className="bg-yellow-600 text-sm">
+                  Starts Soon
+                </Badge>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
