@@ -33,6 +33,7 @@ const SharedWishlist = lazy(() => import("@/pages/SharedWishlist"));
 const OrderConfirmation = lazy(() => import("@/pages/OrderConfirmation"));
 const Signup = lazy(() => import("@/pages/Signup"));
 const Login = lazy(() => import("@/pages/Login"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
@@ -251,6 +252,12 @@ function Router() {
       <Route path="/login">
         <Suspense fallback={<PageLoader />}>
           <Login />
+        </Suspense>
+      </Route>
+
+      <Route path="/forgot-password">
+        <Suspense fallback={<PageLoader />}>
+          <ForgotPassword />
         </Suspense>
       </Route>
 

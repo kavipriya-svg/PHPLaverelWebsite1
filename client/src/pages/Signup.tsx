@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { UserPlus, ShoppingBag, Heart, Gift, Truck, Shield, Loader2, Eye, EyeOff, Check } from "lucide-react";
-import { useState } from "react";
+import { UserPlus, ShoppingBag, Heart, Gift, Truck, Shield, Loader2, Eye, EyeOff, Check, Mail, ArrowLeft, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 interface BrandingSettings {
   logoUrl: string;
@@ -21,15 +22,21 @@ const defaultBranding: BrandingSettings = {
   showStoreName: true,
 };
 
+type SignupStep = 'details' | 'otp' | 'complete';
+
 export default function Signup() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [step, setStep] = useState<SignupStep>('details');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpExpiresIn, setOtpExpiresIn] = useState(0);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const { data: brandingData } = useQuery<{ settings: BrandingSettings }>({
     queryKey: ["/api/settings/branding"],
@@ -37,9 +44,48 @@ export default function Signup() {
 
   const branding = brandingData?.settings ? { ...defaultBranding, ...brandingData.settings } : defaultBranding;
 
+  // Countdown timer for OTP expiry
+  useEffect(() => {
+    if (otpExpiresIn > 0) {
+      const timer = setTimeout(() => setOtpExpiresIn(otpExpiresIn - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpExpiresIn]);
+
+  // Send OTP mutation
+  const sendOtpMutation = useMutation({
+    mutationFn: async (data: { email: string; purpose: string }) => {
+      const response = await apiRequest("POST", "/api/auth/send-otp", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setStep('otp');
+        setOtpExpiresIn(data.expiresIn || 300);
+        if (data.devOtp) {
+          setDevOtp(data.devOtp);
+        }
+        toast({
+          title: "Verification Code Sent",
+          description: data.emailSent 
+            ? "We've sent a verification code to your email." 
+            : "Enter the verification code to continue.",
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Send Code",
+        description: error.message || "Could not send verification code. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Signup with OTP mutation
   const signupMutation = useMutation({
-    mutationFn: async (userData: { email: string; password: string; firstName: string; lastName: string }) => {
-      const response = await apiRequest("POST", "/api/auth/signup", userData);
+    mutationFn: async (userData: { email: string; password: string; firstName: string; lastName: string; otpCode: string }) => {
+      const response = await apiRequest("POST", "/api/auth/signup-with-otp", userData);
       return response.json();
     },
     onSuccess: (data) => {
@@ -71,7 +117,7 @@ export default function Signup() {
   const allRequirementsMet = passwordRequirements.every(req => req.met);
   const passwordsMatch = password === confirmPassword && password.length > 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !confirmPassword) {
       toast({
@@ -97,7 +143,32 @@ export default function Signup() {
       });
       return;
     }
-    signupMutation.mutate({ email, password, firstName, lastName });
+    sendOtpMutation.mutate({ email, purpose: 'signup' });
+  };
+
+  const handleVerifyAndSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      toast({
+        title: "Invalid Code",
+        description: "Please enter the 6-digit verification code.",
+        variant: "destructive",
+      });
+      return;
+    }
+    signupMutation.mutate({ email, password, firstName, lastName, otpCode });
+  };
+
+  const handleResendOtp = () => {
+    setOtpCode("");
+    setDevOtp(null);
+    sendOtpMutation.mutate({ email, purpose: 'signup' });
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -124,152 +195,259 @@ export default function Signup() {
               Welcome to {branding.storeName}
             </h1>
             <p className="text-muted-foreground mt-2">
-              Create an account to unlock exclusive features
+              {step === 'details' ? 'Create an account to unlock exclusive features' : 'Verify your email to continue'}
             </p>
           </div>
 
-          <Card className="mb-6">
-            <CardHeader className="text-center">
-              <CardTitle>Create Account</CardTitle>
-              <CardDescription>
-                Fill in your details to get started
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      type="text"
-                      placeholder="John"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      disabled={signupMutation.isPending}
-                      data-testid="input-first-name"
-                    />
+          {step === 'details' && (
+            <Card className="mb-6">
+              <CardHeader className="text-center">
+                <CardTitle>Create Account</CardTitle>
+                <CardDescription>
+                  Fill in your details to get started
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        placeholder="John"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        disabled={sendOtpMutation.isPending}
+                        data-testid="input-first-name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        type="text"
+                        placeholder="Doe"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        disabled={sendOtpMutation.isPending}
+                        data-testid="input-last-name"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="email">Email *</Label>
                     <Input
-                      id="lastName"
-                      type="text"
-                      placeholder="Doe"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      disabled={signupMutation.isPending}
-                      data-testid="input-last-name"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={signupMutation.isPending}
-                    required
-                    data-testid="input-email"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password *</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Create a strong password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={signupMutation.isPending}
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={sendOtpMutation.isPending}
                       required
-                      data-testid="input-password"
+                      data-testid="input-email"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password *</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Create a strong password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={sendOtpMutation.isPending}
+                        required
+                        data-testid="input-password"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                        data-testid="button-toggle-password"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                    {password.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {passwordRequirements.map((req, index) => (
+                          <div 
+                            key={index} 
+                            className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600' : 'text-muted-foreground'}`}
+                          >
+                            <Check className={`h-3 w-3 ${req.met ? 'opacity-100' : 'opacity-30'}`} />
+                            {req.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <Input
+                      id="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Re-enter your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={sendOtpMutation.isPending}
+                      required
+                      data-testid="input-confirm-password"
+                    />
+                    {confirmPassword.length > 0 && (
+                      <div className={`flex items-center gap-2 text-xs ${passwordsMatch ? 'text-green-600' : 'text-destructive'}`}>
+                        <Check className={`h-3 w-3 ${passwordsMatch ? 'opacity-100' : 'opacity-30'}`} />
+                        {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+                      </div>
+                    )}
+                  </div>
+                  <Button 
+                    type="submit"
+                    size="lg" 
+                    className="w-full"
+                    disabled={sendOtpMutation.isPending || !allRequirementsMet || !passwordsMatch}
+                    data-testid="button-continue"
+                  >
+                    {sendOtpMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Sending Code...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-5 h-5 mr-2" />
+                        Continue with Email Verification
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="text-center text-sm text-muted-foreground">
+                    <span>Already have an account? </span>
+                    <Link 
+                      href="/login" 
+                      className="text-primary hover:underline"
+                      data-testid="link-signin"
+                    >
+                      Sign in
+                    </Link>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {step === 'otp' && (
+            <Card className="mb-6">
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Verify Your Email
+                </CardTitle>
+                <CardDescription>
+                  We've sent a 6-digit code to <strong>{email}</strong>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleVerifyAndSignup} className="space-y-6">
+                  <div className="flex flex-col items-center space-y-4">
+                    <InputOTP
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(value) => setOtpCode(value)}
+                      disabled={signupMutation.isPending}
+                      data-testid="input-otp"
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+
+                    {devOtp && (
+                      <div className="text-xs text-muted-foreground bg-muted p-2 rounded-md">
+                        Dev mode: <code className="font-mono font-bold">{devOtp}</code>
+                      </div>
+                    )}
+
+                    {otpExpiresIn > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Code expires in <span className="font-mono font-medium">{formatTime(otpExpiresIn)}</span>
+                      </p>
+                    )}
+
+                    {otpExpiresIn === 0 && (
+                      <p className="text-sm text-destructive">Code has expired</p>
+                    )}
+                  </div>
+
+                  <Button 
+                    type="submit"
+                    size="lg" 
+                    className="w-full"
+                    disabled={signupMutation.isPending || otpCode.length !== 6}
+                    data-testid="button-verify-signup"
+                  >
+                    {signupMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-5 h-5 mr-2" />
+                        Verify & Create Account
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="flex items-center justify-between text-sm">
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                      data-testid="button-toggle-password"
+                      size="sm"
+                      onClick={() => {
+                        setStep('details');
+                        setOtpCode("");
+                        setDevOtp(null);
+                      }}
+                      disabled={signupMutation.isPending}
+                      data-testid="button-back"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <ArrowLeft className="w-4 h-4 mr-1" />
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResendOtp}
+                      disabled={sendOtpMutation.isPending || signupMutation.isPending}
+                      data-testid="button-resend-otp"
+                    >
+                      {sendOtpMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                       ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <RefreshCw className="w-4 h-4 mr-1" />
                       )}
+                      Resend Code
                     </Button>
                   </div>
-                  {password.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {passwordRequirements.map((req, index) => (
-                        <div 
-                          key={index} 
-                          className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600' : 'text-muted-foreground'}`}
-                        >
-                          <Check className={`h-3 w-3 ${req.met ? 'opacity-100' : 'opacity-30'}`} />
-                          {req.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                  <Input
-                    id="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Re-enter your password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={signupMutation.isPending}
-                    required
-                    data-testid="input-confirm-password"
-                  />
-                  {confirmPassword.length > 0 && (
-                    <div className={`flex items-center gap-2 text-xs ${passwordsMatch ? 'text-green-600' : 'text-destructive'}`}>
-                      <Check className={`h-3 w-3 ${passwordsMatch ? 'opacity-100' : 'opacity-30'}`} />
-                      {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
-                    </div>
-                  )}
-                </div>
-                <Button 
-                  type="submit"
-                  size="lg" 
-                  className="w-full"
-                  disabled={signupMutation.isPending || !allRequirementsMet || !passwordsMatch}
-                  data-testid="button-signup"
-                >
-                  {signupMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Creating Account...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-5 h-5 mr-2" />
-                      Create Account
-                    </>
-                  )}
-                </Button>
-
-                <div className="text-center text-sm text-muted-foreground">
-                  <span>Already have an account? </span>
-                  <Link 
-                    href="/login" 
-                    className="text-primary hover:underline"
-                    data-testid="link-signin"
-                  >
-                    Sign in
-                  </Link>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                </form>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-2 gap-4 mb-8">
             <Card className="p-4">
