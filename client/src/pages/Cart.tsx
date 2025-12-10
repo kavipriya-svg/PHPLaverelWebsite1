@@ -37,7 +37,7 @@ export default function Cart() {
     // Group cart items by comboOfferId
     const comboGroups: Record<string, typeof cartItems> = {};
     cartItems.forEach(item => {
-      const comboId = (item as any).comboOfferId;
+      const comboId = item.comboOfferId;
       if (comboId) {
         if (!comboGroups[comboId]) {
           comboGroups[comboId] = [];
@@ -51,17 +51,34 @@ export default function Cart() {
     // For each combo group, check if all products are present and calculate discount
     Object.entries(comboGroups).forEach(([comboId, items]) => {
       const comboOffer = comboOffersData.offers.find(o => o.id === comboId);
-      if (!comboOffer || !comboOffer.productIds) return;
+      if (!comboOffer || !comboOffer.productIds || !comboOffer.isActive) return;
+      
+      // Check dates if applicable
+      const now = new Date();
+      if (comboOffer.startDate && new Date(comboOffer.startDate) > now) return;
+      if (comboOffer.endDate && new Date(comboOffer.endDate) < now) return;
       
       // Check if all products from the combo are in this group
       const cartProductIds = items.map(item => item.productId);
       const allProductsPresent = comboOffer.productIds.every(pid => cartProductIds.includes(pid));
       
       if (allProductsPresent) {
-        // Calculate discount: originalPrice - comboPrice
-        const originalPrice = parseFloat(comboOffer.originalPrice as string) || 0;
-        const comboPrice = parseFloat(comboOffer.comboPrice as string) || 0;
-        totalComboDiscount += (originalPrice - comboPrice);
+        // Calculate the number of complete combo sets based on minimum quantity
+        // A complete combo set requires 1 of each product
+        const comboSets = Math.min(
+          ...comboOffer.productIds.map(pid => {
+            const cartItem = items.find(i => i.productId === pid);
+            return cartItem?.quantity || 0;
+          })
+        );
+        
+        if (comboSets > 0) {
+          // Calculate discount per set: originalPrice - comboPrice
+          const originalPrice = parseFloat(comboOffer.originalPrice as string) || 0;
+          const comboPrice = parseFloat(comboOffer.comboPrice as string) || 0;
+          const discountPerSet = originalPrice - comboPrice;
+          totalComboDiscount += (discountPerSet * comboSets);
+        }
       }
     });
     
