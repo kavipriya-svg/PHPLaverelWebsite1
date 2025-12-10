@@ -61,6 +61,8 @@ const AdminComboOffersSettings = lazy(() => import("@/pages/admin/ComboOffersSet
 const AdminCategorySectionSettings = lazy(() => import("@/pages/admin/CategorySectionSettings"));
 const AdminBlogSettings = lazy(() => import("@/pages/admin/BlogSettings"));
 const AdminComboOffers = lazy(() => import("@/pages/admin/ComboOffers"));
+const AdminQuickPages = lazy(() => import("@/pages/admin/QuickPages"));
+const QuickPage = lazy(() => import("@/pages/QuickPage"));
 
 function PageLoader() {
   return (
@@ -381,6 +383,20 @@ function Router() {
         <AdminLayout>
           <AdminComboOffers />
         </AdminLayout>
+      </Route>
+      <Route path="/admin/quick-pages">
+        <AdminLayout>
+          <AdminQuickPages />
+        </AdminLayout>
+      </Route>
+
+      {/* Public Quick Pages */}
+      <Route path="/pages/:slug">
+        {(params) => (
+          <StoreLayout>
+            <QuickPage slug={params.slug} />
+          </StoreLayout>
+        )}
       </Route>
 
       <Route>
