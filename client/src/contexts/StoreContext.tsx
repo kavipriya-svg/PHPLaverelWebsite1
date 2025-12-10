@@ -9,7 +9,7 @@ interface StoreContextType {
   cartCount: number;
   cartTotal: number;
   isCartLoading: boolean;
-  addToCart: (productId: string, quantity?: number, variantId?: string) => Promise<void>;
+  addToCart: (productId: string, quantity?: number, variantId?: string, comboOfferId?: string) => Promise<void>;
   updateCartItem: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -44,8 +44,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, 0);
 
   const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, quantity, variantId }: { productId: string; quantity: number; variantId?: string }) => {
-      await apiRequest("POST", "/api/cart", { productId, quantity, variantId });
+    mutationFn: async ({ productId, quantity, variantId, comboOfferId }: { productId: string; quantity: number; variantId?: string; comboOfferId?: string }) => {
+      await apiRequest("POST", "/api/cart", { productId, quantity, variantId, comboOfferId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
@@ -93,8 +93,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const addToCart = useCallback(async (productId: string, quantity = 1, variantId?: string) => {
-    await addToCartMutation.mutateAsync({ productId, quantity, variantId });
+  const addToCart = useCallback(async (productId: string, quantity = 1, variantId?: string, comboOfferId?: string) => {
+    await addToCartMutation.mutateAsync({ productId, quantity, variantId, comboOfferId });
   }, [addToCartMutation]);
 
   const updateCartItem = useCallback(async (itemId: string, quantity: number) => {
