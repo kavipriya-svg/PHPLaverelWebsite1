@@ -2142,7 +2142,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/orders", optionalAuth, async (req, res) => {
     try {
       const userInfo = getUserInfo(req);
-      const { items, shippingAddress, billingAddress, paymentMethod, couponCode, guestEmail: rawGuestEmail, razorpayOrderId, razorpayPaymentId } = req.body;
+      const { items, shippingAddress, billingAddress, paymentMethod, couponCode, comboDiscount: rawComboDiscount, guestEmail: rawGuestEmail, razorpayOrderId, razorpayPaymentId } = req.body;
       // Normalize guest email for consistent comparisons
       const guestEmail = rawGuestEmail ? rawGuestEmail.toLowerCase().trim() : undefined;
 
@@ -2188,9 +2188,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         }
       }
 
+      // Parse combo discount from frontend (validated on frontend based on cart items with comboOfferId)
+      const comboDiscount = parseFloat(rawComboDiscount) || 0;
+      
       const tax = subtotal * 0.08;
       const shippingCost = subtotal > 500 ? 0 : 99;
-      const total = subtotal - discount + tax + shippingCost;
+      const total = subtotal - discount - comboDiscount + tax + shippingCost;
 
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
@@ -4073,7 +4076,7 @@ Sitemap: ${baseUrl}/sitemap.xml`;
   // Create Razorpay order - computes amount from server-side cart
   app.post("/api/razorpay/create-order", async (req, res) => {
     try {
-      const { currency = "INR", couponCode } = req.body;
+      const { currency = "INR", couponCode, comboDiscount: rawComboDiscount } = req.body;
       const userId = (req as any).user?.id || null;
       const sessionId = (req as any).guestSessionId || req.cookies?.sessionId || null;
 
@@ -4123,8 +4126,11 @@ Sitemap: ${baseUrl}/sitemap.xml`;
       // Calculate shipping (free over ₹500)
       const shipping = cartTotal >= 500 ? 0 : 99;
 
+      // Parse combo discount from frontend
+      const comboDiscount = parseFloat(rawComboDiscount) || 0;
+
       // Final total
-      const totalAmount = cartTotal - discount + shipping;
+      const totalAmount = cartTotal - discount - comboDiscount + shipping;
 
       if (totalAmount <= 0) {
         return res.status(400).json({ 
