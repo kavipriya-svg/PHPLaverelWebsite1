@@ -133,7 +133,7 @@ export default function Profile() {
         throw new Error("Failed to upload image");
       }
 
-      const imageUrl = `/api/objects/${objectPath}`;
+      const imageUrl = `/objects/${objectPath}`;
 
       const profileResponse = await apiRequest("PUT", "/api/user/profile", {
         ...form.getValues(),

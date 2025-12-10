@@ -1002,8 +1002,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const storageService = new ObjectStorageService();
       const presignedUrl = await storageService.getObjectEntityUploadURL();
+      
+      // Extract the object path from the presigned URL (same pattern as admin upload)
       const url = new URL(presignedUrl);
-      const objectPath = url.pathname.replace(/^\//, "");
+      const pathParts = url.pathname.split('/');
+      // The path format is /bucket/prefix/uploads/uuid
+      const objectPath = `uploads/${pathParts[pathParts.length - 1]}`;
       
       res.json({ presignedUrl, objectPath });
     } catch (error) {
