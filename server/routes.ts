@@ -3084,7 +3084,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Get MSG91 settings
       const setting = await storage.getSetting("communication_settings");
       if (!setting?.value) {
-        return res.status(400).json({ error: "MSG91 not configured" });
+        return res.status(400).json({ error: "MSG91 not configured. Please save settings first." });
       }
       
       const settings = JSON.parse(setting.value);
@@ -3092,11 +3092,38 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const emailSettings = settings.email;
       
       if (!msg91?.authKey) {
-        return res.status(400).json({ error: "MSG91 AuthKey not configured" });
+        return res.status(400).json({ error: "MSG91 AuthKey not configured. Get it from MSG91 dashboard." });
       }
       
       if (!emailSettings?.enabled) {
-        return res.status(400).json({ error: "Email is disabled" });
+        return res.status(400).json({ error: "Email is disabled. Enable it first." });
+      }
+      
+      if (!emailSettings?.domain) {
+        return res.status(400).json({ error: "Email Domain not configured. Add a verified domain from MSG91 Email settings." });
+      }
+      
+      if (!emailSettings?.fromEmail) {
+        return res.status(400).json({ error: "From Email not configured." });
+      }
+      
+      // Build email payload for MSG91
+      const emailPayload: any = {
+        recipients: [{ to: [{ email: toEmail, name: "Test User" }] }],
+        from: { email: emailSettings.fromEmail, name: emailSettings.fromName || "19Dogs Store" },
+        domain: emailSettings.domain,
+        subject: "Test Email from 19Dogs Store",
+      };
+      
+      // Use template if available, otherwise send with body content
+      if (emailSettings.templateId) {
+        emailPayload.template_id = emailSettings.templateId;
+        emailPayload.variables = { VAR1: "Test", VAR2: "This is a test email" };
+      } else {
+        emailPayload.body = {
+          type: "html",
+          value: `<html><body><h2>Test Email</h2><p>This is a test email from 19Dogs Store.</p><p>Your MSG91 email integration is working correctly!</p></body></html>`,
+        };
       }
       
       // Send test email via MSG91
@@ -3106,30 +3133,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           "authkey": msg91.authKey,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          to: [{ email: toEmail, name: "Test User" }],
-          from: {
-            email: emailSettings.fromEmail || "test@example.com",
-            name: emailSettings.fromName || "19Dogs Store",
-          },
-          domain: emailSettings.domain || "",
-          template_id: emailSettings.templateId || "",
-          variables: {
-            VAR1: "Test Message",
-            VAR2: "This is a test email from 19Dogs Store. Your MSG91 email integration is working correctly!",
-          },
-        }),
+        body: JSON.stringify(emailPayload),
       });
       
-      if (response.ok) {
+      const result = await response.json();
+      console.log("MSG91 Email Response:", JSON.stringify(result));
+      
+      if (response.ok && result.type !== "error") {
         res.json({ success: true, message: `Test email sent to ${toEmail}` });
       } else {
-        const error = await response.json();
-        res.status(400).json({ error: error.message || "Failed to send email" });
+        const errorMsg = result.message || result.msg || result.error || "Failed to send email. Check MSG91 domain verification.";
+        res.status(400).json({ error: errorMsg });
       }
     } catch (error) {
       console.error("Failed to send test email:", error);
-      res.status(500).json({ error: "Failed to send test email" });
+      res.status(500).json({ error: "Failed to send test email. Check console for details." });
     }
   });
 
