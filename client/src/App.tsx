@@ -201,6 +201,12 @@ function Router() {
         </StoreLayout>
       </Route>
       
+      <Route path="/profile">
+        <StoreLayout>
+          <Profile />
+        </StoreLayout>
+      </Route>
+      
       <Route path="/account/addresses">
         <StoreLayout>
           <Addresses />
