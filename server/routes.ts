@@ -782,6 +782,37 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Quick Pages - Public endpoints
+  app.get("/api/quick-pages", async (req, res) => {
+    try {
+      const pages = await storage.getQuickPages(true); // Only published pages
+      res.json({ pages });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch quick pages" });
+    }
+  });
+
+  app.get("/api/quick-pages/footer", async (req, res) => {
+    try {
+      const pages = await storage.getFooterQuickPages();
+      res.json({ pages });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch footer pages" });
+    }
+  });
+
+  app.get("/api/quick-pages/:slug", async (req, res) => {
+    try {
+      const page = await storage.getQuickPageBySlug(req.params.slug);
+      if (!page || page.status !== "published") {
+        return res.status(404).json({ error: "Page not found" });
+      }
+      res.json({ page });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch page" });
+    }
+  });
+
   // Public settings endpoint for frontend (currency, store name, etc.)
   app.get("/api/settings", async (req, res) => {
     try {
@@ -2785,6 +2816,112 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete combo offer" });
+    }
+  });
+
+  // Quick Pages (Dynamic CMS Pages) - Admin Routes
+  app.get("/api/admin/quick-pages", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const pages = await storage.getQuickPages(false); // Get all pages including drafts
+      res.json({ pages });
+    } catch (error) {
+      console.error("Failed to fetch quick pages:", error);
+      res.status(500).json({ error: "Failed to fetch quick pages" });
+    }
+  });
+
+  app.get("/api/admin/quick-pages/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const page = await storage.getQuickPageById(req.params.id);
+      if (!page) {
+        return res.status(404).json({ error: "Page not found" });
+      }
+      res.json({ page });
+    } catch (error) {
+      console.error("Failed to fetch quick page:", error);
+      res.status(500).json({ error: "Failed to fetch quick page" });
+    }
+  });
+
+  app.post("/api/admin/quick-pages", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { title, slug, content, excerpt, status, showInFooter, footerSection, position, metaTitle, metaDescription, metaKeywords } = req.body;
+      
+      if (!title || !slug) {
+        return res.status(400).json({ error: "Title and slug are required" });
+      }
+      
+      // Check for slug uniqueness
+      const existing = await storage.getQuickPageBySlug(slug);
+      if (existing) {
+        return res.status(400).json({ error: "A page with this slug already exists" });
+      }
+      
+      const page = await storage.createQuickPage({
+        title,
+        slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-"),
+        content,
+        excerpt,
+        status: status || "draft",
+        showInFooter: showInFooter ?? true,
+        footerSection: footerSection || "quick_links",
+        position: position || 0,
+        metaTitle,
+        metaDescription,
+        metaKeywords,
+      });
+      
+      res.json({ page });
+    } catch (error) {
+      console.error("Failed to create quick page:", error);
+      res.status(500).json({ error: "Failed to create quick page" });
+    }
+  });
+
+  app.patch("/api/admin/quick-pages/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { title, slug, content, excerpt, status, showInFooter, footerSection, position, metaTitle, metaDescription, metaKeywords } = req.body;
+      
+      // If slug is being changed, check for uniqueness
+      if (slug) {
+        const existing = await storage.getQuickPageBySlug(slug);
+        if (existing && existing.id !== req.params.id) {
+          return res.status(400).json({ error: "A page with this slug already exists" });
+        }
+      }
+      
+      const updateData: any = {};
+      if (title !== undefined) updateData.title = title;
+      if (slug !== undefined) updateData.slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
+      if (content !== undefined) updateData.content = content;
+      if (excerpt !== undefined) updateData.excerpt = excerpt;
+      if (status !== undefined) updateData.status = status;
+      if (showInFooter !== undefined) updateData.showInFooter = showInFooter;
+      if (footerSection !== undefined) updateData.footerSection = footerSection;
+      if (position !== undefined) updateData.position = position;
+      if (metaTitle !== undefined) updateData.metaTitle = metaTitle;
+      if (metaDescription !== undefined) updateData.metaDescription = metaDescription;
+      if (metaKeywords !== undefined) updateData.metaKeywords = metaKeywords;
+      
+      const page = await storage.updateQuickPage(req.params.id, updateData);
+      if (!page) {
+        return res.status(404).json({ error: "Page not found" });
+      }
+      
+      res.json({ page });
+    } catch (error) {
+      console.error("Failed to update quick page:", error);
+      res.status(500).json({ error: "Failed to update quick page" });
+    }
+  });
+
+  app.delete("/api/admin/quick-pages/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteQuickPage(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to delete quick page:", error);
+      res.status(500).json({ error: "Failed to delete quick page" });
     }
   });
 
