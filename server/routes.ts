@@ -956,16 +956,59 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(401).json({ error: "Unauthorized" });
       }
       
-      const { firstName, lastName, phone } = req.body;
+      const { firstName, lastName, phone, profileImageUrl } = req.body;
       const updatedUser = await storage.updateUser(userInfo.id, {
         firstName,
         lastName,
         phone,
+        profileImageUrl,
       });
       
       res.json(updatedUser);
     } catch (error) {
       res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Alias for /api/profile
+  app.put("/api/user/profile", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { firstName, lastName, phone, profileImageUrl } = req.body;
+      const updatedUser = await storage.updateUser(userInfo.id, {
+        firstName,
+        lastName,
+        phone,
+        profileImageUrl,
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Get presigned URL for customer profile photo upload
+  app.post("/api/user/profile-photo-url", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const storageService = new ObjectStorageService();
+      const presignedUrl = await storageService.getObjectEntityUploadURL();
+      const url = new URL(presignedUrl);
+      const objectPath = url.pathname.replace(/^\//, "");
+      
+      res.json({ presignedUrl, objectPath });
+    } catch (error) {
+      console.error("Error getting profile photo presigned URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
     }
   });
 
