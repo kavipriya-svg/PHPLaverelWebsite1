@@ -1,15 +1,16 @@
 import { Link } from "wouter";
-import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Tag, X } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Tag, X, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/contexts/StoreContext";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
-import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect, useMemo } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { ComboOffer } from "@shared/schema";
 
 interface AppliedCoupon {
   code: string;
@@ -23,6 +24,49 @@ export default function Cart() {
   const { toast } = useToast();
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  // Fetch combo offers to calculate combo discounts
+  const { data: comboOffersData } = useQuery<{ offers: ComboOffer[] }>({
+    queryKey: ["/api/combo-offers"],
+  });
+
+  // Calculate combo discount based on cart items with comboOfferId
+  const comboDiscount = useMemo(() => {
+    if (!comboOffersData?.offers || cartItems.length === 0) return 0;
+    
+    // Group cart items by comboOfferId
+    const comboGroups: Record<string, typeof cartItems> = {};
+    cartItems.forEach(item => {
+      const comboId = (item as any).comboOfferId;
+      if (comboId) {
+        if (!comboGroups[comboId]) {
+          comboGroups[comboId] = [];
+        }
+        comboGroups[comboId].push(item);
+      }
+    });
+    
+    let totalComboDiscount = 0;
+    
+    // For each combo group, check if all products are present and calculate discount
+    Object.entries(comboGroups).forEach(([comboId, items]) => {
+      const comboOffer = comboOffersData.offers.find(o => o.id === comboId);
+      if (!comboOffer || !comboOffer.productIds) return;
+      
+      // Check if all products from the combo are in this group
+      const cartProductIds = items.map(item => item.productId);
+      const allProductsPresent = comboOffer.productIds.every(pid => cartProductIds.includes(pid));
+      
+      if (allProductsPresent) {
+        // Calculate discount: originalPrice - comboPrice
+        const originalPrice = parseFloat(comboOffer.originalPrice as string) || 0;
+        const comboPrice = parseFloat(comboOffer.comboPrice as string) || 0;
+        totalComboDiscount += (originalPrice - comboPrice);
+      }
+    });
+    
+    return totalComboDiscount;
+  }, [cartItems, comboOffersData?.offers]);
 
   // Load any previously applied coupon from localStorage on mount
   useEffect(() => {
@@ -126,9 +170,10 @@ export default function Cart() {
   }
 
   const subtotal = cartTotal;
-  const discount = calculateDiscount();
+  const couponDiscount = calculateDiscount();
+  const totalDiscount = couponDiscount + comboDiscount;
   const shipping = subtotal >= 500 ? 0 : 99;
-  const total = subtotal - discount + shipping;
+  const total = subtotal - totalDiscount + shipping;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -270,10 +315,19 @@ export default function Cart() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
-                {discount > 0 && (
+                {comboDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-purple-600 dark:text-purple-400">
+                    <span className="flex items-center gap-1">
+                      <Gift className="h-3 w-3" />
+                      Combo Discount
+                    </span>
+                    <span data-testid="text-combo-discount">-{formatCurrency(comboDiscount)}</span>
+                  </div>
+                )}
+                {couponDiscount > 0 && (
                   <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                    <span>Discount</span>
-                    <span data-testid="text-cart-discount">-{formatCurrency(discount)}</span>
+                    <span>Coupon Discount</span>
+                    <span data-testid="text-coupon-discount">-{formatCurrency(couponDiscount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
