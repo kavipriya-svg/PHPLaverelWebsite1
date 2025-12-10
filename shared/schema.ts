@@ -46,6 +46,26 @@ export const usersRelations = relations(users, ({ many }) => ({
   cartItems: many(cartItems),
 }));
 
+// OTP codes for verification (signup, forgot password, etc.)
+export const otpCodes = pgTable("otp_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull(),
+  phone: varchar("phone"),
+  code: varchar("code", { length: 8 }).notNull(),
+  purpose: varchar("purpose").notNull(), // signup, forgot_password, phone_verify
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
+  attempts: integer("attempts").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtpCodeSchema = createInsertSchema(otpCodes).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertOtpCode = z.infer<typeof insertOtpCodeSchema>;
+export type OtpCode = typeof otpCodes.$inferSelect;
+
 // Categories with 3-level hierarchy (main -> sub -> child)
 export const categories = pgTable("categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
