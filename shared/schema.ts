@@ -831,6 +831,124 @@ export const defaultBlogSection: BlogSection = {
   posts: [],
 };
 
+// Communication Settings Schema (Email, SMS, WhatsApp)
+export const emailSettingsSchema = z.object({
+  enabled: z.boolean().default(false),
+  provider: z.enum(["resend", "smtp"]).default("resend"),
+  fromEmail: z.string().email().optional().or(z.literal("")),
+  fromName: z.string().optional(),
+  replyTo: z.string().email().optional().or(z.literal("")),
+  // Resend specific
+  resendApiKey: z.string().optional(),
+  // SMTP specific (for future)
+  smtpHost: z.string().optional(),
+  smtpPort: z.number().optional(),
+  smtpUser: z.string().optional(),
+  smtpPass: z.string().optional(),
+  smtpSecure: z.boolean().default(true),
+  // Notification toggles
+  orderConfirmation: z.boolean().default(true),
+  orderStatusUpdate: z.boolean().default(true),
+  shippingUpdate: z.boolean().default(true),
+  lowStockAlert: z.boolean().default(true),
+  restockNotification: z.boolean().default(true),
+  welcomeEmail: z.boolean().default(true),
+  passwordReset: z.boolean().default(true),
+});
+
+export const smsSettingsSchema = z.object({
+  enabled: z.boolean().default(false),
+  provider: z.enum(["twilio", "custom"]).default("twilio"),
+  // Twilio specific
+  twilioAccountSid: z.string().optional(),
+  twilioAuthToken: z.string().optional(),
+  twilioPhoneNumber: z.string().optional(),
+  // Notification toggles
+  orderConfirmation: z.boolean().default(true),
+  orderStatusUpdate: z.boolean().default(true),
+  shippingUpdate: z.boolean().default(true),
+  deliveryOtp: z.boolean().default(false),
+});
+
+export const whatsappSettingsSchema = z.object({
+  enabled: z.boolean().default(false),
+  provider: z.enum(["twilio", "meta", "custom"]).default("twilio"),
+  // Twilio WhatsApp specific (uses same credentials as SMS)
+  useSharedTwilioCredentials: z.boolean().default(true),
+  twilioAccountSid: z.string().optional(),
+  twilioAuthToken: z.string().optional(),
+  twilioWhatsappNumber: z.string().optional(), // WhatsApp-enabled number
+  // Meta Business API (for future)
+  metaAccessToken: z.string().optional(),
+  metaPhoneNumberId: z.string().optional(),
+  metaBusinessAccountId: z.string().optional(),
+  // Notification toggles
+  orderConfirmation: z.boolean().default(true),
+  orderStatusUpdate: z.boolean().default(true),
+  shippingUpdate: z.boolean().default(true),
+  promotionalMessages: z.boolean().default(false),
+});
+
+export const communicationSettingsSchema = z.object({
+  email: emailSettingsSchema.default({}),
+  sms: smsSettingsSchema.default({}),
+  whatsapp: whatsappSettingsSchema.default({}),
+});
+
+export type EmailSettings = z.infer<typeof emailSettingsSchema>;
+export type SmsSettings = z.infer<typeof smsSettingsSchema>;
+export type WhatsappSettings = z.infer<typeof whatsappSettingsSchema>;
+export type CommunicationSettings = z.infer<typeof communicationSettingsSchema>;
+
+export const defaultCommunicationSettings: CommunicationSettings = {
+  email: {
+    enabled: false,
+    provider: "resend",
+    fromEmail: "",
+    fromName: "",
+    replyTo: "",
+    resendApiKey: "",
+    smtpHost: "",
+    smtpPort: 587,
+    smtpUser: "",
+    smtpPass: "",
+    smtpSecure: true,
+    orderConfirmation: true,
+    orderStatusUpdate: true,
+    shippingUpdate: true,
+    lowStockAlert: true,
+    restockNotification: true,
+    welcomeEmail: true,
+    passwordReset: true,
+  },
+  sms: {
+    enabled: false,
+    provider: "twilio",
+    twilioAccountSid: "",
+    twilioAuthToken: "",
+    twilioPhoneNumber: "",
+    orderConfirmation: true,
+    orderStatusUpdate: true,
+    shippingUpdate: true,
+    deliveryOtp: false,
+  },
+  whatsapp: {
+    enabled: false,
+    provider: "twilio",
+    useSharedTwilioCredentials: true,
+    twilioAccountSid: "",
+    twilioAuthToken: "",
+    twilioWhatsappNumber: "",
+    metaAccessToken: "",
+    metaPhoneNumberId: "",
+    metaBusinessAccountId: "",
+    orderConfirmation: true,
+    orderStatusUpdate: true,
+    shippingUpdate: true,
+    promotionalMessages: false,
+  },
+};
+
 // Combo Offers table
 export const comboOffers = pgTable("combo_offers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
