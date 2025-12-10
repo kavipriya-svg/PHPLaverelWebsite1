@@ -23,6 +23,7 @@ import {
   giftRegistryItems,
   stockNotifications,
   comboOffers,
+  quickPages,
   type User,
   type UpsertUser,
   type Category,
@@ -65,6 +66,8 @@ import {
   type InsertGiftRegistryItem,
   type ComboOffer,
   type InsertComboOffer,
+  type QuickPage,
+  type InsertQuickPage,
   verifiedRazorpayPayments,
   type ProductWithDetails,
   type CategoryWithChildren,
@@ -217,6 +220,15 @@ export interface IStorage {
   ): Promise<any | undefined>;
   consumeVerifiedRazorpayPayment(id: string): Promise<void>;
   cleanupExpiredRazorpayPayments(): Promise<void>;
+
+  // Quick Pages (Dynamic CMS Pages)
+  getQuickPages(publishedOnly?: boolean): Promise<QuickPage[]>;
+  getQuickPageById(id: string): Promise<QuickPage | undefined>;
+  getQuickPageBySlug(slug: string): Promise<QuickPage | undefined>;
+  createQuickPage(page: InsertQuickPage): Promise<QuickPage>;
+  updateQuickPage(id: string, page: Partial<InsertQuickPage>): Promise<QuickPage | undefined>;
+  deleteQuickPage(id: string): Promise<void>;
+  getFooterQuickPages(): Promise<QuickPage[]>;
 }
 
 export interface ProductFilters {
@@ -1571,6 +1583,72 @@ export class DatabaseStorage implements IStorage {
       images: images.filter((img) => img.productId === r.products.id),
       variants: variants.filter((v) => v.productId === r.products.id),
     }));
+  }
+
+  // Quick Pages (Dynamic CMS Pages)
+  async getQuickPages(publishedOnly: boolean = false): Promise<QuickPage[]> {
+    const conditions = [];
+    if (publishedOnly) {
+      conditions.push(eq(quickPages.status, "published"));
+    }
+    
+    return db
+      .select()
+      .from(quickPages)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(quickPages.position), asc(quickPages.title));
+  }
+
+  async getQuickPageById(id: string): Promise<QuickPage | undefined> {
+    const [page] = await db.select().from(quickPages).where(eq(quickPages.id, id));
+    return page;
+  }
+
+  async getQuickPageBySlug(slug: string): Promise<QuickPage | undefined> {
+    const [page] = await db.select().from(quickPages).where(eq(quickPages.slug, slug));
+    return page;
+  }
+
+  async createQuickPage(page: InsertQuickPage): Promise<QuickPage> {
+    const [created] = await db.insert(quickPages).values({
+      ...page,
+      publishedAt: page.status === "published" ? new Date() : null,
+    }).returning();
+    return created;
+  }
+
+  async updateQuickPage(id: string, page: Partial<InsertQuickPage>): Promise<QuickPage | undefined> {
+    const updateData: any = { ...page, updatedAt: new Date() };
+    
+    // Set publishedAt when status changes to published
+    if (page.status === "published") {
+      const existing = await this.getQuickPageById(id);
+      if (existing && existing.status !== "published") {
+        updateData.publishedAt = new Date();
+      }
+    }
+    
+    const [updated] = await db
+      .update(quickPages)
+      .set(updateData)
+      .where(eq(quickPages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteQuickPage(id: string): Promise<void> {
+    await db.delete(quickPages).where(eq(quickPages.id, id));
+  }
+
+  async getFooterQuickPages(): Promise<QuickPage[]> {
+    return db
+      .select()
+      .from(quickPages)
+      .where(and(
+        eq(quickPages.status, "published"),
+        eq(quickPages.showInFooter, true)
+      ))
+      .orderBy(asc(quickPages.position), asc(quickPages.title));
   }
 }
 
