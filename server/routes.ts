@@ -3011,7 +3011,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Communication Settings API (Email, SMS, WhatsApp)
+  // Communication Settings API (MSG91 - Email, SMS, WhatsApp, OTP)
   app.get("/api/admin/communication-settings", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const setting = await storage.getSetting("communication_settings");
@@ -3019,20 +3019,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         const settings = JSON.parse(setting.value);
         // Mask sensitive credentials when returning
         const maskedSettings = {
-          email: {
-            ...settings.email,
-            resendApiKey: settings.email?.resendApiKey ? "••••••••" : "",
-            smtpPass: settings.email?.smtpPass ? "••••••••" : "",
+          msg91: {
+            ...settings.msg91,
+            authKey: settings.msg91?.authKey ? "••••••••" : "",
           },
-          sms: {
-            ...settings.sms,
-            twilioAuthToken: settings.sms?.twilioAuthToken ? "••••••••" : "",
-          },
-          whatsapp: {
-            ...settings.whatsapp,
-            twilioAuthToken: settings.whatsapp?.twilioAuthToken ? "••••••••" : "",
-            metaAccessToken: settings.whatsapp?.metaAccessToken ? "••••••••" : "",
-          },
+          email: settings.email,
+          sms: settings.sms,
+          whatsapp: settings.whatsapp,
+          otp: settings.otp,
         };
         res.json({ settings: maskedSettings, rawSettings: settings });
       } else {
@@ -3046,7 +3040,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/communication-settings", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const { email, sms, whatsapp } = req.body;
+      const { msg91, email, sms, whatsapp, otp } = req.body;
       
       // Get existing settings to preserve credentials if masked
       const existing = await storage.getSetting("communication_settings");
@@ -3057,20 +3051,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       // Merge new settings, preserving masked credentials
       const mergedSettings = {
-        email: {
-          ...email,
-          resendApiKey: email?.resendApiKey === "••••••••" ? existingSettings.email?.resendApiKey : email?.resendApiKey,
-          smtpPass: email?.smtpPass === "••••••••" ? existingSettings.email?.smtpPass : email?.smtpPass,
+        msg91: {
+          ...msg91,
+          authKey: msg91?.authKey === "••••••••" ? existingSettings.msg91?.authKey : msg91?.authKey,
         },
-        sms: {
-          ...sms,
-          twilioAuthToken: sms?.twilioAuthToken === "••••••••" ? existingSettings.sms?.twilioAuthToken : sms?.twilioAuthToken,
-        },
-        whatsapp: {
-          ...whatsapp,
-          twilioAuthToken: whatsapp?.twilioAuthToken === "••••••••" ? existingSettings.whatsapp?.twilioAuthToken : whatsapp?.twilioAuthToken,
-          metaAccessToken: whatsapp?.metaAccessToken === "••••••••" ? existingSettings.whatsapp?.metaAccessToken : whatsapp?.metaAccessToken,
-        },
+        email,
+        sms,
+        whatsapp,
+        otp,
       };
       
       await storage.upsertSettings({
@@ -3084,7 +3072,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Test Email
+  // Test Email (MSG91)
   app.post("/api/admin/communication-settings/test-email", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { toEmail } = req.body;
@@ -3093,27 +3081,51 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ error: "Email address is required" });
       }
       
-      if (!emailService.isConfigured()) {
-        return res.status(400).json({ error: "Email service not configured. Set RESEND_API_KEY environment variable." });
+      // Get MSG91 settings
+      const setting = await storage.getSetting("communication_settings");
+      if (!setting?.value) {
+        return res.status(400).json({ error: "MSG91 not configured" });
       }
       
-      const success = await emailService.sendOrderConfirmation({
-        orderId: "test-123",
-        orderNumber: "TEST-EMAIL-001",
-        customerName: "Test User",
-        customerEmail: toEmail,
-        items: [{ title: "Test Product", quantity: 1, price: "99.00" }],
-        subtotal: "99.00",
-        tax: "0.00",
-        shipping: "0.00",
-        total: "99.00",
-        paymentMethod: "test",
+      const settings = JSON.parse(setting.value);
+      const msg91 = settings.msg91;
+      const emailSettings = settings.email;
+      
+      if (!msg91?.authKey) {
+        return res.status(400).json({ error: "MSG91 AuthKey not configured" });
+      }
+      
+      if (!emailSettings?.enabled) {
+        return res.status(400).json({ error: "Email is disabled" });
+      }
+      
+      // Send test email via MSG91
+      const response = await fetch("https://api.msg91.com/api/v5/email/send", {
+        method: "POST",
+        headers: {
+          "authkey": msg91.authKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: [{ email: toEmail, name: "Test User" }],
+          from: {
+            email: emailSettings.fromEmail || "test@example.com",
+            name: emailSettings.fromName || "19Dogs Store",
+          },
+          domain: emailSettings.domain || "",
+          template_id: emailSettings.templateId || "",
+          variables: {
+            VAR1: "Test Message",
+            VAR2: "This is a test email from 19Dogs Store. Your MSG91 email integration is working correctly!",
+          },
+        }),
       });
       
-      if (success) {
+      if (response.ok) {
         res.json({ success: true, message: `Test email sent to ${toEmail}` });
       } else {
-        res.status(500).json({ error: "Failed to send test email" });
+        const error = await response.json();
+        res.status(400).json({ error: error.message || "Failed to send email" });
       }
     } catch (error) {
       console.error("Failed to send test email:", error);
@@ -3121,54 +3133,61 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Test SMS (Twilio)
+  // Test SMS (MSG91)
   app.post("/api/admin/communication-settings/test-sms", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { toPhone } = req.body;
       
       if (!toPhone) {
-        return res.status(400).json({ error: "Phone number is required" });
+        return res.status(400).json({ error: "Phone number is required (with country code, e.g., 919876543210)" });
       }
       
-      // Get SMS settings
+      // Get MSG91 settings
       const setting = await storage.getSetting("communication_settings");
       if (!setting?.value) {
-        return res.status(400).json({ error: "SMS not configured" });
+        return res.status(400).json({ error: "MSG91 not configured" });
       }
       
       const settings = JSON.parse(setting.value);
+      const msg91 = settings.msg91;
       const smsSettings = settings.sms;
+      
+      if (!msg91?.authKey) {
+        return res.status(400).json({ error: "MSG91 AuthKey not configured" });
+      }
       
       if (!smsSettings?.enabled) {
         return res.status(400).json({ error: "SMS is disabled" });
       }
       
-      if (!smsSettings?.twilioAccountSid || !smsSettings?.twilioAuthToken || !smsSettings?.twilioPhoneNumber) {
-        return res.status(400).json({ error: "Twilio credentials not configured" });
+      if (!smsSettings?.templateId) {
+        return res.status(400).json({ error: "SMS Template ID not configured. Create a DLT-registered template in MSG91 dashboard." });
       }
       
-      // Send test SMS via Twilio
-      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${smsSettings.twilioAccountSid}/Messages.json`;
-      const authHeader = Buffer.from(`${smsSettings.twilioAccountSid}:${smsSettings.twilioAuthToken}`).toString("base64");
-      
-      const response = await fetch(twilioUrl, {
+      // Send test SMS via MSG91
+      const response = await fetch("https://api.msg91.com/api/v5/flow/", {
         method: "POST",
         headers: {
-          "Authorization": `Basic ${authHeader}`,
-          "Content-Type": "application/x-www-form-urlencoded",
+          "authkey": msg91.authKey,
+          "Content-Type": "application/json",
         },
-        body: new URLSearchParams({
-          From: smsSettings.twilioPhoneNumber,
-          To: toPhone,
-          Body: "This is a test SMS from 19Dogs Store. Your SMS integration is working correctly!",
+        body: JSON.stringify({
+          template_id: smsSettings.templateId,
+          short_url: "0",
+          recipients: [{
+            mobiles: toPhone,
+            VAR1: "19Dogs Store",
+            VAR2: "Test SMS",
+          }],
         }),
       });
       
-      if (response.ok) {
+      const result = await response.json();
+      
+      if (response.ok && result.type !== "error") {
         res.json({ success: true, message: `Test SMS sent to ${toPhone}` });
       } else {
-        const error = await response.json();
-        res.status(400).json({ error: error.message || "Failed to send SMS" });
+        res.status(400).json({ error: result.message || "Failed to send SMS" });
       }
     } catch (error) {
       console.error("Failed to send test SMS:", error);
@@ -3176,71 +3195,130 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Test WhatsApp (Twilio)
+  // Test WhatsApp (MSG91)
   app.post("/api/admin/communication-settings/test-whatsapp", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { toPhone } = req.body;
       
       if (!toPhone) {
-        return res.status(400).json({ error: "Phone number is required (with country code, e.g., +91...)" });
+        return res.status(400).json({ error: "Phone number is required (with country code, e.g., 919876543210)" });
       }
       
-      // Get WhatsApp settings
+      // Get MSG91 settings
       const setting = await storage.getSetting("communication_settings");
       if (!setting?.value) {
-        return res.status(400).json({ error: "WhatsApp not configured" });
+        return res.status(400).json({ error: "MSG91 not configured" });
       }
       
       const settings = JSON.parse(setting.value);
+      const msg91 = settings.msg91;
       const waSettings = settings.whatsapp;
-      const smsSettings = settings.sms;
+      
+      if (!msg91?.authKey) {
+        return res.status(400).json({ error: "MSG91 AuthKey not configured" });
+      }
       
       if (!waSettings?.enabled) {
         return res.status(400).json({ error: "WhatsApp is disabled" });
       }
       
-      // Use shared SMS credentials or WhatsApp-specific credentials
-      let accountSid, authToken, fromNumber;
-      if (waSettings.useSharedTwilioCredentials && smsSettings) {
-        accountSid = smsSettings.twilioAccountSid;
-        authToken = smsSettings.twilioAuthToken;
-        fromNumber = waSettings.twilioWhatsappNumber || smsSettings.twilioPhoneNumber;
-      } else {
-        accountSid = waSettings.twilioAccountSid;
-        authToken = waSettings.twilioAuthToken;
-        fromNumber = waSettings.twilioWhatsappNumber;
+      if (!waSettings?.integratedNumber) {
+        return res.status(400).json({ error: "WhatsApp Business number not configured" });
       }
       
-      if (!accountSid || !authToken || !fromNumber) {
-        return res.status(400).json({ error: "Twilio credentials not configured for WhatsApp" });
-      }
-      
-      // Send test WhatsApp via Twilio
-      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-      const authHeader = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
-      
-      const response = await fetch(twilioUrl, {
+      // Send test WhatsApp via MSG91
+      const response = await fetch("https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/", {
         method: "POST",
         headers: {
-          "Authorization": `Basic ${authHeader}`,
-          "Content-Type": "application/x-www-form-urlencoded",
+          "authkey": msg91.authKey,
+          "Content-Type": "application/json",
         },
-        body: new URLSearchParams({
-          From: `whatsapp:${fromNumber}`,
-          To: `whatsapp:${toPhone}`,
-          Body: "This is a test WhatsApp message from 19Dogs Store. Your WhatsApp integration is working correctly!",
+        body: JSON.stringify({
+          integrated_number: waSettings.integratedNumber,
+          content_type: "template",
+          payload: {
+            to: toPhone,
+            type: "template",
+            template: {
+              name: waSettings.templateName || "hello_world",
+              language: { code: "en" },
+              components: [{
+                type: "body",
+                parameters: [{
+                  type: "text",
+                  text: "19Dogs Store - Test Message",
+                }],
+              }],
+            },
+          },
         }),
       });
       
-      if (response.ok) {
+      const result = await response.json();
+      
+      if (response.ok && result.type !== "error") {
         res.json({ success: true, message: `Test WhatsApp sent to ${toPhone}` });
       } else {
-        const error = await response.json();
-        res.status(400).json({ error: error.message || "Failed to send WhatsApp message" });
+        res.status(400).json({ error: result.message || "Failed to send WhatsApp message" });
       }
     } catch (error) {
       console.error("Failed to send test WhatsApp:", error);
       res.status(500).json({ error: "Failed to send test WhatsApp message" });
+    }
+  });
+
+  // Test OTP (MSG91)
+  app.post("/api/admin/communication-settings/test-otp", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { toPhone } = req.body;
+      
+      if (!toPhone) {
+        return res.status(400).json({ error: "Phone number is required (with country code, e.g., 919876543210)" });
+      }
+      
+      // Get MSG91 settings
+      const setting = await storage.getSetting("communication_settings");
+      if (!setting?.value) {
+        return res.status(400).json({ error: "MSG91 not configured" });
+      }
+      
+      const settings = JSON.parse(setting.value);
+      const msg91 = settings.msg91;
+      const otpSettings = settings.otp;
+      
+      if (!msg91?.authKey) {
+        return res.status(400).json({ error: "MSG91 AuthKey not configured" });
+      }
+      
+      if (!otpSettings?.enabled) {
+        return res.status(400).json({ error: "OTP is disabled" });
+      }
+      
+      // Send test OTP via MSG91
+      const response = await fetch("https://control.msg91.com/api/v5/otp", {
+        method: "POST",
+        headers: {
+          "authkey": msg91.authKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          template_id: otpSettings.templateId || "",
+          mobile: toPhone,
+          otp_length: otpSettings.otpLength || 6,
+          otp_expiry: otpSettings.otpExpiry || 5,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.type !== "error") {
+        res.json({ success: true, message: `Test OTP sent to ${toPhone}` });
+      } else {
+        res.status(400).json({ error: result.message || "Failed to send OTP" });
+      }
+    } catch (error) {
+      console.error("Failed to send test OTP:", error);
+      res.status(500).json({ error: "Failed to send test OTP" });
     }
   });
 
