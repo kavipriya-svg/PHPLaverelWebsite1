@@ -24,6 +24,7 @@ import {
   stockNotifications,
   comboOffers,
   quickPages,
+  otpCodes,
   type User,
   type UpsertUser,
   type Category,
@@ -229,6 +230,14 @@ export interface IStorage {
   updateQuickPage(id: string, page: Partial<InsertQuickPage>): Promise<QuickPage | undefined>;
   deleteQuickPage(id: string): Promise<void>;
   getFooterQuickPages(): Promise<QuickPage[]>;
+
+  // OTP Codes
+  createOtpCode(otp: { email: string; phone?: string | null; code: string; purpose: string; expiresAt: Date }): Promise<any>;
+  getOtpCode(email: string, purpose: string): Promise<any | undefined>;
+  verifyOtpCode(email: string, code: string, purpose: string): Promise<boolean>;
+  incrementOtpAttempts(id: string): Promise<void>;
+  deleteOtpCodes(email: string, purpose: string): Promise<void>;
+  cleanupExpiredOtpCodes(): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -1649,6 +1658,86 @@ export class DatabaseStorage implements IStorage {
         eq(quickPages.showInFooter, true)
       ))
       .orderBy(asc(quickPages.position), asc(quickPages.title));
+  }
+
+  // OTP Codes
+  async createOtpCode(otp: { email: string; phone?: string | null; code: string; purpose: string; expiresAt: Date }): Promise<any> {
+    // Delete any existing OTP codes for this email and purpose
+    await this.deleteOtpCodes(otp.email, otp.purpose);
+    
+    const [created] = await db.insert(otpCodes).values({
+      email: otp.email.toLowerCase().trim(),
+      phone: otp.phone || null,
+      code: otp.code,
+      purpose: otp.purpose,
+      expiresAt: otp.expiresAt,
+      verified: false,
+      attempts: 0,
+    }).returning();
+    return created;
+  }
+
+  async getOtpCode(email: string, purpose: string): Promise<any | undefined> {
+    const [otp] = await db
+      .select()
+      .from(otpCodes)
+      .where(and(
+        eq(otpCodes.email, email.toLowerCase().trim()),
+        eq(otpCodes.purpose, purpose),
+        eq(otpCodes.verified, false),
+        gte(otpCodes.expiresAt, new Date())
+      ))
+      .orderBy(desc(otpCodes.createdAt))
+      .limit(1);
+    return otp;
+  }
+
+  async verifyOtpCode(email: string, code: string, purpose: string): Promise<boolean> {
+    const otp = await this.getOtpCode(email, purpose);
+    
+    if (!otp) {
+      return false;
+    }
+    
+    // Check max attempts (5)
+    if (otp.attempts >= 5) {
+      return false;
+    }
+    
+    if (otp.code !== code) {
+      await this.incrementOtpAttempts(otp.id);
+      return false;
+    }
+    
+    // Mark as verified
+    await db
+      .update(otpCodes)
+      .set({ verified: true })
+      .where(eq(otpCodes.id, otp.id));
+    
+    return true;
+  }
+
+  async incrementOtpAttempts(id: string): Promise<void> {
+    await db
+      .update(otpCodes)
+      .set({ attempts: sql`${otpCodes.attempts} + 1` })
+      .where(eq(otpCodes.id, id));
+  }
+
+  async deleteOtpCodes(email: string, purpose: string): Promise<void> {
+    await db
+      .delete(otpCodes)
+      .where(and(
+        eq(otpCodes.email, email.toLowerCase().trim()),
+        eq(otpCodes.purpose, purpose)
+      ));
+  }
+
+  async cleanupExpiredOtpCodes(): Promise<void> {
+    await db
+      .delete(otpCodes)
+      .where(lt(otpCodes.expiresAt, new Date()));
   }
 }
 
