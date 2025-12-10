@@ -859,3 +859,31 @@ export const insertComboOfferSchema = createInsertSchema(comboOffers).omit({
 
 export type InsertComboOffer = z.infer<typeof insertComboOfferSchema>;
 export type ComboOffer = typeof comboOffers.$inferSelect;
+
+// Quick Links / Dynamic Pages table
+export const quickPages = pgTable("quick_pages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  slug: varchar("slug").notNull().unique(),
+  content: text("content"), // Rich text HTML content
+  excerpt: text("excerpt"), // Short description for SEO
+  status: varchar("status").default("draft").notNull(), // draft, published
+  showInFooter: boolean("show_in_footer").default(true),
+  footerSection: varchar("footer_section").default("quick_links"), // quick_links, customer_service, about
+  position: integer("position").default(0),
+  metaTitle: varchar("meta_title"),
+  metaDescription: text("meta_description"),
+  metaKeywords: varchar("meta_keywords"),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertQuickPageSchema = createInsertSchema(quickPages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertQuickPage = z.infer<typeof insertQuickPageSchema>;
+export type QuickPage = typeof quickPages.$inferSelect;
