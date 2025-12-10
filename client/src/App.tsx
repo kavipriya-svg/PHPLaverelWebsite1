@@ -62,6 +62,7 @@ const AdminCategorySectionSettings = lazy(() => import("@/pages/admin/CategorySe
 const AdminBlogSettings = lazy(() => import("@/pages/admin/BlogSettings"));
 const AdminComboOffers = lazy(() => import("@/pages/admin/ComboOffers"));
 const AdminQuickPages = lazy(() => import("@/pages/admin/QuickPages"));
+const AdminCommunicationSettings = lazy(() => import("@/pages/admin/CommunicationSettings"));
 const QuickPage = lazy(() => import("@/pages/QuickPage"));
 
 function PageLoader() {
@@ -388,6 +389,9 @@ function Router() {
         <AdminLayout>
           <AdminQuickPages />
         </AdminLayout>
+      </Route>
+      <Route path="/admin/communication">
+        <AdminCommunicationSettings />
       </Route>
 
       {/* Public Quick Pages */}

@@ -25,6 +25,7 @@ import {
   BookOpen,
   Gift,
   Percent,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -61,7 +62,7 @@ const adminMenuItems = [
   { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
   { href: "/admin/combo-offers", icon: Gift, label: "Combo Offers" },
   { href: "/admin/users", icon: Users, label: "Users" },
-  { href: "/admin/email", icon: Mail, label: "Email" },
+  { href: "/admin/communication", icon: MessageSquare, label: "Communication" },
   { href: "/admin/seo", icon: Search, label: "SEO" },
   { href: "/admin/invoice", icon: FileText, label: "Invoice" },
   { href: "/admin/branding", icon: Paintbrush, label: "Branding" },
