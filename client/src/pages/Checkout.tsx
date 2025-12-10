@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CreditCard, Truck, Package, Tag, X, MapPin, Plus, Check, Loader2, FileText } from "lucide-react";
+import { CreditCard, Truck, Package, Tag, X, MapPin, Plus, Check, Loader2, FileText, Gift } from "lucide-react";
 
 interface AppliedCoupon {
   code: string;
@@ -40,7 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Address } from "@shared/schema";
+import type { Address, ComboOffer } from "@shared/schema";
 
 const addressSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -124,6 +124,65 @@ export default function Checkout() {
   });
 
   const isRazorpayEnabled = razorpayConfig?.enabled && razorpayConfig?.keyId;
+
+  // Fetch combo offers to calculate combo discounts
+  const { data: comboOffersData } = useQuery<{ offers: ComboOffer[] }>({
+    queryKey: ["/api/combo-offers"],
+  });
+
+  // Calculate combo discount based on cart items with comboOfferId
+  const comboDiscount = useMemo(() => {
+    if (!comboOffersData?.offers || cartItems.length === 0) return 0;
+    
+    // Group cart items by comboOfferId
+    const comboGroups: Record<string, typeof cartItems> = {};
+    cartItems.forEach(item => {
+      const comboId = item.comboOfferId;
+      if (comboId) {
+        if (!comboGroups[comboId]) {
+          comboGroups[comboId] = [];
+        }
+        comboGroups[comboId].push(item);
+      }
+    });
+    
+    let totalComboDiscount = 0;
+    
+    // For each combo group, check if all products are present and calculate discount
+    Object.entries(comboGroups).forEach(([comboId, items]) => {
+      const comboOffer = comboOffersData.offers.find(o => o.id === comboId);
+      if (!comboOffer || !comboOffer.productIds || !comboOffer.isActive) return;
+      
+      // Check dates if applicable
+      const now = new Date();
+      if (comboOffer.startDate && new Date(comboOffer.startDate) > now) return;
+      if (comboOffer.endDate && new Date(comboOffer.endDate) < now) return;
+      
+      // Check if all products from the combo are in this group
+      const cartProductIds = items.map(item => item.productId);
+      const allProductsPresent = comboOffer.productIds.every(pid => cartProductIds.includes(pid));
+      
+      if (allProductsPresent) {
+        // Calculate the number of complete combo sets based on minimum quantity
+        const comboSets = Math.min(
+          ...comboOffer.productIds.map(pid => {
+            const cartItem = items.find(i => i.productId === pid);
+            return cartItem?.quantity || 0;
+          })
+        );
+        
+        if (comboSets > 0) {
+          // Calculate discount per set: originalPrice - comboPrice
+          const originalPrice = parseFloat(comboOffer.originalPrice as string) || 0;
+          const comboPrice = parseFloat(comboOffer.comboPrice as string) || 0;
+          const discountPerSet = originalPrice - comboPrice;
+          totalComboDiscount += (discountPerSet * comboSets);
+        }
+      }
+    });
+    
+    return totalComboDiscount;
+  }, [cartItems, comboOffersData?.offers]);
 
   // Load applied coupon from localStorage
   useEffect(() => {
@@ -354,6 +413,7 @@ export default function Checkout() {
         shippingAddress,
         billingAddress,
         couponCode: appliedCoupon?.code,
+        comboDiscount: comboDiscount,
         items: cartItems.map(item => {
           const price = item.variant?.price || item.product.salePrice || item.product.price;
           const primaryImage = item.product.images?.find(img => img.isPrimary)?.url || item.product.images?.[0]?.url;
@@ -420,6 +480,7 @@ export default function Checkout() {
         body: JSON.stringify({
           currency: "INR",
           couponCode: appliedCoupon?.code,
+          comboDiscount: comboDiscount,
         }),
       });
 
@@ -598,9 +659,9 @@ export default function Checkout() {
   }
 
   const subtotal = cartTotal;
-  const discount = calculateDiscount();
+  const couponDiscount = calculateDiscount();
   const shipping = subtotal >= 500 ? 0 : 99;
-  const total = subtotal - discount + shipping;
+  const total = subtotal - couponDiscount - comboDiscount + shipping;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -1319,10 +1380,19 @@ export default function Checkout() {
                       <span className="text-muted-foreground">Subtotal</span>
                       <span>{formatCurrency(subtotal)}</span>
                     </div>
-                    {discount > 0 && (
+                    {comboDiscount > 0 && (
+                      <div className="flex justify-between text-sm text-purple-600 dark:text-purple-400">
+                        <span className="flex items-center gap-1">
+                          <Gift className="h-3 w-3" />
+                          Combo Discount
+                        </span>
+                        <span data-testid="text-checkout-combo-discount">-{formatCurrency(comboDiscount)}</span>
+                      </div>
+                    )}
+                    {couponDiscount > 0 && (
                       <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span>Discount</span>
-                        <span data-testid="text-checkout-discount">-{formatCurrency(discount)}</span>
+                        <span>Coupon Discount</span>
+                        <span data-testid="text-checkout-discount">-{formatCurrency(couponDiscount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
