@@ -3011,6 +3011,239 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Communication Settings API (Email, SMS, WhatsApp)
+  app.get("/api/admin/communication-settings", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const setting = await storage.getSetting("communication_settings");
+      if (setting?.value) {
+        const settings = JSON.parse(setting.value);
+        // Mask sensitive credentials when returning
+        const maskedSettings = {
+          email: {
+            ...settings.email,
+            resendApiKey: settings.email?.resendApiKey ? "••••••••" : "",
+            smtpPass: settings.email?.smtpPass ? "••••••••" : "",
+          },
+          sms: {
+            ...settings.sms,
+            twilioAuthToken: settings.sms?.twilioAuthToken ? "••••••••" : "",
+          },
+          whatsapp: {
+            ...settings.whatsapp,
+            twilioAuthToken: settings.whatsapp?.twilioAuthToken ? "••••••••" : "",
+            metaAccessToken: settings.whatsapp?.metaAccessToken ? "••••••••" : "",
+          },
+        };
+        res.json({ settings: maskedSettings, rawSettings: settings });
+      } else {
+        res.json({ settings: null, rawSettings: null });
+      }
+    } catch (error) {
+      console.error("Failed to fetch communication settings:", error);
+      res.status(500).json({ error: "Failed to fetch communication settings" });
+    }
+  });
+
+  app.post("/api/admin/communication-settings", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email, sms, whatsapp } = req.body;
+      
+      // Get existing settings to preserve credentials if masked
+      const existing = await storage.getSetting("communication_settings");
+      let existingSettings: any = {};
+      if (existing?.value) {
+        existingSettings = JSON.parse(existing.value);
+      }
+      
+      // Merge new settings, preserving masked credentials
+      const mergedSettings = {
+        email: {
+          ...email,
+          resendApiKey: email?.resendApiKey === "••••••••" ? existingSettings.email?.resendApiKey : email?.resendApiKey,
+          smtpPass: email?.smtpPass === "••••••••" ? existingSettings.email?.smtpPass : email?.smtpPass,
+        },
+        sms: {
+          ...sms,
+          twilioAuthToken: sms?.twilioAuthToken === "••••••••" ? existingSettings.sms?.twilioAuthToken : sms?.twilioAuthToken,
+        },
+        whatsapp: {
+          ...whatsapp,
+          twilioAuthToken: whatsapp?.twilioAuthToken === "••••••••" ? existingSettings.whatsapp?.twilioAuthToken : whatsapp?.twilioAuthToken,
+          metaAccessToken: whatsapp?.metaAccessToken === "••••••••" ? existingSettings.whatsapp?.metaAccessToken : whatsapp?.metaAccessToken,
+        },
+      };
+      
+      await storage.upsertSettings({
+        communication_settings: JSON.stringify(mergedSettings),
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to save communication settings:", error);
+      res.status(500).json({ error: "Failed to save communication settings" });
+    }
+  });
+
+  // Test Email
+  app.post("/api/admin/communication-settings/test-email", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { toEmail } = req.body;
+      
+      if (!toEmail) {
+        return res.status(400).json({ error: "Email address is required" });
+      }
+      
+      if (!emailService.isConfigured()) {
+        return res.status(400).json({ error: "Email service not configured. Set RESEND_API_KEY environment variable." });
+      }
+      
+      const success = await emailService.sendOrderConfirmation({
+        orderId: "test-123",
+        orderNumber: "TEST-EMAIL-001",
+        customerName: "Test User",
+        customerEmail: toEmail,
+        items: [{ title: "Test Product", quantity: 1, price: "99.00" }],
+        subtotal: "99.00",
+        tax: "0.00",
+        shipping: "0.00",
+        total: "99.00",
+        paymentMethod: "test",
+      });
+      
+      if (success) {
+        res.json({ success: true, message: `Test email sent to ${toEmail}` });
+      } else {
+        res.status(500).json({ error: "Failed to send test email" });
+      }
+    } catch (error) {
+      console.error("Failed to send test email:", error);
+      res.status(500).json({ error: "Failed to send test email" });
+    }
+  });
+
+  // Test SMS (Twilio)
+  app.post("/api/admin/communication-settings/test-sms", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { toPhone } = req.body;
+      
+      if (!toPhone) {
+        return res.status(400).json({ error: "Phone number is required" });
+      }
+      
+      // Get SMS settings
+      const setting = await storage.getSetting("communication_settings");
+      if (!setting?.value) {
+        return res.status(400).json({ error: "SMS not configured" });
+      }
+      
+      const settings = JSON.parse(setting.value);
+      const smsSettings = settings.sms;
+      
+      if (!smsSettings?.enabled) {
+        return res.status(400).json({ error: "SMS is disabled" });
+      }
+      
+      if (!smsSettings?.twilioAccountSid || !smsSettings?.twilioAuthToken || !smsSettings?.twilioPhoneNumber) {
+        return res.status(400).json({ error: "Twilio credentials not configured" });
+      }
+      
+      // Send test SMS via Twilio
+      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${smsSettings.twilioAccountSid}/Messages.json`;
+      const authHeader = Buffer.from(`${smsSettings.twilioAccountSid}:${smsSettings.twilioAuthToken}`).toString("base64");
+      
+      const response = await fetch(twilioUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Basic ${authHeader}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          From: smsSettings.twilioPhoneNumber,
+          To: toPhone,
+          Body: "This is a test SMS from 19Dogs Store. Your SMS integration is working correctly!",
+        }),
+      });
+      
+      if (response.ok) {
+        res.json({ success: true, message: `Test SMS sent to ${toPhone}` });
+      } else {
+        const error = await response.json();
+        res.status(400).json({ error: error.message || "Failed to send SMS" });
+      }
+    } catch (error) {
+      console.error("Failed to send test SMS:", error);
+      res.status(500).json({ error: "Failed to send test SMS" });
+    }
+  });
+
+  // Test WhatsApp (Twilio)
+  app.post("/api/admin/communication-settings/test-whatsapp", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { toPhone } = req.body;
+      
+      if (!toPhone) {
+        return res.status(400).json({ error: "Phone number is required (with country code, e.g., +91...)" });
+      }
+      
+      // Get WhatsApp settings
+      const setting = await storage.getSetting("communication_settings");
+      if (!setting?.value) {
+        return res.status(400).json({ error: "WhatsApp not configured" });
+      }
+      
+      const settings = JSON.parse(setting.value);
+      const waSettings = settings.whatsapp;
+      const smsSettings = settings.sms;
+      
+      if (!waSettings?.enabled) {
+        return res.status(400).json({ error: "WhatsApp is disabled" });
+      }
+      
+      // Use shared SMS credentials or WhatsApp-specific credentials
+      let accountSid, authToken, fromNumber;
+      if (waSettings.useSharedTwilioCredentials && smsSettings) {
+        accountSid = smsSettings.twilioAccountSid;
+        authToken = smsSettings.twilioAuthToken;
+        fromNumber = waSettings.twilioWhatsappNumber || smsSettings.twilioPhoneNumber;
+      } else {
+        accountSid = waSettings.twilioAccountSid;
+        authToken = waSettings.twilioAuthToken;
+        fromNumber = waSettings.twilioWhatsappNumber;
+      }
+      
+      if (!accountSid || !authToken || !fromNumber) {
+        return res.status(400).json({ error: "Twilio credentials not configured for WhatsApp" });
+      }
+      
+      // Send test WhatsApp via Twilio
+      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+      const authHeader = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+      
+      const response = await fetch(twilioUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Basic ${authHeader}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          From: `whatsapp:${fromNumber}`,
+          To: `whatsapp:${toPhone}`,
+          Body: "This is a test WhatsApp message from 19Dogs Store. Your WhatsApp integration is working correctly!",
+        }),
+      });
+      
+      if (response.ok) {
+        res.json({ success: true, message: `Test WhatsApp sent to ${toPhone}` });
+      } else {
+        const error = await response.json();
+        res.status(400).json({ error: error.message || "Failed to send WhatsApp message" });
+      }
+    } catch (error) {
+      console.error("Failed to send test WhatsApp:", error);
+      res.status(500).json({ error: "Failed to send test WhatsApp message" });
+    }
+  });
+
   app.post("/api/admin/inventory/check-low-stock", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const threshold = parseInt(req.body.threshold) || 10;
