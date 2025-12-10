@@ -391,7 +391,9 @@ function Router() {
         </AdminLayout>
       </Route>
       <Route path="/admin/communication">
-        <AdminCommunicationSettings />
+        <AdminLayout>
+          <AdminCommunicationSettings />
+        </AdminLayout>
       </Route>
 
       {/* Public Quick Pages */}
