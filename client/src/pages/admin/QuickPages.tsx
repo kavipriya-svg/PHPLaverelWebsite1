@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Plus,
@@ -292,8 +292,22 @@ function PageDialog({ open, onOpenChange, page }: PageDialogProps) {
   const [metaKeywords, setMetaKeywords] = useState("");
   const { toast } = useToast();
 
+  const resetForm = () => {
+    setTitle("");
+    setSlug("");
+    setContent("");
+    setExcerpt("");
+    setStatus("draft");
+    setShowInFooter(true);
+    setFooterSection("quick_links");
+    setPosition(0);
+    setMetaTitle("");
+    setMetaDescription("");
+    setMetaKeywords("");
+  };
+
   // Load page data when editing
-  useState(() => {
+  useEffect(() => {
     if (page) {
       setTitle(page.title || "");
       setSlug(page.slug || "");
@@ -309,21 +323,7 @@ function PageDialog({ open, onOpenChange, page }: PageDialogProps) {
     } else {
       resetForm();
     }
-  });
-
-  const resetForm = () => {
-    setTitle("");
-    setSlug("");
-    setContent("");
-    setExcerpt("");
-    setStatus("draft");
-    setShowInFooter(true);
-    setFooterSection("quick_links");
-    setPosition(0);
-    setMetaTitle("");
-    setMetaDescription("");
-    setMetaKeywords("");
-  };
+  }, [page]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
