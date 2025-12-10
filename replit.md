@@ -170,11 +170,17 @@ Preferred communication style: Simple, everyday language.
 - Currently uses local storage for product images
 - Designed with abstraction for future S3 migration
 
-**Email Service:**
-- Resend for transactional emails (order confirmations, status updates, low stock alerts)
-- Configurable via RESEND_API_KEY environment variable
-- HTML email templates with responsive design
-- Admin panel for testing emails and checking low stock
+**Communication Service (MSG91):**
+- Unified MSG91 integration for Email, SMS, WhatsApp, and OTP
+- Admin panel at /admin/communication for plug-and-play configuration
+- Single AuthKey for all channels (stored in database settings)
+- Features:
+  - Email: Template-based transactional emails (order confirmations, status updates)
+  - SMS: DLT-compliant SMS for India (template ID required)
+  - WhatsApp: WhatsApp Business API for notifications
+  - OTP: One-time password verification with configurable length and expiry
+- Each channel can be independently enabled/disabled
+- Test functionality for each channel in admin panel
 
 **Notable Architectural Decisions:**
 
