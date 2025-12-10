@@ -1659,7 +1659,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const userInfo = getUserInfo(req);
       const sessionId = (req as any).guestSessionId || req.cookies?.sessionId;
-      const { productId, quantity = 1, variantId } = req.body;
+      const { productId, quantity = 1, variantId, comboOfferId } = req.body;
       
       const item = await storage.addToCart({
         userId: userInfo?.id,
@@ -1667,6 +1667,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         productId,
         quantity,
         variantId,
+        comboOfferId,
       });
       res.json({ item });
     } catch (error) {
