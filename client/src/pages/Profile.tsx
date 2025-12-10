@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Camera, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,6 +28,9 @@ export default function Profile() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -47,6 +50,9 @@ export default function Profile() {
         email: user.email || "",
         phone: user.phone || "",
       });
+      if (user.profileImageUrl) {
+        setPreviewUrl(user.profileImageUrl);
+      }
     }
   }, [user, form]);
 
@@ -58,13 +64,13 @@ export default function Profile() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        setLocation("/login");
       }, 500);
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [isAuthenticated, isLoading, toast, setLocation]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: ProfileFormData) => {
+    mutationFn: async (data: ProfileFormData & { profileImageUrl?: string }) => {
       const response = await apiRequest("PUT", "/api/user/profile", data);
       return response.json();
     },
@@ -83,6 +89,112 @@ export default function Profile() {
       });
     },
   });
+
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file (JPG, PNG, GIF, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+
+    try {
+      const localPreview = URL.createObjectURL(file);
+      setPreviewUrl(localPreview);
+
+      const urlResponse = await apiRequest("POST", "/api/user/profile-photo-url", {});
+      const { presignedUrl, objectPath } = await urlResponse.json();
+
+      const uploadResponse = await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      const imageUrl = `/api/objects/${objectPath}`;
+
+      const profileResponse = await apiRequest("PUT", "/api/user/profile", {
+        ...form.getValues(),
+        profileImageUrl: imageUrl,
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error("Failed to update profile with new photo");
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      toast({
+        title: "Photo Updated",
+        description: "Your profile photo has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Photo upload error:", error);
+      setPreviewUrl(user?.profileImageUrl || null);
+      toast({
+        title: "Upload Failed",
+        description: "Could not upload your photo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingPhoto(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setIsUploadingPhoto(true);
+    try {
+      const response = await apiRequest("PUT", "/api/user/profile", {
+        ...form.getValues(),
+        profileImageUrl: null,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to remove photo");
+      }
+
+      setPreviewUrl(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      toast({
+        title: "Photo Removed",
+        description: "Your profile photo has been removed.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not remove photo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   const onSubmit = (data: ProfileFormData) => {
     updateProfileMutation.mutate(data);
@@ -112,20 +224,75 @@ export default function Profile() {
           </Button>
         </Link>
 
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16" data-testid="avatar-profile">
-                <AvatarImage src={user?.profileImageUrl || undefined} />
-                <AvatarFallback className="text-lg">
-                  {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <CardTitle data-testid="text-profile-title">Edit Profile</CardTitle>
-                <CardDescription data-testid="text-profile-description">Update your personal information</CardDescription>
+            <CardTitle data-testid="text-profile-photo-title">Profile Photo</CardTitle>
+            <CardDescription>Upload a photo to personalize your account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="relative">
+                <Avatar className="h-24 w-24" data-testid="avatar-profile-large">
+                  <AvatarImage src={previewUrl || undefined} />
+                  <AvatarFallback className="text-2xl">
+                    {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                {isUploadingPhoto && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                    <Loader2 className="h-6 w-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handlePhotoUpload}
+                  accept="image/*"
+                  className="hidden"
+                  data-testid="input-profile-photo"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingPhoto}
+                  data-testid="button-upload-photo"
+                >
+                  {isUploadingPhoto ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4 mr-2" />
+                  )}
+                  {previewUrl ? "Change Photo" : "Upload Photo"}
+                </Button>
+                {previewUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemovePhoto}
+                    disabled={isUploadingPhoto}
+                    className="text-destructive hover:text-destructive"
+                    data-testid="button-remove-photo"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Remove Photo
+                  </Button>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG or GIF. Max 5MB.
+                </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle data-testid="text-profile-title">Personal Information</CardTitle>
+            <CardDescription data-testid="text-profile-description">Update your personal details</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -178,6 +345,7 @@ export default function Profile() {
                           type="email"
                           placeholder="Enter your email"
                           data-testid="input-email"
+                          disabled
                           {...field}
                         />
                       </FormControl>
@@ -195,7 +363,7 @@ export default function Profile() {
                       <FormControl>
                         <Input
                           type="tel"
-                          placeholder="Enter your phone number"
+                          placeholder="Enter your phone number (e.g., +91 98765 43210)"
                           data-testid="input-phone"
                           {...field}
                         />
