@@ -9,6 +9,14 @@ interface FooterLink {
   url: string;
 }
 
+interface QuickPageLink {
+  id: string;
+  title: string;
+  slug: string;
+  footerSection: string | null;
+  position: number | null;
+}
+
 interface FooterSettings {
   storeName: string;
   storeDescription: string;
@@ -80,7 +88,18 @@ export function Footer() {
     queryKey: ["/api/settings/footer"],
   });
 
+  // Fetch dynamic quick pages from database
+  const { data: quickPagesData } = useQuery<{ pages: QuickPageLink[] }>({
+    queryKey: ["/api/quick-pages/footer"],
+  });
+
   const settings = data?.settings ? { ...defaultSettings, ...data.settings } : defaultSettings;
+  
+  // Group quick pages by footer section
+  const dynamicQuickLinks = quickPagesData?.pages || [];
+  const quickLinksSection = dynamicQuickLinks.filter(p => p.footerSection === "quick_links");
+  const customerServiceSection = dynamicQuickLinks.filter(p => p.footerSection === "customer_service");
+  const aboutSection = dynamicQuickLinks.filter(p => p.footerSection === "about");
 
   const hasSocialLinks = settings.socialLinks.facebook || 
     settings.socialLinks.twitter || 
@@ -165,18 +184,29 @@ export function Footer() {
             )}
           </div>
 
-          {settings.showQuickLinks && settings.quickLinks.length > 0 && (
+          {settings.showQuickLinks && (settings.quickLinks.length > 0 || quickLinksSection.length > 0) && (
             <div>
               <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-sm">
                 {settings.quickLinks.map((link, index) => (
-                  <li key={index}>
+                  <li key={`static-${index}`}>
                     <Link 
                       href={link.url} 
                       className="text-muted-foreground hover:text-foreground"
                       data-testid={`link-quick-${index}`}
                     >
                       {link.label}
+                    </Link>
+                  </li>
+                ))}
+                {quickLinksSection.map((page) => (
+                  <li key={`dynamic-${page.id}`}>
+                    <Link 
+                      href={`/pages/${page.slug}`} 
+                      className="text-muted-foreground hover:text-foreground"
+                      data-testid={`link-page-${page.slug}`}
+                    >
+                      {page.title}
                     </Link>
                   </li>
                 ))}
@@ -211,6 +241,36 @@ export function Footer() {
                     />
                   </li>
                 )}
+                {customerServiceSection.map((page) => (
+                  <li key={page.id}>
+                    <Link 
+                      href={`/pages/${page.slug}`} 
+                      className="text-muted-foreground hover:text-foreground"
+                      data-testid={`link-service-${page.slug}`}
+                    >
+                      {page.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {aboutSection.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-4">About Us</h3>
+              <ul className="space-y-2 text-sm">
+                {aboutSection.map((page) => (
+                  <li key={page.id}>
+                    <Link 
+                      href={`/pages/${page.slug}`} 
+                      className="text-muted-foreground hover:text-foreground"
+                      data-testid={`link-about-${page.slug}`}
+                    >
+                      {page.title}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           )}
