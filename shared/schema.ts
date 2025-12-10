@@ -831,21 +831,19 @@ export const defaultBlogSection: BlogSection = {
   posts: [],
 };
 
-// Communication Settings Schema (Email, SMS, WhatsApp)
+// Communication Settings Schema (MSG91 - Email, SMS, WhatsApp, OTP)
+// MSG91 Global Settings (shared across all channels)
+export const msg91SettingsSchema = z.object({
+  authKey: z.string().optional(),
+  senderId: z.string().optional(), // 6-char Sender ID for SMS
+});
+
 export const emailSettingsSchema = z.object({
   enabled: z.boolean().default(false),
-  provider: z.enum(["resend", "smtp"]).default("resend"),
+  templateId: z.string().optional(), // MSG91 email template ID
   fromEmail: z.string().email().optional().or(z.literal("")),
   fromName: z.string().optional(),
-  replyTo: z.string().email().optional().or(z.literal("")),
-  // Resend specific
-  resendApiKey: z.string().optional(),
-  // SMTP specific (for future)
-  smtpHost: z.string().optional(),
-  smtpPort: z.number().optional(),
-  smtpUser: z.string().optional(),
-  smtpPass: z.string().optional(),
-  smtpSecure: z.boolean().default(true),
+  domain: z.string().optional(), // Verified domain in MSG91
   // Notification toggles
   orderConfirmation: z.boolean().default(true),
   orderStatusUpdate: z.boolean().default(true),
@@ -858,11 +856,7 @@ export const emailSettingsSchema = z.object({
 
 export const smsSettingsSchema = z.object({
   enabled: z.boolean().default(false),
-  provider: z.enum(["twilio", "custom"]).default("twilio"),
-  // Twilio specific
-  twilioAccountSid: z.string().optional(),
-  twilioAuthToken: z.string().optional(),
-  twilioPhoneNumber: z.string().optional(),
+  templateId: z.string().optional(), // MSG91 SMS template ID (DLT registered)
   // Notification toggles
   orderConfirmation: z.boolean().default(true),
   orderStatusUpdate: z.boolean().default(true),
@@ -872,16 +866,8 @@ export const smsSettingsSchema = z.object({
 
 export const whatsappSettingsSchema = z.object({
   enabled: z.boolean().default(false),
-  provider: z.enum(["twilio", "meta", "custom"]).default("twilio"),
-  // Twilio WhatsApp specific (uses same credentials as SMS)
-  useSharedTwilioCredentials: z.boolean().default(true),
-  twilioAccountSid: z.string().optional(),
-  twilioAuthToken: z.string().optional(),
-  twilioWhatsappNumber: z.string().optional(), // WhatsApp-enabled number
-  // Meta Business API (for future)
-  metaAccessToken: z.string().optional(),
-  metaPhoneNumberId: z.string().optional(),
-  metaBusinessAccountId: z.string().optional(),
+  integratedNumber: z.string().optional(), // MSG91 WhatsApp Business number
+  templateName: z.string().optional(), // WhatsApp template name
   // Notification toggles
   orderConfirmation: z.boolean().default(true),
   orderStatusUpdate: z.boolean().default(true),
@@ -889,30 +875,40 @@ export const whatsappSettingsSchema = z.object({
   promotionalMessages: z.boolean().default(false),
 });
 
+export const otpSettingsSchema = z.object({
+  enabled: z.boolean().default(false),
+  templateId: z.string().optional(), // MSG91 OTP template ID
+  otpLength: z.number().min(4).max(8).default(6),
+  otpExpiry: z.number().min(1).max(30).default(5), // Minutes
+  emailFallback: z.boolean().default(true),
+});
+
 export const communicationSettingsSchema = z.object({
+  msg91: msg91SettingsSchema.default({}),
   email: emailSettingsSchema.default({}),
   sms: smsSettingsSchema.default({}),
   whatsapp: whatsappSettingsSchema.default({}),
+  otp: otpSettingsSchema.default({}),
 });
 
+export type Msg91Settings = z.infer<typeof msg91SettingsSchema>;
 export type EmailSettings = z.infer<typeof emailSettingsSchema>;
 export type SmsSettings = z.infer<typeof smsSettingsSchema>;
 export type WhatsappSettings = z.infer<typeof whatsappSettingsSchema>;
+export type OtpSettings = z.infer<typeof otpSettingsSchema>;
 export type CommunicationSettings = z.infer<typeof communicationSettingsSchema>;
 
 export const defaultCommunicationSettings: CommunicationSettings = {
+  msg91: {
+    authKey: "",
+    senderId: "",
+  },
   email: {
     enabled: false,
-    provider: "resend",
+    templateId: "",
     fromEmail: "",
     fromName: "",
-    replyTo: "",
-    resendApiKey: "",
-    smtpHost: "",
-    smtpPort: 587,
-    smtpUser: "",
-    smtpPass: "",
-    smtpSecure: true,
+    domain: "",
     orderConfirmation: true,
     orderStatusUpdate: true,
     shippingUpdate: true,
@@ -923,10 +919,7 @@ export const defaultCommunicationSettings: CommunicationSettings = {
   },
   sms: {
     enabled: false,
-    provider: "twilio",
-    twilioAccountSid: "",
-    twilioAuthToken: "",
-    twilioPhoneNumber: "",
+    templateId: "",
     orderConfirmation: true,
     orderStatusUpdate: true,
     shippingUpdate: true,
@@ -934,18 +927,19 @@ export const defaultCommunicationSettings: CommunicationSettings = {
   },
   whatsapp: {
     enabled: false,
-    provider: "twilio",
-    useSharedTwilioCredentials: true,
-    twilioAccountSid: "",
-    twilioAuthToken: "",
-    twilioWhatsappNumber: "",
-    metaAccessToken: "",
-    metaPhoneNumberId: "",
-    metaBusinessAccountId: "",
+    integratedNumber: "",
+    templateName: "",
     orderConfirmation: true,
     orderStatusUpdate: true,
     shippingUpdate: true,
     promotionalMessages: false,
+  },
+  otp: {
+    enabled: false,
+    templateId: "",
+    otpLength: 6,
+    otpExpiry: 5,
+    emailFallback: true,
   },
 };
 
