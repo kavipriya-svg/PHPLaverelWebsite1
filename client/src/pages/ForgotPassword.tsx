@@ -22,7 +22,7 @@ const defaultBranding: BrandingSettings = {
   showStoreName: true,
 };
 
-type ResetStep = 'email' | 'otp' | 'newPassword' | 'success';
+type ResetStep = 'email' | 'resetForm' | 'success';
 
 export default function ForgotPassword() {
   const [, setLocation] = useLocation();
@@ -58,7 +58,7 @@ export default function ForgotPassword() {
     },
     onSuccess: (data) => {
       if (data.success) {
-        setStep('otp');
+        setStep('resetForm');
         setOtpExpiresIn(data.expiresIn || 300);
         if (data.devOtp) {
           setDevOtp(data.devOtp);
@@ -80,31 +80,7 @@ export default function ForgotPassword() {
     },
   });
 
-  // Verify OTP
-  const verifyOtpMutation = useMutation({
-    mutationFn: async (data: { email: string; code: string; purpose: string }) => {
-      const response = await apiRequest("POST", "/api/auth/verify-otp", data);
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.success) {
-        setStep('newPassword');
-        toast({
-          title: "Code Verified",
-          description: "Now enter your new password.",
-        });
-      }
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Invalid Code",
-        description: error.message || "The code is invalid or has expired.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Reset password
+  // Reset password (includes OTP verification)
   const resetPasswordMutation = useMutation({
     mutationFn: async (data: { email: string; otpCode: string; newPassword: string }) => {
       const response = await apiRequest("POST", "/api/auth/reset-password", data);
@@ -151,7 +127,7 @@ export default function ForgotPassword() {
     sendOtpMutation.mutate({ email });
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleResetPassword = (e: React.FormEvent) => {
     e.preventDefault();
     if (otpCode.length !== 6) {
       toast({
@@ -161,11 +137,6 @@ export default function ForgotPassword() {
       });
       return;
     }
-    verifyOtpMutation.mutate({ email, code: otpCode, purpose: 'forgot_password' });
-  };
-
-  const handleResetPassword = (e: React.FormEvent) => {
-    e.preventDefault();
     if (!allRequirementsMet) {
       toast({
         title: "Password Too Weak",
@@ -222,8 +193,7 @@ export default function ForgotPassword() {
             </h1>
             <p className="text-muted-foreground mt-2">
               {step === 'email' && "Enter your email to receive a reset code"}
-              {step === 'otp' && "Enter the verification code sent to your email"}
-              {step === 'newPassword' && "Create your new password"}
+              {step === 'resetForm' && "Enter the code and your new password"}
               {step === 'success' && "Your password has been updated"}
             </p>
           </div>
@@ -286,190 +256,127 @@ export default function ForgotPassword() {
             </Card>
           )}
 
-          {step === 'otp' && (
-            <Card className="mb-6">
-              <CardHeader className="text-center">
-                <CardTitle className="flex items-center justify-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Enter Reset Code
-                </CardTitle>
-                <CardDescription>
-                  We've sent a 6-digit code to <strong>{email}</strong>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleVerifyOtp} className="space-y-6">
-                  <div className="flex flex-col items-center space-y-4">
-                    <InputOTP
-                      maxLength={6}
-                      value={otpCode}
-                      onChange={(value) => setOtpCode(value)}
-                      disabled={verifyOtpMutation.isPending}
-                      data-testid="input-otp"
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-
-                    {devOtp && (
-                      <div className="text-xs text-muted-foreground bg-muted p-2 rounded-md">
-                        Dev mode: <code className="font-mono font-bold">{devOtp}</code>
-                      </div>
-                    )}
-
-                    {otpExpiresIn > 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        Code expires in <span className="font-mono font-medium">{formatTime(otpExpiresIn)}</span>
-                      </p>
-                    )}
-
-                    {otpExpiresIn === 0 && (
-                      <p className="text-sm text-destructive">Code has expired</p>
-                    )}
-                  </div>
-
-                  <Button 
-                    type="submit"
-                    size="lg" 
-                    className="w-full"
-                    disabled={verifyOtpMutation.isPending || otpCode.length !== 6}
-                    data-testid="button-verify-code"
-                  >
-                    {verifyOtpMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Verifying...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="w-5 h-5 mr-2" />
-                        Verify Code
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setStep('email');
-                        setOtpCode("");
-                        setDevOtp(null);
-                      }}
-                      disabled={verifyOtpMutation.isPending}
-                      data-testid="button-back"
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-1" />
-                      Back
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleResendOtp}
-                      disabled={sendOtpMutation.isPending || verifyOtpMutation.isPending}
-                      data-testid="button-resend-otp"
-                    >
-                      {sendOtpMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                      ) : (
-                        <RefreshCw className="w-4 h-4 mr-1" />
-                      )}
-                      Resend Code
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {step === 'newPassword' && (
+          {step === 'resetForm' && (
             <Card className="mb-6">
               <CardHeader className="text-center">
                 <CardTitle className="flex items-center justify-center gap-2">
                   <KeyRound className="w-5 h-5" />
-                  Create New Password
+                  Reset Your Password
                 </CardTitle>
                 <CardDescription>
-                  Enter a strong new password for your account
+                  Enter the code sent to <strong>{email}</strong> and your new password
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleResetPassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <div className="relative">
+                <form onSubmit={handleResetPassword} className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Verification Code</Label>
+                      <div className="flex flex-col items-center space-y-2">
+                        <InputOTP
+                          maxLength={6}
+                          value={otpCode}
+                          onChange={(value) => setOtpCode(value)}
+                          disabled={resetPasswordMutation.isPending}
+                          data-testid="input-otp"
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+
+                        {devOtp && (
+                          <div className="text-xs text-muted-foreground bg-muted p-2 rounded-md">
+                            Dev mode: <code className="font-mono font-bold">{devOtp}</code>
+                          </div>
+                        )}
+
+                        {otpExpiresIn > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            Code expires in <span className="font-mono font-medium">{formatTime(otpExpiresIn)}</span>
+                          </p>
+                        )}
+
+                        {otpExpiresIn === 0 && (
+                          <p className="text-sm text-destructive">Code has expired</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="newPassword"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Create a strong password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          disabled={resetPasswordMutation.isPending}
+                          required
+                          data-testid="input-new-password"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                          data-testid="button-toggle-password"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                      {newPassword.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {passwordRequirements.map((req, index) => (
+                            <div 
+                              key={index} 
+                              className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600' : 'text-muted-foreground'}`}
+                            >
+                              <Check className={`h-3 w-3 ${req.met ? 'opacity-100' : 'opacity-30'}`} />
+                              {req.label}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
                       <Input
-                        id="newPassword"
+                        id="confirmPassword"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Create a strong password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Re-enter your password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         disabled={resetPasswordMutation.isPending}
                         required
-                        data-testid="input-new-password"
+                        data-testid="input-confirm-password"
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                        data-testid="button-toggle-password"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
+                      {confirmPassword.length > 0 && (
+                        <div className={`flex items-center gap-2 text-xs ${passwordsMatch ? 'text-green-600' : 'text-destructive'}`}>
+                          <Check className={`h-3 w-3 ${passwordsMatch ? 'opacity-100' : 'opacity-30'}`} />
+                          {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+                        </div>
+                      )}
                     </div>
-                    {newPassword.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {passwordRequirements.map((req, index) => (
-                          <div 
-                            key={index} 
-                            className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600' : 'text-muted-foreground'}`}
-                          >
-                            <Check className={`h-3 w-3 ${req.met ? 'opacity-100' : 'opacity-30'}`} />
-                            {req.label}
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Re-enter your password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      disabled={resetPasswordMutation.isPending}
-                      required
-                      data-testid="input-confirm-password"
-                    />
-                    {confirmPassword.length > 0 && (
-                      <div className={`flex items-center gap-2 text-xs ${passwordsMatch ? 'text-green-600' : 'text-destructive'}`}>
-                        <Check className={`h-3 w-3 ${passwordsMatch ? 'opacity-100' : 'opacity-30'}`} />
-                        {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
-                      </div>
-                    )}
-                  </div>
+
                   <Button 
                     type="submit"
                     size="lg" 
                     className="w-full"
-                    disabled={resetPasswordMutation.isPending || !allRequirementsMet || !passwordsMatch}
+                    disabled={resetPasswordMutation.isPending || otpCode.length !== 6 || !allRequirementsMet || !passwordsMatch}
                     data-testid="button-reset-password"
                   >
                     {resetPasswordMutation.isPending ? (
@@ -484,6 +391,41 @@ export default function ForgotPassword() {
                       </>
                     )}
                   </Button>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setStep('email');
+                        setOtpCode("");
+                        setNewPassword("");
+                        setConfirmPassword("");
+                        setDevOtp(null);
+                      }}
+                      disabled={resetPasswordMutation.isPending}
+                      data-testid="button-back"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-1" />
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResendOtp}
+                      disabled={sendOtpMutation.isPending || resetPasswordMutation.isPending}
+                      data-testid="button-resend-otp"
+                    >
+                      {sendOtpMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4 mr-1" />
+                      )}
+                      Resend Code
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
