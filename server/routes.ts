@@ -418,6 +418,440 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // Generate OTP code
+  function generateOtpCode(length: number = 6): string {
+    const digits = '0123456789';
+    let otp = '';
+    for (let i = 0; i < length; i++) {
+      otp += digits[Math.floor(Math.random() * digits.length)];
+    }
+    return otp;
+  }
+
+  // Send OTP for email verification (signup)
+  app.post("/api/auth/send-otp", async (req, res) => {
+    try {
+      const { email, purpose } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+      
+      const validPurposes = ['signup', 'forgot_password', 'email_change'];
+      const otpPurpose = purpose || 'signup';
+      
+      if (!validPurposes.includes(otpPurpose)) {
+        return res.status(400).json({ error: "Invalid purpose" });
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+      
+      // For signup, check if email already exists
+      if (otpPurpose === 'signup') {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser) {
+          return res.status(409).json({ error: "An account with this email already exists" });
+        }
+      }
+      
+      // For forgot password, check if email exists
+      if (otpPurpose === 'forgot_password') {
+        const existingUser = await storage.getUserByEmail(email);
+        if (!existingUser) {
+          // Don't reveal that the email doesn't exist (security)
+          return res.json({ success: true, message: "If an account exists with this email, you will receive an OTP" });
+        }
+      }
+      
+      // Get communication settings
+      const settingsData = await storage.getSetting("communication_settings");
+      let commSettings = null;
+      try {
+        commSettings = settingsData?.value ? JSON.parse(settingsData.value) : null;
+      } catch (e) {
+        console.error("Failed to parse communication settings:", e);
+      }
+      
+      // Get OTP settings
+      const otpSettings = commSettings?.otp || {};
+      const otpLength = otpSettings.otpLength || 6;
+      const otpExpiry = otpSettings.otpExpiry || 5; // minutes
+      
+      // Generate OTP
+      const code = generateOtpCode(otpLength);
+      const expiresAt = new Date(Date.now() + otpExpiry * 60 * 1000);
+      
+      // Save OTP to database
+      await storage.createOtpCode({
+        email,
+        code,
+        purpose: otpPurpose,
+        expiresAt,
+      });
+      
+      // Check if MSG91 is configured for OTP or Email
+      const msg91AuthKey = commSettings?.authKey;
+      const emailSettings = commSettings?.email || {};
+      
+      let emailSent = false;
+      let emailError = null;
+      
+      if (msg91AuthKey && emailSettings.enabled && emailSettings.senderEmail && emailSettings.senderName) {
+        try {
+          // Send OTP via MSG91 email
+          const emailPayload = {
+            recipients: [
+              {
+                to: [{ email, name: email.split('@')[0] }],
+                variables: {
+                  otp_code: code,
+                  purpose: otpPurpose === 'signup' ? 'account verification' : 
+                           otpPurpose === 'forgot_password' ? 'password reset' : 'email verification',
+                  expiry_minutes: otpExpiry.toString(),
+                },
+              }
+            ],
+            from: {
+              email: emailSettings.senderEmail,
+              name: emailSettings.senderName,
+            },
+            domain: emailSettings.senderEmail?.split('@')[1] || '',
+            template_id: emailSettings.templateId || undefined,
+          };
+          
+          // If no template, send a simple email with OTP
+          if (!emailSettings.templateId) {
+            const purposeText = otpPurpose === 'signup' ? 'verify your email for account creation' : 
+                               otpPurpose === 'forgot_password' ? 'reset your password' : 'verify your email';
+            
+            const emailBody = {
+              recipients: [{ to: [{ email, name: email.split('@')[0] }] }],
+              from: { email: emailSettings.senderEmail, name: emailSettings.senderName },
+              domain: emailSettings.senderEmail?.split('@')[1] || '',
+              content: [{
+                type: "text/html",
+                value: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>Your Verification Code</h2>
+                    <p>Use the following code to ${purposeText}:</p>
+                    <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
+                      ${code}
+                    </div>
+                    <p>This code will expire in ${otpExpiry} minutes.</p>
+                    <p style="color: #666; font-size: 12px;">If you didn't request this code, please ignore this email.</p>
+                  </div>
+                `
+              }],
+              subject: `Your verification code: ${code}`,
+            };
+            
+            const response = await fetch("https://api.msg91.com/api/v5/email/send", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "authkey": msg91AuthKey,
+              },
+              body: JSON.stringify(emailBody),
+            });
+            
+            if (response.ok) {
+              emailSent = true;
+            } else {
+              const errorData = await response.json().catch(() => ({}));
+              emailError = errorData.message || 'Failed to send email';
+              console.error("MSG91 email error:", errorData);
+            }
+          } else {
+            // Send with template
+            const response = await fetch("https://api.msg91.com/api/v5/email/send", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "authkey": msg91AuthKey,
+              },
+              body: JSON.stringify(emailPayload),
+            });
+            
+            if (response.ok) {
+              emailSent = true;
+            } else {
+              const errorData = await response.json().catch(() => ({}));
+              emailError = errorData.message || 'Failed to send email';
+              console.error("MSG91 email error:", errorData);
+            }
+          }
+        } catch (error) {
+          console.error("Error sending OTP email:", error);
+          emailError = error instanceof Error ? error.message : 'Email sending failed';
+        }
+      }
+      
+      // Return success (in development, include OTP for testing)
+      const isDev = process.env.NODE_ENV !== 'production';
+      
+      res.json({ 
+        success: true, 
+        message: emailSent ? "OTP sent to your email" : "OTP generated (email not configured)",
+        expiresIn: otpExpiry * 60, // seconds
+        ...(isDev && { devOtp: code }), // Only show in development
+        emailSent,
+        ...(emailError && { emailError }),
+      });
+    } catch (error) {
+      console.error("Send OTP error:", error);
+      res.status(500).json({ error: "Failed to send OTP" });
+    }
+  });
+
+  // Verify OTP
+  app.post("/api/auth/verify-otp", async (req, res) => {
+    try {
+      const { email, code, purpose } = req.body;
+      
+      if (!email || !code) {
+        return res.status(400).json({ error: "Email and OTP code are required" });
+      }
+      
+      const otpPurpose = purpose || 'signup';
+      
+      const isValid = await storage.verifyOtpCode(email, code, otpPurpose);
+      
+      if (!isValid) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
+      
+      res.json({ success: true, message: "OTP verified successfully" });
+    } catch (error) {
+      console.error("Verify OTP error:", error);
+      res.status(500).json({ error: "Failed to verify OTP" });
+    }
+  });
+
+  // Signup with OTP verification
+  app.post("/api/auth/signup-with-otp", async (req, res) => {
+    try {
+      const { email, password, firstName, lastName, otpCode } = req.body;
+      
+      if (!email || !password || !otpCode) {
+        return res.status(400).json({ error: "Email, password, and OTP code are required" });
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ error: "An account with this email already exists" });
+      }
+      
+      // Verify OTP
+      const isValidOtp = await storage.verifyOtpCode(email, otpCode, 'signup');
+      if (!isValidOtp) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
+      
+      // Validate password strength
+      const validation = validatePasswordStrength(password);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.message });
+      }
+      
+      // Hash password and create user
+      const passwordHash = await hashPassword(password);
+      const newUser = await storage.createUser({
+        email,
+        passwordHash,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        role: "customer",
+      });
+      
+      // Clean up used OTP
+      await storage.deleteOtpCodes(email, 'signup');
+      
+      // Create session for the new user
+      const sessionUser = {
+        claims: { sub: newUser.id },
+        dbUser: newUser,
+      };
+      
+      req.login(sessionUser, (err) => {
+        if (err) {
+          return res.status(500).json({ error: "Failed to create session" });
+        }
+        res.json({ 
+          success: true, 
+          user: {
+            id: newUser.id,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            role: newUser.role,
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Signup with OTP error:", error);
+      res.status(500).json({ error: "Signup failed" });
+    }
+  });
+
+  // Forgot password - request OTP
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      
+      // Always return success to prevent email enumeration
+      if (!user) {
+        return res.json({ success: true, message: "If an account exists, you will receive a password reset OTP" });
+      }
+      
+      // Get communication settings
+      const settingsData = await storage.getSetting("communication_settings");
+      let commSettings = null;
+      try {
+        commSettings = settingsData?.value ? JSON.parse(settingsData.value) : null;
+      } catch (e) {
+        console.error("Failed to parse communication settings:", e);
+      }
+      
+      const otpSettings = commSettings?.otp || {};
+      const otpLength = otpSettings.otpLength || 6;
+      const otpExpiry = otpSettings.otpExpiry || 5;
+      
+      // Generate OTP
+      const code = generateOtpCode(otpLength);
+      const expiresAt = new Date(Date.now() + otpExpiry * 60 * 1000);
+      
+      // Save OTP
+      await storage.createOtpCode({
+        email,
+        code,
+        purpose: 'forgot_password',
+        expiresAt,
+      });
+      
+      // Try to send email via MSG91
+      const msg91AuthKey = commSettings?.authKey;
+      const emailSettings = commSettings?.email || {};
+      let emailSent = false;
+      
+      if (msg91AuthKey && emailSettings.enabled && emailSettings.senderEmail) {
+        try {
+          const emailBody = {
+            recipients: [{ to: [{ email, name: user.firstName || email.split('@')[0] }] }],
+            from: { email: emailSettings.senderEmail, name: emailSettings.senderName || 'Support' },
+            domain: emailSettings.senderEmail?.split('@')[1] || '',
+            content: [{
+              type: "text/html",
+              value: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <h2>Password Reset Request</h2>
+                  <p>Hi ${user.firstName || 'there'},</p>
+                  <p>Use the following code to reset your password:</p>
+                  <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
+                    ${code}
+                  </div>
+                  <p>This code will expire in ${otpExpiry} minutes.</p>
+                  <p style="color: #666; font-size: 12px;">If you didn't request a password reset, please ignore this email.</p>
+                </div>
+              `
+            }],
+            subject: `Password Reset Code: ${code}`,
+          };
+          
+          const response = await fetch("https://api.msg91.com/api/v5/email/send", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "authkey": msg91AuthKey,
+            },
+            body: JSON.stringify(emailBody),
+          });
+          
+          emailSent = response.ok;
+        } catch (error) {
+          console.error("Error sending password reset email:", error);
+        }
+      }
+      
+      const isDev = process.env.NODE_ENV !== 'production';
+      
+      res.json({ 
+        success: true, 
+        message: "If an account exists, you will receive a password reset OTP",
+        expiresIn: otpExpiry * 60,
+        ...(isDev && { devOtp: code }),
+        emailSent,
+      });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ error: "Failed to process request" });
+    }
+  });
+
+  // Reset password with OTP
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { email, otpCode, newPassword } = req.body;
+      
+      if (!email || !otpCode || !newPassword) {
+        return res.status(400).json({ error: "Email, OTP code, and new password are required" });
+      }
+      
+      // Verify OTP
+      const isValidOtp = await storage.verifyOtpCode(email, otpCode, 'forgot_password');
+      if (!isValidOtp) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
+      
+      // Get user
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Validate password strength
+      const validation = validatePasswordStrength(newPassword);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.message });
+      }
+      
+      // Hash and update password
+      const passwordHash = await hashPassword(newPassword);
+      await storage.updateUserPassword(user.id, passwordHash);
+      
+      // Clean up OTP
+      await storage.deleteOtpCodes(email, 'forgot_password');
+      
+      res.json({ success: true, message: "Password reset successfully" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ error: "Failed to reset password" });
+    }
+  });
+
   // Admin password setup/change (for existing admins)
   app.post("/api/admin/set-password", isAuthenticated, isAdmin, async (req, res) => {
     try {
