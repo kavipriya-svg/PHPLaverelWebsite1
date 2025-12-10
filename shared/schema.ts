@@ -392,6 +392,7 @@ export const cartItems = pgTable("cart_items", {
   sessionId: varchar("session_id"),
   productId: varchar("product_id").notNull(),
   variantId: varchar("variant_id"),
+  comboOfferId: varchar("combo_offer_id"), // Track which combo offer this item belongs to
   quantity: integer("quantity").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
