@@ -57,6 +57,7 @@ const adminMenuItems = [
   { href: "/admin/home-blocks", icon: LayoutGrid, label: "Home Blocks" },
   { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },
   { href: "/admin/blog", icon: BookOpen, label: "Blog" },
+  { href: "/admin/quick-pages", icon: FileText, label: "Quick Pages" },
   { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
   { href: "/admin/combo-offers", icon: Gift, label: "Combo Offers" },
   { href: "/admin/users", icon: Users, label: "Users" },
