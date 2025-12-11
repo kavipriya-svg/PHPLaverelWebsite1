@@ -63,10 +63,12 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
   const isInterState = sellerState && buyerState && sellerState !== buyerState;
   const gstType = isInterState ? "IGST" : "CGST+SGST";
   
-  // Calculate GST for each item
+  // Calculate GST for each item (GST is INCLUDED in price)
   interface ItemGST {
     gstRate: number;
+    lineTotal: number;
     taxableAmount: number;
+    includedGst: number;
     igst: number;
     cgst: number;
     sgst: number;
@@ -76,14 +78,18 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
     const itemPrice = parseFloat(item.price as string) || 0;
     const lineTotal = itemPrice * item.quantity;
     const gstRate = parseFloat((item as any).gstRate as string) || settings.gstPercentage || 18;
-    const gstAmount = (lineTotal * gstRate) / 100;
+    // GST is included: includedGst = lineTotal * gstRate / (100 + gstRate)
+    const includedGst = lineTotal * gstRate / (100 + gstRate);
+    const taxableAmount = lineTotal - includedGst; // Base price without GST
     
     return {
       gstRate,
-      taxableAmount: lineTotal,
-      igst: isInterState ? gstAmount : 0,
-      cgst: isInterState ? 0 : gstAmount / 2,
-      sgst: isInterState ? 0 : gstAmount / 2,
+      lineTotal,
+      taxableAmount,
+      includedGst,
+      igst: isInterState ? includedGst : 0,
+      cgst: isInterState ? 0 : includedGst / 2,
+      sgst: isInterState ? 0 : includedGst / 2,
     };
   });
   
@@ -92,7 +98,7 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
   const totalCGST = itemGSTData.reduce((sum, item) => sum + item.cgst, 0);
   const totalSGST = itemGSTData.reduce((sum, item) => sum + item.sgst, 0);
   
-  // Build items HTML with GST columns
+  // Build items HTML with GST columns (GST is included in price)
   const itemsHTML = order.items.map((item, index) => {
     const gst = itemGSTData[index];
     return `
@@ -101,7 +107,7 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
       <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${item.title}${settings.showSKU ? `<br><span style="color: #6b7280; font-size: 11px;">SKU: ${item.sku || 'N/A'}</span>` : ''}</td>
       <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
       <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${parseFloat(item.price as string).toFixed(2)}</td>
-      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${gst.taxableAmount.toFixed(2)}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.taxableAmount.toFixed(2)}</td>
       <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${gst.gstRate}%</td>
       ${isInterState ? `
         <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.igst.toFixed(2)}</td>
@@ -109,7 +115,7 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
         <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.cgst.toFixed(2)}</td>
         <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.sgst.toFixed(2)}</td>
       `}
-      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">${CURRENCY_SYMBOL}${(gst.taxableAmount + gst.igst + gst.cgst + gst.sgst).toFixed(2)}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">${CURRENCY_SYMBOL}${gst.lineTotal.toFixed(2)}</td>
     </tr>
   `}).join('');
 
@@ -226,9 +232,9 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
 
         ${settings.showTaxBreakdown && settings.gstNumber ? `
         <div class="gst-note">
-          <strong>GST Note:</strong> ${isInterState 
-            ? 'This is an inter-state supply. IGST is applicable.' 
-            : 'This is an intra-state supply. CGST + SGST is applicable.'}
+          <strong>GST Note:</strong> GST is included in product prices as per Government of India regulations. ${isInterState 
+            ? 'This is an inter-state supply (IGST).' 
+            : 'This is an intra-state supply (CGST + SGST).'}
           ${settings.gstNumber ? ` Seller GSTIN: ${settings.gstNumber}` : ''}<br>
           <span style="font-size: 11px; color: #64748b;">This is a computer-generated invoice and does not require a signature.</span>
         </div>
@@ -269,23 +275,6 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
               <span>-${CURRENCY_SYMBOL}${discount.toFixed(2)}</span>
             </div>
             ` : ''}
-            ${settings.showTaxBreakdown ? `
-              ${isInterState ? `
-              <div class="summary-row">
-                <span>IGST:</span>
-                <span>${CURRENCY_SYMBOL}${totalIGST.toFixed(2)}</span>
-              </div>
-              ` : `
-              <div class="summary-row">
-                <span>CGST:</span>
-                <span>${CURRENCY_SYMBOL}${totalCGST.toFixed(2)}</span>
-              </div>
-              <div class="summary-row">
-                <span>SGST:</span>
-                <span>${CURRENCY_SYMBOL}${totalSGST.toFixed(2)}</span>
-              </div>
-              `}
-            ` : ''}
             ${settings.showShippingCost ? `
             <div class="summary-row">
               <span>Shipping:</span>
@@ -296,6 +285,12 @@ function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): 
               <span>Total:</span>
               <span>${CURRENCY_SYMBOL}${total.toFixed(2)}</span>
             </div>
+            ${settings.showTaxBreakdown ? `
+              <div class="summary-row" style="font-size: 12px; color: #6b7280;">
+                <span>Incl. GST${isInterState ? ' (IGST)' : ' (CGST+SGST)'}:</span>
+                <span>${CURRENCY_SYMBOL}${(totalIGST + totalCGST + totalSGST).toFixed(2)}</span>
+              </div>
+            ` : ''}
           </div>
         </div>
 

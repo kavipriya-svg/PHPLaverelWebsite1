@@ -59,6 +59,18 @@ interface Order {
 }
 
 function generateInvoiceHTML(order: Order, settings: InvoiceSettings): string {
+  // Calculate included GST for each item
+  const itemsWithGst = order.items.map(item => {
+    const price = parseFloat(item.price);
+    const gstRate = parseFloat(item.gstRate || "18");
+    const itemTotal = price * item.quantity;
+    // GST is included: gstAmount = itemTotal * gstRate / (100 + gstRate)
+    const gstAmount = itemTotal * gstRate / (100 + gstRate);
+    return { ...item, gstAmount, gstRate };
+  });
+  
+  const totalIncludedGst = itemsWithGst.reduce((sum, item) => sum + item.gstAmount, 0);
+
   const itemsHTML = order.items.map((item, index) => `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
@@ -183,7 +195,7 @@ function generateInvoiceHTML(order: Order, settings: InvoiceSettings): string {
 
         ${settings.showTaxBreakdown ? `
         <div class="gst-note">
-          <strong>GST Note:</strong> GST @ ${settings.gstPercentage}% is included in the total amount as per Government of India regulations.${settings.gstNumber ? ` Seller GSTIN: ${settings.gstNumber}` : ''}
+          <strong>GST Note:</strong> GST is included in product prices as per Government of India regulations. Total GST included: ${CURRENCY_SYMBOL}${totalIncludedGst.toFixed(2)}${settings.gstNumber ? `. Seller GSTIN: ${settings.gstNumber}` : ''}
         </div>
         ` : ''}
 
@@ -205,16 +217,16 @@ function generateInvoiceHTML(order: Order, settings: InvoiceSettings): string {
               <span>${parseFloat(order.shippingCost) === 0 ? 'Free' : `${CURRENCY_SYMBOL}${parseFloat(order.shippingCost).toFixed(2)}`}</span>
             </div>
             ` : ''}
-            ${settings.showTaxBreakdown ? `
-            <div class="summary-row">
-              <span>GST (${settings.gstPercentage}%)</span>
-              <span>${CURRENCY_SYMBOL}${parseFloat(order.tax).toFixed(2)}</span>
-            </div>
-            ` : ''}
             <div class="summary-row total">
               <span>Total</span>
               <span>${CURRENCY_SYMBOL}${parseFloat(order.total).toFixed(2)}</span>
             </div>
+            ${settings.showTaxBreakdown ? `
+            <div class="summary-row" style="font-size: 12px; color: #6b7280;">
+              <span>Incl. GST</span>
+              <span>${CURRENCY_SYMBOL}${totalIncludedGst.toFixed(2)}</span>
+            </div>
+            ` : ''}
           </div>
         </div>
 
