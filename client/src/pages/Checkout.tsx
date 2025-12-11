@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CreditCard, Truck, Package, Tag, X, MapPin, Plus, Check, Loader2, FileText, Gift } from "lucide-react";
+import { CreditCard, Truck, Package, Tag, X, MapPin, Plus, Check, Loader2, FileText, Gift, Info } from "lucide-react";
 
 interface AppliedCoupon {
   code: string;
@@ -19,6 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Form,
   FormControl,
@@ -183,6 +184,20 @@ export default function Checkout() {
     
     return totalComboDiscount;
   }, [cartItems, comboOffersData?.offers]);
+
+  // Calculate GST included in cart items (for display purposes - GST is already in the price)
+  const includedGst = useMemo(() => {
+    return cartItems.reduce((total, item) => {
+      const price = parseFloat((item.variant?.price || item.product.salePrice || item.product.price) as string);
+      const gstRate = parseFloat((item.product.gstRate as string) || "18");
+      const itemTotal = price * item.quantity;
+      // GST is included in price, so: price = basePrice + GST, where GST = basePrice * (gstRate/100)
+      // Therefore: price = basePrice * (1 + gstRate/100), so basePrice = price / (1 + gstRate/100)
+      // And: includedGST = price - basePrice = price - price/(1 + gstRate/100) = price * gstRate / (100 + gstRate)
+      const gstAmount = itemTotal * gstRate / (100 + gstRate);
+      return total + gstAmount;
+    }, 0);
+  }, [cartItems]);
 
   // Load applied coupon from localStorage
   useEffect(() => {
@@ -1406,6 +1421,22 @@ export default function Checkout() {
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
                     <span data-testid="text-checkout-total">{formatCurrency(total)}</span>
+                  </div>
+                  
+                  {/* GST included info */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex items-center gap-1 cursor-help">
+                          <Info className="h-3 w-3" />
+                          Incl. GST
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>GST is included in product prices</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <span data-testid="text-checkout-included-gst">{formatCurrency(includedGst)}</span>
                   </div>
 
                   <Button 

@@ -2196,9 +2196,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Parse combo discount from frontend (validated on frontend based on cart items with comboOfferId)
       const comboDiscount = parseFloat(rawComboDiscount) || 0;
       
-      const tax = subtotal * 0.08;
+      // Note: GST is already included in product prices, no separate tax calculation needed
       const shippingCost = subtotal > 500 ? 0 : 99;
-      const total = subtotal - discount - comboDiscount + tax + shippingCost;
+      const total = subtotal - discount - comboDiscount + shippingCost;
 
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
