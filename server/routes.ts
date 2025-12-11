@@ -377,7 +377,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       // Create session for the user
       const sessionUser = {
-        claims: { sub: user.id },
+        claims: { 
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+        },
         dbUser: user,
       };
       
