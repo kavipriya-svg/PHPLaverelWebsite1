@@ -1,4 +1,4 @@
-import { eq, and, or, like, desc, asc, sql, isNull, inArray, gte, lte, lt, ne } from "drizzle-orm";
+import { eq, and, or, like, desc, asc, sql, isNull, inArray, gte, lte, lt, gt, ne } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -251,6 +251,7 @@ export interface ProductFilters {
   isTrending?: boolean;
   isNewArrival?: boolean;
   isOnSale?: boolean;
+  isInStock?: boolean;
   isActive?: boolean;
   limit?: number;
   offset?: number;
@@ -483,6 +484,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     if (filters.isActive !== undefined) conditions.push(eq(products.isActive, filters.isActive));
+    if (filters.isInStock) conditions.push(gt(products.stock, 0));
 
     const baseQuery = conditions.length > 0 
       ? db.select().from(products).where(and(...conditions))
