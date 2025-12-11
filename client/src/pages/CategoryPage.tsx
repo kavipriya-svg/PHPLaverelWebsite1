@@ -22,6 +22,7 @@ export default function CategoryPage() {
 
   const [filters, setFilters] = useState<ProductFiltersState>({
     sort: "newest",
+    brandIds: [],
   });
   const [page, setPage] = useState(1);
   const limit = 12;
@@ -36,22 +37,31 @@ export default function CategoryPage() {
   if (categoryId) productsQueryParams.set("categoryId", categoryId);
   if (filters.minPrice) productsQueryParams.set("minPrice", filters.minPrice.toString());
   if (filters.maxPrice) productsQueryParams.set("maxPrice", filters.maxPrice.toString());
-  if (filters.brandId) productsQueryParams.set("brandId", filters.brandId);
-  if (filters.sort === "price-low") {
+  if (filters.brandIds && filters.brandIds.length > 0) {
+    productsQueryParams.set("brandIds", filters.brandIds.join(","));
+  }
+  if (filters.inStock) productsQueryParams.set("inStock", "true");
+  if (filters.onSale) productsQueryParams.set("onSale", "true");
+  if (filters.sort === "price_asc") {
     productsQueryParams.set("sortBy", "price");
     productsQueryParams.set("sortOrder", "asc");
-  } else if (filters.sort === "price-high") {
+  } else if (filters.sort === "price_desc") {
     productsQueryParams.set("sortBy", "price");
     productsQueryParams.set("sortOrder", "desc");
+  } else if (filters.sort === "popular") {
+    productsQueryParams.set("sortBy", "popular");
+  } else if (filters.sort === "rating") {
+    productsQueryParams.set("sortBy", "rating");
   }
   productsQueryParams.set("limit", limit.toString());
   productsQueryParams.set("offset", ((page - 1) * limit).toString());
 
+  const queryString = productsQueryParams.toString();
   const { data: productsData, isLoading: productsLoading } = useQuery<{ 
     products: ProductWithDetails[]; 
     total: number;
   }>({
-    queryKey: ["/api/products", productsQueryParams.toString()],
+    queryKey: ["/api/products?" + queryString],
     enabled: !!categoryId,
   });
 
