@@ -2235,7 +2235,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           guestEmail: userInfo?.id ? undefined : guestEmail,
           subtotal: subtotal.toString(),
           discount: discount.toString(),
-          tax: tax.toString(),
+          tax: "0", // GST is included in product prices, no separate tax
           shippingCost: shippingCost.toString(),
           total: total.toString(),
           status: "pending",
@@ -2280,7 +2280,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             price: item.price,
           })),
           subtotal: subtotal.toFixed(2),
-          tax: tax.toFixed(2),
+          tax: "0.00", // GST is included in product prices
           shipping: shippingCost.toFixed(2),
           discount: discount > 0 ? discount.toFixed(2) : undefined,
           total: total.toFixed(2),
