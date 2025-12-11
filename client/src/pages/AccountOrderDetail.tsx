@@ -17,8 +17,10 @@ import {
   CheckCircle,
   Truck,
   XCircle,
-  ArrowLeft
+  ArrowLeft,
+  Info
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { type InvoiceSettings, defaultInvoiceSettings } from "@shared/schema";
 
@@ -29,6 +31,7 @@ interface OrderItem {
   price: string;
   quantity: number;
   imageUrl: string;
+  gstRate?: string;
 }
 
 interface Order {
@@ -487,14 +490,35 @@ export default function AccountOrderDetail() {
                   : formatCurrency(parseFloat(order.shippingCost))}
               </span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">GST</span>
-              <span data-testid="text-tax">{formatCurrency(parseFloat(order.tax))}</span>
-            </div>
             <Separator />
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
               <span data-testid="text-order-total">{formatCurrency(parseFloat(order.total))}</span>
+            </div>
+            {/* GST included info */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="flex items-center gap-1 cursor-help">
+                    <Info className="h-3 w-3" />
+                    Incl. GST
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>GST is included in product prices</p>
+                </TooltipContent>
+              </Tooltip>
+              <span data-testid="text-included-gst">
+                {formatCurrency(
+                  order.items.reduce((total, item) => {
+                    const price = parseFloat(item.price);
+                    const gstRate = parseFloat(item.gstRate || "18");
+                    const itemTotal = price * item.quantity;
+                    const gstAmount = itemTotal * gstRate / (100 + gstRate);
+                    return total + gstAmount;
+                  }, 0)
+                )}
+              </span>
             </div>
           </div>
         </CardContent>
