@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, getUserInfo, getOidcConfig, client } from "./replitAuth";
 import { emailService } from "./email";
 import { randomUUID, createHmac } from "crypto";
+import path from "path";
+import fs from "fs";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import Razorpay from "razorpay";
 import { hashPassword, verifyPassword, validatePasswordStrength } from "./password";
@@ -164,6 +166,29 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
+
+  // Project backup download routes
+  app.get("/api/download/project", (req, res) => {
+    const filePath = path.join(process.cwd(), "project_backup.tar.gz");
+    if (fs.existsSync(filePath)) {
+      res.setHeader("Content-Disposition", "attachment; filename=project_backup.tar.gz");
+      res.setHeader("Content-Type", "application/gzip");
+      fs.createReadStream(filePath).pipe(res);
+    } else {
+      res.status(404).json({ error: "Project backup not found" });
+    }
+  });
+
+  app.get("/api/download/database", (req, res) => {
+    const filePath = path.join(process.cwd(), "database_backup.sql");
+    if (fs.existsSync(filePath)) {
+      res.setHeader("Content-Disposition", "attachment; filename=database_backup.sql");
+      res.setHeader("Content-Type", "application/sql");
+      fs.createReadStream(filePath).pipe(res);
+    } else {
+      res.status(404).json({ error: "Database backup not found" });
+    }
+  });
 
   app.use(async (req, res, next) => {
     try {
