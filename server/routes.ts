@@ -3470,6 +3470,79 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/admin/users/admins", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string || "";
+      const result = await storage.getAdminUsers(search);
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to fetch admin users:", error);
+      res.status(500).json({ error: "Failed to fetch admin users" });
+    }
+  });
+
+  app.get("/api/admin/users/customers", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string || "";
+      const result = await storage.getCustomerUsers(search);
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+      res.status(500).json({ error: "Failed to fetch customers" });
+    }
+  });
+
+  app.post("/api/admin/users/create-admin", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email, password, firstName, lastName, role } = req.body;
+      
+      if (!email || !password || !firstName) {
+        return res.status(400).json({ error: "Email, password, and first name are required" });
+      }
+      
+      if (!["admin", "manager", "support"].includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+      
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User with this email already exists" });
+      }
+      
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({ error: passwordValidation.errors.join(", ") });
+      }
+      
+      const passwordHash = await hashPassword(password);
+      const userId = randomUUID();
+      
+      const newUser = await storage.createUser({
+        id: userId,
+        email,
+        firstName,
+        lastName: lastName || null,
+        role,
+        passwordHash,
+        createdAt: new Date(),
+      });
+      
+      res.json({ 
+        success: true, 
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role,
+        }
+      });
+    } catch (error) {
+      console.error("Failed to create admin user:", error);
+      res.status(500).json({ error: "Failed to create admin user" });
+    }
+  });
+
   app.patch("/api/admin/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { role } = req.body;
