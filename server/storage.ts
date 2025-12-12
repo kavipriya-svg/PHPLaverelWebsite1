@@ -92,6 +92,8 @@ export interface IStorage {
   updateUserRole(id: string, role: string): Promise<User | undefined>;
   updateUserPassword(id: string, passwordHash: string): Promise<User | undefined>;
   getUsers(search?: string): Promise<{ users: User[]; total: number }>;
+  getAdminUsers(search?: string): Promise<{ users: User[]; total: number }>;
+  getCustomerUsers(search?: string): Promise<{ users: any[]; total: number }>;
 
   getCategories(): Promise<CategoryWithChildren[]>;
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
@@ -288,14 +290,21 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(userData: { email: string; passwordHash: string; firstName?: string | null; lastName?: string | null; role?: string }): Promise<User> {
-    const [created] = await db.insert(users).values({
+  async createUser(userData: { id?: string; email: string; passwordHash: string; firstName?: string | null; lastName?: string | null; role?: string; createdAt?: Date }): Promise<User> {
+    const insertData: any = {
       email: userData.email.toLowerCase().trim(),
       passwordHash: userData.passwordHash,
       firstName: userData.firstName || null,
       lastName: userData.lastName || null,
       role: userData.role || "customer",
-    }).returning();
+    };
+    if (userData.id) {
+      insertData.id = userData.id;
+    }
+    if (userData.createdAt) {
+      insertData.createdAt = userData.createdAt;
+    }
+    const [created] = await db.insert(users).values(insertData).returning();
     return created;
   }
 
@@ -377,6 +386,62 @@ export class DatabaseStorage implements IStorage {
     
     const result = await query.orderBy(desc(users.createdAt));
     return { users: result, total: result.length };
+  }
+
+  async getAdminUsers(search?: string): Promise<{ users: User[]; total: number }> {
+    const adminRoles = ["admin", "manager", "support"];
+    let baseCondition = inArray(users.role, adminRoles);
+    
+    let whereCondition: any = baseCondition;
+    
+    if (search) {
+      whereCondition = and(
+        baseCondition,
+        or(
+          like(users.email, `%${search}%`),
+          like(users.firstName, `%${search}%`),
+          like(users.lastName, `%${search}%`)
+        )
+      );
+    }
+    
+    const result = await db.select().from(users).where(whereCondition).orderBy(desc(users.createdAt));
+    return { users: result, total: result.length };
+  }
+
+  async getCustomerUsers(search?: string): Promise<{ users: any[]; total: number }> {
+    let baseCondition = eq(users.role, "customer");
+    
+    let whereCondition: any = baseCondition;
+    
+    if (search) {
+      whereCondition = and(
+        baseCondition,
+        or(
+          like(users.email, `%${search}%`),
+          like(users.firstName, `%${search}%`),
+          like(users.lastName, `%${search}%`)
+        )
+      );
+    }
+    
+    const customerList = await db.select().from(users).where(whereCondition).orderBy(desc(users.createdAt));
+    
+    const customersWithStats = await Promise.all(
+      customerList.map(async (customer) => {
+        const customerOrders = await db.select().from(orders).where(eq(orders.userId, customer.id));
+        const orderCount = customerOrders.length;
+        const totalSpent = customerOrders.reduce((sum, order) => sum + parseFloat(order.total || "0"), 0);
+        
+        return {
+          ...customer,
+          orderCount,
+          totalSpent,
+        };
+      })
+    );
+    
+    return { users: customersWithStats, total: customersWithStats.length };
   }
 
   async getCategories(): Promise<CategoryWithChildren[]> {

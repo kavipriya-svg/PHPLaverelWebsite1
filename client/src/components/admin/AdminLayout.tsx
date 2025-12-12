@@ -12,6 +12,8 @@ import {
   Settings,
   Users,
   ChevronLeft,
+  ChevronDown,
+  ChevronRight,
   Menu,
   Star,
   Mail,
@@ -26,6 +28,8 @@ import {
   Gift,
   Percent,
   MessageSquare,
+  Shield,
+  UserCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,10 +44,18 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { ReactNode } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ReactNode, useState } from "react";
 
 const adminMenuItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
@@ -61,7 +73,6 @@ const adminMenuItems = [
   { href: "/admin/quick-pages", icon: FileText, label: "Quick Pages" },
   { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
   { href: "/admin/combo-offers", icon: Gift, label: "Combo Offers" },
-  { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/communication", icon: MessageSquare, label: "Communication" },
   { href: "/admin/seo", icon: Search, label: "SEO" },
   { href: "/admin/invoice", icon: FileText, label: "Invoice" },
@@ -72,9 +83,15 @@ const adminMenuItems = [
   { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
+const userSubMenuItems = [
+  { href: "/admin/users/admins", icon: Shield, label: "Admin Users" },
+  { href: "/admin/users/customers", icon: UserCircle, label: "Customers" },
+];
+
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
+  const [usersOpen, setUsersOpen] = useState(location.startsWith("/admin/users"));
 
   if (isLoading) {
     return (
@@ -149,10 +166,50 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               <SidebarGroupLabel>Management</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {adminMenuItems.map((item) => (
+                  {adminMenuItems.slice(0, 15).map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild isActive={location === item.href}>
-                        <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase()}`}>
+                        <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                  
+                  <Collapsible open={usersOpen} onOpenChange={setUsersOpen} className="group/collapsible">
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton 
+                          isActive={location.startsWith("/admin/users")}
+                          data-testid="link-admin-users"
+                        >
+                          <Users className="h-4 w-4" />
+                          <span>Users</span>
+                          <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {userSubMenuItems.map((item) => (
+                            <SidebarMenuSubItem key={item.href}>
+                              <SidebarMenuSubButton asChild isActive={location === item.href}>
+                                <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                                  <item.icon className="h-4 w-4" />
+                                  <span>{item.label}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                  
+                  {adminMenuItems.slice(15).map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={location === item.href}>
+                        <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.label}</span>
                         </Link>
