@@ -394,9 +394,9 @@ export class DatabaseStorage implements IStorage {
     return { users: result, total: result.length };
   }
 
-  async getAdminUsers(search?: string): Promise<{ users: User[]; total: number }> {
-    const adminRoles = ["admin", "manager", "support"];
-    let baseCondition = inArray(users.role, adminRoles);
+  async getAdminUsers(search?: string): Promise<{ users: (User & { adminRoleName?: string })[]; total: number }> {
+    const adminRolesArr = ["admin", "manager", "support"];
+    let baseCondition = inArray(users.role, adminRolesArr);
     
     let whereCondition: any = baseCondition;
     
@@ -411,7 +411,26 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    const result = await db.select().from(users).where(whereCondition).orderBy(desc(users.createdAt));
+    const result = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        phone: users.phone,
+        role: users.role,
+        adminRoleId: users.adminRoleId,
+        passwordHash: users.passwordHash,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        adminRoleName: adminRoles.name,
+      })
+      .from(users)
+      .leftJoin(adminRoles, eq(users.adminRoleId, adminRoles.id))
+      .where(whereCondition)
+      .orderBy(desc(users.createdAt));
+    
     return { users: result, total: result.length };
   }
 
