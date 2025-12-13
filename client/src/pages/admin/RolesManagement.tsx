@@ -36,7 +36,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Shield, Plus, Pencil, Trash2, Loader2, Users, Check, X } from "lucide-react";
+import { Shield, Plus, Pencil, Trash2, Loader2, Users, Check, X, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import type { AdminRole, RolePermission } from "@shared/schema";
 
 interface AdminModule {
@@ -220,9 +221,16 @@ export default function RolesManagement() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Roles & Permissions</h1>
-          <p className="text-muted-foreground">Create and manage admin roles with custom permissions</p>
+        <div className="flex items-center gap-4">
+          <Link href="/admin">
+            <Button variant="outline" size="icon" data-testid="button-back-to-admin">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Roles & Permissions</h1>
+            <p className="text-muted-foreground">Create and manage admin roles with custom permissions</p>
+          </div>
         </div>
         <Button onClick={handleAddRole} data-testid="button-add-role">
           <Plus className="h-4 w-4 mr-2" />
