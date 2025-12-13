@@ -49,18 +49,27 @@ export default function AdminUsersList() {
   const [search, setSearch] = useState("");
   const [editUser, setEditUser] = useState<User | null>(null);
   const [newRole, setNewRole] = useState("");
+  const [assignRoleUser, setAssignRoleUser] = useState<User | null>(null);
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminPassword, setNewAdminPassword] = useState("");
   const [newAdminFirstName, setNewAdminFirstName] = useState("");
   const [newAdminLastName, setNewAdminLastName] = useState("");
   const [newAdminRole, setNewAdminRole] = useState("admin");
+  const [newAdminRoleId, setNewAdminRoleId] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
-  const { data, isLoading } = useQuery<{ users: User[]; total: number }>({
+  const { data, isLoading } = useQuery<{ users: UserWithRole[]; total: number }>({
     queryKey: ["/api/admin/users/admins", { search }],
   });
+
+  const { data: rolesData } = useQuery<{ roles: AdminRole[] }>({
+    queryKey: ["/api/admin/roles"],
+  });
+
+  const roles = rolesData?.roles?.filter(r => r.isActive) || [];
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ id, role }: { id: string; role: string }) => {
@@ -76,8 +85,23 @@ export default function AdminUsersList() {
     },
   });
 
+  const assignRoleMutation = useMutation({
+    mutationFn: async ({ userId, roleId }: { userId: string; roleId: string | null }) => {
+      await apiRequest("PATCH", `/api/admin/users/${userId}/assign-role`, { roleId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users/admins"] });
+      toast({ title: "Permission role assigned successfully" });
+      setAssignRoleUser(null);
+      setSelectedRoleId("");
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to assign role", description: error.message, variant: "destructive" });
+    },
+  });
+
   const createAdminMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string; firstName: string; lastName: string; role: string }) => {
+    mutationFn: async (data: { email: string; password: string; firstName: string; lastName: string; role: string; adminRoleId?: string }) => {
       const res = await apiRequest("POST", "/api/admin/users/create-admin", data);
       return res.json();
     },
@@ -90,6 +114,7 @@ export default function AdminUsersList() {
       setNewAdminFirstName("");
       setNewAdminLastName("");
       setNewAdminRole("admin");
+      setNewAdminRoleId("");
     },
     onError: (error: Error) => {
       toast({ title: "Failed to create admin", description: error.message, variant: "destructive" });
@@ -122,6 +147,15 @@ export default function AdminUsersList() {
       firstName: newAdminFirstName,
       lastName: newAdminLastName,
       role: newAdminRole,
+      adminRoleId: newAdminRoleId && newAdminRoleId !== "none" ? newAdminRoleId : undefined,
+    });
+  };
+
+  const handleAssignRole = () => {
+    if (!assignRoleUser) return;
+    assignRoleMutation.mutate({
+      userId: assignRoleUser.id,
+      roleId: selectedRoleId === "none" || selectedRoleId === "" ? null : selectedRoleId,
     });
   };
 
@@ -157,7 +191,8 @@ export default function AdminUsersList() {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>Legacy Role</TableHead>
+                <TableHead>Permission Role</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead className="w-16"></TableHead>
               </TableRow>
@@ -166,14 +201,14 @@ export default function AdminUsersList() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    {Array.from({ length: 5 }).map((_, j) => (
+                    {Array.from({ length: 6 }).map((_, j) => (
                       <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No admin users found
                   </TableCell>
                 </TableRow>
@@ -200,6 +235,16 @@ export default function AdminUsersList() {
                         {user.role}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      {user.adminRoleName ? (
+                        <Badge variant="outline">
+                          <Key className="h-3 w-3 mr-1" />
+                          {user.adminRoleName}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Not assigned</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
                     </TableCell>
@@ -216,7 +261,15 @@ export default function AdminUsersList() {
                             setNewRole(user.role);
                           }}>
                             <Shield className="h-4 w-4 mr-2" />
-                            Change Role
+                            Change Legacy Role
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => {
+                            setAssignRoleUser(user);
+                            setSelectedRoleId(user.adminRoleId || "");
+                          }}>
+                            <Key className="h-4 w-4 mr-2" />
+                            Assign Permission Role
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -231,7 +284,10 @@ export default function AdminUsersList() {
         <Dialog open={!!editUser} onOpenChange={() => setEditUser(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Change Admin Role</DialogTitle>
+              <DialogTitle>Change Legacy Role</DialogTitle>
+              <DialogDescription>
+                This changes the basic role type. For granular permissions, assign a Permission Role instead.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="flex items-center gap-3">
@@ -272,6 +328,70 @@ export default function AdminUsersList() {
                 data-testid="button-save-admin-role"
               >
                 {updateRoleMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!assignRoleUser} onOpenChange={() => setAssignRoleUser(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Assign Permission Role</DialogTitle>
+              <DialogDescription>
+                Assign a custom permission role with granular module access controls.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={assignRoleUser?.profileImageUrl || undefined} />
+                  <AvatarFallback>
+                    {assignRoleUser?.firstName?.[0] || assignRoleUser?.email?.[0]?.toUpperCase() || "A"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">
+                    {assignRoleUser?.firstName ? `${assignRoleUser.firstName} ${assignRoleUser.lastName || ""}` : "Admin User"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{assignRoleUser?.email}</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Permission Role</Label>
+                <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
+                  <SelectTrigger data-testid="select-permission-role">
+                    <SelectValue placeholder="Select a role..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Role (Remove Assignment)</SelectItem>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.name}
+                        {role.description && (
+                          <span className="text-muted-foreground ml-2">- {role.description}</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {roles.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No roles available. Create roles in the Roles & Permissions page first.
+                  </p>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAssignRoleUser(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAssignRole}
+                disabled={assignRoleMutation.isPending}
+                data-testid="button-save-permission-role"
+              >
+                {assignRoleMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Save
               </Button>
             </DialogFooter>
@@ -336,7 +456,7 @@ export default function AdminUsersList() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Role *</Label>
+                <Label>Legacy Role *</Label>
                 <Select value={newAdminRole} onValueChange={setNewAdminRole}>
                   <SelectTrigger data-testid="select-new-admin-role">
                     <SelectValue />
@@ -345,6 +465,22 @@ export default function AdminUsersList() {
                     <SelectItem value="support">Support</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Permission Role (Optional)</Label>
+                <Select value={newAdminRoleId} onValueChange={setNewAdminRoleId}>
+                  <SelectTrigger data-testid="select-new-admin-permission-role">
+                    <SelectValue placeholder="Select a permission role..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Role</SelectItem>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

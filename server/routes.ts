@@ -25,6 +25,7 @@ import {
   defaultHomeCategorySection,
   blogSectionSchema,
   defaultBlogSection,
+  ADMIN_MODULES,
 } from "@shared/schema";
 
 function escapeHtml(str: string): string {
@@ -3676,7 +3677,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Get available modules for permission assignment
   app.get("/api/admin/modules", isAuthenticated, isAdmin, async (req, res) => {
-    const { ADMIN_MODULES } = require("@shared/schema");
     res.json({ modules: ADMIN_MODULES });
   });
 
