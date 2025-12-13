@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Search, MoreHorizontal, Shield, UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
+import { Search, MoreHorizontal, Shield, UserPlus, Loader2, Eye, EyeOff, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,11 +17,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -37,7 +39,11 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { User } from "@shared/schema";
+import type { User, AdminRole } from "@shared/schema";
+
+interface UserWithRole extends User {
+  adminRoleName?: string;
+}
 
 export default function AdminUsersList() {
   const [search, setSearch] = useState("");

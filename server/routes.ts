@@ -145,7 +145,14 @@ async function generateOgHtml(req: Request, baseUrl: string): Promise<string | n
 const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
   const dbUser = user?.dbUser;
-  if (!dbUser || !["admin", "manager"].includes(dbUser.role)) {
+  if (!dbUser) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  // Check legacy role field OR new adminRoleId for dynamic roles
+  const hasLegacyAdminRole = ["admin", "manager", "support"].includes(dbUser.role);
+  const hasDynamicRole = !!dbUser.adminRoleId;
+  
+  if (!hasLegacyAdminRole && !hasDynamicRole) {
     return res.status(403).json({ error: "Admin access required" });
   }
   next();
@@ -3550,6 +3557,153 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ user });
     } catch (error) {
       res.status(500).json({ error: "Failed to update user role" });
+    }
+  });
+
+  // Admin Roles Management API
+  app.get("/api/admin/roles", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const roles = await storage.getAdminRoles();
+      res.json({ roles });
+    } catch (error) {
+      console.error("Failed to get admin roles:", error);
+      res.status(500).json({ error: "Failed to get admin roles" });
+    }
+  });
+
+  app.get("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const data = await storage.getAdminRoleWithPermissions(req.params.id);
+      if (!data) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      res.json(data);
+    } catch (error) {
+      console.error("Failed to get role:", error);
+      res.status(500).json({ error: "Failed to get role" });
+    }
+  });
+
+  app.post("/api/admin/roles", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { name, description, permissions } = req.body;
+      
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({ error: "Role name is required" });
+      }
+      
+      // Create the role
+      const role = await storage.createAdminRole({
+        name: name.trim(),
+        description: description?.trim() || null,
+        isSystemRole: false,
+        isActive: true,
+      });
+      
+      // Set permissions if provided
+      if (permissions && Array.isArray(permissions)) {
+        await storage.setRolePermissions(role.id, permissions);
+      }
+      
+      const fullRole = await storage.getAdminRoleWithPermissions(role.id);
+      res.json(fullRole);
+    } catch (error: any) {
+      console.error("Failed to create role:", error);
+      if (error?.code === '23505') {
+        return res.status(400).json({ error: "A role with this name already exists" });
+      }
+      res.status(500).json({ error: "Failed to create role" });
+    }
+  });
+
+  app.patch("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { name, description, isActive, permissions } = req.body;
+      
+      const existingRole = await storage.getAdminRoleById(req.params.id);
+      if (!existingRole) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      // Update role details
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name.trim();
+      if (description !== undefined) updateData.description = description?.trim() || null;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      
+      if (Object.keys(updateData).length > 0) {
+        await storage.updateAdminRole(req.params.id, updateData);
+      }
+      
+      // Update permissions if provided
+      if (permissions && Array.isArray(permissions)) {
+        await storage.setRolePermissions(req.params.id, permissions);
+      }
+      
+      const fullRole = await storage.getAdminRoleWithPermissions(req.params.id);
+      res.json(fullRole);
+    } catch (error: any) {
+      console.error("Failed to update role:", error);
+      if (error?.code === '23505') {
+        return res.status(400).json({ error: "A role with this name already exists" });
+      }
+      res.status(500).json({ error: "Failed to update role" });
+    }
+  });
+
+  app.delete("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const role = await storage.getAdminRoleById(req.params.id);
+      if (!role) {
+        return res.status(404).json({ error: "Role not found" });
+      }
+      
+      if (role.isSystemRole) {
+        return res.status(400).json({ error: "Cannot delete system roles" });
+      }
+      
+      const deleted = await storage.deleteAdminRole(req.params.id);
+      if (deleted) {
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: "Failed to delete role" });
+      }
+    } catch (error) {
+      console.error("Failed to delete role:", error);
+      res.status(500).json({ error: "Failed to delete role" });
+    }
+  });
+
+  // Get available modules for permission assignment
+  app.get("/api/admin/modules", isAuthenticated, isAdmin, async (req, res) => {
+    const { ADMIN_MODULES } = require("@shared/schema");
+    res.json({ modules: ADMIN_MODULES });
+  });
+
+  // Assign role to user
+  app.patch("/api/admin/users/:id/assign-role", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { adminRoleId } = req.body;
+      
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Verify role exists if provided
+      if (adminRoleId) {
+        const role = await storage.getAdminRoleById(adminRoleId);
+        if (!role) {
+          return res.status(400).json({ error: "Role not found" });
+        }
+      }
+      
+      // Update user's admin role
+      const updated = await storage.updateUser(req.params.id, { adminRoleId: adminRoleId || null });
+      res.json({ user: updated });
+    } catch (error) {
+      console.error("Failed to assign role:", error);
+      res.status(500).json({ error: "Failed to assign role to user" });
     }
   });
 

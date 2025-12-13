@@ -30,6 +30,7 @@ import {
   MessageSquare,
   Shield,
   UserCircle,
+  Key,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -86,6 +87,7 @@ const adminMenuItems = [
 const userSubMenuItems = [
   { href: "/admin/users/admins", icon: Shield, label: "Admin Users" },
   { href: "/admin/users/customers", icon: UserCircle, label: "Customers" },
+  { href: "/admin/users/roles", icon: Key, label: "Roles & Permissions" },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {
