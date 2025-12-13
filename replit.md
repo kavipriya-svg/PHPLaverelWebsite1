@@ -97,11 +97,6 @@ Preferred communication style: Simple, everyday language.
 - User roles stored in database and checked on each request
 - Public routes accessible without authentication
 - Protected routes require valid session
-- Dynamic Role-Based Access Control (RBAC) system with granular module-level permissions
-  - Custom roles with View/Add/Edit/Delete permissions per admin module
-  - 19 available modules: Dashboard, Products, Categories, Brands, Orders, Coupons, Banners, Home Blocks, Users, Customers, Settings, Reviews, Blog, Quick Pages, Combo Offers, Communication, Invoice Settings, Footer Settings, Roles
-  - Role assignment from Admin Users page with ability to add/remove permission roles
-  - Supports both legacy roles (admin, manager, support) and dynamic permission roles
 
 ### Data Storage
 

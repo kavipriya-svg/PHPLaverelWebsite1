@@ -1,4 +1,4 @@
-import { eq, and, or, like, desc, asc, sql, isNull, inArray, gte, lte, lt, gt, ne } from "drizzle-orm";
+import { eq, and, or, like, desc, asc, sql, isNull, inArray, gte, lte, lt, ne } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -25,8 +25,6 @@ import {
   comboOffers,
   quickPages,
   otpCodes,
-  adminRoles,
-  rolePermissions,
   type User,
   type UpsertUser,
   type Category,
@@ -78,10 +76,6 @@ import {
   type CartItemWithProduct,
   type ReviewWithUser,
   type GiftRegistryWithItems,
-  type AdminRole,
-  type InsertAdminRole,
-  type RolePermission,
-  type InsertRolePermission,
 } from "@shared/schema";
 
 // Extended type for combo offer with full product details
@@ -98,8 +92,6 @@ export interface IStorage {
   updateUserRole(id: string, role: string): Promise<User | undefined>;
   updateUserPassword(id: string, passwordHash: string): Promise<User | undefined>;
   getUsers(search?: string): Promise<{ users: User[]; total: number }>;
-  getAdminUsers(search?: string): Promise<{ users: User[]; total: number }>;
-  getCustomerUsers(search?: string): Promise<{ users: any[]; total: number }>;
 
   getCategories(): Promise<CategoryWithChildren[]>;
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
@@ -259,7 +251,6 @@ export interface ProductFilters {
   isTrending?: boolean;
   isNewArrival?: boolean;
   isOnSale?: boolean;
-  isInStock?: boolean;
   isActive?: boolean;
   limit?: number;
   offset?: number;
@@ -296,21 +287,14 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(userData: { id?: string; email: string; passwordHash: string; firstName?: string | null; lastName?: string | null; role?: string; createdAt?: Date }): Promise<User> {
-    const insertData: any = {
+  async createUser(userData: { email: string; passwordHash: string; firstName?: string | null; lastName?: string | null; role?: string }): Promise<User> {
+    const [created] = await db.insert(users).values({
       email: userData.email.toLowerCase().trim(),
       passwordHash: userData.passwordHash,
       firstName: userData.firstName || null,
       lastName: userData.lastName || null,
       role: userData.role || "customer",
-    };
-    if (userData.id) {
-      insertData.id = userData.id;
-    }
-    if (userData.createdAt) {
-      insertData.createdAt = userData.createdAt;
-    }
-    const [created] = await db.insert(users).values(insertData).returning();
+    }).returning();
     return created;
   }
 
@@ -392,81 +376,6 @@ export class DatabaseStorage implements IStorage {
     
     const result = await query.orderBy(desc(users.createdAt));
     return { users: result, total: result.length };
-  }
-
-  async getAdminUsers(search?: string): Promise<{ users: (User & { adminRoleName?: string })[]; total: number }> {
-    const adminRolesArr = ["admin", "manager", "support"];
-    let baseCondition = inArray(users.role, adminRolesArr);
-    
-    let whereCondition: any = baseCondition;
-    
-    if (search) {
-      whereCondition = and(
-        baseCondition,
-        or(
-          like(users.email, `%${search}%`),
-          like(users.firstName, `%${search}%`),
-          like(users.lastName, `%${search}%`)
-        )
-      );
-    }
-    
-    const result = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        profileImageUrl: users.profileImageUrl,
-        phone: users.phone,
-        role: users.role,
-        adminRoleId: users.adminRoleId,
-        passwordHash: users.passwordHash,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        adminRoleName: adminRoles.name,
-      })
-      .from(users)
-      .leftJoin(adminRoles, eq(users.adminRoleId, adminRoles.id))
-      .where(whereCondition)
-      .orderBy(desc(users.createdAt));
-    
-    return { users: result, total: result.length };
-  }
-
-  async getCustomerUsers(search?: string): Promise<{ users: any[]; total: number }> {
-    let baseCondition = eq(users.role, "customer");
-    
-    let whereCondition: any = baseCondition;
-    
-    if (search) {
-      whereCondition = and(
-        baseCondition,
-        or(
-          like(users.email, `%${search}%`),
-          like(users.firstName, `%${search}%`),
-          like(users.lastName, `%${search}%`)
-        )
-      );
-    }
-    
-    const customerList = await db.select().from(users).where(whereCondition).orderBy(desc(users.createdAt));
-    
-    const customersWithStats = await Promise.all(
-      customerList.map(async (customer) => {
-        const customerOrders = await db.select().from(orders).where(eq(orders.userId, customer.id));
-        const orderCount = customerOrders.length;
-        const totalSpent = customerOrders.reduce((sum, order) => sum + parseFloat(order.total || "0"), 0);
-        
-        return {
-          ...customer,
-          orderCount,
-          totalSpent,
-        };
-      })
-    );
-    
-    return { users: customersWithStats, total: customersWithStats.length };
   }
 
   async getCategories(): Promise<CategoryWithChildren[]> {
@@ -574,7 +483,6 @@ export class DatabaseStorage implements IStorage {
       }
     }
     if (filters.isActive !== undefined) conditions.push(eq(products.isActive, filters.isActive));
-    if (filters.isInStock) conditions.push(gt(products.stock, 0));
 
     const baseQuery = conditions.length > 0 
       ? db.select().from(products).where(and(...conditions))
@@ -1838,136 +1746,6 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(otpCodes)
       .where(lt(otpCodes.expiresAt, new Date()));
-  }
-
-  // Admin Roles CRUD
-  async getAdminRoles(): Promise<AdminRole[]> {
-    return await db
-      .select()
-      .from(adminRoles)
-      .orderBy(asc(adminRoles.name));
-  }
-
-  async getAdminRoleById(id: string): Promise<AdminRole | undefined> {
-    const [role] = await db
-      .select()
-      .from(adminRoles)
-      .where(eq(adminRoles.id, id));
-    return role;
-  }
-
-  async getAdminRoleWithPermissions(id: string): Promise<{ role: AdminRole; permissions: RolePermission[] } | undefined> {
-    const role = await this.getAdminRoleById(id);
-    if (!role) return undefined;
-
-    const permissions = await db
-      .select()
-      .from(rolePermissions)
-      .where(eq(rolePermissions.roleId, id));
-
-    return { role, permissions };
-  }
-
-  async createAdminRole(data: InsertAdminRole): Promise<AdminRole> {
-    const [role] = await db
-      .insert(adminRoles)
-      .values(data)
-      .returning();
-    return role;
-  }
-
-  async updateAdminRole(id: string, data: Partial<InsertAdminRole>): Promise<AdminRole | undefined> {
-    const [role] = await db
-      .update(adminRoles)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(adminRoles.id, id))
-      .returning();
-    return role;
-  }
-
-  async deleteAdminRole(id: string): Promise<boolean> {
-    // Check if it's a system role
-    const role = await this.getAdminRoleById(id);
-    if (role?.isSystemRole) {
-      return false; // Cannot delete system roles
-    }
-    
-    const result = await db
-      .delete(adminRoles)
-      .where(eq(adminRoles.id, id))
-      .returning();
-    return result.length > 0;
-  }
-
-  // Role Permissions CRUD
-  async getRolePermissions(roleId: string): Promise<RolePermission[]> {
-    return await db
-      .select()
-      .from(rolePermissions)
-      .where(eq(rolePermissions.roleId, roleId));
-  }
-
-  async setRolePermissions(roleId: string, permissions: Omit<InsertRolePermission, 'roleId'>[]): Promise<RolePermission[]> {
-    // Delete existing permissions
-    await db
-      .delete(rolePermissions)
-      .where(eq(rolePermissions.roleId, roleId));
-    
-    // Insert new permissions
-    if (permissions.length === 0) {
-      return [];
-    }
-    
-    const permissionsWithRoleId = permissions.map(p => ({
-      ...p,
-      roleId,
-    }));
-    
-    return await db
-      .insert(rolePermissions)
-      .values(permissionsWithRoleId)
-      .returning();
-  }
-
-  async getUserPermissions(userId: string): Promise<RolePermission[]> {
-    const user = await this.getUser(userId);
-    if (!user?.adminRoleId) {
-      return [];
-    }
-    return await this.getRolePermissions(user.adminRoleId);
-  }
-
-  async checkUserPermission(userId: string, module: string, action: 'view' | 'add' | 'edit' | 'delete'): Promise<boolean> {
-    const user = await this.getUser(userId);
-    
-    // Super admins (legacy admin role without specific role assignment) have all permissions
-    if (user?.role === 'admin' && !user.adminRoleId) {
-      return true;
-    }
-    
-    if (!user?.adminRoleId) {
-      return false;
-    }
-    
-    const [permission] = await db
-      .select()
-      .from(rolePermissions)
-      .where(and(
-        eq(rolePermissions.roleId, user.adminRoleId),
-        eq(rolePermissions.module, module)
-      ));
-    
-    if (!permission) {
-      return false;
-    }
-    
-    switch (action) {
-      case 'view': return permission.canView ?? false;
-      case 'add': return permission.canAdd ?? false;
-      case 'edit': return permission.canEdit ?? false;
-      case 'delete': return permission.canDelete ?? false;
-      default: return false;
-    }
   }
 }
 

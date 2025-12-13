@@ -4,8 +4,6 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, getUserInfo, getOidcConfig, client } from "./replitAuth";
 import { emailService } from "./email";
 import { randomUUID, createHmac } from "crypto";
-import path from "path";
-import fs from "fs";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import Razorpay from "razorpay";
 import { hashPassword, verifyPassword, validatePasswordStrength } from "./password";
@@ -25,7 +23,6 @@ import {
   defaultHomeCategorySection,
   blogSectionSchema,
   defaultBlogSection,
-  ADMIN_MODULES,
 } from "@shared/schema";
 
 function escapeHtml(str: string): string {
@@ -146,14 +143,7 @@ async function generateOgHtml(req: Request, baseUrl: string): Promise<string | n
 const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
   const dbUser = user?.dbUser;
-  if (!dbUser) {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-  // Check legacy role field OR new adminRoleId for dynamic roles
-  const hasLegacyAdminRole = ["admin", "manager", "support"].includes(dbUser.role);
-  const hasDynamicRole = !!dbUser.adminRoleId;
-  
-  if (!hasLegacyAdminRole && !hasDynamicRole) {
+  if (!dbUser || !["admin", "manager"].includes(dbUser.role)) {
     return res.status(403).json({ error: "Admin access required" });
   }
   next();
@@ -174,29 +164,6 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
-
-  // Project backup download routes
-  app.get("/api/download/project", (req, res) => {
-    const filePath = path.join(process.cwd(), "project_backup.tar.gz");
-    if (fs.existsSync(filePath)) {
-      res.setHeader("Content-Disposition", "attachment; filename=project_backup.tar.gz");
-      res.setHeader("Content-Type", "application/gzip");
-      fs.createReadStream(filePath).pipe(res);
-    } else {
-      res.status(404).json({ error: "Project backup not found" });
-    }
-  });
-
-  app.get("/api/download/database", (req, res) => {
-    const filePath = path.join(process.cwd(), "database_backup.sql");
-    if (fs.existsSync(filePath)) {
-      res.setHeader("Content-Disposition", "attachment; filename=database_backup.sql");
-      res.setHeader("Content-Type", "application/sql");
-      fs.createReadStream(filePath).pipe(res);
-    } else {
-      res.status(404).json({ error: "Database backup not found" });
-    }
-  });
 
   app.use(async (req, res, next) => {
     try {
@@ -1214,7 +1181,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         isTrending: req.query.trending === "true" ? true : undefined,
         isNewArrival: req.query.newArrival === "true" ? true : undefined,
         isOnSale: req.query.onSale === "true" ? true : undefined,
-        isInStock: req.query.inStock === "true" ? true : undefined,
         isActive: true,
         limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
         offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
@@ -3478,79 +3444,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/users/admins", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const search = req.query.search as string || "";
-      const result = await storage.getAdminUsers(search);
-      res.json(result);
-    } catch (error) {
-      console.error("Failed to fetch admin users:", error);
-      res.status(500).json({ error: "Failed to fetch admin users" });
-    }
-  });
-
-  app.get("/api/admin/users/customers", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const search = req.query.search as string || "";
-      const result = await storage.getCustomerUsers(search);
-      res.json(result);
-    } catch (error) {
-      console.error("Failed to fetch customers:", error);
-      res.status(500).json({ error: "Failed to fetch customers" });
-    }
-  });
-
-  app.post("/api/admin/users/create-admin", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const { email, password, firstName, lastName, role } = req.body;
-      
-      if (!email || !password || !firstName) {
-        return res.status(400).json({ error: "Email, password, and first name are required" });
-      }
-      
-      if (!["admin", "manager", "support"].includes(role)) {
-        return res.status(400).json({ error: "Invalid role" });
-      }
-      
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ error: "User with this email already exists" });
-      }
-      
-      const passwordValidation = validatePasswordStrength(password);
-      if (!passwordValidation.isValid) {
-        return res.status(400).json({ error: passwordValidation.errors.join(", ") });
-      }
-      
-      const passwordHash = await hashPassword(password);
-      const userId = randomUUID();
-      
-      const newUser = await storage.createUser({
-        id: userId,
-        email,
-        firstName,
-        lastName: lastName || null,
-        role,
-        passwordHash,
-        createdAt: new Date(),
-      });
-      
-      res.json({ 
-        success: true, 
-        user: {
-          id: newUser.id,
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          role: newUser.role,
-        }
-      });
-    } catch (error) {
-      console.error("Failed to create admin user:", error);
-      res.status(500).json({ error: "Failed to create admin user" });
-    }
-  });
-
   app.patch("/api/admin/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { role } = req.body;
@@ -3558,152 +3451,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json({ user });
     } catch (error) {
       res.status(500).json({ error: "Failed to update user role" });
-    }
-  });
-
-  // Admin Roles Management API
-  app.get("/api/admin/roles", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const roles = await storage.getAdminRoles();
-      res.json({ roles });
-    } catch (error) {
-      console.error("Failed to get admin roles:", error);
-      res.status(500).json({ error: "Failed to get admin roles" });
-    }
-  });
-
-  app.get("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const data = await storage.getAdminRoleWithPermissions(req.params.id);
-      if (!data) {
-        return res.status(404).json({ error: "Role not found" });
-      }
-      res.json(data);
-    } catch (error) {
-      console.error("Failed to get role:", error);
-      res.status(500).json({ error: "Failed to get role" });
-    }
-  });
-
-  app.post("/api/admin/roles", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const { name, description, permissions } = req.body;
-      
-      if (!name || name.trim().length === 0) {
-        return res.status(400).json({ error: "Role name is required" });
-      }
-      
-      // Create the role
-      const role = await storage.createAdminRole({
-        name: name.trim(),
-        description: description?.trim() || null,
-        isSystemRole: false,
-        isActive: true,
-      });
-      
-      // Set permissions if provided
-      if (permissions && Array.isArray(permissions)) {
-        await storage.setRolePermissions(role.id, permissions);
-      }
-      
-      const fullRole = await storage.getAdminRoleWithPermissions(role.id);
-      res.json(fullRole);
-    } catch (error: any) {
-      console.error("Failed to create role:", error);
-      if (error?.code === '23505') {
-        return res.status(400).json({ error: "A role with this name already exists" });
-      }
-      res.status(500).json({ error: "Failed to create role" });
-    }
-  });
-
-  app.patch("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const { name, description, isActive, permissions } = req.body;
-      
-      const existingRole = await storage.getAdminRoleById(req.params.id);
-      if (!existingRole) {
-        return res.status(404).json({ error: "Role not found" });
-      }
-      
-      // Update role details
-      const updateData: any = {};
-      if (name !== undefined) updateData.name = name.trim();
-      if (description !== undefined) updateData.description = description?.trim() || null;
-      if (isActive !== undefined) updateData.isActive = isActive;
-      
-      if (Object.keys(updateData).length > 0) {
-        await storage.updateAdminRole(req.params.id, updateData);
-      }
-      
-      // Update permissions if provided
-      if (permissions && Array.isArray(permissions)) {
-        await storage.setRolePermissions(req.params.id, permissions);
-      }
-      
-      const fullRole = await storage.getAdminRoleWithPermissions(req.params.id);
-      res.json(fullRole);
-    } catch (error: any) {
-      console.error("Failed to update role:", error);
-      if (error?.code === '23505') {
-        return res.status(400).json({ error: "A role with this name already exists" });
-      }
-      res.status(500).json({ error: "Failed to update role" });
-    }
-  });
-
-  app.delete("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const role = await storage.getAdminRoleById(req.params.id);
-      if (!role) {
-        return res.status(404).json({ error: "Role not found" });
-      }
-      
-      if (role.isSystemRole) {
-        return res.status(400).json({ error: "Cannot delete system roles" });
-      }
-      
-      const deleted = await storage.deleteAdminRole(req.params.id);
-      if (deleted) {
-        res.json({ success: true });
-      } else {
-        res.status(400).json({ error: "Failed to delete role" });
-      }
-    } catch (error) {
-      console.error("Failed to delete role:", error);
-      res.status(500).json({ error: "Failed to delete role" });
-    }
-  });
-
-  // Get available modules for permission assignment
-  app.get("/api/admin/modules", isAuthenticated, isAdmin, async (req, res) => {
-    res.json({ modules: ADMIN_MODULES });
-  });
-
-  // Assign role to user
-  app.patch("/api/admin/users/:id/assign-role", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const { adminRoleId } = req.body;
-      
-      const user = await storage.getUser(req.params.id);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      
-      // Verify role exists if provided
-      if (adminRoleId) {
-        const role = await storage.getAdminRoleById(adminRoleId);
-        if (!role) {
-          return res.status(400).json({ error: "Role not found" });
-        }
-      }
-      
-      // Update user's admin role
-      const updated = await storage.updateUser(req.params.id, { adminRoleId: adminRoleId || null });
-      res.json({ user: updated });
-    } catch (error) {
-      console.error("Failed to assign role:", error);
-      res.status(500).json({ error: "Failed to assign role to user" });
     }
   });
 
