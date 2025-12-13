@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, MapPin, ShoppingBag, Loader2 } from "lucide-react";
+import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, MapPin, ShoppingBag, Loader2, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -58,10 +59,17 @@ export default function CustomerUsersList() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Customer Accounts</h1>
+      <div className="flex items-center gap-4">
+        <Link href="/admin">
+          <Button variant="outline" size="icon" data-testid="button-back-to-admin">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold">Customer Accounts</h1>
           <p className="text-muted-foreground">View and manage customer accounts</p>
         </div>
+      </div>
 
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">

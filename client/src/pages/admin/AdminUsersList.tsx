@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Search, MoreHorizontal, Shield, UserPlus, Loader2, Eye, EyeOff, Key } from "lucide-react";
+import { Search, MoreHorizontal, Shield, UserPlus, Loader2, Eye, EyeOff, Key, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -162,15 +163,22 @@ export default function AdminUsersList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Users</h1>
+        <div className="flex items-center gap-4">
+          <Link href="/admin">
+            <Button variant="outline" size="icon" data-testid="button-back-to-admin">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Admin Users</h1>
             <p className="text-muted-foreground">Manage admin, manager, and support staff accounts</p>
           </div>
-          <Button onClick={() => setShowAddDialog(true)} data-testid="button-add-admin">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Admin
-          </Button>
         </div>
+        <Button onClick={() => setShowAddDialog(true)} data-testid="button-add-admin">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Add Admin
+        </Button>
+      </div>
 
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
