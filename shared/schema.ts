@@ -33,8 +33,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   phone: varchar("phone"),
-  role: varchar("role").default("customer").notNull(), // admin, manager, support, customer (legacy field)
-  adminRoleId: varchar("admin_role_id"), // References adminRoles.id for dynamic permissions
+  role: varchar("role").default("customer").notNull(), // admin, manager, support, customer
   passwordHash: varchar("password_hash"), // For admin email/password authentication
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -1021,79 +1020,3 @@ export const insertQuickPageSchema = createInsertSchema(quickPages).omit({
 
 export type InsertQuickPage = z.infer<typeof insertQuickPageSchema>;
 export type QuickPage = typeof quickPages.$inferSelect;
-
-// Admin Roles table for dynamic role-based access control
-export const adminRoles = pgTable("admin_roles", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name").notNull().unique(),
-  description: text("description"),
-  isSystemRole: boolean("is_system_role").default(false), // System roles like 'Super Admin' cannot be deleted
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const adminRolesRelations = relations(adminRoles, ({ many }) => ({
-  permissions: many(rolePermissions),
-}));
-
-export const insertAdminRoleSchema = createInsertSchema(adminRoles).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertAdminRole = z.infer<typeof insertAdminRoleSchema>;
-export type AdminRole = typeof adminRoles.$inferSelect;
-
-// Role Permissions table - stores module-level permissions for each role
-export const rolePermissions = pgTable("role_permissions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  roleId: varchar("role_id").notNull().references(() => adminRoles.id, { onDelete: "cascade" }),
-  module: varchar("module").notNull(), // e.g., 'products', 'orders', 'categories', 'users', 'settings'
-  canView: boolean("can_view").default(false),
-  canAdd: boolean("can_add").default(false),
-  canEdit: boolean("can_edit").default(false),
-  canDelete: boolean("can_delete").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
-  role: one(adminRoles, {
-    fields: [rolePermissions.roleId],
-    references: [adminRoles.id],
-  }),
-}));
-
-export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
-export type RolePermission = typeof rolePermissions.$inferSelect;
-
-// Define available admin modules for permission assignment
-export const ADMIN_MODULES = [
-  { key: "dashboard", label: "Dashboard", description: "View dashboard and analytics" },
-  { key: "products", label: "Products", description: "Manage products and inventory" },
-  { key: "categories", label: "Categories", description: "Manage product categories" },
-  { key: "brands", label: "Brands", description: "Manage product brands" },
-  { key: "orders", label: "Orders", description: "View and manage customer orders" },
-  { key: "customers", label: "Customers", description: "View and manage customer accounts" },
-  { key: "coupons", label: "Coupons", description: "Manage discount coupons" },
-  { key: "reviews", label: "Reviews", description: "Moderate product reviews" },
-  { key: "banners", label: "Banners", description: "Manage home page banners" },
-  { key: "home_blocks", label: "Home Blocks", description: "Manage home page content blocks" },
-  { key: "blog", label: "Blog", description: "Manage blog posts" },
-  { key: "pages", label: "Pages", description: "Manage quick links and CMS pages" },
-  { key: "special_offers", label: "Special Offers", description: "Manage special offer sections" },
-  { key: "combo_offers", label: "Combo Offers", description: "Manage combo/bundle offers" },
-  { key: "settings", label: "Settings", description: "Store settings and configuration" },
-  { key: "communication", label: "Communication", description: "Email, SMS, WhatsApp settings" },
-  { key: "invoices", label: "Invoices", description: "Invoice settings and templates" },
-  { key: "admin_users", label: "Admin Users", description: "Manage admin user accounts" },
-  { key: "roles", label: "Roles & Permissions", description: "Manage admin roles and permissions" },
-] as const;
-
-export type AdminModuleKey = typeof ADMIN_MODULES[number]["key"];
