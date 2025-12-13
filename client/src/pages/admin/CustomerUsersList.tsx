@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, MapPin, ShoppingBag, Loader2, ArrowLeft } from "lucide-react";
+import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, MapPin, ShoppingBag, Loader2, ArrowLeft, Download, FileSpreadsheet, FileText, File } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -31,6 +33,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Document, Packer, Paragraph, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, TextRun, WidthType, BorderStyle, HeadingLevel } from "docx";
+import { saveAs } from "file-saver";
 
 interface CustomerWithStats extends User {
   orderCount?: number;
@@ -57,18 +64,201 @@ export default function CustomerUsersList() {
     }).format(amount);
   };
 
+  const formatCurrencyPlain = (amount: number) => {
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
+
+  const getExportData = () => {
+    return users.map(user => ({
+      Name: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Customer",
+      Email: user.email || "",
+      Phone: user.phone || "-",
+      Orders: user.orderCount || 0,
+      "Total Spent": formatCurrencyPlain(user.totalSpent || 0),
+      "Joined Date": user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN') : "N/A",
+    }));
+  };
+
+  const exportToExcel = () => {
+    try {
+      const exportData = getExportData();
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Customers");
+      
+      const colWidths = [
+        { wch: 25 },
+        { wch: 30 },
+        { wch: 15 },
+        { wch: 10 },
+        { wch: 15 },
+        { wch: 15 },
+      ];
+      worksheet["!cols"] = colWidths;
+      
+      XLSX.writeFile(workbook, `customers_${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast({ title: "Exported to Excel successfully" });
+    } catch (error) {
+      toast({ title: "Failed to export to Excel", variant: "destructive" });
+    }
+  };
+
+  const exportToPDF = () => {
+    try {
+      const doc = new jsPDF();
+      
+      doc.setFontSize(18);
+      doc.text("Customer Accounts", 14, 22);
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 14, 30);
+      doc.text(`Total Customers: ${users.length}`, 14, 36);
+
+      const tableData = users.map(user => [
+        user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Customer",
+        user.email || "",
+        user.phone || "-",
+        String(user.orderCount || 0),
+        formatCurrencyPlain(user.totalSpent || 0),
+        user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN') : "N/A",
+      ]);
+
+      autoTable(doc, {
+        head: [["Name", "Email", "Phone", "Orders", "Total Spent", "Joined"]],
+        body: tableData,
+        startY: 42,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [41, 128, 185] },
+      });
+
+      doc.save(`customers_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast({ title: "Exported to PDF successfully" });
+    } catch (error) {
+      toast({ title: "Failed to export to PDF", variant: "destructive" });
+    }
+  };
+
+  const exportToWord = async () => {
+    try {
+      const tableRows = [
+        new DocxTableRow({
+          children: [
+            new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Name", bold: true })] })] }),
+            new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Email", bold: true })] })] }),
+            new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Phone", bold: true })] })] }),
+            new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Orders", bold: true })] })] }),
+            new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Total Spent", bold: true })] })] }),
+            new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Joined", bold: true })] })] }),
+          ],
+        }),
+        ...users.map(user => 
+          new DocxTableRow({
+            children: [
+              new DocxTableCell({ children: [new Paragraph(user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Customer")] }),
+              new DocxTableCell({ children: [new Paragraph(user.email || "")] }),
+              new DocxTableCell({ children: [new Paragraph(user.phone || "-")] }),
+              new DocxTableCell({ children: [new Paragraph(String(user.orderCount || 0))] }),
+              new DocxTableCell({ children: [new Paragraph(formatCurrencyPlain(user.totalSpent || 0))] }),
+              new DocxTableCell({ children: [new Paragraph(user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN') : "N/A")] }),
+            ],
+          })
+        ),
+      ];
+
+      const doc = new Document({
+        sections: [{
+          children: [
+            new Paragraph({
+              text: "Customer Accounts",
+              heading: HeadingLevel.HEADING_1,
+            }),
+            new Paragraph({
+              text: `Generated on: ${new Date().toLocaleDateString('en-IN')} | Total Customers: ${users.length}`,
+            }),
+            new Paragraph({ text: "" }),
+            new DocxTable({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: tableRows,
+            }),
+          ],
+        }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `customers_${new Date().toISOString().split('T')[0]}.docx`);
+      toast({ title: "Exported to Word successfully" });
+    } catch (error) {
+      toast({ title: "Failed to export to Word", variant: "destructive" });
+    }
+  };
+
+  const exportToText = () => {
+    try {
+      let content = "CUSTOMER ACCOUNTS\n";
+      content += "=".repeat(80) + "\n";
+      content += `Generated on: ${new Date().toLocaleDateString('en-IN')}\n`;
+      content += `Total Customers: ${users.length}\n`;
+      content += "=".repeat(80) + "\n\n";
+
+      users.forEach((user, index) => {
+        content += `${index + 1}. ${user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Customer"}\n`;
+        content += `   Email: ${user.email || "-"}\n`;
+        content += `   Phone: ${user.phone || "-"}\n`;
+        content += `   Orders: ${user.orderCount || 0}\n`;
+        content += `   Total Spent: ${formatCurrencyPlain(user.totalSpent || 0)}\n`;
+        content += `   Joined: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN') : "N/A"}\n`;
+        content += "-".repeat(40) + "\n";
+      });
+
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      saveAs(blob, `customers_${new Date().toISOString().split('T')[0]}.txt`);
+      toast({ title: "Exported to Text successfully" });
+    } catch (error) {
+      toast({ title: "Failed to export to Text", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/admin">
-          <Button variant="outline" size="icon" data-testid="button-back-to-admin">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">Customer Accounts</h1>
-          <p className="text-muted-foreground">View and manage customer accounts</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/admin">
+            <Button variant="outline" size="icon" data-testid="button-back-to-admin">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Customer Accounts</h1>
+            <p className="text-muted-foreground">View and manage customer accounts</p>
+          </div>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" data-testid="button-export-customers">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={exportToExcel} data-testid="export-excel">
+              <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+              Excel (.xlsx)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToPDF} data-testid="export-pdf">
+              <File className="h-4 w-4 mr-2 text-red-600" />
+              PDF (.pdf)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToWord} data-testid="export-word">
+              <FileText className="h-4 w-4 mr-2 text-blue-600" />
+              Word (.docx)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToText} data-testid="export-text">
+              <FileText className="h-4 w-4 mr-2 text-gray-600" />
+              Text (.txt)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
         <div className="flex items-center gap-4">
