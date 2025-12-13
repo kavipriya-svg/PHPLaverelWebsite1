@@ -25,6 +25,8 @@ import {
   comboOffers,
   quickPages,
   otpCodes,
+  adminRoles,
+  rolePermissions,
   type User,
   type UpsertUser,
   type Category,
@@ -76,6 +78,10 @@ import {
   type CartItemWithProduct,
   type ReviewWithUser,
   type GiftRegistryWithItems,
+  type AdminRole,
+  type InsertAdminRole,
+  type RolePermission,
+  type InsertRolePermission,
 } from "@shared/schema";
 
 // Extended type for combo offer with full product details
@@ -1813,6 +1819,136 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(otpCodes)
       .where(lt(otpCodes.expiresAt, new Date()));
+  }
+
+  // Admin Roles CRUD
+  async getAdminRoles(): Promise<AdminRole[]> {
+    return await db
+      .select()
+      .from(adminRoles)
+      .orderBy(asc(adminRoles.name));
+  }
+
+  async getAdminRoleById(id: string): Promise<AdminRole | undefined> {
+    const [role] = await db
+      .select()
+      .from(adminRoles)
+      .where(eq(adminRoles.id, id));
+    return role;
+  }
+
+  async getAdminRoleWithPermissions(id: string): Promise<{ role: AdminRole; permissions: RolePermission[] } | undefined> {
+    const role = await this.getAdminRoleById(id);
+    if (!role) return undefined;
+
+    const permissions = await db
+      .select()
+      .from(rolePermissions)
+      .where(eq(rolePermissions.roleId, id));
+
+    return { role, permissions };
+  }
+
+  async createAdminRole(data: InsertAdminRole): Promise<AdminRole> {
+    const [role] = await db
+      .insert(adminRoles)
+      .values(data)
+      .returning();
+    return role;
+  }
+
+  async updateAdminRole(id: string, data: Partial<InsertAdminRole>): Promise<AdminRole | undefined> {
+    const [role] = await db
+      .update(adminRoles)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(adminRoles.id, id))
+      .returning();
+    return role;
+  }
+
+  async deleteAdminRole(id: string): Promise<boolean> {
+    // Check if it's a system role
+    const role = await this.getAdminRoleById(id);
+    if (role?.isSystemRole) {
+      return false; // Cannot delete system roles
+    }
+    
+    const result = await db
+      .delete(adminRoles)
+      .where(eq(adminRoles.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Role Permissions CRUD
+  async getRolePermissions(roleId: string): Promise<RolePermission[]> {
+    return await db
+      .select()
+      .from(rolePermissions)
+      .where(eq(rolePermissions.roleId, roleId));
+  }
+
+  async setRolePermissions(roleId: string, permissions: Omit<InsertRolePermission, 'roleId'>[]): Promise<RolePermission[]> {
+    // Delete existing permissions
+    await db
+      .delete(rolePermissions)
+      .where(eq(rolePermissions.roleId, roleId));
+    
+    // Insert new permissions
+    if (permissions.length === 0) {
+      return [];
+    }
+    
+    const permissionsWithRoleId = permissions.map(p => ({
+      ...p,
+      roleId,
+    }));
+    
+    return await db
+      .insert(rolePermissions)
+      .values(permissionsWithRoleId)
+      .returning();
+  }
+
+  async getUserPermissions(userId: string): Promise<RolePermission[]> {
+    const user = await this.getUser(userId);
+    if (!user?.adminRoleId) {
+      return [];
+    }
+    return await this.getRolePermissions(user.adminRoleId);
+  }
+
+  async checkUserPermission(userId: string, module: string, action: 'view' | 'add' | 'edit' | 'delete'): Promise<boolean> {
+    const user = await this.getUser(userId);
+    
+    // Super admins (legacy admin role without specific role assignment) have all permissions
+    if (user?.role === 'admin' && !user.adminRoleId) {
+      return true;
+    }
+    
+    if (!user?.adminRoleId) {
+      return false;
+    }
+    
+    const [permission] = await db
+      .select()
+      .from(rolePermissions)
+      .where(and(
+        eq(rolePermissions.roleId, user.adminRoleId),
+        eq(rolePermissions.module, module)
+      ));
+    
+    if (!permission) {
+      return false;
+    }
+    
+    switch (action) {
+      case 'view': return permission.canView ?? false;
+      case 'add': return permission.canAdd ?? false;
+      case 'edit': return permission.canEdit ?? false;
+      case 'delete': return permission.canDelete ?? false;
+      default: return false;
+    }
   }
 }
 
