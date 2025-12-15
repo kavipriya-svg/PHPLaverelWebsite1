@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, ShoppingBag, Download, FileText, FileSpreadsheet, FileType, File, ArrowLeft } from "lucide-react";
+import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, ShoppingBag, Download, FileText, FileSpreadsheet, FileType, File, ArrowLeft, MapPin, Receipt } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,9 +29,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import type { User } from "@shared/schema";
+import type { User, Order, Address } from "@shared/schema";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -42,13 +44,27 @@ interface CustomerWithStats extends User {
   totalSpent?: number;
 }
 
+interface CustomerDetailsResponse {
+  customer: User;
+  orders: Order[];
+  addresses: Address[];
+}
+
 export default function CustomerUsersList() {
   const [search, setSearch] = useState("");
   const [viewCustomer, setViewCustomer] = useState<CustomerWithStats | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
 
   const { data, isLoading } = useQuery<{ users: CustomerWithStats[]; total: number }>({
     queryKey: ["/api/admin/users/customers", { search }],
+  });
+
+  const customerId = viewCustomer?.id;
+  const { data: customerDetails, isLoading: detailsLoading } = useQuery<CustomerDetailsResponse>({
+    queryKey: ['/api/admin/users/customers', customerId, 'details'],
+    enabled: !!customerId,
+    staleTime: 0,
   });
 
   const users = data?.users || [];
@@ -362,71 +378,195 @@ export default function CustomerUsersList() {
         </Table>
       </div>
 
-      <Dialog open={!!viewCustomer} onOpenChange={() => setViewCustomer(null)}>
-        <DialogContent className="max-w-md">
+      <Dialog open={!!viewCustomer} onOpenChange={() => { setViewCustomer(null); setActiveTab("overview"); }}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Customer Details</DialogTitle>
           </DialogHeader>
           {viewCustomer && (
-            <div className="space-y-6 py-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={viewCustomer.profileImageUrl || undefined} />
-                  <AvatarFallback className="text-xl">
-                    {viewCustomer.firstName?.[0] || viewCustomer.email?.[0]?.toUpperCase() || "C"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold text-lg">
-                    {viewCustomer.firstName ? `${viewCustomer.firstName} ${viewCustomer.lastName || ""}` : "Customer"}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Customer Account</p>
-                </div>
-              </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="overview" data-testid="tab-overview">
+                  <UserIcon className="h-4 w-4 mr-2" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="orders" data-testid="tab-orders">
+                  <ShoppingBag className="h-4 w-4 mr-2" />
+                  Orders
+                </TabsTrigger>
+                <TabsTrigger value="addresses" data-testid="tab-addresses">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Addresses
+                </TabsTrigger>
+              </TabsList>
 
-              <div className="grid gap-4">
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <Mail className="h-5 w-5 text-muted-foreground" />
+              <TabsContent value="overview" className="space-y-4 py-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={viewCustomer.profileImageUrl || undefined} />
+                    <AvatarFallback className="text-xl">
+                      {viewCustomer.firstName?.[0] || viewCustomer.email?.[0]?.toUpperCase() || "C"}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
-                    <p className="text-xs text-muted-foreground">Email</p>
-                    <p className="font-medium">{viewCustomer.email}</p>
+                    <h3 className="font-semibold text-lg">
+                      {viewCustomer.firstName ? `${viewCustomer.firstName} ${viewCustomer.lastName || ""}` : "Customer"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">Customer Account</p>
                   </div>
                 </div>
 
-                {viewCustomer.phone && (
+                <div className="grid gap-4">
                   <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
+                    <Mail className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="text-xs text-muted-foreground">Phone</p>
-                      <p className="font-medium">{viewCustomer.phone}</p>
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="font-medium">{viewCustomer.email}</p>
                     </div>
                   </div>
-                )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-muted/50 rounded-lg text-center">
-                    <ShoppingBag className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-                    <p className="text-2xl font-bold">{viewCustomer.orderCount || 0}</p>
-                    <p className="text-xs text-muted-foreground">Total Orders</p>
+                  {viewCustomer.phone && (
+                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                      <Phone className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Phone</p>
+                        <p className="font-medium">{viewCustomer.phone}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div 
+                      className="p-3 bg-muted/50 rounded-lg text-center cursor-pointer hover-elevate"
+                      onClick={() => setActiveTab("orders")}
+                      data-testid="card-total-orders"
+                    >
+                      <ShoppingBag className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                      <p className="text-2xl font-bold">{viewCustomer.orderCount || 0}</p>
+                      <p className="text-xs text-muted-foreground">Total Orders</p>
+                      <p className="text-xs text-primary mt-1">Click to view</p>
+                    </div>
+                    <div 
+                      className="p-3 bg-muted/50 rounded-lg text-center cursor-pointer hover-elevate"
+                      onClick={() => setActiveTab("orders")}
+                      data-testid="card-total-spent"
+                    >
+                      <Receipt className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                      <p className="text-2xl font-bold">{formatCurrency(viewCustomer.totalSpent || 0)}</p>
+                      <p className="text-xs text-muted-foreground">Total Spent</p>
+                      <p className="text-xs text-primary mt-1">Click to view</p>
+                    </div>
                   </div>
-                  <div className="p-3 bg-muted/50 rounded-lg text-center">
-                    <p className="text-2xl font-bold">{formatCurrency(viewCustomer.totalSpent || 0)}</p>
-                    <p className="text-xs text-muted-foreground">Total Spent</p>
+
+                  <div className="text-sm text-muted-foreground">
+                    Member since: {viewCustomer.createdAt ? new Date(viewCustomer.createdAt).toLocaleDateString('en-IN', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    }) : "N/A"}
                   </div>
                 </div>
+              </TabsContent>
 
-                <div className="text-sm text-muted-foreground">
-                  Member since: {viewCustomer.createdAt ? new Date(viewCustomer.createdAt).toLocaleDateString('en-IN', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  }) : "N/A"}
-                </div>
-              </div>
-            </div>
+              <TabsContent value="orders" className="py-4">
+                <ScrollArea className="h-[400px]">
+                  {detailsLoading ? (
+                    <div className="space-y-2">
+                      {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+                    </div>
+                  ) : customerDetails?.orders && customerDetails.orders.length > 0 ? (
+                    <div className="space-y-3">
+                      {customerDetails.orders.map((order) => (
+                        <div key={order.id} className="p-4 border rounded-lg" data-testid={`order-${order.id}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="font-medium">#{order.orderNumber}</div>
+                            <Badge variant={
+                              order.status === "delivered" ? "default" :
+                              order.status === "cancelled" ? "destructive" :
+                              "secondary"
+                            }>
+                              {order.status}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <span>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A"}</span>
+                            <span className="font-medium text-foreground">{formatCurrency(Number(order.total))}</span>
+                          </div>
+                          <div className="mt-2 flex gap-2">
+                            <Link href={`/admin/orders/${order.id}`}>
+                              <Button variant="outline" size="sm" data-testid={`button-view-order-${order.id}`}>
+                                View Order
+                              </Button>
+                            </Link>
+                            <Link href={`/admin/orders/${order.id}/invoice`}>
+                              <Button variant="outline" size="sm" data-testid={`button-view-invoice-${order.id}`}>
+                                <FileText className="h-3 w-3 mr-1" />
+                                Invoice
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <ShoppingBag className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No orders found</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="addresses" className="py-4">
+                <ScrollArea className="h-[400px]">
+                  {detailsLoading ? (
+                    <div className="space-y-2">
+                      {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+                    </div>
+                  ) : customerDetails?.addresses && customerDetails.addresses.length > 0 ? (
+                    <div className="space-y-3">
+                      {customerDetails.addresses.map((address) => (
+                        <div key={address.id} className="p-4 border rounded-lg" data-testid={`address-${address.id}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{address.firstName} {address.lastName}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              {address.isDefault && <Badge variant="default">Default</Badge>}
+                              <Badge variant="outline">{address.type}</Badge>
+                            </div>
+                          </div>
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <p>{address.address1}</p>
+                            {address.address2 && <p>{address.address2}</p>}
+                            <p>{address.city}, {address.state} {address.postalCode}</p>
+                            <p>{address.country}</p>
+                            {address.phone && (
+                              <p className="flex items-center gap-1 mt-2">
+                                <Phone className="h-3 w-3" />
+                                {address.phone}
+                              </p>
+                            )}
+                            {address.gstNumber && (
+                              <p className="text-xs">GST: {address.gstNumber}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MapPin className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No addresses found</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewCustomer(null)}>
+            <Button variant="outline" onClick={() => { setViewCustomer(null); setActiveTab("overview"); }}>
               Close
             </Button>
           </DialogFooter>
