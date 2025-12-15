@@ -49,6 +49,9 @@ const AdminBrands = lazy(() => import("@/pages/admin/Brands"));
 const AdminHomeBlocks = lazy(() => import("@/pages/admin/HomeBlocks"));
 const AdminSettings = lazy(() => import("@/pages/admin/Settings"));
 const AdminUsers = lazy(() => import("@/pages/admin/Users"));
+const AdminUsersList = lazy(() => import("@/pages/admin/AdminUsersList"));
+const CustomerUsersList = lazy(() => import("@/pages/admin/CustomerUsersList"));
+const RolesManagement = lazy(() => import("@/pages/admin/RolesManagement"));
 const AdminReviews = lazy(() => import("@/pages/admin/Reviews"));
 const AdminEmailSettings = lazy(() => import("@/pages/admin/EmailSettings"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/Analytics"));
@@ -331,6 +334,21 @@ function Router() {
       <Route path="/admin/users">
         <AdminLayout>
           <AdminUsers />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/users/admins">
+        <AdminLayout>
+          <AdminUsersList />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/users/customers">
+        <AdminLayout>
+          <CustomerUsersList />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/users/roles">
+        <AdminLayout>
+          <RolesManagement />
         </AdminLayout>
       </Route>
       <Route path="/admin/reviews">
