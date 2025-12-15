@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Search,
@@ -15,6 +15,7 @@ import {
   Phone,
   Mail,
   UserPlus,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +78,44 @@ export default function POS() {
     email: "",
     phone: "",
   });
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const customerInputRef = useRef<HTMLDivElement>(null);
+
+  // Customer search query
+  const { data: customerSearchData } = useQuery<{
+    customers: Array<{
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      phone: string | null;
+      email: string | null;
+    }>;
+  }>({
+    queryKey: ["/api/admin/pos/customers", { search: customerSearch }],
+    enabled: customerSearch.length >= 2,
+  });
+
+  const searchedCustomers = customerSearchData?.customers || [];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (customerInputRef.current && !customerInputRef.current.contains(event.target as Node)) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectCustomer = (customer: typeof searchedCustomers[0]) => {
+    const fullName = `${customer.firstName || ""} ${customer.lastName || ""}`.trim();
+    setCustomerName(fullName);
+    setCustomerPhone(customer.phone || "");
+    setCustomerSearch("");
+    setShowCustomerDropdown(false);
+  };
 
   const { data: productsData, isLoading } = useQuery<{
     products: ProductWithDetails[];
@@ -94,11 +133,8 @@ export default function POS() {
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/admin/pos/orders", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await apiRequest("POST", "/api/admin/pos/orders", data);
+      return response.json();
     },
     onSuccess: (data: any) => {
       setLastOrderNumber(data.order?.orderNumber || "");
@@ -338,15 +374,40 @@ export default function POS() {
 
           <div className="px-4 pb-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative flex-1" ref={customerInputRef}>
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  data-testid="input-customer-name"
-                  placeholder="Customer Name (optional)"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
+                  data-testid="input-customer-search"
+                  placeholder="Search existing customer..."
+                  value={customerSearch}
+                  onChange={(e) => {
+                    setCustomerSearch(e.target.value);
+                    setShowCustomerDropdown(true);
+                  }}
+                  onFocus={() => setShowCustomerDropdown(true)}
                   className="pl-10"
                 />
+                {showCustomerDropdown && searchedCustomers.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {searchedCustomers.map((customer) => (
+                      <div
+                        key={customer.id}
+                        data-testid={`customer-option-${customer.id}`}
+                        className="px-3 py-2 cursor-pointer hover-elevate"
+                        onClick={() => selectCustomer(customer)}
+                      >
+                        <div className="font-medium text-sm">
+                          {customer.firstName} {customer.lastName}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {customer.phone && <span>{customer.phone}</span>}
+                          {customer.phone && customer.email && <span> • </span>}
+                          {customer.email && <span>{customer.email}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <Button
                 size="icon"
@@ -357,6 +418,16 @@ export default function POS() {
               >
                 <UserPlus className="h-4 w-4" />
               </Button>
+            </div>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                data-testid="input-customer-name"
+                placeholder="Customer Name (optional)"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="pl-10"
+              />
             </div>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

@@ -3167,6 +3167,41 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Search POS customers by name or phone
+  app.get("/api/admin/pos/customers", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const search = (req.query.search as string)?.toLowerCase().trim() || "";
+      
+      if (!search || search.length < 2) {
+        return res.json({ customers: [] });
+      }
+      
+      // Get all customers and filter by search term
+      const allUsers = await storage.getUsers();
+      const customers = allUsers
+        .filter(u => u.role === "customer")
+        .filter(u => {
+          const fullName = `${u.firstName || ""} ${u.lastName || ""}`.toLowerCase();
+          const phone = (u.phone || "").toLowerCase();
+          const email = (u.email || "").toLowerCase();
+          return fullName.includes(search) || phone.includes(search) || email.includes(search);
+        })
+        .slice(0, 10) // Limit to 10 results
+        .map(u => ({
+          id: u.id,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          phone: u.phone,
+          email: u.email,
+        }));
+      
+      res.json({ customers });
+    } catch (error: any) {
+      console.error("Search POS customers error:", error);
+      res.status(500).json({ error: error.message || "Failed to search customers" });
+    }
+  });
+
   app.patch("/api/admin/orders/:id/status", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { status, trackingNumber } = req.body;
