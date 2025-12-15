@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, ShoppingBag, Download, FileText, FileSpreadsheet, FileType, File, ArrowLeft, MapPin, Receipt } from "lucide-react";
+import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, ShoppingBag, Download, FileText, FileSpreadsheet, FileType, File, ArrowLeft, MapPin, Receipt, ChevronDown, ChevronUp, Package, Truck, CreditCard } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,12 +28,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import type { User, Order, Address } from "@shared/schema";
+import type { User, Address, OrderWithItems, InvoiceSettings } from "@shared/schema";
+import { defaultInvoiceSettings } from "@shared/schema";
+import { CURRENCY_SYMBOL } from "@/lib/currency";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -46,14 +50,237 @@ interface CustomerWithStats extends User {
 
 interface CustomerDetailsResponse {
   customer: User;
-  orders: Order[];
+  orders: OrderWithItems[];
   addresses: Address[];
+}
+
+async function fetchInvoiceSettings(): Promise<InvoiceSettings> {
+  try {
+    const response = await fetch('/api/settings/invoice');
+    if (response.ok) {
+      const data = await response.json();
+      return { ...defaultInvoiceSettings, ...data.settings };
+    }
+  } catch (error) {
+    console.error('Failed to fetch invoice settings:', error);
+  }
+  return defaultInvoiceSettings;
+}
+
+function generateInvoiceHTML(order: OrderWithItems, settings: InvoiceSettings): string {
+  const shippingAddress = order.shippingAddress as any || {};
+  const billingAddress = order.billingAddress as any || shippingAddress;
+  
+  const sellerState = (settings.sellerState || "").toLowerCase().trim();
+  const buyerState = (shippingAddress.state || "").toLowerCase().trim();
+  const isInterState = sellerState && buyerState && sellerState !== buyerState;
+  
+  interface ItemGST {
+    gstRate: number;
+    lineTotal: number;
+    taxableAmount: number;
+    includedGst: number;
+    igst: number;
+    cgst: number;
+    sgst: number;
+  }
+  
+  const itemGSTData: ItemGST[] = order.items.map((item) => {
+    const itemPrice = parseFloat(item.price as string) || 0;
+    const lineTotal = itemPrice * item.quantity;
+    const gstRate = parseFloat((item as any).gstRate as string) || settings.gstPercentage || 18;
+    const includedGst = lineTotal * gstRate / (100 + gstRate);
+    const taxableAmount = lineTotal - includedGst;
+    
+    return {
+      gstRate,
+      lineTotal,
+      taxableAmount,
+      includedGst,
+      igst: isInterState ? includedGst : 0,
+      cgst: isInterState ? 0 : includedGst / 2,
+      sgst: isInterState ? 0 : includedGst / 2,
+    };
+  });
+  
+  const totalIGST = itemGSTData.reduce((sum, item) => sum + item.igst, 0);
+  const totalCGST = itemGSTData.reduce((sum, item) => sum + item.cgst, 0);
+  const totalSGST = itemGSTData.reduce((sum, item) => sum + item.sgst, 0);
+  
+  const itemsHTML = order.items.map((item, index) => {
+    const gst = itemGSTData[index];
+    return `
+    <tr>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${item.title}${settings.showSKU ? `<br><span style="color: #6b7280; font-size: 11px;">SKU: ${item.sku || 'N/A'}</span>` : ''}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${parseFloat(item.price as string).toFixed(2)}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.taxableAmount.toFixed(2)}</td>
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${gst.gstRate}%</td>
+      ${isInterState ? `
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.igst.toFixed(2)}</td>
+      ` : `
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.cgst.toFixed(2)}</td>
+        <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${CURRENCY_SYMBOL}${gst.sgst.toFixed(2)}</td>
+      `}
+      <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">${CURRENCY_SYMBOL}${gst.lineTotal.toFixed(2)}</td>
+    </tr>
+  `}).join('');
+
+  const orderDate = order.createdAt 
+    ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : 'N/A';
+  
+  const subtotal = parseFloat(order.subtotal as string) || 0;
+  const discount = parseFloat(order.discount as string) || 0;
+  const shipping = parseFloat(order.shippingCost as string) || 0;
+  const total = parseFloat(order.total as string) || 0;
+  
+  const sellerAddressLine = [
+    settings.sellerAddress,
+    [settings.sellerCity, settings.sellerState, settings.sellerPostalCode].filter(Boolean).join(', '),
+    settings.sellerCountry
+  ].filter(Boolean).join('<br>');
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Invoice - ${order.orderNumber}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1f2937; line-height: 1.5; }
+        .invoice { max-width: 800px; margin: 0 auto; padding: 40px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
+        .company-info h1 { font-size: 28px; color: #2563eb; margin-bottom: 5px; }
+        .company-info p { color: #6b7280; font-size: 13px; }
+        .company-logo { max-height: 60px; margin-bottom: 10px; }
+        .invoice-details { text-align: right; }
+        .invoice-details h2 { font-size: 24px; color: #1f2937; margin-bottom: 10px; }
+        .invoice-details p { color: #6b7280; font-size: 14px; }
+        .addresses { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .address-block { width: 45%; }
+        .address-block h3 { font-size: 14px; color: #6b7280; text-transform: uppercase; margin-bottom: 10px; }
+        .address-block p { font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        thead { background-color: #f3f4f6; }
+        th { padding: 12px; text-align: left; font-weight: 600; font-size: 14px; color: #374151; }
+        .summary { display: flex; justify-content: flex-end; }
+        .summary-table { width: 300px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .summary-row.total { border-top: 2px solid #1f2937; padding-top: 12px; margin-top: 8px; font-size: 18px; font-weight: bold; }
+        .summary-row.discount { color: #16a34a; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px; }
+        .gst-note { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #0369a1; }
+        .terms { margin-top: 20px; padding: 12px; background-color: #f9fafb; border-radius: 6px; font-size: 12px; color: #6b7280; }
+        .terms h4 { margin-bottom: 8px; color: #374151; }
+        @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } .no-print { display: none !important; } }
+      </style>
+    </head>
+    <body>
+      <div class="invoice">
+        <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Print Invoice</button>
+          <button onclick="window.close()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Close</button>
+        </div>
+        <div class="header">
+          <div class="company-info">
+            ${settings.logoUrl ? `<img src="${settings.logoUrl}" alt="${settings.sellerName}" class="company-logo" />` : ''}
+            <h1>${settings.sellerName || 'Your Store'}</h1>
+            ${sellerAddressLine ? `<p>${sellerAddressLine}</p>` : ''}
+            ${settings.sellerPhone ? `<p>Phone: ${settings.sellerPhone}</p>` : ''}
+            ${settings.sellerEmail ? `<p>Email: ${settings.sellerEmail}</p>` : ''}
+            ${settings.gstNumber ? `<p><strong>GSTIN:</strong> ${settings.gstNumber}</p>` : ''}
+          </div>
+          <div class="invoice-details">
+            <h2>TAX INVOICE</h2>
+            <p><strong>Invoice #:</strong> ${order.orderNumber}</p>
+            <p><strong>Date:</strong> ${orderDate}</p>
+            ${settings.showPaymentMethod ? `<p><strong>Payment:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</p>` : ''}
+          </div>
+        </div>
+        <div class="addresses">
+          <div class="address-block">
+            <h3>Bill To</h3>
+            <p><strong>${billingAddress.name || 'Customer'}</strong></p>
+            <p>${billingAddress.line1 || billingAddress.address1 || ''}</p>
+            ${billingAddress.line2 || billingAddress.address2 ? `<p>${billingAddress.line2 || billingAddress.address2}</p>` : ''}
+            <p>${billingAddress.city || ''}, ${billingAddress.state || ''} ${billingAddress.postalCode || ''}</p>
+            <p>${billingAddress.country || ''}</p>
+            ${billingAddress.phone ? `<p>Phone: ${billingAddress.phone}</p>` : ''}
+          </div>
+          <div class="address-block">
+            <h3>Ship To</h3>
+            <p><strong>${shippingAddress.name || 'Customer'}</strong></p>
+            <p>${shippingAddress.line1 || shippingAddress.address1 || ''}</p>
+            ${shippingAddress.line2 || shippingAddress.address2 ? `<p>${shippingAddress.line2 || shippingAddress.address2}</p>` : ''}
+            <p>${shippingAddress.city || ''}, ${shippingAddress.state || ''} ${shippingAddress.postalCode || ''}</p>
+            <p>${shippingAddress.country || ''}</p>
+            ${shippingAddress.phone ? `<p>Phone: ${shippingAddress.phone}</p>` : ''}
+          </div>
+        </div>
+        ${settings.showTaxBreakdown && settings.gstNumber ? `
+        <div class="gst-note">
+          <strong>GST Note:</strong> GST is included in product prices. ${isInterState ? 'This is an inter-state supply (IGST).' : 'This is an intra-state supply (CGST + SGST).'}
+          ${settings.gstNumber ? ` Seller GSTIN: ${settings.gstNumber}` : ''}
+        </div>
+        ` : ''}
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 35px; font-size: 12px;">#</th>
+              <th style="font-size: 12px;">Item Description</th>
+              <th style="width: 50px; font-size: 12px; text-align: center;">Qty</th>
+              <th style="width: 80px; font-size: 12px; text-align: right;">Unit Price</th>
+              <th style="width: 80px; font-size: 12px; text-align: right;">Taxable</th>
+              <th style="width: 50px; font-size: 12px; text-align: center;">GST%</th>
+              ${isInterState ? `<th style="width: 80px; font-size: 12px; text-align: right;">IGST</th>` : `<th style="width: 70px; font-size: 12px; text-align: right;">CGST</th><th style="width: 70px; font-size: 12px; text-align: right;">SGST</th>`}
+              <th style="width: 90px; font-size: 12px; text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>${itemsHTML}</tbody>
+        </table>
+        <div class="summary">
+          <div class="summary-table">
+            <div class="summary-row"><span>Subtotal:</span><span>${CURRENCY_SYMBOL}${subtotal.toFixed(2)}</span></div>
+            ${settings.showDiscountLine && discount > 0 ? `<div class="summary-row discount"><span>Discount:</span><span>-${CURRENCY_SYMBOL}${discount.toFixed(2)}</span></div>` : ''}
+            ${settings.showShippingCost ? `<div class="summary-row"><span>Shipping:</span><span>${shipping === 0 ? 'Free' : CURRENCY_SYMBOL + shipping.toFixed(2)}</span></div>` : ''}
+            <div class="summary-row total"><span>Total:</span><span>${CURRENCY_SYMBOL}${total.toFixed(2)}</span></div>
+            ${settings.showTaxBreakdown ? `<div class="summary-row" style="font-size: 12px; color: #6b7280;"><span>Incl. GST${isInterState ? ' (IGST)' : ' (CGST+SGST)'}:</span><span>${CURRENCY_SYMBOL}${(totalIGST + totalCGST + totalSGST).toFixed(2)}</span></div>` : ''}
+          </div>
+        </div>
+        ${settings.termsAndConditions ? `<div class="terms"><h4>Terms & Conditions</h4><p>${settings.termsAndConditions.replace(/\n/g, '<br>')}</p></div>` : ''}
+        <div class="footer">
+          <p>${settings.footerNote || 'Thank you for your business!'}</p>
+          <p style="margin-top: 5px;">Email: ${order.user?.email || order.guestEmail || 'N/A'}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+async function openInvoice(order: OrderWithItems) {
+  const settings = await fetchInvoiceSettings();
+  const invoiceHTML = generateInvoiceHTML(order, settings);
+  const invoiceWindow = window.open('', '_blank');
+  if (invoiceWindow) {
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
+  }
 }
 
 export default function CustomerUsersList() {
   const [search, setSearch] = useState("");
   const [viewCustomer, setViewCustomer] = useState<CustomerWithStats | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data, isLoading } = useQuery<{ users: CustomerWithStats[]; total: number }>({
@@ -476,31 +703,140 @@ export default function CustomerUsersList() {
                     </div>
                   ) : customerDetails?.orders && customerDetails.orders.length > 0 ? (
                     <div className="space-y-3">
-                      {customerDetails.orders.map((order) => (
-                        <div key={order.id} className="p-4 border rounded-lg" data-testid={`order-${order.id}`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="font-medium">#{order.orderNumber}</div>
-                            <Badge variant={
-                              order.status === "delivered" ? "default" :
-                              order.status === "cancelled" ? "destructive" :
-                              "secondary"
-                            }>
-                              {order.status}
-                            </Badge>
+                      {customerDetails.orders.map((order) => {
+                        const isExpanded = expandedOrderId === String(order.id);
+                        const shippingAddr = order.shippingAddress as any;
+                        return (
+                          <div key={order.id} className="border rounded-lg overflow-hidden" data-testid={`order-${order.id}`}>
+                            <div className="p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="font-medium">#{order.orderNumber}</div>
+                                <Badge variant={
+                                  order.status === "delivered" ? "default" :
+                                  order.status === "cancelled" ? "destructive" :
+                                  "secondary"
+                                }>
+                                  {order.status}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <span>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A"}</span>
+                                <span className="font-medium text-foreground">{formatCurrency(Number(order.total))}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                <Package className="h-3 w-3" />
+                                <span>{order.items?.length || 0} items</span>
+                                <span className="mx-1">•</span>
+                                <CreditCard className="h-3 w-3" />
+                                <span>{order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</span>
+                              </div>
+                              <div className="mt-3 flex gap-2 flex-wrap">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => setExpandedOrderId(isExpanded ? null : String(order.id))}
+                                  data-testid={`button-toggle-order-${order.id}`}
+                                >
+                                  {isExpanded ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+                                  {isExpanded ? 'Hide Details' : 'View Details'}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openInvoice(order)}
+                                  data-testid={`button-invoice-${order.id}`}
+                                >
+                                  <Receipt className="h-4 w-4 mr-1" />
+                                  Invoice
+                                </Button>
+                                <Link href={`/admin/orders?search=${order.orderNumber}`}>
+                                  <Button variant="outline" size="sm" data-testid={`button-view-order-${order.id}`} onClick={() => setViewCustomer(null)}>
+                                    Go to Order
+                                  </Button>
+                                </Link>
+                              </div>
+                            </div>
+                            
+                            {isExpanded && (
+                              <div className="border-t bg-muted/30 p-4 space-y-4">
+                                <div>
+                                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                    <Package className="h-4 w-4" />
+                                    Order Items
+                                  </h4>
+                                  <div className="space-y-2">
+                                    {order.items?.map((item, idx) => (
+                                      <div key={idx} className="flex items-center gap-3 p-2 bg-background rounded-md">
+                                        {item.image ? (
+                                          <img 
+                                            src={item.image} 
+                                            alt={item.title} 
+                                            className="w-12 h-12 object-cover rounded"
+                                          />
+                                        ) : (
+                                          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                                            <Package className="h-5 w-5 text-muted-foreground" />
+                                          </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-sm font-medium truncate">{item.title}</p>
+                                          {item.variantName && (
+                                            <p className="text-xs text-muted-foreground">{item.variantName}</p>
+                                          )}
+                                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                                        </div>
+                                        <div className="text-sm font-medium">
+                                          {formatCurrency(Number(item.price) * item.quantity)}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {shippingAddr && (
+                                  <div>
+                                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                      <Truck className="h-4 w-4" />
+                                      Shipping Address
+                                    </h4>
+                                    <div className="text-sm text-muted-foreground bg-background rounded-md p-3">
+                                      <p className="font-medium text-foreground">{shippingAddr.name || shippingAddr.firstName}</p>
+                                      <p>{shippingAddr.line1 || shippingAddr.address1}</p>
+                                      {(shippingAddr.line2 || shippingAddr.address2) && (
+                                        <p>{shippingAddr.line2 || shippingAddr.address2}</p>
+                                      )}
+                                      <p>{shippingAddr.city}, {shippingAddr.state} {shippingAddr.postalCode}</p>
+                                      <p>{shippingAddr.country}</p>
+                                      {shippingAddr.phone && <p className="mt-1">Phone: {shippingAddr.phone}</p>}
+                                    </div>
+                                  </div>
+                                )}
+
+                                <Separator />
+                                
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Subtotal</span>
+                                  <span>{formatCurrency(Number(order.subtotal))}</span>
+                                </div>
+                                {Number(order.discount) > 0 && (
+                                  <div className="flex justify-between text-sm text-green-600">
+                                    <span>Discount</span>
+                                    <span>-{formatCurrency(Number(order.discount))}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Shipping</span>
+                                  <span>{Number(order.shippingCost) === 0 ? 'Free' : formatCurrency(Number(order.shippingCost))}</span>
+                                </div>
+                                <div className="flex justify-between font-medium pt-2 border-t">
+                                  <span>Total</span>
+                                  <span>{formatCurrency(Number(order.total))}</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <span>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A"}</span>
-                            <span className="font-medium text-foreground">{formatCurrency(Number(order.total))}</span>
-                          </div>
-                          <div className="mt-2 flex gap-2">
-                            <Link href={`/admin/orders?search=${order.orderNumber}`}>
-                              <Button variant="outline" size="sm" data-testid={`button-view-order-${order.id}`} onClick={() => setViewCustomer(null)}>
-                                View Order
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
@@ -560,7 +896,7 @@ export default function CustomerUsersList() {
             </Tabs>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setViewCustomer(null); setActiveTab("overview"); }}>
+            <Button variant="outline" onClick={() => { setViewCustomer(null); setActiveTab("overview"); setExpandedOrderId(null); }}>
               Close
             </Button>
           </DialogFooter>
