@@ -259,6 +259,11 @@ export const orders = pgTable("orders", {
   trackingUpdates: jsonb("tracking_updates"),
   couponCode: varchar("coupon_code"),
   notes: text("notes"),
+  // POS-specific fields
+  orderType: varchar("order_type").default("online"), // online, pos
+  posPaymentType: varchar("pos_payment_type"), // cash, card, credit, upi
+  posCustomerName: varchar("pos_customer_name"),
+  posCustomerPhone: varchar("pos_customer_phone"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
