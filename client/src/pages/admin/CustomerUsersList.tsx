@@ -493,15 +493,9 @@ export default function CustomerUsersList() {
                             <span className="font-medium text-foreground">{formatCurrency(Number(order.total))}</span>
                           </div>
                           <div className="mt-2 flex gap-2">
-                            <Link href={`/admin/orders/${order.id}`}>
-                              <Button variant="outline" size="sm" data-testid={`button-view-order-${order.id}`}>
+                            <Link href={`/admin/orders?search=${order.orderNumber}`}>
+                              <Button variant="outline" size="sm" data-testid={`button-view-order-${order.id}`} onClick={() => setViewCustomer(null)}>
                                 View Order
-                              </Button>
-                            </Link>
-                            <Link href={`/admin/orders/${order.id}/invoice`}>
-                              <Button variant="outline" size="sm" data-testid={`button-view-invoice-${order.id}`}>
-                                <FileText className="h-3 w-3 mr-1" />
-                                Invoice
                               </Button>
                             </Link>
                           </div>
