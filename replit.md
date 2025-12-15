@@ -35,6 +35,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Dynamic Shop by Category section on homepage with admin controls (category selection, custom images/labels, ordering, visibility, width percentage 25/50/75/100%, alignment left/center/right) - uses banner-style row grouping where complementary widths display side-by-side on desktop
 - Blog section above footer with admin controls for creating/editing blog posts (title, excerpt, author, images, visibility)
 - Unified email/password authentication for customers and admins (no external OAuth dependencies)
+- POS (Point of Sale) module for in-store sales with product search, cart management, and multiple payment types (cash, card, UPI, credit)
 
 ## User Preferences
 
