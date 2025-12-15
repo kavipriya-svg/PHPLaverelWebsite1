@@ -3117,6 +3117,49 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Create POS customer (walk-in customer registration)
+  app.post("/api/admin/pos/customers", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { firstName, lastName, email, phone } = req.body;
+      
+      if (!firstName) {
+        return res.status(400).json({ error: "First name is required" });
+      }
+      
+      // Check if email already exists (if provided)
+      if (email) {
+        const existingUser = await storage.getUserByEmail(email.toLowerCase().trim());
+        if (existingUser) {
+          return res.status(400).json({ error: "A customer with this email already exists" });
+        }
+      }
+      
+      // Create customer with a generated ID (no password for walk-in customers)
+      const newCustomer = await storage.upsertUser({
+        id: randomUUID(),
+        email: email ? email.toLowerCase().trim() : null,
+        firstName: firstName.trim(),
+        lastName: lastName?.trim() || null,
+        phone: phone?.trim() || null,
+        role: "customer",
+      });
+      
+      res.json({ 
+        success: true, 
+        customer: {
+          id: newCustomer.id,
+          email: newCustomer.email,
+          firstName: newCustomer.firstName,
+          lastName: newCustomer.lastName,
+          phone: newCustomer.phone,
+        }
+      });
+    } catch (error) {
+      console.error("Create POS customer error:", error);
+      res.status(500).json({ error: "Failed to create customer" });
+    }
+  });
+
   app.patch("/api/admin/orders/:id/status", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { status, trackingNumber } = req.body;
