@@ -553,6 +553,19 @@ export default function POS() {
                 className="pl-10"
               />
             </div>
+            <div>
+              <Label className="text-sm mb-1 block">Order Date</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="date"
+                  data-testid="input-order-date"
+                  value={orderDate}
+                  onChange={(e) => setOrderDate(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
           </div>
 
           <ScrollArea className="flex-1 px-4">
@@ -644,20 +657,6 @@ export default function POS() {
           </ScrollArea>
 
           <div className="p-4 border-t space-y-3">
-            <div>
-              <Label className="text-sm mb-1 block">Order Date</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="date"
-                  data-testid="input-order-date"
-                  value={orderDate}
-                  onChange={(e) => setOrderDate(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
             <div>
               <Label className="text-sm mb-1 block">Coupon Code</Label>
               <div className="flex gap-2">
