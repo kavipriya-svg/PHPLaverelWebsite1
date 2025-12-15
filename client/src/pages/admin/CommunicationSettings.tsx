@@ -24,7 +24,9 @@ import {
   EyeOff,
   Key,
   Shield,
+  ArrowLeft,
 } from "lucide-react";
+import { Link } from "wouter";
 import { SiWhatsapp } from "react-icons/si";
 import {
   defaultCommunicationSettings,
@@ -136,12 +138,19 @@ export default function CommunicationSettings() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold" data-testid="text-page-title">Communication Settings</h1>
-            <p className="text-muted-foreground">
-              Configure MSG91 for Email, SMS, WhatsApp, and OTP services
-            </p>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <Link href="/admin">
+              <Button variant="outline" size="icon" data-testid="button-back">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold" data-testid="text-page-title">Communication Settings</h1>
+              <p className="text-muted-foreground">
+                Configure MSG91 for Email, SMS, WhatsApp, and OTP services
+              </p>
+            </div>
           </div>
           <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-settings">
             {saveMutation.isPending ? (
