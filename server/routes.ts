@@ -3177,8 +3177,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       // Get all customers and filter by search term
-      const allUsers = await storage.getUsers();
-      const customers = allUsers
+      const result = await storage.getUsers();
+      const customers = result.users
         .filter(u => u.role === "customer")
         .filter(u => {
           const fullName = `${u.firstName || ""} ${u.lastName || ""}`.toLowerCase();
