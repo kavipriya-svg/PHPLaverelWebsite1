@@ -3500,6 +3500,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/admin/users/customers/:id/details", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const customer = await storage.getUser(id);
+      if (!customer) {
+        return res.status(404).json({ error: "Customer not found" });
+      }
+      const customerOrders = await storage.getUserOrders(id);
+      const customerAddresses = await storage.getUserAddresses(id);
+      res.json({
+        customer,
+        orders: customerOrders,
+        addresses: customerAddresses
+      });
+    } catch (error) {
+      console.error("Failed to fetch customer details:", error);
+      res.status(500).json({ error: "Failed to fetch customer details" });
+    }
+  });
+
   // Marketing - Customer Segments
   app.get("/api/admin/marketing/segments", isAuthenticated, isAdmin, async (req, res) => {
     try {
