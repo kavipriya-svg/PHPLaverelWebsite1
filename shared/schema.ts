@@ -1081,6 +1081,7 @@ export const ADMIN_MODULES = [
   { key: "brands", label: "Brands", description: "Manage product brands" },
   { key: "orders", label: "Orders", description: "View and manage customer orders" },
   { key: "customers", label: "Customers", description: "View and manage customer accounts" },
+  { key: "marketing", label: "Marketing", description: "Customer segments for marketing campaigns" },
   { key: "coupons", label: "Coupons", description: "Manage discount coupons" },
   { key: "reviews", label: "Reviews", description: "Moderate product reviews" },
   { key: "banners", label: "Banners", description: "Manage home page banners" },

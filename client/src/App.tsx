@@ -67,6 +67,7 @@ const AdminBlogSettings = lazy(() => import("@/pages/admin/BlogSettings"));
 const AdminComboOffers = lazy(() => import("@/pages/admin/ComboOffers"));
 const AdminQuickPages = lazy(() => import("@/pages/admin/QuickPages"));
 const AdminCommunicationSettings = lazy(() => import("@/pages/admin/CommunicationSettings"));
+const AdminMarketing = lazy(() => import("@/pages/admin/Marketing"));
 const QuickPage = lazy(() => import("@/pages/QuickPage"));
 
 function PageLoader() {
@@ -424,6 +425,11 @@ function Router() {
       <Route path="/admin/communication">
         <AdminLayout>
           <AdminCommunicationSettings />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/marketing">
+        <AdminLayout>
+          <AdminMarketing />
         </AdminLayout>
       </Route>
 
