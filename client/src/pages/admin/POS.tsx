@@ -121,11 +121,8 @@ export default function POS() {
 
   const createCustomerMutation = useMutation({
     mutationFn: async (data: typeof newCustomer) => {
-      return apiRequest("/api/admin/pos/customers", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await apiRequest("POST", "/api/admin/pos/customers", data);
+      return response.json();
     },
     onSuccess: (data: any) => {
       const customer = data.customer;
