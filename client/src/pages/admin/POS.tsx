@@ -114,7 +114,14 @@ export default function POS() {
       email: string | null;
     }>;
   }>({
-    queryKey: ["/api/admin/pos/customers", { search: customerSearch }],
+    queryKey: ["/api/admin/pos/customers", customerSearch],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (customerSearch) params.set("search", customerSearch);
+      const response = await fetch(`/api/admin/pos/customers?${params}`);
+      if (!response.ok) throw new Error("Failed to search customers");
+      return response.json();
+    },
     enabled: customerSearch.length >= 2,
   });
 
