@@ -313,12 +313,14 @@ export default function POS() {
   const cartGstDetails = useMemo(() => {
     return cart.map((item) => {
       const itemTotal = item.price * item.quantity;
-      const gstAmount = (itemTotal * item.gstRate) / 100;
+      // GST is included in price: Extract GST from total
+      const gstAmount = (itemTotal * item.gstRate) / (100 + item.gstRate);
+      const basePrice = itemTotal - gstAmount; // Taxable value without GST
       return {
         productId: item.productId,
         gstRate: item.gstRate,
         gstAmount,
-        basePrice: itemTotal,
+        basePrice,
       };
     });
   }, [cart]);
@@ -344,8 +346,8 @@ export default function POS() {
   }, [appliedCoupon, cartSubtotal]);
 
   const totalDiscount = manualDiscount + couponDiscount;
-  const cartTotalWithGst = cartSubtotal + totalGst;
-  const cartTotal = Math.max(0, cartTotalWithGst - totalDiscount);
+  // GST is already included in price, so total is just subtotal minus discount
+  const cartTotal = Math.max(0, cartSubtotal - totalDiscount);
 
   const handleCheckout = (asQuotation = false) => {
     if (cart.length === 0) {
@@ -783,8 +785,8 @@ export default function POS() {
                 </div>
               )}
               <div className="flex justify-between text-muted-foreground">
-                <span>GST</span>
-                <span>+{formatCurrency(totalGst)}</span>
+                <span>GST (included)</span>
+                <span>{formatCurrency(totalGst)}</span>
               </div>
             </div>
 
