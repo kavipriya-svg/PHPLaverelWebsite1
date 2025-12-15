@@ -568,14 +568,14 @@ export default function POS() {
             </div>
           </div>
 
-          <ScrollArea className="flex-1 px-4">
+          <div className="flex-1 overflow-y-auto px-4 min-h-[120px]">
             {cart.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-                <ShoppingCart className="h-10 w-10 mb-2" />
+              <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+                <ShoppingCart className="h-8 w-8 mb-2" />
                 <p className="text-sm">Cart is empty</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 pb-2">
                 {cart.map((item) => (
                   <Card key={item.productId} className="p-3">
                     <div className="flex items-start gap-3">
@@ -654,7 +654,7 @@ export default function POS() {
                 ))}
               </div>
             )}
-          </ScrollArea>
+          </div>
 
           <div className="p-4 border-t space-y-3">
             <div>
