@@ -3002,6 +3002,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const filters = {
         search: req.query.search as string,
         status: req.query.status as string,
+        orderType: req.query.orderType as string,
         limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
         offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
       };
@@ -3009,6 +3010,110 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
+  // POS Routes
+  app.get("/api/admin/pos/products", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string;
+      const result = await storage.getProducts({
+        search,
+        isActive: true,
+        limit: 100,
+      });
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch POS products" });
+    }
+  });
+
+  app.post("/api/admin/pos/orders", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { items, posPaymentType, posCustomerName, posCustomerPhone, notes } = req.body;
+      
+      if (!items || items.length === 0) {
+        return res.status(400).json({ error: "Cart is empty" });
+      }
+      
+      if (!posPaymentType) {
+        return res.status(400).json({ error: "Payment type is required" });
+      }
+
+      // Calculate totals from items
+      let subtotal = 0;
+      const orderItemsData = [];
+      
+      for (const item of items) {
+        const product = await storage.getProductById(item.productId);
+        if (!product) {
+          return res.status(400).json({ error: `Product not found: ${item.productId}` });
+        }
+        
+        // Get price (use sale price if available, otherwise regular price)
+        let price = parseFloat(product.price);
+        if (product.salePrice) {
+          price = parseFloat(product.salePrice);
+        }
+        
+        // If variant is specified, use variant price
+        if (item.variantId) {
+          const variant = product.variants?.find((v: any) => v.id === item.variantId);
+          if (variant) {
+            price = variant.salePrice ? parseFloat(variant.salePrice) : (variant.price ? parseFloat(variant.price) : price);
+          }
+        }
+        
+        const itemTotal = price * item.quantity;
+        subtotal += itemTotal;
+        
+        orderItemsData.push({
+          productId: item.productId,
+          variantId: item.variantId || null,
+          title: product.title,
+          sku: product.sku,
+          price: price.toFixed(2),
+          quantity: item.quantity,
+          imageUrl: product.images?.[0]?.url || null,
+          gstRate: product.gstRate || "18",
+        });
+      }
+      
+      // Generate order number
+      const orderNumber = `POS-${Date.now().toString(36).toUpperCase()}`;
+      
+      const orderData = {
+        orderNumber,
+        subtotal: subtotal.toFixed(2),
+        discount: "0",
+        tax: "0",
+        shippingCost: "0",
+        total: subtotal.toFixed(2),
+        status: "delivered", // POS orders are immediately delivered
+        paymentStatus: posPaymentType === "credit" ? "pending" : "paid",
+        paymentMethod: posPaymentType,
+        orderType: "pos",
+        posPaymentType,
+        posCustomerName: posCustomerName || null,
+        posCustomerPhone: posCustomerPhone || null,
+        notes: notes || null,
+      };
+      
+      const order = await storage.createOrder(orderData as any, orderItemsData as any);
+      
+      // Reduce stock for each item
+      for (const item of items) {
+        const product = await storage.getProductById(item.productId);
+        if (product && product.stock !== null) {
+          const newStock = Math.max(0, (product.stock || 0) - item.quantity);
+          await storage.updateProduct(item.productId, { stock: newStock });
+        }
+      }
+      
+      res.json({ order, success: true });
+    } catch (error) {
+      console.error("POS order error:", error);
+      res.status(500).json({ error: "Failed to create POS order" });
     }
   });
 

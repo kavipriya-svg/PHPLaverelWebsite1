@@ -272,6 +272,7 @@ export interface OrderFilters {
   search?: string;
   status?: string;
   userId?: string;
+  orderType?: string; // online, pos
   limit?: number;
   offset?: number;
 }
@@ -883,12 +884,15 @@ export class DatabaseStorage implements IStorage {
       conditions.push(
         or(
           like(orders.orderNumber, `%${filters.search}%`),
-          like(orders.guestEmail, `%${filters.search}%`)
+          like(orders.guestEmail, `%${filters.search}%`),
+          like(orders.posCustomerName, `%${filters.search}%`),
+          like(orders.posCustomerPhone, `%${filters.search}%`)
         )
       );
     }
     if (filters.status) conditions.push(eq(orders.status, filters.status));
     if (filters.userId) conditions.push(eq(orders.userId, filters.userId));
+    if (filters.orderType) conditions.push(eq(orders.orderType, filters.orderType));
 
     const baseQuery = conditions.length > 0
       ? db.select().from(orders).where(and(...conditions))
