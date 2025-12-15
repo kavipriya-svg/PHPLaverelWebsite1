@@ -182,14 +182,12 @@ export function ProductCard({ product, showSaleCountdown = false }: ProductCardP
           <Button
             variant="outline"
             size="icon"
-            className={`absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm transition-opacity ${
-              isHovered || isInWishlist(product.id) ? "opacity-100" : "opacity-0"
-            }`}
+            className="absolute top-2 right-2 z-50 h-10 w-10 rounded-full bg-white shadow-lg border-2 border-red-200 hover:bg-red-50 hover:border-red-300"
             onClick={handleToggleWishlist}
             data-testid={`button-wishlist-${product.id}`}
           >
             <Heart 
-              className={`h-4 w-4 ${isInWishlist(product.id) ? "fill-destructive text-destructive" : ""}`} 
+              className={`h-6 w-6 ${isInWishlist(product.id) ? "fill-red-500 text-red-500" : "text-red-400"}`} 
             />
           </Button>
 
