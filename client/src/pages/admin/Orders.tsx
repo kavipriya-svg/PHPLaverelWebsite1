@@ -337,6 +337,7 @@ async function openInvoice(order: OrderWithItems) {
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [orderTypeFilter, setOrderTypeFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
   const [updateStatusOrder, setUpdateStatusOrder] = useState<OrderWithItems | null>(null);
   const [newStatus, setNewStatus] = useState("");
@@ -344,7 +345,7 @@ export default function AdminOrders() {
   const { toast } = useToast();
 
   const { data, isLoading } = useQuery<{ orders: OrderWithItems[]; total: number }>({
-    queryKey: ["/api/admin/orders", { search, status: statusFilter !== "all" ? statusFilter : undefined }],
+    queryKey: ["/api/admin/orders", { search, status: statusFilter !== "all" ? statusFilter : undefined, orderType: orderTypeFilter !== "all" ? orderTypeFilter : undefined }],
   });
 
   const updateStatusMutation = useMutation({
@@ -423,6 +424,16 @@ export default function AdminOrders() {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={orderTypeFilter} onValueChange={setOrderTypeFilter}>
+            <SelectTrigger className="w-[150px]" data-testid="select-order-type-filter">
+              <SelectValue placeholder="All Orders" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Orders</SelectItem>
+              <SelectItem value="online">Online Orders</SelectItem>
+              <SelectItem value="pos">POS Sales</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="border rounded-lg">
@@ -430,6 +441,7 @@ export default function AdminOrders() {
             <TableHeader>
               <TableRow>
                 <TableHead>Order</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Items</TableHead>
                 <TableHead>Total</TableHead>
@@ -443,14 +455,14 @@ export default function AdminOrders() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    {Array.from({ length: 8 }).map((_, j) => (
+                    {Array.from({ length: 9 }).map((_, j) => (
                       <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No orders found
                   </TableCell>
                 </TableRow>
@@ -459,7 +471,14 @@ export default function AdminOrders() {
                   <TableRow key={order.id} data-testid={`row-order-${order.id}`}>
                     <TableCell className="font-medium">{order.orderNumber}</TableCell>
                     <TableCell>
-                      {order.user?.email || order.guestEmail || "Guest"}
+                      <Badge variant={(order as any).orderType === "pos" ? "secondary" : "outline"}>
+                        {(order as any).orderType === "pos" ? "POS" : "Online"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {(order as any).orderType === "pos" 
+                        ? ((order as any).posCustomerName || "Walk-in Customer")
+                        : (order.user?.email || order.guestEmail || "Guest")}
                     </TableCell>
                     <TableCell>{order.items.length}</TableCell>
                     <TableCell className="font-medium">
@@ -523,8 +542,10 @@ export default function AdminOrders() {
               <div className="space-y-6">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="font-medium mb-2">Customer</h4>
-                    <p className="text-sm">{selectedOrder.user?.email || selectedOrder.guestEmail}</p>
+                    <h4 className="font-medium mb-2">Order Type</h4>
+                    <Badge variant={(selectedOrder as any).orderType === "pos" ? "secondary" : "outline"}>
+                      {(selectedOrder as any).orderType === "pos" ? "POS Sale" : "Online Order"}
+                    </Badge>
                   </div>
                   <div>
                     <h4 className="font-medium mb-2">Status</h4>
@@ -534,15 +555,39 @@ export default function AdminOrders() {
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="font-medium mb-2">Shipping Address</h4>
-                  {selectedOrder.shippingAddress && (
-                    <p className="text-sm text-muted-foreground">
-                      {String((selectedOrder.shippingAddress as any).address1 || "")}<br />
-                      {String((selectedOrder.shippingAddress as any).city || "")}, {String((selectedOrder.shippingAddress as any).state || "")} {String((selectedOrder.shippingAddress as any).postalCode || "")}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Customer</h4>
+                    <p className="text-sm">
+                      {(selectedOrder as any).orderType === "pos" 
+                        ? ((selectedOrder as any).posCustomerName || "Walk-in Customer")
+                        : (selectedOrder.user?.email || selectedOrder.guestEmail || "Guest")}
                     </p>
-                  )}
+                    {(selectedOrder as any).orderType === "pos" && (selectedOrder as any).posCustomerPhone && (
+                      <p className="text-xs text-muted-foreground">{(selectedOrder as any).posCustomerPhone}</p>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Payment</h4>
+                    <p className="text-sm capitalize">
+                      {(selectedOrder as any).orderType === "pos" 
+                        ? ((selectedOrder as any).posPaymentType || "cash")
+                        : (selectedOrder.paymentMethod || "online")}
+                    </p>
+                  </div>
                 </div>
+
+                {(selectedOrder as any).orderType !== "pos" && (
+                  <div>
+                    <h4 className="font-medium mb-2">Shipping Address</h4>
+                    {selectedOrder.shippingAddress && (
+                      <p className="text-sm text-muted-foreground">
+                        {String((selectedOrder.shippingAddress as any).address1 || "")}<br />
+                        {String((selectedOrder.shippingAddress as any).city || "")}, {String((selectedOrder.shippingAddress as any).state || "")} {String((selectedOrder.shippingAddress as any).postalCode || "")}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <h4 className="font-medium mb-2">Items</h4>
