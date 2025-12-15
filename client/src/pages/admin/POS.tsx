@@ -87,6 +87,7 @@ export default function POS() {
   });
   const [customerSearch, setCustomerSearch] = useState("");
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [selectedCustomerPendingBalance, setSelectedCustomerPendingBalance] = useState(0);
   const customerInputRef = useRef<HTMLDivElement>(null);
   
   const [orderDate, setOrderDate] = useState(() => {
@@ -112,6 +113,7 @@ export default function POS() {
       lastName: string | null;
       phone: string | null;
       email: string | null;
+      pendingBalance: number;
     }>;
   }>({
     queryKey: ["/api/admin/pos/customers", customerSearch],
@@ -142,6 +144,7 @@ export default function POS() {
     const fullName = `${customer.firstName || ""} ${customer.lastName || ""}`.trim();
     setCustomerName(fullName);
     setCustomerPhone(customer.phone || "");
+    setSelectedCustomerPendingBalance(customer.pendingBalance || 0);
     setCustomerSearch("");
     setShowCustomerDropdown(false);
   };
@@ -389,6 +392,7 @@ export default function POS() {
     setCart([]);
     setCustomerName("");
     setCustomerPhone("");
+    setSelectedCustomerPendingBalance(0);
     setNotes("");
     setCouponCode("");
     setAppliedCoupon(null);
@@ -519,8 +523,15 @@ export default function POS() {
                         className="px-3 py-2 cursor-pointer hover-elevate"
                         onClick={() => selectCustomer(customer)}
                       >
-                        <div className="font-medium text-sm">
-                          {customer.firstName} {customer.lastName}
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-sm">
+                            {customer.firstName} {customer.lastName}
+                          </span>
+                          {customer.pendingBalance > 0 && (
+                            <span className="text-xs px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 rounded">
+                              Due: {formatCurrency(customer.pendingBalance)}
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {customer.phone && <span>{customer.phone}</span>}
@@ -548,9 +559,17 @@ export default function POS() {
                 data-testid="input-customer-name"
                 placeholder="Customer Name (optional)"
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e) => {
+                  setCustomerName(e.target.value);
+                  if (!e.target.value) setSelectedCustomerPendingBalance(0);
+                }}
                 className="pl-10"
               />
+              {selectedCustomerPendingBalance > 0 && customerName && (
+                <div className="mt-1 px-2 py-1 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded text-xs text-amber-700 dark:text-amber-300" data-testid="text-pending-balance">
+                  Pending Credit: {formatCurrency(selectedCustomerPendingBalance)}
+                </div>
+              )}
             </div>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

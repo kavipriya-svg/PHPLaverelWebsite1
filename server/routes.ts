@@ -3178,7 +3178,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       // Get all customers and filter by search term
       const result = await storage.getUsers();
-      const customers = result.users
+      const filteredCustomers = result.users
         .filter(u => u.role === "customer")
         .filter(u => {
           const fullName = `${u.firstName || ""} ${u.lastName || ""}`.toLowerCase();
@@ -3186,16 +3186,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           const email = (u.email || "").toLowerCase();
           return fullName.includes(search) || phone.includes(search) || email.includes(search);
         })
-        .slice(0, 10) // Limit to 10 results
-        .map(u => ({
-          id: u.id,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          phone: u.phone,
-          email: u.email,
-        }));
+        .slice(0, 10); // Limit to 10 results
       
-      res.json({ customers });
+      // Calculate pending balance for each customer (unpaid POS credit orders)
+      const customersWithBalance = await Promise.all(
+        filteredCustomers.map(async (u) => {
+          // Get unpaid POS orders for this customer by userId or by phone number
+          const allOrders = await storage.getOrders();
+          const pendingOrders = allOrders.orders.filter(order => 
+            order.orderType === "pos" &&
+            order.paymentStatus === "pending" &&
+            order.posPaymentType === "credit" &&
+            (order.userId === u.id || order.posCustomerPhone === u.phone)
+          );
+          
+          const pendingBalance = pendingOrders.reduce((sum, order) => {
+            return sum + parseFloat(order.total as string || "0");
+          }, 0);
+          
+          return {
+            id: u.id,
+            firstName: u.firstName,
+            lastName: u.lastName,
+            phone: u.phone,
+            email: u.email,
+            pendingBalance,
+          };
+        })
+      );
+      
+      res.json({ customers: customersWithBalance });
     } catch (error: any) {
       console.error("Search POS customers error:", error);
       res.status(500).json({ error: error.message || "Failed to search customers" });
