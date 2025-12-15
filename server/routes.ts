@@ -3135,14 +3135,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       // Create customer with a generated ID (no password for walk-in customers)
-      const newCustomer = await storage.upsertUser({
+      // Use direct insert with minimal fields to avoid issues
+      const customerData: any = {
         id: randomUUID(),
-        email: email ? email.toLowerCase().trim() : null,
         firstName: firstName.trim(),
         lastName: lastName?.trim() || null,
         phone: phone?.trim() || null,
         role: "customer",
-      });
+      };
+      
+      // Only add email if provided (to avoid null email constraint issues)
+      if (email && email.trim()) {
+        customerData.email = email.toLowerCase().trim();
+      }
+      
+      const newCustomer = await storage.upsertUser(customerData);
       
       res.json({ 
         success: true, 
@@ -3154,9 +3161,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           phone: newCustomer.phone,
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Create POS customer error:", error);
-      res.status(500).json({ error: "Failed to create customer" });
+      res.status(500).json({ error: error.message || "Failed to create customer" });
     }
   });
 
