@@ -16,6 +16,12 @@ import {
   Mail,
   UserPlus,
   Users,
+  Calendar,
+  Tag,
+  Percent,
+  IndianRupee,
+  ClipboardList,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +58,7 @@ interface CartItem {
   product: ProductWithDetails;
   quantity: number;
   price: number;
+  gstRate: number;
 }
 
 const paymentTypes = [
@@ -81,6 +88,21 @@ export default function POS() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const customerInputRef = useRef<HTMLDivElement>(null);
+  
+  const [orderDate, setOrderDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split("T")[0];
+  });
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    type: string;
+    amount: string;
+    discount: number;
+  } | null>(null);
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+  const [isQuotation, setIsQuotation] = useState(false);
 
   // Customer search query
   const { data: customerSearchData } = useQuery<{
@@ -138,11 +160,9 @@ export default function POS() {
     },
     onSuccess: (data: any) => {
       setLastOrderNumber(data.order?.orderNumber || "");
+      setIsQuotation(data.order?.isQuotation || false);
       setShowSuccessDialog(true);
-      setCart([]);
-      setCustomerName("");
-      setCustomerPhone("");
-      setNotes("");
+      resetCart();
       queryClient.invalidateQueries({ queryKey: ["/api/admin/pos/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/orders"] });
     },
@@ -183,6 +203,44 @@ export default function POS() {
     },
   });
 
+  const validateCouponMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const response = await fetch(`/api/coupons/validate/${encodeURIComponent(code)}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Invalid coupon");
+      }
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      const coupon = data.coupon;
+      let discountAmount = 0;
+      if (coupon.type === "percentage") {
+        discountAmount = (cartTotal * parseFloat(coupon.amount)) / 100;
+      } else {
+        discountAmount = parseFloat(coupon.amount);
+      }
+      setAppliedCoupon({
+        code: coupon.code,
+        type: coupon.type,
+        amount: coupon.amount,
+        discount: discountAmount,
+      });
+      setCouponCode("");
+      toast({
+        title: "Coupon Applied",
+        description: `Discount of ${formatCurrency(discountAmount)} applied`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Invalid Coupon",
+        description: error.message || "Could not apply coupon",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateCustomer = () => {
     if (!newCustomer.firstName.trim()) {
       toast({
@@ -206,6 +264,7 @@ export default function POS() {
     const price = product.salePrice
       ? parseFloat(product.salePrice)
       : parseFloat(product.price);
+    const gstRate = product.gstRate ? parseFloat(product.gstRate) : 18;
 
     if (existingItem) {
       setCart(
@@ -223,6 +282,7 @@ export default function POS() {
           product,
           quantity: 1,
           price,
+          gstRate,
         },
       ]);
     }
@@ -246,11 +306,48 @@ export default function POS() {
     setCart(cart.filter((item) => item.productId !== productId));
   };
 
-  const cartTotal = useMemo(() => {
+  const cartSubtotal = useMemo(() => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cart]);
 
-  const handleCheckout = () => {
+  const cartGstDetails = useMemo(() => {
+    return cart.map((item) => {
+      const itemTotal = item.price * item.quantity;
+      const gstAmount = (itemTotal * item.gstRate) / 100;
+      return {
+        productId: item.productId,
+        gstRate: item.gstRate,
+        gstAmount,
+        basePrice: itemTotal,
+      };
+    });
+  }, [cart]);
+
+  const totalGst = useMemo(() => {
+    return cartGstDetails.reduce((sum, item) => sum + item.gstAmount, 0);
+  }, [cartGstDetails]);
+
+  const manualDiscount = useMemo(() => {
+    const value = parseFloat(discountValue) || 0;
+    if (discountType === "percentage") {
+      return (cartSubtotal * value) / 100;
+    }
+    return value;
+  }, [discountType, discountValue, cartSubtotal]);
+
+  const couponDiscount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.type === "percentage") {
+      return (cartSubtotal * parseFloat(appliedCoupon.amount)) / 100;
+    }
+    return parseFloat(appliedCoupon.amount);
+  }, [appliedCoupon, cartSubtotal]);
+
+  const totalDiscount = manualDiscount + couponDiscount;
+  const cartTotalWithGst = cartSubtotal + totalGst;
+  const cartTotal = Math.max(0, cartTotalWithGst - totalDiscount);
+
+  const handleCheckout = (asQuotation = false) => {
     if (cart.length === 0) {
       toast({
         title: "Cart is empty",
@@ -265,12 +362,29 @@ export default function POS() {
         productId: item.productId,
         variantId: item.variantId,
         quantity: item.quantity,
+        gstRate: item.gstRate,
       })),
       posPaymentType: paymentType,
       posCustomerName: customerName || undefined,
       posCustomerPhone: customerPhone || undefined,
       notes: notes || undefined,
+      orderDate: orderDate,
+      couponCode: appliedCoupon?.code || undefined,
+      couponDiscount: couponDiscount > 0 ? couponDiscount.toString() : undefined,
+      posManualDiscount: manualDiscount > 0 ? manualDiscount.toString() : undefined,
+      isQuotation: asQuotation,
     });
+  };
+
+  const resetCart = () => {
+    setCart([]);
+    setCustomerName("");
+    setCustomerPhone("");
+    setNotes("");
+    setCouponCode("");
+    setAppliedCoupon(null);
+    setDiscountValue("");
+    setOrderDate(new Date().toISOString().split("T")[0]);
   };
 
   return (
@@ -471,6 +585,11 @@ export default function POS() {
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {formatCurrency(item.price)} each
+                          {item.gstRate > 0 && (
+                            <span className="ml-2 text-xs">
+                              (GST {item.gstRate}%)
+                            </span>
+                          )}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           <Button
@@ -524,14 +643,111 @@ export default function POS() {
             )}
           </ScrollArea>
 
-          <div className="p-4 border-t space-y-4">
+          <div className="p-4 border-t space-y-3">
             <div>
-              <Label className="text-sm mb-2 block">Payment Method</Label>
+              <Label className="text-sm mb-1 block">Order Date</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="date"
+                  data-testid="input-order-date"
+                  value={orderDate}
+                  onChange={(e) => setOrderDate(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm mb-1 block">Coupon Code</Label>
+              <div className="flex gap-2">
+                {appliedCoupon ? (
+                  <div className="flex-1 flex items-center justify-between bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                        {appliedCoupon.code} (-{formatCurrency(couponDiscount)})
+                      </span>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6"
+                      onClick={() => setAppliedCoupon(null)}
+                      data-testid="button-remove-coupon"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Input
+                      data-testid="input-coupon-code"
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => couponCode && validateCouponMutation.mutate(couponCode)}
+                      disabled={!couponCode || validateCouponMutation.isPending}
+                      data-testid="button-apply-coupon"
+                    >
+                      {validateCouponMutation.isPending ? "..." : "Apply"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm mb-1 block">Manual Discount</Label>
+              <div className="flex gap-2">
+                <Select value={discountType} onValueChange={(v: "percentage" | "fixed") => setDiscountType(v)}>
+                  <SelectTrigger className="w-24" data-testid="select-discount-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">
+                      <div className="flex items-center gap-1">
+                        <Percent className="h-3 w-3" />
+                        <span>%</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="fixed">
+                      <div className="flex items-center gap-1">
+                        <IndianRupee className="h-3 w-3" />
+                        <span>Fixed</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  min="0"
+                  data-testid="input-discount-value"
+                  placeholder={discountType === "percentage" ? "0%" : "0.00"}
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+              {manualDiscount > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Discount: -{formatCurrency(manualDiscount)}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-sm mb-1 block">Payment Method</Label>
               <div className="grid grid-cols-2 gap-2">
                 {paymentTypes.map((type) => (
                   <Button
                     key={type.value}
                     variant={paymentType === type.value ? "default" : "outline"}
+                    size="sm"
                     className="justify-start gap-2"
                     onClick={() => setPaymentType(type.value)}
                     data-testid={`button-payment-${type.value}`}
@@ -544,7 +760,7 @@ export default function POS() {
             </div>
 
             <div>
-              <Label className="text-sm mb-2 block">Notes (optional)</Label>
+              <Label className="text-sm mb-1 block">Notes (optional)</Label>
               <Textarea
                 data-testid="textarea-notes"
                 placeholder="Order notes..."
@@ -556,27 +772,55 @@ export default function POS() {
 
             <Separator />
 
-            <div className="flex justify-between items-center text-lg font-bold">
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatCurrency(cartSubtotal)}</span>
+              </div>
+              {totalDiscount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount</span>
+                  <span>-{formatCurrency(totalDiscount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-muted-foreground">
+                <span>GST (included)</span>
+                <span>{formatCurrency(totalGst)}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
               <span>Total</span>
               <span data-testid="text-cart-total">{formatCurrency(cartTotal)}</span>
             </div>
 
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={handleCheckout}
-              disabled={cart.length === 0 || createOrderMutation.isPending}
-              data-testid="button-checkout"
-            >
-              {createOrderMutation.isPending ? (
-                "Processing..."
-              ) : (
-                <>
-                  <CheckCircle className="h-5 w-5 mr-2" />
-                  Complete Sale
-                </>
-              )}
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleCheckout(true)}
+                disabled={cart.length === 0 || createOrderMutation.isPending}
+                data-testid="button-quotation"
+              >
+                <ClipboardList className="h-5 w-5 mr-2" />
+                Quotation
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => handleCheckout(false)}
+                disabled={cart.length === 0 || createOrderMutation.isPending}
+                data-testid="button-checkout"
+              >
+                {createOrderMutation.isPending ? (
+                  "Processing..."
+                ) : (
+                  <>
+                    <CheckCircle className="h-5 w-5 mr-2" />
+                    Complete Sale
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -586,24 +830,32 @@ export default function POS() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-6 w-6" />
-              Order Created Successfully
+              {isQuotation ? "Quotation Created" : "Order Created Successfully"}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-center text-lg">
-              Order <span className="font-bold">{lastOrderNumber}</span> has been
+              {isQuotation ? "Quotation" : "Order"}{" "}
+              <span className="font-bold">{lastOrderNumber}</span> has been
               created.
             </p>
-            <p className="text-center text-muted-foreground mt-2">
-              Payment: {paymentTypes.find((t) => t.value === paymentType)?.label}
-            </p>
+            {!isQuotation && (
+              <p className="text-center text-muted-foreground mt-2">
+                Payment: {paymentTypes.find((t) => t.value === paymentType)?.label}
+              </p>
+            )}
+            {isQuotation && (
+              <p className="text-center text-muted-foreground mt-2">
+                This is a quotation and can be converted to an order later.
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button
               onClick={() => setShowSuccessDialog(false)}
               data-testid="button-close-success"
             >
-              Create New Order
+              {isQuotation ? "Create New Quotation" : "Create New Order"}
             </Button>
           </DialogFooter>
         </DialogContent>
