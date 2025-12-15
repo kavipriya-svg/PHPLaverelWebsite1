@@ -783,8 +783,8 @@ export default function POS() {
                 </div>
               )}
               <div className="flex justify-between text-muted-foreground">
-                <span>GST (included)</span>
-                <span>{formatCurrency(totalGst)}</span>
+                <span>GST</span>
+                <span>+{formatCurrency(totalGst)}</span>
               </div>
             </div>
 
