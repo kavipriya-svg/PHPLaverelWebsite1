@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Download, Mail, Phone, Copy, Users, UserCheck, UserX, Clock, Crown, UserPlus, ShoppingBag } from "lucide-react";
+import { Search, Download, Mail, Phone, Copy, Users, UserCheck, UserX, Clock, Crown, UserPlus, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -182,9 +183,16 @@ export default function Marketing() {
   return (
     <div className="space-y-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-3xl font-bold" data-testid="text-marketing-title">Marketing</h1>
-            <p className="text-muted-foreground">Customer segments for marketing campaigns</p>
+          <div className="flex items-center gap-4">
+            <Link href="/admin">
+              <Button variant="outline" size="icon" data-testid="button-back">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold" data-testid="text-marketing-title">Marketing</h1>
+              <p className="text-muted-foreground">Customer segments for marketing campaigns</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button variant="outline" onClick={copyEmails} data-testid="button-copy-emails">
