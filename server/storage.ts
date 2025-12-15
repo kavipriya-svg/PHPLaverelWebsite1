@@ -100,6 +100,7 @@ export interface IStorage {
   getUsers(search?: string): Promise<{ users: User[]; total: number }>;
   getAdminUsers(search?: string): Promise<{ users: User[]; total: number }>;
   getCustomerUsers(search?: string): Promise<{ users: any[]; total: number }>;
+  getCustomerSegments(segment: string, search?: string): Promise<{ customers: any[]; total: number }>;
 
   getCategories(): Promise<CategoryWithChildren[]>;
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
@@ -467,6 +468,96 @@ export class DatabaseStorage implements IStorage {
     );
     
     return { users: customersWithStats, total: customersWithStats.length };
+  }
+
+  async getCustomerSegments(segment: string, search?: string): Promise<{ customers: any[]; total: number }> {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    // Get all customers first
+    let baseCondition = eq(users.role, "customer");
+    let whereCondition: any = baseCondition;
+    
+    if (search) {
+      whereCondition = and(
+        baseCondition,
+        or(
+          like(users.email, `%${search}%`),
+          like(users.firstName, `%${search}%`),
+          like(users.lastName, `%${search}%`),
+          like(users.phone, `%${search}%`)
+        )
+      );
+    }
+    
+    const customerList = await db.select().from(users).where(whereCondition).orderBy(desc(users.createdAt));
+    
+    // Enrich with order stats
+    const customersWithStats = await Promise.all(
+      customerList.map(async (customer) => {
+        const customerOrders = await db.select().from(orders).where(eq(orders.userId, customer.id));
+        const orderCount = customerOrders.length;
+        const totalSpent = customerOrders.reduce((sum, order) => sum + parseFloat(order.total || "0"), 0);
+        const lastOrderDate = customerOrders.length > 0 
+          ? customerOrders.reduce((latest, order) => {
+              const orderDate = order.createdAt ? new Date(order.createdAt) : new Date(0);
+              return orderDate > latest ? orderDate : latest;
+            }, new Date(0))
+          : null;
+        
+        return {
+          ...customer,
+          orderCount,
+          totalSpent,
+          lastOrderDate,
+        };
+      })
+    );
+
+    // Filter by segment
+    let filteredCustomers = customersWithStats;
+    
+    switch (segment) {
+      case "all":
+        // No additional filtering
+        break;
+      case "active":
+        // Customers with orders in last 30 days
+        filteredCustomers = customersWithStats.filter(c => 
+          c.lastOrderDate && c.lastOrderDate >= thirtyDaysAgo
+        );
+        break;
+      case "inactive":
+        // Customers with no orders in last 90 days (but have placed at least one order before)
+        filteredCustomers = customersWithStats.filter(c => 
+          c.orderCount > 0 && (!c.lastOrderDate || c.lastOrderDate < ninetyDaysAgo)
+        );
+        break;
+      case "recent":
+        // Customers with orders in last 7 days
+        filteredCustomers = customersWithStats.filter(c => 
+          c.lastOrderDate && c.lastOrderDate >= sevenDaysAgo
+        );
+        break;
+      case "high_value":
+        // Top spenders - customers who have spent > 10000
+        filteredCustomers = customersWithStats.filter(c => c.totalSpent >= 10000);
+        break;
+      case "new":
+        // Customers registered in last 30 days
+        filteredCustomers = customersWithStats.filter(c => 
+          c.createdAt && new Date(c.createdAt) >= thirtyDaysAgo
+        );
+        break;
+      case "never_purchased":
+        // Customers who registered but never made a purchase
+        filteredCustomers = customersWithStats.filter(c => c.orderCount === 0);
+        break;
+    }
+
+    return { customers: filteredCustomers, total: filteredCustomers.length };
   }
 
   async getCategories(): Promise<CategoryWithChildren[]> {

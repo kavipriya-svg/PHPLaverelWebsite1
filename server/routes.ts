@@ -3500,6 +3500,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Marketing - Customer Segments
+  app.get("/api/admin/marketing/segments", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const segment = req.query.segment as string || "all";
+      const search = req.query.search as string || "";
+      const result = await storage.getCustomerSegments(segment, search);
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to fetch customer segments:", error);
+      res.status(500).json({ error: "Failed to fetch customer segments" });
+    }
+  });
+
   app.post("/api/admin/users/create-admin", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { email, password, firstName, lastName, role } = req.body;
