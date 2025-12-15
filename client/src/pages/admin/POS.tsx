@@ -13,6 +13,8 @@ import {
   CheckCircle,
   User,
   Phone,
+  Mail,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +70,13 @@ export default function POS() {
   const [notes, setNotes] = useState("");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [lastOrderNumber, setLastOrderNumber] = useState("");
+  const [showNewCustomerDialog, setShowNewCustomerDialog] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
 
   const { data: productsData, isLoading } = useQuery<{
     products: ProductWithDetails[];
@@ -109,6 +118,49 @@ export default function POS() {
       });
     },
   });
+
+  const createCustomerMutation = useMutation({
+    mutationFn: async (data: typeof newCustomer) => {
+      return apiRequest("/api/admin/pos/customers", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: (data: any) => {
+      const customer = data.customer;
+      const fullName = `${customer.firstName || ""} ${customer.lastName || ""}`.trim();
+      setCustomerName(fullName);
+      if (customer.phone) {
+        setCustomerPhone(customer.phone);
+      }
+      setShowNewCustomerDialog(false);
+      setNewCustomer({ firstName: "", lastName: "", email: "", phone: "" });
+      toast({
+        title: "Customer Created",
+        description: `${fullName} has been added as a new customer`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create customer",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCreateCustomer = () => {
+    if (!newCustomer.firstName.trim()) {
+      toast({
+        title: "Error",
+        description: "First name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    createCustomerMutation.mutate(newCustomer);
+  };
 
   const products = productsData?.products || [];
 
@@ -288,15 +340,26 @@ export default function POS() {
           </CardHeader>
 
           <div className="px-4 pb-4 space-y-3">
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                data-testid="input-customer-name"
-                placeholder="Customer Name (optional)"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  data-testid="input-customer-name"
+                  placeholder="Customer Name (optional)"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setShowNewCustomerDialog(true)}
+                title="Add new customer"
+                data-testid="button-add-customer"
+              >
+                <UserPlus className="h-4 w-4" />
+              </Button>
             </div>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -473,6 +536,97 @@ export default function POS() {
               data-testid="button-close-success"
             >
               Create New Order
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showNewCustomerDialog} onOpenChange={setShowNewCustomerDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Add New Customer
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name *</Label>
+                <Input
+                  id="firstName"
+                  data-testid="input-new-customer-firstname"
+                  placeholder="First name"
+                  value={newCustomer.firstName}
+                  onChange={(e) =>
+                    setNewCustomer({ ...newCustomer, firstName: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  data-testid="input-new-customer-lastname"
+                  placeholder="Last name"
+                  value={newCustomer.lastName}
+                  onChange={(e) =>
+                    setNewCustomer({ ...newCustomer, lastName: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  data-testid="input-new-customer-email"
+                  placeholder="customer@example.com"
+                  value={newCustomer.email}
+                  onChange={(e) =>
+                    setNewCustomer({ ...newCustomer, email: e.target.value })
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  data-testid="input-new-customer-phone"
+                  placeholder="+91 98765 43210"
+                  value={newCustomer.phone}
+                  onChange={(e) =>
+                    setNewCustomer({ ...newCustomer, phone: e.target.value })
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowNewCustomerDialog(false);
+                setNewCustomer({ firstName: "", lastName: "", email: "", phone: "" });
+              }}
+              data-testid="button-cancel-new-customer"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateCustomer}
+              disabled={createCustomerMutation.isPending}
+              data-testid="button-save-new-customer"
+            >
+              {createCustomerMutation.isPending ? "Creating..." : "Create Customer"}
             </Button>
           </DialogFooter>
         </DialogContent>
