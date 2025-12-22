@@ -3804,6 +3804,37 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Update customer type
+  app.patch("/api/admin/users/:id/customer-type", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { customerType } = req.body;
+      const validTypes = ["regular", "subscription", "retailer", "distributor", "self_employed"];
+      
+      if (!validTypes.includes(customerType)) {
+        return res.status(400).json({ error: "Invalid customer type" });
+      }
+      
+      const user = await storage.updateUser(req.params.id, { customerType });
+      res.json({ user });
+    } catch (error) {
+      console.error("Failed to update customer type:", error);
+      res.status(500).json({ error: "Failed to update customer type" });
+    }
+  });
+
+  // Get available customer types
+  app.get("/api/admin/customer-types", isAuthenticated, isAdmin, async (req, res) => {
+    res.json({
+      types: [
+        { value: "regular", label: "Regular Customer" },
+        { value: "subscription", label: "Subscription Customer" },
+        { value: "retailer", label: "Retailer" },
+        { value: "distributor", label: "Distributor" },
+        { value: "self_employed", label: "Self Employed" },
+      ]
+    });
+  });
+
   // Admin Roles Management API
   app.get("/api/admin/roles", isAuthenticated, isAdmin, async (req, res) => {
     try {
