@@ -34,6 +34,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   phone: varchar("phone"),
   role: varchar("role").default("customer").notNull(), // admin, manager, support, customer (legacy field)
+  customerType: varchar("customer_type").default("regular").notNull(), // regular, subscription, retailer, distributor, self_employed
   adminRoleId: varchar("admin_role_id"), // References adminRoles.id for dynamic permissions
   passwordHash: varchar("password_hash"), // For admin email/password authentication
   createdAt: timestamp("created_at").defaultNow(),
