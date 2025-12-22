@@ -3810,8 +3810,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const { customerType } = req.body;
       const validTypes = ["regular", "subscription", "retailer", "distributor", "self_employed"];
       
-      if (!validTypes.includes(customerType)) {
-        return res.status(400).json({ error: "Invalid customer type" });
+      if (!customerType || !validTypes.includes(customerType)) {
+        return res.status(400).json({ error: "Invalid customer type. Must be one of: regular, subscription, retailer, distributor, self_employed" });
+      }
+      
+      // Check if user exists
+      const existingUser = await storage.getUser(req.params.id);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
       }
       
       const user = await storage.updateUser(req.params.id, { customerType });

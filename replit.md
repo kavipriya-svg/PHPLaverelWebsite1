@@ -36,6 +36,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Blog section above footer with admin controls for creating/editing blog posts (title, excerpt, author, images, visibility)
 - Unified email/password authentication for customers and admins (no external OAuth dependencies)
 - POS (Point of Sale) module for in-store sales with product search, cart management, and multiple payment types (cash, card, UPI, credit)
+- Customer types system with 5 types: Regular Customer, Subscription Customer, Retailer, Distributor, Self Employed - manageable from Admin Panel
 
 ## User Preferences
 

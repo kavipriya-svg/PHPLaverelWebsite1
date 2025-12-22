@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Search, MoreHorizontal, User as UserIcon, Mail, Phone, ShoppingBag, Download, FileText, FileSpreadsheet, FileType, File, ArrowLeft, MapPin, Receipt, ChevronDown, ChevronUp, Package, Truck, CreditCard } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { User, Address, OrderWithItems, InvoiceSettings } from "@shared/schema";
 import { defaultInvoiceSettings } from "@shared/schema";
@@ -276,11 +285,37 @@ async function openInvoice(order: OrderWithItems) {
   }
 }
 
+const CUSTOMER_TYPES = [
+  { value: "regular", label: "Regular Customer" },
+  { value: "subscription", label: "Subscription Customer" },
+  { value: "retailer", label: "Retailer" },
+  { value: "distributor", label: "Distributor" },
+  { value: "self_employed", label: "Self Employed" },
+];
+
+const getCustomerTypeLabel = (type: string): string => {
+  return CUSTOMER_TYPES.find(t => t.value === type)?.label || "Regular Customer";
+};
+
+const getCustomerTypeBadgeVariant = (type: string): "default" | "secondary" | "outline" => {
+  switch (type) {
+    case "subscription":
+      return "default";
+    case "retailer":
+    case "distributor":
+      return "secondary";
+    default:
+      return "outline";
+  }
+};
+
 export default function CustomerUsersList() {
   const [search, setSearch] = useState("");
   const [viewCustomer, setViewCustomer] = useState<CustomerWithStats | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [editTypeCustomer, setEditTypeCustomer] = useState<CustomerWithStats | null>(null);
+  const [newCustomerType, setNewCustomerType] = useState("");
   const { toast } = useToast();
 
   const { data, isLoading } = useQuery<{ users: CustomerWithStats[]; total: number }>({
@@ -295,6 +330,21 @@ export default function CustomerUsersList() {
   });
 
   const users = data?.users || [];
+
+  const updateCustomerTypeMutation = useMutation({
+    mutationFn: async ({ id, customerType }: { id: string; customerType: string }) => {
+      await apiRequest("PATCH", `/api/admin/users/${id}/customer-type`, { customerType });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users/customers"] });
+      toast({ title: "Customer type updated successfully" });
+      setEditTypeCustomer(null);
+      setNewCustomerType("");
+    },
+    onError: () => {
+      toast({ title: "Failed to update customer type", variant: "destructive" });
+    },
+  });
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -518,6 +568,7 @@ export default function CustomerUsersList() {
               <TableHead>Customer</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Orders</TableHead>
               <TableHead>Total Spent</TableHead>
               <TableHead>Joined</TableHead>
@@ -528,14 +579,14 @@ export default function CustomerUsersList() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 7 }).map((_, j) => (
+                  {Array.from({ length: 8 }).map((_, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   No customers found
                 </TableCell>
               </TableRow>
@@ -572,6 +623,14 @@ export default function CustomerUsersList() {
                     )}
                   </TableCell>
                   <TableCell>
+                    <Badge 
+                      variant={getCustomerTypeBadgeVariant(user.customerType || "regular")}
+                      className="text-xs"
+                    >
+                      {getCustomerTypeLabel(user.customerType || "regular")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
                     <Badge variant="outline">
                       <ShoppingBag className="h-3 w-3 mr-1" />
                       {user.orderCount || 0}
@@ -594,6 +653,14 @@ export default function CustomerUsersList() {
                         <DropdownMenuItem onClick={() => setViewCustomer(user)}>
                           <UserIcon className="h-4 w-4 mr-2" />
                           View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => {
+                          setEditTypeCustomer(user);
+                          setNewCustomerType(user.customerType || "regular");
+                        }}>
+                          <ShoppingBag className="h-4 w-4 mr-2" />
+                          Change Customer Type
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -898,6 +965,50 @@ export default function CustomerUsersList() {
           <DialogFooter>
             <Button variant="outline" onClick={() => { setViewCustomer(null); setActiveTab("overview"); setExpandedOrderId(null); }}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Customer Type Dialog */}
+      <Dialog open={!!editTypeCustomer} onOpenChange={() => { setEditTypeCustomer(null); setNewCustomerType(""); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Customer Type</DialogTitle>
+            <DialogDescription>
+              Update the customer type for {editTypeCustomer?.firstName} {editTypeCustomer?.lastName || editTypeCustomer?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Customer Type</Label>
+              <Select value={newCustomerType} onValueChange={setNewCustomerType}>
+                <SelectTrigger data-testid="select-customer-type">
+                  <SelectValue placeholder="Select customer type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CUSTOMER_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditTypeCustomer(null); setNewCustomerType(""); }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => editTypeCustomer && newCustomerType && updateCustomerTypeMutation.mutate({ 
+                id: editTypeCustomer.id, 
+                customerType: newCustomerType 
+              })}
+              disabled={updateCustomerTypeMutation.isPending || !newCustomerType}
+              data-testid="button-save-customer-type"
+            >
+              {updateCustomerTypeMutation.isPending ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
