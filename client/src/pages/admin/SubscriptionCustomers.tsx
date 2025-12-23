@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, Plus, Search, Edit, Eye, UserPlus } from "lucide-react";
+import { ArrowLeft, Plus, Search, Edit, Eye, UserPlus, Trash2, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +36,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import type { User } from "@shared/schema";
+import type { User, Category, SubscriptionCategoryDiscount } from "@shared/schema";
 import { CURRENCY_SYMBOL } from "@/lib/currency";
 
 interface SubscriptionCustomer extends User {
@@ -44,11 +44,27 @@ interface SubscriptionCustomer extends User {
   totalSpent?: number;
 }
 
+interface CategoryDiscountFormData {
+  categoryId: string;
+  discountType: string;
+  discountValue: string;
+  saleDiscountType: string;
+  saleDiscountValue: string;
+}
+
 export default function SubscriptionCustomers() {
   const [search, setSearch] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editCustomer, setEditCustomer] = useState<SubscriptionCustomer | null>(null);
   const [viewCustomer, setViewCustomer] = useState<SubscriptionCustomer | null>(null);
+  const [showAddCategoryDiscount, setShowAddCategoryDiscount] = useState(false);
+  const [categoryDiscountForm, setCategoryDiscountForm] = useState<CategoryDiscountFormData>({
+    categoryId: "",
+    discountType: "percentage",
+    discountValue: "",
+    saleDiscountType: "percentage",
+    saleDiscountValue: "",
+  });
   const { toast } = useToast();
 
   // Form state for add/edit
@@ -112,6 +128,97 @@ export default function SubscriptionCustomers() {
       });
     },
   });
+
+  // Fetch categories for category discount selection
+  const { data: categoriesData } = useQuery<{ categories: Category[] }>({
+    queryKey: ["/api/categories"],
+  });
+  const allCategories = categoriesData?.categories || [];
+
+  // Build a flat list of categories with hierarchy labels
+  const flattenCategories = (cats: Category[], parentLabel = ""): { id: string; label: string; level: number }[] => {
+    const result: { id: string; label: string; level: number }[] = [];
+    const buildList = (categories: any[], prefix: string, level: number) => {
+      for (const cat of categories) {
+        const label = prefix ? `${prefix} > ${cat.name}` : cat.name;
+        result.push({ id: cat.id, label, level });
+        if (cat.children && cat.children.length > 0) {
+          buildList(cat.children, label, level + 1);
+        }
+      }
+    };
+    buildList(cats, parentLabel, 0);
+    return result;
+  };
+  const flatCategories = flattenCategories(allCategories);
+
+  // Fetch category discounts for the customer being edited
+  const { data: categoryDiscountsData, refetch: refetchCategoryDiscounts } = useQuery<{ discounts: SubscriptionCategoryDiscount[] }>({
+    queryKey: ["/api/admin/subscription-customers", editCustomer?.id, "category-discounts"],
+    enabled: !!editCustomer?.id,
+  });
+  const categoryDiscounts = categoryDiscountsData?.discounts || [];
+
+  // Create category discount mutation
+  const createCategoryDiscountMutation = useMutation({
+    mutationFn: async (data: CategoryDiscountFormData) => {
+      return apiRequest("POST", `/api/admin/subscription-customers/${editCustomer?.id}/category-discounts`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/subscription-customers", editCustomer?.id, "category-discounts"] });
+      toast({ title: "Category discount added successfully" });
+      setShowAddCategoryDiscount(false);
+      resetCategoryDiscountForm();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to add category discount", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Delete category discount mutation
+  const deleteCategoryDiscountMutation = useMutation({
+    mutationFn: async (discountId: string) => {
+      return apiRequest("DELETE", `/api/admin/subscription-customers/${editCustomer?.id}/category-discounts/${discountId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/subscription-customers", editCustomer?.id, "category-discounts"] });
+      toast({ title: "Category discount removed" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to remove category discount", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const resetCategoryDiscountForm = () => {
+    setCategoryDiscountForm({
+      categoryId: "",
+      discountType: "percentage",
+      discountValue: "",
+      saleDiscountType: "percentage",
+      saleDiscountValue: "",
+    });
+  };
+
+  const handleAddCategoryDiscount = () => {
+    if (!categoryDiscountForm.categoryId || !categoryDiscountForm.discountValue) {
+      toast({ title: "Please select a category and enter a discount value", variant: "destructive" });
+      return;
+    }
+    createCategoryDiscountMutation.mutate(categoryDiscountForm);
+  };
+
+  const getCategoryName = (categoryId: string): string => {
+    const cat = flatCategories.find(c => c.id === categoryId);
+    return cat?.label || "Unknown Category";
+  };
 
   const resetForm = () => {
     setFormData({
@@ -723,6 +830,184 @@ export default function SubscriptionCustomers() {
                 rows={3}
                 data-testid="input-edit-notes"
               />
+            </div>
+
+            <Separator />
+
+            {/* Category-Specific Discounts Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Category-Specific Discounts
+                </h3>
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setShowAddCategoryDiscount(!showAddCategoryDiscount)}
+                  data-testid="button-add-category-discount"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Category Discount
+                </Button>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Set specific discounts for product categories. These override the default discounts above.
+              </p>
+
+              {/* Add Category Discount Form */}
+              {showAddCategoryDiscount && (
+                <Card className="p-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Select Category</Label>
+                      <Select
+                        value={categoryDiscountForm.categoryId}
+                        onValueChange={(value) => setCategoryDiscountForm({ ...categoryDiscountForm, categoryId: value })}
+                      >
+                        <SelectTrigger data-testid="select-category">
+                          <SelectValue placeholder="Choose a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {flatCategories
+                            .filter(cat => !categoryDiscounts.some(d => d.categoryId === cat.id))
+                            .map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                <span style={{ paddingLeft: `${cat.level * 12}px` }}>{cat.label}</span>
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Regular Product Discount Type</Label>
+                        <Select
+                          value={categoryDiscountForm.discountType}
+                          onValueChange={(value) => setCategoryDiscountForm({ ...categoryDiscountForm, discountType: value })}
+                        >
+                          <SelectTrigger data-testid="select-cat-discount-type">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentage (%)</SelectItem>
+                            <SelectItem value="fixed">Fixed Amount ({CURRENCY_SYMBOL})</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Discount Value</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={categoryDiscountForm.discountValue}
+                          onChange={(e) => setCategoryDiscountForm({ ...categoryDiscountForm, discountValue: e.target.value })}
+                          placeholder={categoryDiscountForm.discountType === "percentage" ? "e.g., 10" : "e.g., 100"}
+                          data-testid="input-cat-discount-value"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Sale Product Discount Type</Label>
+                        <Select
+                          value={categoryDiscountForm.saleDiscountType}
+                          onValueChange={(value) => setCategoryDiscountForm({ ...categoryDiscountForm, saleDiscountType: value })}
+                        >
+                          <SelectTrigger data-testid="select-cat-sale-discount-type">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentage (%)</SelectItem>
+                            <SelectItem value="fixed">Fixed Amount ({CURRENCY_SYMBOL})</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Sale Discount Value</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={categoryDiscountForm.saleDiscountValue}
+                          onChange={(e) => setCategoryDiscountForm({ ...categoryDiscountForm, saleDiscountValue: e.target.value })}
+                          placeholder="Optional - for sale products"
+                          data-testid="input-cat-sale-discount-value"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setShowAddCategoryDiscount(false);
+                          resetCategoryDiscountForm();
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="button" 
+                        size="sm"
+                        onClick={handleAddCategoryDiscount}
+                        disabled={createCategoryDiscountMutation.isPending}
+                        data-testid="button-save-category-discount"
+                      >
+                        {createCategoryDiscountMutation.isPending ? "Adding..." : "Add Discount"}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* List of existing category discounts */}
+              {categoryDiscounts.length > 0 ? (
+                <div className="space-y-2">
+                  {categoryDiscounts.map((discount) => (
+                    <div 
+                      key={discount.id} 
+                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                      data-testid={`category-discount-${discount.id}`}
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{getCategoryName(discount.categoryId)}</p>
+                        <div className="flex gap-4 text-xs text-muted-foreground mt-1">
+                          <span>
+                            Regular: {discount.discountType === "percentage" 
+                              ? `${discount.discountValue}%` 
+                              : `${CURRENCY_SYMBOL}${discount.discountValue}`}
+                          </span>
+                          {discount.saleDiscountValue && (
+                            <span>
+                              Sale: {discount.saleDiscountType === "percentage" 
+                                ? `${discount.saleDiscountValue}%` 
+                                : `${CURRENCY_SYMBOL}${discount.saleDiscountValue}`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => deleteCategoryDiscountMutation.mutate(discount.id)}
+                        disabled={deleteCategoryDiscountMutation.isPending}
+                        data-testid={`button-delete-category-discount-${discount.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  No category-specific discounts configured. Default discounts will apply to all categories.
+                </p>
+              )}
             </div>
           </div>
 

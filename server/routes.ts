@@ -243,6 +243,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
     
     const user = await storage.getUser(userInfo.id);
+    
+    // If user is a subscription customer, include their category discounts
+    if (user && user.customerType === 'subscription') {
+      const categoryDiscounts = await storage.getSubscriptionCategoryDiscounts(user.id);
+      return res.json({ ...user, categoryDiscounts });
+    }
+    
     res.json(user || null);
   });
 
@@ -4045,6 +4052,85 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     } catch (error) {
       console.error("Failed to get subscription customer:", error);
       res.status(500).json({ error: "Failed to get subscription customer" });
+    }
+  });
+
+  // Subscription Category Discounts API
+  app.get("/api/admin/subscription-customers/:customerId/category-discounts", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const discounts = await storage.getSubscriptionCategoryDiscounts(req.params.customerId);
+      res.json({ discounts });
+    } catch (error) {
+      console.error("Failed to get category discounts:", error);
+      res.status(500).json({ error: "Failed to get category discounts" });
+    }
+  });
+
+  app.post("/api/admin/subscription-customers/:customerId/category-discounts", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { categoryId, discountType, discountValue, saleDiscountType, saleDiscountValue } = req.body;
+      
+      if (!categoryId) {
+        return res.status(400).json({ error: "Category is required" });
+      }
+      if (!discountType || !['percentage', 'fixed'].includes(discountType)) {
+        return res.status(400).json({ error: "Valid discount type is required (percentage or fixed)" });
+      }
+      if (discountValue === undefined || discountValue === null || parseFloat(discountValue) < 0) {
+        return res.status(400).json({ error: "Valid discount value is required" });
+      }
+
+      // Check if discount already exists for this category
+      const existing = await storage.getSubscriptionCategoryDiscount(req.params.customerId, categoryId);
+      if (existing) {
+        return res.status(400).json({ error: "A discount already exists for this category. Please edit or delete the existing one." });
+      }
+
+      const discount = await storage.createSubscriptionCategoryDiscount({
+        customerId: req.params.customerId,
+        categoryId,
+        discountType,
+        discountValue: String(discountValue),
+        saleDiscountType: saleDiscountType || null,
+        saleDiscountValue: saleDiscountValue ? String(saleDiscountValue) : null,
+      });
+
+      res.json({ discount });
+    } catch (error) {
+      console.error("Failed to create category discount:", error);
+      res.status(500).json({ error: "Failed to create category discount" });
+    }
+  });
+
+  app.patch("/api/admin/subscription-customers/:customerId/category-discounts/:discountId", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { discountType, discountValue, saleDiscountType, saleDiscountValue } = req.body;
+      
+      const updateData: any = {};
+      if (discountType !== undefined) updateData.discountType = discountType;
+      if (discountValue !== undefined) updateData.discountValue = String(discountValue);
+      if (saleDiscountType !== undefined) updateData.saleDiscountType = saleDiscountType || null;
+      if (saleDiscountValue !== undefined) updateData.saleDiscountValue = saleDiscountValue ? String(saleDiscountValue) : null;
+
+      const updated = await storage.updateSubscriptionCategoryDiscount(req.params.discountId, updateData);
+      if (!updated) {
+        return res.status(404).json({ error: "Category discount not found" });
+      }
+
+      res.json({ discount: updated });
+    } catch (error) {
+      console.error("Failed to update category discount:", error);
+      res.status(500).json({ error: "Failed to update category discount" });
+    }
+  });
+
+  app.delete("/api/admin/subscription-customers/:customerId/category-discounts/:discountId", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSubscriptionCategoryDiscount(req.params.discountId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to delete category discount:", error);
+      res.status(500).json({ error: "Failed to delete category discount" });
     }
   });
 

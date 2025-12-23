@@ -8,12 +8,17 @@ import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
-import type { ProductWithDetails, User } from "@shared/schema";
+import type { ProductWithDetails, User, SubscriptionCategoryDiscount } from "@shared/schema";
+
+interface UserWithDiscounts extends User {
+  categoryDiscounts?: SubscriptionCategoryDiscount[];
+}
 
 function calculateSubscriptionPrice(
   basePrice: string | number,
   salePrice: string | number | null | undefined,
-  user: User | null | undefined
+  user: UserWithDiscounts | null | undefined,
+  categoryId?: string | null
 ): { finalPrice: number; hasSubscriptionDiscount: boolean; originalPrice: number } {
   const base = parseFloat(String(basePrice));
   const sale = salePrice ? parseFloat(String(salePrice)) : null;
@@ -27,12 +32,29 @@ function calculateSubscriptionPrice(
   let discountType: string | null = null;
   let discountValue: number | null = null;
   
-  if (isOnSale) {
-    discountType = user.subscriptionSaleDiscountType || null;
-    discountValue = user.subscriptionSaleDiscountValue ? parseFloat(String(user.subscriptionSaleDiscountValue)) : null;
-  } else {
-    discountType = user.subscriptionDiscountType || null;
-    discountValue = user.subscriptionDiscountValue ? parseFloat(String(user.subscriptionDiscountValue)) : null;
+  // First check for category-specific discount
+  if (categoryId && user.categoryDiscounts && user.categoryDiscounts.length > 0) {
+    const categoryDiscount = user.categoryDiscounts.find(d => d.categoryId === categoryId);
+    if (categoryDiscount) {
+      if (isOnSale && categoryDiscount.saleDiscountType && categoryDiscount.saleDiscountValue) {
+        discountType = categoryDiscount.saleDiscountType;
+        discountValue = parseFloat(String(categoryDiscount.saleDiscountValue));
+      } else {
+        discountType = categoryDiscount.discountType;
+        discountValue = parseFloat(String(categoryDiscount.discountValue));
+      }
+    }
+  }
+  
+  // Fall back to global subscription discounts if no category-specific discount found
+  if (!discountType || !discountValue || discountValue <= 0) {
+    if (isOnSale) {
+      discountType = user.subscriptionSaleDiscountType || null;
+      discountValue = user.subscriptionSaleDiscountValue ? parseFloat(String(user.subscriptionSaleDiscountValue)) : null;
+    } else {
+      discountType = user.subscriptionDiscountType || null;
+      discountValue = user.subscriptionDiscountValue ? parseFloat(String(user.subscriptionDiscountValue)) : null;
+    }
   }
   
   if (!discountType || !discountValue || discountValue <= 0) {
@@ -146,7 +168,8 @@ export function ProductCard({ product, showSaleCountdown = false }: ProductCardP
   const { finalPrice, hasSubscriptionDiscount, originalPrice } = calculateSubscriptionPrice(
     product.price,
     product.salePrice,
-    user
+    user as UserWithDiscounts,
+    product.categoryId
   );
 
   const handleAddToCart = async (e: React.MouseEvent) => {

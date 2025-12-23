@@ -52,7 +52,17 @@ import { ProductGrid } from "@/components/store/ProductGrid";
 import { ReviewSection } from "@/components/store/ReviewSection";
 import { ShareButtons } from "@/components/store/ShareButtons";
 import { SEOHead } from "@/components/SEOHead";
-import type { ProductWithDetails, Coupon, Banner } from "@shared/schema";
+import type { ProductWithDetails, Coupon, Banner, SubscriptionCategoryDiscount } from "@shared/schema";
+
+interface UserWithDiscounts {
+  id: string;
+  customerType?: string | null;
+  subscriptionDiscountType?: string | null;
+  subscriptionDiscountValue?: string | number | null;
+  subscriptionSaleDiscountType?: string | null;
+  subscriptionSaleDiscountValue?: string | number | null;
+  categoryDiscounts?: SubscriptionCategoryDiscount[];
+}
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:slug");
@@ -172,16 +182,35 @@ export default function ProductDetail() {
   let hasSubscriptionDiscount = false;
   
   if (user && user.customerType === 'subscription' && currentPrice) {
+    const typedUser = user as UserWithDiscounts;
     const basePrice = parseFloat(String(currentPrice));
     let discountType: string | null = null;
     let discountValue: number | null = null;
     
-    if (hasDiscount) {
-      discountType = user.subscriptionSaleDiscountType || null;
-      discountValue = user.subscriptionSaleDiscountValue ? parseFloat(String(user.subscriptionSaleDiscountValue)) : null;
-    } else {
-      discountType = user.subscriptionDiscountType || null;
-      discountValue = user.subscriptionDiscountValue ? parseFloat(String(user.subscriptionDiscountValue)) : null;
+    // First check for category-specific discount
+    const categoryId = product?.categoryId;
+    if (categoryId && typedUser.categoryDiscounts && typedUser.categoryDiscounts.length > 0) {
+      const categoryDiscount = typedUser.categoryDiscounts.find(d => d.categoryId === categoryId);
+      if (categoryDiscount) {
+        if (hasDiscount && categoryDiscount.saleDiscountType && categoryDiscount.saleDiscountValue) {
+          discountType = categoryDiscount.saleDiscountType;
+          discountValue = parseFloat(String(categoryDiscount.saleDiscountValue));
+        } else {
+          discountType = categoryDiscount.discountType;
+          discountValue = parseFloat(String(categoryDiscount.discountValue));
+        }
+      }
+    }
+    
+    // Fall back to global subscription discounts if no category-specific discount
+    if (!discountType || !discountValue || discountValue <= 0) {
+      if (hasDiscount) {
+        discountType = typedUser.subscriptionSaleDiscountType || null;
+        discountValue = typedUser.subscriptionSaleDiscountValue ? parseFloat(String(typedUser.subscriptionSaleDiscountValue)) : null;
+      } else {
+        discountType = typedUser.subscriptionDiscountType || null;
+        discountValue = typedUser.subscriptionDiscountValue ? parseFloat(String(typedUser.subscriptionDiscountValue)) : null;
+      }
     }
     
     if (discountType && discountValue && discountValue > 0) {

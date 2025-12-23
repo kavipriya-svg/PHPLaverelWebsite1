@@ -27,6 +27,7 @@ import {
   otpCodes,
   adminRoles,
   rolePermissions,
+  subscriptionCategoryDiscounts,
   type User,
   type UpsertUser,
   type Category,
@@ -71,6 +72,8 @@ import {
   type InsertComboOffer,
   type QuickPage,
   type InsertQuickPage,
+  type SubscriptionCategoryDiscount,
+  type InsertSubscriptionCategoryDiscount,
   verifiedRazorpayPayments,
   type ProductWithDetails,
   type CategoryWithChildren,
@@ -247,6 +250,14 @@ export interface IStorage {
   incrementOtpAttempts(id: string): Promise<void>;
   deleteOtpCodes(email: string, purpose: string): Promise<void>;
   cleanupExpiredOtpCodes(): Promise<void>;
+
+  // Subscription Category Discounts
+  getSubscriptionCategoryDiscounts(customerId: string): Promise<SubscriptionCategoryDiscount[]>;
+  getSubscriptionCategoryDiscount(customerId: string, categoryId: string): Promise<SubscriptionCategoryDiscount | undefined>;
+  createSubscriptionCategoryDiscount(discount: InsertSubscriptionCategoryDiscount): Promise<SubscriptionCategoryDiscount>;
+  updateSubscriptionCategoryDiscount(id: string, discount: Partial<InsertSubscriptionCategoryDiscount>): Promise<SubscriptionCategoryDiscount | undefined>;
+  deleteSubscriptionCategoryDiscount(id: string): Promise<void>;
+  deleteSubscriptionCategoryDiscountsByCustomer(customerId: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -2129,6 +2140,54 @@ export class DatabaseStorage implements IStorage {
       case 'delete': return permission.canDelete ?? false;
       default: return false;
     }
+  }
+
+  // Subscription Category Discounts
+  async getSubscriptionCategoryDiscounts(customerId: string): Promise<SubscriptionCategoryDiscount[]> {
+    return await db
+      .select()
+      .from(subscriptionCategoryDiscounts)
+      .where(eq(subscriptionCategoryDiscounts.customerId, customerId));
+  }
+
+  async getSubscriptionCategoryDiscount(customerId: string, categoryId: string): Promise<SubscriptionCategoryDiscount | undefined> {
+    const [discount] = await db
+      .select()
+      .from(subscriptionCategoryDiscounts)
+      .where(and(
+        eq(subscriptionCategoryDiscounts.customerId, customerId),
+        eq(subscriptionCategoryDiscounts.categoryId, categoryId)
+      ));
+    return discount;
+  }
+
+  async createSubscriptionCategoryDiscount(discount: InsertSubscriptionCategoryDiscount): Promise<SubscriptionCategoryDiscount> {
+    const [created] = await db
+      .insert(subscriptionCategoryDiscounts)
+      .values(discount)
+      .returning();
+    return created;
+  }
+
+  async updateSubscriptionCategoryDiscount(id: string, discount: Partial<InsertSubscriptionCategoryDiscount>): Promise<SubscriptionCategoryDiscount | undefined> {
+    const [updated] = await db
+      .update(subscriptionCategoryDiscounts)
+      .set({ ...discount, updatedAt: new Date() })
+      .where(eq(subscriptionCategoryDiscounts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSubscriptionCategoryDiscount(id: string): Promise<void> {
+    await db
+      .delete(subscriptionCategoryDiscounts)
+      .where(eq(subscriptionCategoryDiscounts.id, id));
+  }
+
+  async deleteSubscriptionCategoryDiscountsByCustomer(customerId: string): Promise<void> {
+    await db
+      .delete(subscriptionCategoryDiscounts)
+      .where(eq(subscriptionCategoryDiscounts.customerId, customerId));
   }
 }
 

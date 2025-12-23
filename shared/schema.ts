@@ -56,7 +56,42 @@ export const usersRelations = relations(users, ({ many }) => ({
   addresses: many(addresses),
   wishlistItems: many(wishlistItems),
   cartItems: many(cartItems),
+  subscriptionCategoryDiscounts: many(subscriptionCategoryDiscounts),
 }));
+
+// Subscription category discounts - per-customer, per-category discount settings
+export const subscriptionCategoryDiscounts = pgTable("subscription_category_discounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull(),
+  categoryId: varchar("category_id").notNull(),
+  discountType: varchar("discount_type").notNull(), // "percentage" or "fixed"
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).notNull(),
+  saleDiscountType: varchar("sale_discount_type"), // "percentage" or "fixed" - for products already on sale
+  saleDiscountValue: decimal("sale_discount_value", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("subscription_category_discounts_customer_category_idx").on(table.customerId, table.categoryId),
+]);
+
+export const subscriptionCategoryDiscountsRelations = relations(subscriptionCategoryDiscounts, ({ one }) => ({
+  customer: one(users, {
+    fields: [subscriptionCategoryDiscounts.customerId],
+    references: [users.id],
+  }),
+  category: one(categories, {
+    fields: [subscriptionCategoryDiscounts.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+export const insertSubscriptionCategoryDiscountSchema = createInsertSchema(subscriptionCategoryDiscounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSubscriptionCategoryDiscount = z.infer<typeof insertSubscriptionCategoryDiscountSchema>;
+export type SubscriptionCategoryDiscount = typeof subscriptionCategoryDiscounts.$inferSelect;
 
 // OTP codes for verification (signup, forgot password, etc.)
 export const otpCodes = pgTable("otp_codes", {
