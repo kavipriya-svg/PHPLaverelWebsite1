@@ -469,6 +469,7 @@ export const cartItems = pgTable("cart_items", {
   variantId: varchar("variant_id"),
   comboOfferId: varchar("combo_offer_id"), // Track which combo offer this item belongs to
   quantity: integer("quantity").notNull().default(1),
+  deliveryDate: varchar("delivery_date"), // Selected delivery date for subscription customers (YYYY-MM-DD format)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
