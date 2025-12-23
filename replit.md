@@ -39,6 +39,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Customer types system with 5 types: Regular Customer, Subscription Customer, Retailer, Distributor, Self Employed - manageable from Admin Panel
 - Subscription customer pricing with category-specific discount settings (percentage or fixed discounts for regular and sale products per category, with fallback to global subscription discounts)
 - Per-item delivery date selection for subscription customers with calendar popover in cart
+- Ability to add the same product multiple times for different delivery dates (duplicate cart item feature)
 - Weight-based shipping calculation grouped by delivery date with Chennai vs PAN India rate differentiation
 - Automatic Chennai/PAN India detection from saved shipping address (falls back to estimate if no address saved)
 
