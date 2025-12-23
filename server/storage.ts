@@ -28,6 +28,7 @@ import {
   adminRoles,
   rolePermissions,
   subscriptionCategoryDiscounts,
+  subscriptionDeliveryTiers,
   type User,
   type UpsertUser,
   type Category,
@@ -74,6 +75,8 @@ import {
   type InsertQuickPage,
   type SubscriptionCategoryDiscount,
   type InsertSubscriptionCategoryDiscount,
+  type SubscriptionDeliveryTier,
+  type InsertSubscriptionDeliveryTier,
   verifiedRazorpayPayments,
   type ProductWithDetails,
   type CategoryWithChildren,
@@ -258,6 +261,13 @@ export interface IStorage {
   updateSubscriptionCategoryDiscount(id: string, discount: Partial<InsertSubscriptionCategoryDiscount>): Promise<SubscriptionCategoryDiscount | undefined>;
   deleteSubscriptionCategoryDiscount(id: string): Promise<void>;
   deleteSubscriptionCategoryDiscountsByCustomer(customerId: string): Promise<void>;
+
+  // Subscription Delivery Tiers
+  getSubscriptionDeliveryTiers(activeOnly?: boolean): Promise<SubscriptionDeliveryTier[]>;
+  getSubscriptionDeliveryTierById(id: string): Promise<SubscriptionDeliveryTier | undefined>;
+  createSubscriptionDeliveryTier(tier: InsertSubscriptionDeliveryTier): Promise<SubscriptionDeliveryTier>;
+  updateSubscriptionDeliveryTier(id: string, tier: Partial<InsertSubscriptionDeliveryTier>): Promise<SubscriptionDeliveryTier | undefined>;
+  deleteSubscriptionDeliveryTier(id: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -2188,6 +2198,47 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(subscriptionCategoryDiscounts)
       .where(eq(subscriptionCategoryDiscounts.customerId, customerId));
+  }
+
+  // Subscription Delivery Tiers
+  async getSubscriptionDeliveryTiers(activeOnly: boolean = false): Promise<SubscriptionDeliveryTier[]> {
+    const conditions = activeOnly ? eq(subscriptionDeliveryTiers.isActive, true) : undefined;
+    return await db
+      .select()
+      .from(subscriptionDeliveryTiers)
+      .where(conditions)
+      .orderBy(asc(subscriptionDeliveryTiers.upToWeightKg));
+  }
+
+  async getSubscriptionDeliveryTierById(id: string): Promise<SubscriptionDeliveryTier | undefined> {
+    const [tier] = await db
+      .select()
+      .from(subscriptionDeliveryTiers)
+      .where(eq(subscriptionDeliveryTiers.id, id));
+    return tier;
+  }
+
+  async createSubscriptionDeliveryTier(tier: InsertSubscriptionDeliveryTier): Promise<SubscriptionDeliveryTier> {
+    const [created] = await db
+      .insert(subscriptionDeliveryTiers)
+      .values(tier)
+      .returning();
+    return created;
+  }
+
+  async updateSubscriptionDeliveryTier(id: string, tier: Partial<InsertSubscriptionDeliveryTier>): Promise<SubscriptionDeliveryTier | undefined> {
+    const [updated] = await db
+      .update(subscriptionDeliveryTiers)
+      .set({ ...tier, updatedAt: new Date() })
+      .where(eq(subscriptionDeliveryTiers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSubscriptionDeliveryTier(id: string): Promise<void> {
+    await db
+      .delete(subscriptionDeliveryTiers)
+      .where(eq(subscriptionDeliveryTiers.id, id));
   }
 }
 

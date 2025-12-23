@@ -95,6 +95,27 @@ export const insertSubscriptionCategoryDiscountSchema = createInsertSchema(subsc
 export type InsertSubscriptionCategoryDiscount = z.infer<typeof insertSubscriptionCategoryDiscountSchema>;
 export type SubscriptionCategoryDiscount = typeof subscriptionCategoryDiscounts.$inferSelect;
 
+// Subscription Delivery Tiers - weight-based delivery fees for Chennai and PAN India
+export const subscriptionDeliveryTiers = pgTable("subscription_delivery_tiers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  label: varchar("label").notNull(), // Display label like "Up to 1kg", "1-3kg", etc.
+  upToWeightKg: decimal("up_to_weight_kg", { precision: 10, scale: 2 }).notNull(), // Weight threshold in kg
+  chennaiFee: decimal("chennai_fee", { precision: 10, scale: 2 }).notNull(), // Delivery fee for Chennai
+  panIndiaFee: decimal("pan_india_fee", { precision: 10, scale: 2 }).notNull(), // Delivery fee for PAN India
+  sortOrder: integer("sort_order").default(0), // For ordering tiers
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSubscriptionDeliveryTierSchema = createInsertSchema(subscriptionDeliveryTiers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSubscriptionDeliveryTier = z.infer<typeof insertSubscriptionDeliveryTierSchema>;
+export type SubscriptionDeliveryTier = typeof subscriptionDeliveryTiers.$inferSelect;
+
 // OTP codes for verification (signup, forgot password, etc.)
 export const otpCodes = pgTable("otp_codes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
