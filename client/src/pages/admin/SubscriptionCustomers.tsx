@@ -78,7 +78,8 @@ export default function SubscriptionCustomers() {
     subscriptionDiscountValue: "",
     subscriptionSaleDiscountType: "percentage",
     subscriptionSaleDiscountValue: "",
-    subscriptionDeliveryFee: "",
+    subscriptionDeliveryFeeCity: "",
+    subscriptionDeliveryFeeIndia: "",
     subscriptionDeliverySchedule: "weekly",
     subscriptionStartDate: "",
     subscriptionEndDate: "",
@@ -238,7 +239,8 @@ export default function SubscriptionCustomers() {
       subscriptionDiscountValue: "",
       subscriptionSaleDiscountType: "percentage",
       subscriptionSaleDiscountValue: "",
-      subscriptionDeliveryFee: "",
+      subscriptionDeliveryFeeCity: "",
+      subscriptionDeliveryFeeIndia: "",
       subscriptionDeliverySchedule: "weekly",
       subscriptionStartDate: "",
       subscriptionEndDate: "",
@@ -263,7 +265,8 @@ export default function SubscriptionCustomers() {
       subscriptionDiscountValue: customer.subscriptionDiscountValue || "",
       subscriptionSaleDiscountType: customer.subscriptionSaleDiscountType || "percentage",
       subscriptionSaleDiscountValue: customer.subscriptionSaleDiscountValue || "",
-      subscriptionDeliveryFee: customer.subscriptionDeliveryFee || "",
+      subscriptionDeliveryFeeCity: (customer as any).subscriptionDeliveryFeeCity || "",
+      subscriptionDeliveryFeeIndia: (customer as any).subscriptionDeliveryFeeIndia || "",
       subscriptionDeliverySchedule: customer.subscriptionDeliverySchedule || "weekly",
       subscriptionStartDate: customer.subscriptionStartDate 
         ? new Date(customer.subscriptionStartDate).toISOString().split('T')[0] 
@@ -347,7 +350,8 @@ export default function SubscriptionCustomers() {
               <TableHead>Phone</TableHead>
               <TableHead>Discount</TableHead>
               <TableHead>Sale Discount</TableHead>
-              <TableHead>Delivery Fee</TableHead>
+              <TableHead>City Fee</TableHead>
+              <TableHead>India Fee</TableHead>
               <TableHead>Schedule</TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
@@ -396,8 +400,13 @@ export default function SubscriptionCustomers() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {customer.subscriptionDeliveryFee 
-                      ? formatCurrency(parseFloat(customer.subscriptionDeliveryFee)) 
+                    {(customer as any).subscriptionDeliveryFeeCity 
+                      ? formatCurrency(parseFloat((customer as any).subscriptionDeliveryFeeCity)) 
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {(customer as any).subscriptionDeliveryFeeIndia 
+                      ? formatCurrency(parseFloat((customer as any).subscriptionDeliveryFeeIndia)) 
                       : "-"}
                   </TableCell>
                   <TableCell>
@@ -571,17 +580,29 @@ export default function SubscriptionCustomers() {
 
             <div className="space-y-4">
               <h3 className="font-semibold">Delivery Settings</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="deliveryFee">Delivery Fee (per schedule)</Label>
+                  <Label htmlFor="deliveryFeeCity">Delivery Fee (Within City)</Label>
                   <Input
-                    id="deliveryFee"
+                    id="deliveryFeeCity"
                     type="number"
                     step="0.01"
-                    value={formData.subscriptionDeliveryFee}
-                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFee: e.target.value })}
-                    placeholder="Enter delivery fee"
-                    data-testid="input-delivery-fee"
+                    value={formData.subscriptionDeliveryFeeCity}
+                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFeeCity: e.target.value })}
+                    placeholder="Within city fee"
+                    data-testid="input-delivery-fee-city"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryFeeIndia">Delivery Fee (Within India)</Label>
+                  <Input
+                    id="deliveryFeeIndia"
+                    type="number"
+                    step="0.01"
+                    value={formData.subscriptionDeliveryFeeIndia}
+                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFeeIndia: e.target.value })}
+                    placeholder="Within India fee"
+                    data-testid="input-delivery-fee-india"
                   />
                 </div>
                 <div className="space-y-2">
@@ -772,16 +793,29 @@ export default function SubscriptionCustomers() {
 
             <div className="space-y-4">
               <h3 className="font-semibold">Delivery Settings</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-deliveryFee">Delivery Fee (per schedule)</Label>
+                  <Label htmlFor="edit-deliveryFeeCity">Delivery Fee (Within City)</Label>
                   <Input
-                    id="edit-deliveryFee"
+                    id="edit-deliveryFeeCity"
                     type="number"
                     step="0.01"
-                    value={formData.subscriptionDeliveryFee}
-                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFee: e.target.value })}
-                    data-testid="input-edit-delivery-fee"
+                    value={formData.subscriptionDeliveryFeeCity}
+                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFeeCity: e.target.value })}
+                    placeholder="Within city fee"
+                    data-testid="input-edit-delivery-fee-city"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-deliveryFeeIndia">Delivery Fee (Within India)</Label>
+                  <Input
+                    id="edit-deliveryFeeIndia"
+                    type="number"
+                    step="0.01"
+                    value={formData.subscriptionDeliveryFeeIndia}
+                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFeeIndia: e.target.value })}
+                    placeholder="Within India fee"
+                    data-testid="input-edit-delivery-fee-india"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1124,12 +1158,20 @@ export default function SubscriptionCustomers() {
               {/* Delivery & Subscription Period */}
               <div>
                 <h4 className="font-semibold mb-3">Delivery & Subscription Period</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-4 rounded-lg">
+                <div className="grid grid-cols-3 gap-4 text-sm bg-muted/50 p-4 rounded-lg">
                   <div>
-                    <p className="text-muted-foreground">Delivery Fee</p>
+                    <p className="text-muted-foreground">Delivery Fee (Within City)</p>
                     <p className="font-medium">
-                      {viewCustomer.subscriptionDeliveryFee 
-                        ? formatCurrency(parseFloat(viewCustomer.subscriptionDeliveryFee)) 
+                      {(viewCustomer as any).subscriptionDeliveryFeeCity 
+                        ? formatCurrency(parseFloat((viewCustomer as any).subscriptionDeliveryFeeCity)) 
+                        : "Not set"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Delivery Fee (Within India)</p>
+                    <p className="font-medium">
+                      {(viewCustomer as any).subscriptionDeliveryFeeIndia 
+                        ? formatCurrency(parseFloat((viewCustomer as any).subscriptionDeliveryFeeIndia)) 
                         : "Not set"}
                     </p>
                   </div>
@@ -1139,6 +1181,8 @@ export default function SubscriptionCustomers() {
                       {viewCustomer.subscriptionDeliverySchedule || "Not set"}
                     </p>
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-4 rounded-lg mt-2">
                   <div>
                     <p className="text-muted-foreground">Subscription Start</p>
                     <p className="font-medium">

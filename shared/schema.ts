@@ -42,7 +42,9 @@ export const users = pgTable("users", {
   subscriptionDiscountValue: decimal("subscription_discount_value", { precision: 10, scale: 2 }),
   subscriptionSaleDiscountType: varchar("subscription_sale_discount_type"), // "percentage" or "fixed" - for products already on sale
   subscriptionSaleDiscountValue: decimal("subscription_sale_discount_value", { precision: 10, scale: 2 }),
-  subscriptionDeliveryFee: decimal("subscription_delivery_fee", { precision: 10, scale: 2 }), // per delivery schedule
+  subscriptionDeliveryFee: decimal("subscription_delivery_fee", { precision: 10, scale: 2 }), // legacy field - kept for compatibility
+  subscriptionDeliveryFeeCity: decimal("subscription_delivery_fee_city", { precision: 10, scale: 2 }), // delivery fee within city
+  subscriptionDeliveryFeeIndia: decimal("subscription_delivery_fee_india", { precision: 10, scale: 2 }), // delivery fee within India
   subscriptionDeliverySchedule: varchar("subscription_delivery_schedule"), // "daily", "weekly", "biweekly", "monthly"
   subscriptionStartDate: timestamp("subscription_start_date"),
   subscriptionEndDate: timestamp("subscription_end_date"),
