@@ -65,7 +65,7 @@ export default function ProductDetail() {
   const [saleCountdown, setSaleCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
   
   const { addToCart, isInWishlist, toggleWishlist } = useStore();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
 
   const { data, isLoading } = useQuery<{ product: ProductWithDetails }>({
@@ -165,6 +165,34 @@ export default function ProductDetail() {
     discountPercentage = hasDiscount 
       ? Math.round((1 - parseFloat(product!.salePrice as string) / parseFloat(product!.price as string)) * 100)
       : 0;
+  }
+  
+  // Calculate subscription price if user is a subscription customer
+  let subscriptionFinalPrice: number | null = null;
+  let hasSubscriptionDiscount = false;
+  
+  if (user && user.customerType === 'subscription' && currentPrice) {
+    const basePrice = parseFloat(String(currentPrice));
+    let discountType: string | null = null;
+    let discountValue: number | null = null;
+    
+    if (hasDiscount) {
+      discountType = user.subscriptionSaleDiscountType || null;
+      discountValue = user.subscriptionSaleDiscountValue ? parseFloat(String(user.subscriptionSaleDiscountValue)) : null;
+    } else {
+      discountType = user.subscriptionDiscountType || null;
+      discountValue = user.subscriptionDiscountValue ? parseFloat(String(user.subscriptionDiscountValue)) : null;
+    }
+    
+    if (discountType && discountValue && discountValue > 0) {
+      if (discountType === 'percentage') {
+        subscriptionFinalPrice = basePrice * (1 - discountValue / 100);
+      } else {
+        subscriptionFinalPrice = basePrice - discountValue;
+      }
+      subscriptionFinalPrice = Math.max(0, Math.round(subscriptionFinalPrice * 100) / 100);
+      hasSubscriptionDiscount = subscriptionFinalPrice < Math.round(basePrice * 100) / 100;
+    }
   }
   
   const copyToClipboard = (code: string) => {
@@ -452,19 +480,40 @@ export default function ProductDetail() {
             </div>
           )}
 
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <span className="text-3xl font-bold text-primary" data-testid="text-product-price">
-              {formatCurrency(currentPrice || 0)}
-            </span>
-            {hasDiscount && originalPrice && (
-              <>
-                <span className="text-xl text-muted-foreground line-through" data-testid="text-original-price">
-                  {formatCurrency(originalPrice)}
-                </span>
-                <Badge variant="destructive" data-testid="badge-discount">
-                  Save {discountPercentage}%
-                </Badge>
-              </>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              {hasSubscriptionDiscount && subscriptionFinalPrice !== null ? (
+                <>
+                  <span className="text-3xl font-bold text-green-600" data-testid="text-product-price">
+                    {formatCurrency(subscriptionFinalPrice)}
+                  </span>
+                  <span className="text-xl text-muted-foreground line-through" data-testid="text-original-price">
+                    {formatCurrency(currentPrice || 0)}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-3xl font-bold text-primary" data-testid="text-product-price">
+                    {formatCurrency(currentPrice || 0)}
+                  </span>
+                  {hasDiscount && originalPrice && (
+                    <>
+                      <span className="text-xl text-muted-foreground line-through" data-testid="text-original-price">
+                        {formatCurrency(originalPrice)}
+                      </span>
+                      <Badge variant="destructive" data-testid="badge-discount">
+                        Save {discountPercentage}%
+                      </Badge>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+            {hasSubscriptionDiscount && (
+              <Badge variant="secondary" className="w-fit bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                <Tag className="h-3 w-3 mr-1" />
+                Your Subscription Price
+              </Badge>
             )}
           </div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Heart, ShoppingCart, Star, Eye, Clock } from "lucide-react";
+import { Heart, ShoppingCart, Star, Eye, Clock, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,53 @@ import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
-import type { ProductWithDetails } from "@shared/schema";
+import type { ProductWithDetails, User } from "@shared/schema";
+
+function calculateSubscriptionPrice(
+  basePrice: string | number,
+  salePrice: string | number | null | undefined,
+  user: User | null | undefined
+): { finalPrice: number; hasSubscriptionDiscount: boolean; originalPrice: number } {
+  const base = parseFloat(String(basePrice));
+  const sale = salePrice ? parseFloat(String(salePrice)) : null;
+  const isOnSale = sale !== null && sale < base;
+  const currentPrice = isOnSale ? sale : base;
+  
+  if (!user || user.customerType !== 'subscription') {
+    return { finalPrice: Math.round(currentPrice * 100) / 100, hasSubscriptionDiscount: false, originalPrice: Math.round(currentPrice * 100) / 100 };
+  }
+  
+  let discountType: string | null = null;
+  let discountValue: number | null = null;
+  
+  if (isOnSale) {
+    discountType = user.subscriptionSaleDiscountType || null;
+    discountValue = user.subscriptionSaleDiscountValue ? parseFloat(String(user.subscriptionSaleDiscountValue)) : null;
+  } else {
+    discountType = user.subscriptionDiscountType || null;
+    discountValue = user.subscriptionDiscountValue ? parseFloat(String(user.subscriptionDiscountValue)) : null;
+  }
+  
+  if (!discountType || !discountValue || discountValue <= 0) {
+    return { finalPrice: Math.round(currentPrice * 100) / 100, hasSubscriptionDiscount: false, originalPrice: Math.round(currentPrice * 100) / 100 };
+  }
+  
+  let finalPrice: number;
+  if (discountType === 'percentage') {
+    finalPrice = currentPrice * (1 - discountValue / 100);
+  } else {
+    finalPrice = currentPrice - discountValue;
+  }
+  
+  finalPrice = Math.max(0, Math.round(finalPrice * 100) / 100);
+  const roundedOriginal = Math.round(currentPrice * 100) / 100;
+  
+  return { 
+    finalPrice, 
+    hasSubscriptionDiscount: finalPrice < roundedOriginal, 
+    originalPrice: roundedOriginal 
+  };
+}
 
 interface ProductCardProps {
   product: ProductWithDetails;
@@ -82,7 +128,7 @@ function ProductCountdownTimer({ endDate }: { endDate: Date }) {
 
 export function ProductCard({ product, showSaleCountdown = false }: ProductCardProps) {
   const { addToCart, isInWishlist, toggleWishlist } = useStore();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -96,6 +142,12 @@ export function ProductCard({ product, showSaleCountdown = false }: ProductCardP
   const discountPercent = hasDiscount
     ? Math.round((1 - parseFloat(product.salePrice as string) / parseFloat(product.price as string)) * 100)
     : 0;
+  
+  const { finalPrice, hasSubscriptionDiscount, originalPrice } = calculateSubscriptionPrice(
+    product.price,
+    product.salePrice,
+    user
+  );
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -252,14 +304,35 @@ export function ProductCard({ product, showSaleCountdown = false }: ProductCardP
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-lg" data-testid={`text-price-${product.id}`}>
-              {formatCurrency(currentPrice)}
-            </span>
-            {hasDiscount && (
-              <span className="text-sm text-muted-foreground line-through">
-                {formatCurrency(product.price)}
-              </span>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              {hasSubscriptionDiscount ? (
+                <>
+                  <span className="font-bold text-lg text-green-600" data-testid={`text-price-${product.id}`}>
+                    {formatCurrency(finalPrice)}
+                  </span>
+                  <span className="text-sm text-muted-foreground line-through">
+                    {formatCurrency(originalPrice)}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-lg" data-testid={`text-price-${product.id}`}>
+                    {formatCurrency(currentPrice)}
+                  </span>
+                  {hasDiscount && (
+                    <span className="text-sm text-muted-foreground line-through">
+                      {formatCurrency(product.price)}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+            {hasSubscriptionDiscount && (
+              <Badge variant="secondary" className="text-xs w-fit bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                <Tag className="h-3 w-3 mr-1" />
+                Subscription Price
+              </Badge>
             )}
           </div>
 
