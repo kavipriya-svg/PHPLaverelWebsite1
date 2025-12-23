@@ -3842,6 +3842,212 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // Subscription customer validation schema
+  const subscriptionCustomerSchema = {
+    create: {
+      parse: (body: any) => {
+        const errors: string[] = [];
+        if (!body.email || typeof body.email !== 'string' || !body.email.includes('@')) {
+          errors.push('Valid email is required');
+        }
+        if (!body.password || typeof body.password !== 'string') {
+          errors.push('Password is required');
+        }
+        if (!body.firstName || typeof body.firstName !== 'string' || body.firstName.trim().length === 0) {
+          errors.push('First name is required');
+        }
+        if (body.subscriptionDiscountType && !['percentage', 'fixed'].includes(body.subscriptionDiscountType)) {
+          errors.push('Discount type must be "percentage" or "fixed"');
+        }
+        if (body.subscriptionSaleDiscountType && !['percentage', 'fixed'].includes(body.subscriptionSaleDiscountType)) {
+          errors.push('Sale discount type must be "percentage" or "fixed"');
+        }
+        if (body.subscriptionDeliverySchedule && !['daily', 'weekly', 'biweekly', 'monthly'].includes(body.subscriptionDeliverySchedule)) {
+          errors.push('Delivery schedule must be "daily", "weekly", "biweekly", or "monthly"');
+        }
+        if (body.subscriptionDiscountValue && isNaN(parseFloat(body.subscriptionDiscountValue))) {
+          errors.push('Discount value must be a valid number');
+        }
+        if (body.subscriptionSaleDiscountValue && isNaN(parseFloat(body.subscriptionSaleDiscountValue))) {
+          errors.push('Sale discount value must be a valid number');
+        }
+        if (body.subscriptionDeliveryFee && isNaN(parseFloat(body.subscriptionDeliveryFee))) {
+          errors.push('Delivery fee must be a valid number');
+        }
+        if (errors.length > 0) {
+          throw new Error(errors.join(', '));
+        }
+        return body;
+      }
+    },
+    update: {
+      parse: (body: any) => {
+        const errors: string[] = [];
+        if (body.subscriptionDiscountType && !['percentage', 'fixed'].includes(body.subscriptionDiscountType)) {
+          errors.push('Discount type must be "percentage" or "fixed"');
+        }
+        if (body.subscriptionSaleDiscountType && !['percentage', 'fixed'].includes(body.subscriptionSaleDiscountType)) {
+          errors.push('Sale discount type must be "percentage" or "fixed"');
+        }
+        if (body.subscriptionDeliverySchedule && !['daily', 'weekly', 'biweekly', 'monthly'].includes(body.subscriptionDeliverySchedule)) {
+          errors.push('Delivery schedule must be "daily", "weekly", "biweekly", or "monthly"');
+        }
+        if (body.subscriptionDiscountValue && isNaN(parseFloat(body.subscriptionDiscountValue))) {
+          errors.push('Discount value must be a valid number');
+        }
+        if (body.subscriptionSaleDiscountValue && isNaN(parseFloat(body.subscriptionSaleDiscountValue))) {
+          errors.push('Sale discount value must be a valid number');
+        }
+        if (body.subscriptionDeliveryFee && isNaN(parseFloat(body.subscriptionDeliveryFee))) {
+          errors.push('Delivery fee must be a valid number');
+        }
+        if (errors.length > 0) {
+          throw new Error(errors.join(', '));
+        }
+        return body;
+      }
+    }
+  };
+
+  // Create subscription customer
+  app.post("/api/admin/users/subscription", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      // Validate input
+      try {
+        subscriptionCustomerSchema.create.parse(req.body);
+      } catch (validationError: any) {
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      const {
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        subscriptionDiscountType,
+        subscriptionDiscountValue,
+        subscriptionSaleDiscountType,
+        subscriptionSaleDiscountValue,
+        subscriptionDeliveryFee,
+        subscriptionDeliverySchedule,
+        subscriptionStartDate,
+        subscriptionEndDate,
+        subscriptionNotes,
+      } = req.body;
+
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User with this email already exists" });
+      }
+
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({ error: passwordValidation.errors.join(", ") });
+      }
+
+      const passwordHash = await hashPassword(password);
+      const userId = randomUUID();
+
+      const newUser = await storage.createSubscriptionCustomer({
+        id: userId,
+        email: email.toLowerCase().trim(),
+        passwordHash,
+        firstName: firstName.trim(),
+        lastName: lastName?.trim() || null,
+        phone: phone?.trim() || null,
+        customerType: "subscription",
+        subscriptionDiscountType: subscriptionDiscountType || null,
+        subscriptionDiscountValue: subscriptionDiscountValue ? String(subscriptionDiscountValue) : null,
+        subscriptionSaleDiscountType: subscriptionSaleDiscountType || null,
+        subscriptionSaleDiscountValue: subscriptionSaleDiscountValue ? String(subscriptionSaleDiscountValue) : null,
+        subscriptionDeliveryFee: subscriptionDeliveryFee ? String(subscriptionDeliveryFee) : null,
+        subscriptionDeliverySchedule: subscriptionDeliverySchedule || null,
+        subscriptionStartDate: subscriptionStartDate ? new Date(subscriptionStartDate) : null,
+        subscriptionEndDate: subscriptionEndDate ? new Date(subscriptionEndDate) : null,
+        subscriptionNotes: subscriptionNotes?.trim() || null,
+      });
+
+      res.json({ success: true, user: newUser });
+    } catch (error) {
+      console.error("Failed to create subscription customer:", error);
+      res.status(500).json({ error: "Failed to create subscription customer" });
+    }
+  });
+
+  // Update subscription customer
+  app.patch("/api/admin/users/subscription/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      // Validate input
+      try {
+        subscriptionCustomerSchema.update.parse(req.body);
+      } catch (validationError: any) {
+        return res.status(400).json({ error: validationError.message });
+      }
+
+      const { id } = req.params;
+      const {
+        firstName,
+        lastName,
+        phone,
+        subscriptionDiscountType,
+        subscriptionDiscountValue,
+        subscriptionSaleDiscountType,
+        subscriptionSaleDiscountValue,
+        subscriptionDeliveryFee,
+        subscriptionDeliverySchedule,
+        subscriptionStartDate,
+        subscriptionEndDate,
+        subscriptionNotes,
+      } = req.body;
+
+      const existingUser = await storage.getUser(id);
+      if (!existingUser) {
+        return res.status(404).json({ error: "Customer not found" });
+      }
+
+      const updatedUser = await storage.updateUser(id, {
+        firstName: firstName?.trim() || existingUser.firstName,
+        lastName: lastName !== undefined ? (lastName?.trim() || null) : existingUser.lastName,
+        phone: phone !== undefined ? (phone?.trim() || null) : existingUser.phone,
+        subscriptionDiscountType: subscriptionDiscountType ?? existingUser.subscriptionDiscountType,
+        subscriptionDiscountValue: subscriptionDiscountValue !== undefined 
+          ? (subscriptionDiscountValue ? String(subscriptionDiscountValue) : null) 
+          : existingUser.subscriptionDiscountValue,
+        subscriptionSaleDiscountType: subscriptionSaleDiscountType ?? existingUser.subscriptionSaleDiscountType,
+        subscriptionSaleDiscountValue: subscriptionSaleDiscountValue !== undefined 
+          ? (subscriptionSaleDiscountValue ? String(subscriptionSaleDiscountValue) : null) 
+          : existingUser.subscriptionSaleDiscountValue,
+        subscriptionDeliveryFee: subscriptionDeliveryFee !== undefined 
+          ? (subscriptionDeliveryFee ? String(subscriptionDeliveryFee) : null) 
+          : existingUser.subscriptionDeliveryFee,
+        subscriptionDeliverySchedule: subscriptionDeliverySchedule ?? existingUser.subscriptionDeliverySchedule,
+        subscriptionStartDate: subscriptionStartDate ? new Date(subscriptionStartDate) : existingUser.subscriptionStartDate,
+        subscriptionEndDate: subscriptionEndDate ? new Date(subscriptionEndDate) : existingUser.subscriptionEndDate,
+        subscriptionNotes: subscriptionNotes !== undefined ? (subscriptionNotes?.trim() || null) : existingUser.subscriptionNotes,
+      });
+
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error("Failed to update subscription customer:", error);
+      res.status(500).json({ error: "Failed to update subscription customer" });
+    }
+  });
+
+  // Get subscription customer by ID
+  app.get("/api/admin/users/subscription/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ error: "Customer not found" });
+      }
+      res.json({ user });
+    } catch (error) {
+      console.error("Failed to get subscription customer:", error);
+      res.status(500).json({ error: "Failed to get subscription customer" });
+    }
+  });
+
   // Admin Roles Management API
   app.get("/api/admin/roles", isAuthenticated, isAdmin, async (req, res) => {
     try {

@@ -379,6 +379,46 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async createSubscriptionCustomer(userData: {
+    id: string;
+    email: string;
+    passwordHash: string;
+    firstName: string;
+    lastName?: string | null;
+    phone?: string | null;
+    customerType: string;
+    subscriptionDiscountType?: string | null;
+    subscriptionDiscountValue?: string | null;
+    subscriptionSaleDiscountType?: string | null;
+    subscriptionSaleDiscountValue?: string | null;
+    subscriptionDeliveryFee?: string | null;
+    subscriptionDeliverySchedule?: string | null;
+    subscriptionStartDate?: Date | null;
+    subscriptionEndDate?: Date | null;
+    subscriptionNotes?: string | null;
+  }): Promise<User> {
+    const [created] = await db.insert(users).values({
+      id: userData.id,
+      email: userData.email,
+      passwordHash: userData.passwordHash,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      phone: userData.phone,
+      role: "customer",
+      customerType: userData.customerType,
+      subscriptionDiscountType: userData.subscriptionDiscountType,
+      subscriptionDiscountValue: userData.subscriptionDiscountValue,
+      subscriptionSaleDiscountType: userData.subscriptionSaleDiscountType,
+      subscriptionSaleDiscountValue: userData.subscriptionSaleDiscountValue,
+      subscriptionDeliveryFee: userData.subscriptionDeliveryFee,
+      subscriptionDeliverySchedule: userData.subscriptionDeliverySchedule,
+      subscriptionStartDate: userData.subscriptionStartDate,
+      subscriptionEndDate: userData.subscriptionEndDate,
+      subscriptionNotes: userData.subscriptionNotes,
+    }).returning();
+    return created;
+  }
+
   async getUsers(search?: string): Promise<{ users: User[]; total: number }> {
     let query = db.select().from(users);
     

@@ -51,6 +51,7 @@ const AdminSettings = lazy(() => import("@/pages/admin/Settings"));
 const AdminUsers = lazy(() => import("@/pages/admin/Users"));
 const AdminUsersList = lazy(() => import("@/pages/admin/AdminUsersList"));
 const CustomerUsersList = lazy(() => import("@/pages/admin/CustomerUsersList"));
+const SubscriptionCustomers = lazy(() => import("@/pages/admin/SubscriptionCustomers"));
 const RolesManagement = lazy(() => import("@/pages/admin/RolesManagement"));
 const AdminReviews = lazy(() => import("@/pages/admin/Reviews"));
 const AdminEmailSettings = lazy(() => import("@/pages/admin/EmailSettings"));
@@ -346,6 +347,11 @@ function Router() {
       <Route path="/admin/users/customers">
         <AdminLayout>
           <CustomerUsersList />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/users/customers/subscription">
+        <AdminLayout>
+          <SubscriptionCustomers />
         </AdminLayout>
       </Route>
       <Route path="/admin/users/roles">

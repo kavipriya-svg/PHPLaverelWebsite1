@@ -37,6 +37,16 @@ export const users = pgTable("users", {
   customerType: varchar("customer_type").default("regular").notNull(), // regular, subscription, retailer, distributor, self_employed
   adminRoleId: varchar("admin_role_id"), // References adminRoles.id for dynamic permissions
   passwordHash: varchar("password_hash"), // For admin email/password authentication
+  // Subscription customer specific fields
+  subscriptionDiscountType: varchar("subscription_discount_type"), // "percentage" or "fixed"
+  subscriptionDiscountValue: decimal("subscription_discount_value", { precision: 10, scale: 2 }),
+  subscriptionSaleDiscountType: varchar("subscription_sale_discount_type"), // "percentage" or "fixed" - for products already on sale
+  subscriptionSaleDiscountValue: decimal("subscription_sale_discount_value", { precision: 10, scale: 2 }),
+  subscriptionDeliveryFee: decimal("subscription_delivery_fee", { precision: 10, scale: 2 }), // per delivery schedule
+  subscriptionDeliverySchedule: varchar("subscription_delivery_schedule"), // "daily", "weekly", "biweekly", "monthly"
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  subscriptionNotes: text("subscription_notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
