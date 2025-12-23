@@ -484,7 +484,7 @@ export class DatabaseStorage implements IStorage {
       subscription: 0,
       retailer: 0,
       distributor: 0,
-      self_employed: 0,
+      mini_distributor: 0,
     };
     
     allCustomers.forEach(customer => {
