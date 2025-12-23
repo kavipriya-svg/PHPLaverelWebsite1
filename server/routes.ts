@@ -3685,6 +3685,83 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Subscription Delivery Tiers Management
+  app.get("/api/admin/subscription-delivery-tiers", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const tiers = await storage.getSubscriptionDeliveryTiers();
+      res.json({ tiers });
+    } catch (error) {
+      console.error("Failed to fetch delivery tiers:", error);
+      res.status(500).json({ error: "Failed to fetch delivery tiers" });
+    }
+  });
+
+  app.post("/api/admin/subscription-delivery-tiers", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { label, upToWeightKg, chennaiFee, panIndiaFee, sortOrder, isActive } = req.body;
+      if (!label || upToWeightKg === undefined || chennaiFee === undefined || panIndiaFee === undefined) {
+        return res.status(400).json({ error: "Label, weight, Chennai fee, and PAN India fee are required" });
+      }
+      const tier = await storage.createSubscriptionDeliveryTier({
+        label,
+        upToWeightKg: upToWeightKg.toString(),
+        chennaiFee: chennaiFee.toString(),
+        panIndiaFee: panIndiaFee.toString(),
+        sortOrder: sortOrder || 0,
+        isActive: isActive !== false
+      });
+      res.json({ tier });
+    } catch (error) {
+      console.error("Failed to create delivery tier:", error);
+      res.status(500).json({ error: "Failed to create delivery tier" });
+    }
+  });
+
+  app.patch("/api/admin/subscription-delivery-tiers/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { label, upToWeightKg, chennaiFee, panIndiaFee, sortOrder, isActive } = req.body;
+      const updateData: any = {};
+      if (label !== undefined) updateData.label = label;
+      if (upToWeightKg !== undefined) updateData.upToWeightKg = upToWeightKg.toString();
+      if (chennaiFee !== undefined) updateData.chennaiFee = chennaiFee.toString();
+      if (panIndiaFee !== undefined) updateData.panIndiaFee = panIndiaFee.toString();
+      if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
+      if (isActive !== undefined) updateData.isActive = isActive;
+
+      const tier = await storage.updateSubscriptionDeliveryTier(id, updateData);
+      if (!tier) {
+        return res.status(404).json({ error: "Delivery tier not found" });
+      }
+      res.json({ tier });
+    } catch (error) {
+      console.error("Failed to update delivery tier:", error);
+      res.status(500).json({ error: "Failed to update delivery tier" });
+    }
+  });
+
+  app.delete("/api/admin/subscription-delivery-tiers/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSubscriptionDeliveryTier(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to delete delivery tier:", error);
+      res.status(500).json({ error: "Failed to delete delivery tier" });
+    }
+  });
+
+  // Public endpoint for customers to see delivery tiers (for checkout)
+  app.get("/api/subscription-delivery-tiers", async (req, res) => {
+    try {
+      const tiers = await storage.getSubscriptionDeliveryTiers(true); // Only active tiers
+      res.json({ tiers });
+    } catch (error) {
+      console.error("Failed to fetch delivery tiers:", error);
+      res.status(500).json({ error: "Failed to fetch delivery tiers" });
+    }
+  });
+
   app.get("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const search = req.query.search as string;
