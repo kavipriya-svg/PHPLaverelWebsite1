@@ -2388,6 +2388,39 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Customer endpoint to update their delivery schedule preference
+  app.patch("/api/account/delivery-schedule", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const user = await storage.getUser(userInfo!.id);
+      
+      if (!user || user.customerType !== "subscription") {
+        return res.status(403).json({ error: "This feature is only available for subscription customers" });
+      }
+
+      const { schedule } = req.body;
+      const validSchedules = ["daily", "weekly", "biweekly", "monthly"];
+      
+      if (!schedule || !validSchedules.includes(schedule)) {
+        return res.status(400).json({ 
+          error: `Invalid schedule. Must be one of: ${validSchedules.join(", ")}` 
+        });
+      }
+
+      const updatedUser = await storage.updateUser(user.id, {
+        subscriptionDeliverySchedule: schedule,
+      });
+
+      res.json({ 
+        success: true, 
+        schedule: updatedUser.subscriptionDeliverySchedule 
+      });
+    } catch (error) {
+      console.error("Failed to update delivery schedule:", error);
+      res.status(500).json({ error: "Failed to update delivery schedule" });
+    }
+  });
+
   app.get("/api/admin/dashboard", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const [products, orders, users] = await Promise.all([
