@@ -175,6 +175,7 @@ export interface IStorage {
   getCartItems(userId?: string, sessionId?: string): Promise<CartItemWithProduct[]>;
   addToCart(item: InsertCartItem): Promise<CartItem>;
   updateCartItem(id: string, quantity: number): Promise<CartItem | undefined>;
+  updateCartItemDeliveryDate(id: string, deliveryDate: string | null): Promise<CartItem | undefined>;
   removeFromCart(id: string): Promise<void>;
   clearCart(userId?: string, sessionId?: string): Promise<void>;
 
@@ -1242,6 +1243,15 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(cartItems)
       .set({ quantity, updatedAt: new Date() })
+      .where(eq(cartItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateCartItemDeliveryDate(id: string, deliveryDate: string | null): Promise<CartItem | undefined> {
+    const [updated] = await db
+      .update(cartItems)
+      .set({ deliveryDate, updatedAt: new Date() })
       .where(eq(cartItems.id, id))
       .returning();
     return updated;

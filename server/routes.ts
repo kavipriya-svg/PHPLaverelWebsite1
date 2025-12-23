@@ -1731,6 +1731,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.patch("/api/cart/:id/delivery-date", optionalAuth, async (req, res) => {
+    try {
+      const { deliveryDate } = req.body;
+      const item = await storage.updateCartItemDeliveryDate(req.params.id, deliveryDate);
+      res.json({ item });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update delivery date" });
+    }
+  });
+
   app.delete("/api/cart/:id", optionalAuth, async (req, res) => {
     try {
       await storage.removeFromCart(req.params.id);
