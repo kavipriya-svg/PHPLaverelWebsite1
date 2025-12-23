@@ -37,6 +37,7 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Unified email/password authentication for customers and admins (no external OAuth dependencies)
 - POS (Point of Sale) module for in-store sales with product search, cart management, and multiple payment types (cash, card, UPI, credit)
 - Customer types system with 5 types: Regular Customer, Subscription Customer, Retailer, Distributor, Self Employed - manageable from Admin Panel
+- Subscription customer pricing with category-specific discount settings (percentage or fixed discounts for regular and sale products per category, with fallback to global subscription discounts)
 
 ## User Preferences
 
@@ -133,6 +134,7 @@ Preferred communication style: Simple, everyday language.
 - **stockNotifications**: Customer email subscriptions for product restock alerts
 - **giftRegistries**: User gift registries for events (wedding, birthday, baby shower, etc.)
 - **giftRegistryItems**: Products added to gift registries with quantity tracking
+- **subscriptionCategoryDiscounts**: Category-specific discount settings for subscription customers (categoryId, discountType, discountValue, saleDiscountType, saleDiscountValue)
 
 **Data Relationships:**
 - One-to-many: categories (parent-child), products-images, products-variants, users-orders, orders-orderItems
