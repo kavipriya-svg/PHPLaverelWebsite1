@@ -99,7 +99,7 @@ export interface IStorage {
   updateUserPassword(id: string, passwordHash: string): Promise<User | undefined>;
   getUsers(search?: string): Promise<{ users: User[]; total: number }>;
   getAdminUsers(search?: string): Promise<{ users: User[]; total: number }>;
-  getCustomerUsers(search?: string): Promise<{ users: any[]; total: number }>;
+  getCustomerUsers(search?: string, customerType?: string): Promise<{ users: any[]; total: number; typeCounts: Record<string, number> }>;
   getCustomerSegments(segment: string, search?: string): Promise<{ customers: any[]; total: number }>;
 
   getCategories(): Promise<CategoryWithChildren[]>;
@@ -436,7 +436,7 @@ export class DatabaseStorage implements IStorage {
     return { users: result, total: result.length };
   }
 
-  async getCustomerUsers(search?: string): Promise<{ users: any[]; total: number }> {
+  async getCustomerUsers(search?: string, customerType?: string): Promise<{ users: any[]; total: number; typeCounts: Record<string, number> }> {
     let baseCondition = eq(users.role, "customer");
     
     let whereCondition: any = baseCondition;
@@ -449,6 +449,14 @@ export class DatabaseStorage implements IStorage {
           like(users.firstName, `%${search}%`),
           like(users.lastName, `%${search}%`)
         )
+      );
+    }
+    
+    // Add customer type filter if provided
+    if (customerType && customerType !== "all") {
+      whereCondition = and(
+        whereCondition,
+        eq(users.customerType, customerType)
       );
     }
     
@@ -468,7 +476,25 @@ export class DatabaseStorage implements IStorage {
       })
     );
     
-    return { users: customersWithStats, total: customersWithStats.length };
+    // Get counts for all customer types
+    const allCustomers = await db.select().from(users).where(eq(users.role, "customer"));
+    const typeCounts: Record<string, number> = {
+      all: allCustomers.length,
+      regular: 0,
+      subscription: 0,
+      retailer: 0,
+      distributor: 0,
+      self_employed: 0,
+    };
+    
+    allCustomers.forEach(customer => {
+      const type = customer.customerType || "regular";
+      if (typeCounts[type] !== undefined) {
+        typeCounts[type]++;
+      }
+    });
+    
+    return { users: customersWithStats, total: customersWithStats.length, typeCounts };
   }
 
   async getCustomerSegments(segment: string, search?: string): Promise<{ customers: any[]; total: number }> {

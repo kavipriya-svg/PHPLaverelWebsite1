@@ -3702,7 +3702,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/admin/users/customers", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const search = req.query.search as string || "";
-      const result = await storage.getCustomerUsers(search);
+      const customerType = req.query.customerType as string || "";
+      const result = await storage.getCustomerUsers(search, customerType);
       res.json(result);
     } catch (error) {
       console.error("Failed to fetch customers:", error);

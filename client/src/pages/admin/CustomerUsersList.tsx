@@ -311,6 +311,7 @@ const getCustomerTypeBadgeVariant = (type: string): "default" | "secondary" | "o
 
 export default function CustomerUsersList() {
   const [search, setSearch] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
   const [viewCustomer, setViewCustomer] = useState<CustomerWithStats | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -318,8 +319,8 @@ export default function CustomerUsersList() {
   const [newCustomerType, setNewCustomerType] = useState("");
   const { toast } = useToast();
 
-  const { data, isLoading } = useQuery<{ users: CustomerWithStats[]; total: number }>({
-    queryKey: ["/api/admin/users/customers", { search }],
+  const { data, isLoading } = useQuery<{ users: CustomerWithStats[]; total: number; typeCounts: Record<string, number> }>({
+    queryKey: ["/api/admin/users/customers", { search, customerType: selectedType }],
   });
 
   const customerId = viewCustomer?.id;
@@ -559,6 +560,75 @@ export default function CustomerUsersList() {
         <Badge variant="secondary" className="text-sm">
           {data?.total || 0} Customers
         </Badge>
+      </div>
+
+      <div className="flex flex-wrap gap-2" data-testid="customer-type-filters">
+        <Button
+          variant={selectedType === "all" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedType("all")}
+          data-testid="filter-type-all"
+        >
+          All Customers
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {data?.typeCounts?.all || 0}
+          </Badge>
+        </Button>
+        <Button
+          variant={selectedType === "regular" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedType("regular")}
+          data-testid="filter-type-regular"
+        >
+          Regular
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {data?.typeCounts?.regular || 0}
+          </Badge>
+        </Button>
+        <Button
+          variant={selectedType === "subscription" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedType("subscription")}
+          data-testid="filter-type-subscription"
+        >
+          Subscription
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {data?.typeCounts?.subscription || 0}
+          </Badge>
+        </Button>
+        <Button
+          variant={selectedType === "retailer" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedType("retailer")}
+          data-testid="filter-type-retailer"
+        >
+          Retailer
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {data?.typeCounts?.retailer || 0}
+          </Badge>
+        </Button>
+        <Button
+          variant={selectedType === "distributor" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedType("distributor")}
+          data-testid="filter-type-distributor"
+        >
+          Distributor
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {data?.typeCounts?.distributor || 0}
+          </Badge>
+        </Button>
+        <Button
+          variant={selectedType === "self_employed" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedType("self_employed")}
+          data-testid="filter-type-self-employed"
+        >
+          Self Employed
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {data?.typeCounts?.self_employed || 0}
+          </Badge>
+        </Button>
       </div>
 
       <div className="border rounded-lg">
