@@ -1728,6 +1728,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const sessionId = (req as any).guestSessionId || req.cookies?.sessionId;
       const { deliveryDate } = req.body;
       
+      if (!deliveryDate || typeof deliveryDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(deliveryDate)) {
+        return res.status(400).json({ error: "Valid delivery date (YYYY-MM-DD) is required" });
+      }
+      
       const cart = await storage.getCartItems(userInfo?.id, sessionId);
       const existingItem = cart.find((item: any) => item.id === req.params.id);
       

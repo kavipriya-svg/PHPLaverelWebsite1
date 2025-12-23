@@ -562,17 +562,18 @@ export default function Cart() {
                                 variant="ghost" 
                                 size="sm"
                                 className="h-7 gap-1 text-xs text-muted-foreground w-fit"
+                                disabled={duplicateCartItemMutation.isPending}
                                 data-testid={`button-add-another-date-${item.id}`}
                               >
                                 <Copy className="h-3 w-3" />
-                                Add for another delivery date
+                                {duplicateCartItemMutation.isPending ? 'Adding...' : 'Add for another delivery date'}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
                               <CalendarComponent
                                 mode="single"
                                 onSelect={(date) => {
-                                  if (date) {
+                                  if (date && !duplicateCartItemMutation.isPending) {
                                     duplicateCartItemMutation.mutate({
                                       itemId: item.id,
                                       deliveryDate: format(date, 'yyyy-MM-dd'),
