@@ -1705,7 +1705,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const userInfo = getUserInfo(req);
       const sessionId = (req as any).guestSessionId || req.cookies?.sessionId;
-      const { productId, quantity = 1, variantId, comboOfferId } = req.body;
+      const { productId, quantity = 1, variantId, comboOfferId, deliveryDate } = req.body;
       
       const item = await storage.addToCart({
         userId: userInfo?.id,
@@ -1714,10 +1714,39 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         quantity,
         variantId,
         comboOfferId,
+        deliveryDate,
       });
       res.json({ item });
     } catch (error) {
       res.status(500).json({ error: "Failed to add to cart" });
+    }
+  });
+
+  app.post("/api/cart/:id/duplicate", optionalAuth, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      const sessionId = (req as any).guestSessionId || req.cookies?.sessionId;
+      const { deliveryDate } = req.body;
+      
+      const cart = await storage.getCartItems(userInfo?.id, sessionId);
+      const existingItem = cart.find((item: any) => item.id === req.params.id);
+      
+      if (!existingItem) {
+        return res.status(404).json({ error: "Cart item not found" });
+      }
+      
+      const newItem = await storage.addToCart({
+        userId: userInfo?.id,
+        sessionId: userInfo?.id ? undefined : sessionId,
+        productId: existingItem.productId,
+        quantity: 1,
+        variantId: existingItem.variantId || undefined,
+        comboOfferId: existingItem.comboOfferId || undefined,
+        deliveryDate,
+      });
+      res.json({ item: newItem });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to duplicate cart item" });
     }
   });
 

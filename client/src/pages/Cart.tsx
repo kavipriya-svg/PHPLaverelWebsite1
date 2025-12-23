@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Tag, X, Gift, Info, Calendar, Truck } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Tag, X, Gift, Info, Calendar, Truck, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -147,6 +147,28 @@ export default function Cart() {
       toast({
         variant: "destructive",
         title: "Failed to update delivery date",
+        description: "Please try again.",
+      });
+    },
+  });
+
+  // Mutation to duplicate cart item with a different delivery date
+  const duplicateCartItemMutation = useMutation({
+    mutationFn: async ({ itemId, deliveryDate }: { itemId: string; deliveryDate: string }) => {
+      const res = await apiRequest("POST", `/api/cart/${itemId}/duplicate`, { deliveryDate });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+      toast({
+        title: "Item added for another delivery date",
+        description: "The product has been added with the selected delivery date.",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Failed to add item",
         description: "Please try again.",
       });
     },
@@ -487,30 +509,71 @@ export default function Cart() {
                       </div>
                       
                       {isSubscriptionCustomer && (
-                        <div className="flex items-center gap-2 mt-3 p-2 bg-muted/50 rounded-md">
-                          <Truck className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm text-muted-foreground">Deliver on:</span>
+                        <div className="flex flex-col gap-2 mt-3 p-2 bg-muted/50 rounded-md">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Truck className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="text-sm text-muted-foreground">Deliver on:</span>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="h-8 gap-1"
+                                  data-testid={`button-delivery-date-${item.id}`}
+                                >
+                                  <Calendar className="h-3 w-3" />
+                                  {(item as any).deliveryDate 
+                                    ? format(new Date((item as any).deliveryDate), 'MMM d, yyyy')
+                                    : 'Select date'}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={(item as any).deliveryDate ? new Date((item as any).deliveryDate) : undefined}
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      updateDeliveryDateMutation.mutate({
+                                        itemId: item.id,
+                                        deliveryDate: format(date, 'yyyy-MM-dd'),
+                                      });
+                                    }
+                                  }}
+                                  disabled={(date) => date < addDays(new Date(), 1)}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            {(item as any).deliveryDate && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground"
+                                onClick={() => updateDeliveryDateMutation.mutate({ itemId: item.id, deliveryDate: null })}
+                                data-testid={`button-clear-delivery-date-${item.id}`}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button 
-                                variant="outline" 
+                                variant="ghost" 
                                 size="sm"
-                                className="h-8 gap-1"
-                                data-testid={`button-delivery-date-${item.id}`}
+                                className="h-7 gap-1 text-xs text-muted-foreground w-fit"
+                                data-testid={`button-add-another-date-${item.id}`}
                               >
-                                <Calendar className="h-3 w-3" />
-                                {(item as any).deliveryDate 
-                                  ? format(new Date((item as any).deliveryDate), 'MMM d, yyyy')
-                                  : 'Select date'}
+                                <Copy className="h-3 w-3" />
+                                Add for another delivery date
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
                               <CalendarComponent
                                 mode="single"
-                                selected={(item as any).deliveryDate ? new Date((item as any).deliveryDate) : undefined}
                                 onSelect={(date) => {
                                   if (date) {
-                                    updateDeliveryDateMutation.mutate({
+                                    duplicateCartItemMutation.mutate({
                                       itemId: item.id,
                                       deliveryDate: format(date, 'yyyy-MM-dd'),
                                     });
@@ -521,17 +584,6 @@ export default function Cart() {
                               />
                             </PopoverContent>
                           </Popover>
-                          {(item as any).deliveryDate && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-muted-foreground"
-                              onClick={() => updateDeliveryDateMutation.mutate({ itemId: item.id, deliveryDate: null })}
-                              data-testid={`button-clear-delivery-date-${item.id}`}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          )}
                         </div>
                       )}
 

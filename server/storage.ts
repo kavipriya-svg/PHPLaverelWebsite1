@@ -1212,17 +1212,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addToCart(item: InsertCartItem): Promise<CartItem> {
-    // Include comboOfferId in uniqueness check - combo items should be kept separate
+    // Include comboOfferId and deliveryDate in uniqueness check
+    // This allows subscription customers to add same product with different delivery dates
     const comboCondition = item.comboOfferId 
       ? eq(cartItems.comboOfferId, item.comboOfferId) 
       : isNull(cartItems.comboOfferId);
     const variantCondition = item.variantId 
       ? eq(cartItems.variantId, item.variantId) 
       : isNull(cartItems.variantId);
+    const deliveryDateCondition = item.deliveryDate
+      ? eq(cartItems.deliveryDate, item.deliveryDate)
+      : isNull(cartItems.deliveryDate);
     
     const condition = item.userId
-      ? and(eq(cartItems.userId, item.userId), eq(cartItems.productId, item.productId), variantCondition, comboCondition)
-      : and(eq(cartItems.sessionId, item.sessionId!), eq(cartItems.productId, item.productId), variantCondition, comboCondition);
+      ? and(eq(cartItems.userId, item.userId), eq(cartItems.productId, item.productId), variantCondition, comboCondition, deliveryDateCondition)
+      : and(eq(cartItems.sessionId, item.sessionId!), eq(cartItems.productId, item.productId), variantCondition, comboCondition, deliveryDateCondition);
 
     const [existing] = await db.select().from(cartItems).where(condition).limit(1);
 
