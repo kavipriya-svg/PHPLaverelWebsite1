@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Save, Store, Truck, CreditCard, Mail } from "lucide-react";
+import { Link } from "wouter";
+import { Save, Store, Truck, CreditCard, Mail, ChevronRight, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -225,6 +226,26 @@ export default function AdminSettings() {
                     }
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Subscription Delivery Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure weight-based delivery fees for subscription customers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/admin/settings/delivery">
+                  <Button variant="outline" className="w-full justify-between" data-testid="button-delivery-settings">
+                    Manage Delivery Tiers
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </TabsContent>
