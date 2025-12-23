@@ -1,20 +1,61 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Bell, Shield, CreditCard, LogOut } from "lucide-react";
+import { ArrowLeft, Bell, Shield, CreditCard, LogOut, Truck, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AccountSettings() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [deliverySchedule, setDeliverySchedule] = useState(user?.subscriptionDeliverySchedule || "weekly");
+
+  // Update local state when user data loads
+  useEffect(() => {
+    if (user?.subscriptionDeliverySchedule) {
+      setDeliverySchedule(user.subscriptionDeliverySchedule);
+    }
+  }, [user?.subscriptionDeliverySchedule]);
+
+  const deliveryScheduleMutation = useMutation({
+    mutationFn: async (schedule: string) => {
+      const response = await apiRequest("PATCH", "/api/account/delivery-schedule", { schedule });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Delivery schedule updated",
+        description: "Your preferred delivery schedule has been saved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to update",
+        description: "Could not update your delivery schedule. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeliveryScheduleChange = (value: string) => {
+    setDeliverySchedule(value);
+    deliveryScheduleMutation.mutate(value);
+  };
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -105,6 +146,59 @@ export default function AccountSettings() {
               </div>
             </CardContent>
           </Card>
+
+          {user?.customerType === "subscription" && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Truck className="h-5 w-5 text-primary" />
+                  <div>
+                    <CardTitle className="text-lg">Delivery Preferences</CardTitle>
+                    <CardDescription>Manage your subscription delivery settings</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="space-y-0.5">
+                    <Label>Delivery Schedule</Label>
+                    <p className="text-sm text-muted-foreground">
+                      How often would you like to receive your subscription deliveries?
+                    </p>
+                  </div>
+                  <Select
+                    value={deliverySchedule}
+                    onValueChange={handleDeliveryScheduleChange}
+                    disabled={deliveryScheduleMutation.isPending}
+                  >
+                    <SelectTrigger className="w-40" data-testid="select-delivery-schedule">
+                      <SelectValue placeholder="Select schedule" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="biweekly">Bi-Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {user.subscriptionStartDate && (
+                  <>
+                    <Separator />
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        Subscription active since: {new Date(user.subscriptionStartDate).toLocaleDateString()}
+                        {user.subscriptionEndDate && (
+                          <> until {new Date(user.subscriptionEndDate).toLocaleDateString()}</>
+                        )}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
