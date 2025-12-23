@@ -78,8 +78,6 @@ export default function SubscriptionCustomers() {
     subscriptionDiscountValue: "",
     subscriptionSaleDiscountType: "percentage",
     subscriptionSaleDiscountValue: "",
-    subscriptionDeliveryFeeCity: "",
-    subscriptionDeliveryFeeIndia: "",
     subscriptionDeliverySchedule: "weekly",
     subscriptionStartDate: "",
     subscriptionEndDate: "",
@@ -239,8 +237,6 @@ export default function SubscriptionCustomers() {
       subscriptionDiscountValue: "",
       subscriptionSaleDiscountType: "percentage",
       subscriptionSaleDiscountValue: "",
-      subscriptionDeliveryFeeCity: "",
-      subscriptionDeliveryFeeIndia: "",
       subscriptionDeliverySchedule: "weekly",
       subscriptionStartDate: "",
       subscriptionEndDate: "",
@@ -265,8 +261,6 @@ export default function SubscriptionCustomers() {
       subscriptionDiscountValue: customer.subscriptionDiscountValue || "",
       subscriptionSaleDiscountType: customer.subscriptionSaleDiscountType || "percentage",
       subscriptionSaleDiscountValue: customer.subscriptionSaleDiscountValue || "",
-      subscriptionDeliveryFeeCity: (customer as any).subscriptionDeliveryFeeCity || "",
-      subscriptionDeliveryFeeIndia: (customer as any).subscriptionDeliveryFeeIndia || "",
       subscriptionDeliverySchedule: customer.subscriptionDeliverySchedule || "weekly",
       subscriptionStartDate: customer.subscriptionStartDate 
         ? new Date(customer.subscriptionStartDate).toISOString().split('T')[0] 
@@ -350,8 +344,6 @@ export default function SubscriptionCustomers() {
               <TableHead>Phone</TableHead>
               <TableHead>Discount</TableHead>
               <TableHead>Sale Discount</TableHead>
-              <TableHead>City Fee</TableHead>
-              <TableHead>India Fee</TableHead>
               <TableHead>Schedule</TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
@@ -360,14 +352,14 @@ export default function SubscriptionCustomers() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 8 }).map((_, j) => (
+                  {Array.from({ length: 7 }).map((_, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : customers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No subscription customers found. Click "Add Subscription Customer" to create one.
                 </TableCell>
               </TableRow>
@@ -398,16 +390,6 @@ export default function SubscriptionCustomers() {
                     <Badge variant="secondary">
                       {getDiscountDisplay(customer.subscriptionSaleDiscountType, customer.subscriptionSaleDiscountValue)}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {(customer as any).subscriptionDeliveryFeeCity 
-                      ? formatCurrency(parseFloat((customer as any).subscriptionDeliveryFeeCity)) 
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    {(customer as any).subscriptionDeliveryFeeIndia 
-                      ? formatCurrency(parseFloat((customer as any).subscriptionDeliveryFeeIndia)) 
-                      : "-"}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
@@ -579,32 +561,11 @@ export default function SubscriptionCustomers() {
             <Separator />
 
             <div className="space-y-4">
-              <h3 className="font-semibold">Delivery Settings</h3>
+              <h3 className="font-semibold">Subscription Period</h3>
+              <p className="text-sm text-muted-foreground">
+                Delivery fees are calculated automatically based on order weight. Configure delivery tiers in Settings → Shipping.
+              </p>
               <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryFeeCity">Delivery Fee (Within City)</Label>
-                  <Input
-                    id="deliveryFeeCity"
-                    type="number"
-                    step="0.01"
-                    value={formData.subscriptionDeliveryFeeCity}
-                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFeeCity: e.target.value })}
-                    placeholder="Within city fee"
-                    data-testid="input-delivery-fee-city"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryFeeIndia">Delivery Fee (Within India)</Label>
-                  <Input
-                    id="deliveryFeeIndia"
-                    type="number"
-                    step="0.01"
-                    value={formData.subscriptionDeliveryFeeIndia}
-                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFeeIndia: e.target.value })}
-                    placeholder="Within India fee"
-                    data-testid="input-delivery-fee-india"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label>Delivery Schedule</Label>
                   <Select
@@ -792,32 +753,11 @@ export default function SubscriptionCustomers() {
             <Separator />
 
             <div className="space-y-4">
-              <h3 className="font-semibold">Delivery Settings</h3>
+              <h3 className="font-semibold">Subscription Period</h3>
+              <p className="text-sm text-muted-foreground">
+                Delivery fees are calculated automatically based on order weight. Configure delivery tiers in Settings → Shipping.
+              </p>
               <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-deliveryFeeCity">Delivery Fee (Within City)</Label>
-                  <Input
-                    id="edit-deliveryFeeCity"
-                    type="number"
-                    step="0.01"
-                    value={formData.subscriptionDeliveryFeeCity}
-                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFeeCity: e.target.value })}
-                    placeholder="Within city fee"
-                    data-testid="input-edit-delivery-fee-city"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-deliveryFeeIndia">Delivery Fee (Within India)</Label>
-                  <Input
-                    id="edit-deliveryFeeIndia"
-                    type="number"
-                    step="0.01"
-                    value={formData.subscriptionDeliveryFeeIndia}
-                    onChange={(e) => setFormData({ ...formData, subscriptionDeliveryFeeIndia: e.target.value })}
-                    placeholder="Within India fee"
-                    data-testid="input-edit-delivery-fee-india"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label>Delivery Schedule</Label>
                   <Select
@@ -1158,23 +1098,10 @@ export default function SubscriptionCustomers() {
               {/* Delivery & Subscription Period */}
               <div>
                 <h4 className="font-semibold mb-3">Delivery & Subscription Period</h4>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Delivery fees are calculated automatically based on order weight.
+                </p>
                 <div className="grid grid-cols-3 gap-4 text-sm bg-muted/50 p-4 rounded-lg">
-                  <div>
-                    <p className="text-muted-foreground">Delivery Fee (Within City)</p>
-                    <p className="font-medium">
-                      {(viewCustomer as any).subscriptionDeliveryFeeCity 
-                        ? formatCurrency(parseFloat((viewCustomer as any).subscriptionDeliveryFeeCity)) 
-                        : "Not set"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Delivery Fee (Within India)</p>
-                    <p className="font-medium">
-                      {(viewCustomer as any).subscriptionDeliveryFeeIndia 
-                        ? formatCurrency(parseFloat((viewCustomer as any).subscriptionDeliveryFeeIndia)) 
-                        : "Not set"}
-                    </p>
-                  </div>
                   <div>
                     <p className="text-muted-foreground">Delivery Schedule</p>
                     <p className="font-medium capitalize">
