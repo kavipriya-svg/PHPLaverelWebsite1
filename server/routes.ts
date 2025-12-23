@@ -3762,8 +3762,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       const passwordValidation = validatePasswordStrength(password);
-      if (!passwordValidation.isValid) {
-        return res.status(400).json({ error: passwordValidation.errors.join(", ") });
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ error: passwordValidation.message || "Invalid password" });
       }
       
       const passwordHash = await hashPassword(password);
@@ -3942,8 +3942,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       const passwordValidation = validatePasswordStrength(password);
-      if (!passwordValidation.isValid) {
-        return res.status(400).json({ error: passwordValidation.errors.join(", ") });
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ error: passwordValidation.message || "Invalid password" });
       }
 
       const passwordHash = await hashPassword(password);
