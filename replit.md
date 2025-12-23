@@ -38,6 +38,9 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - POS (Point of Sale) module for in-store sales with product search, cart management, and multiple payment types (cash, card, UPI, credit)
 - Customer types system with 5 types: Regular Customer, Subscription Customer, Retailer, Distributor, Self Employed - manageable from Admin Panel
 - Subscription customer pricing with category-specific discount settings (percentage or fixed discounts for regular and sale products per category, with fallback to global subscription discounts)
+- Per-item delivery date selection for subscription customers with calendar popover in cart
+- Weight-based shipping calculation grouped by delivery date with Chennai vs PAN India rate differentiation
+- Automatic Chennai/PAN India detection from saved shipping address (falls back to estimate if no address saved)
 
 ## User Preferences
 
