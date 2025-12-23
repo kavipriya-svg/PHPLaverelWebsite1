@@ -3809,10 +3809,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/admin/users/:id/customer-type", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { customerType } = req.body;
-      const validTypes = ["regular", "subscription", "retailer", "distributor", "mini_distributor"];
+      const validTypes = ["regular", "subscription", "retailer", "distributor", "self_employed"];
       
       if (!customerType || !validTypes.includes(customerType)) {
-        return res.status(400).json({ error: "Invalid customer type. Must be one of: regular, subscription, retailer, distributor, mini_distributor" });
+        return res.status(400).json({ error: "Invalid customer type. Must be one of: regular, subscription, retailer, distributor, self_employed" });
       }
       
       // Check if user exists
@@ -3837,7 +3837,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         { value: "subscription", label: "Subscription Customer" },
         { value: "retailer", label: "Retailer" },
         { value: "distributor", label: "Distributor" },
-        { value: "mini_distributor", label: "Mini Distributor" },
+        { value: "self_employed", label: "Self Employed" },
       ]
     });
   });

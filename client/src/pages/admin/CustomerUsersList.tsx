@@ -290,7 +290,7 @@ const CUSTOMER_TYPES = [
   { value: "subscription", label: "Subscription Customer" },
   { value: "retailer", label: "Retailer" },
   { value: "distributor", label: "Distributor" },
-  { value: "mini_distributor", label: "Mini Distributor" },
+  { value: "self_employed", label: "Self Employed" },
 ];
 
 const getCustomerTypeLabel = (type: string): string => {
@@ -631,14 +631,14 @@ export default function CustomerUsersList({
           </Badge>
         </Button>
         <Button
-          variant={selectedType === "mini_distributor" ? "default" : "outline"}
+          variant={selectedType === "self_employed" ? "default" : "outline"}
           size="sm"
-          onClick={() => setSelectedType("mini_distributor")}
-          data-testid="filter-type-mini-distributor"
+          onClick={() => setSelectedType("self_employed")}
+          data-testid="filter-type-self-employed"
         >
-          Mini Distributor
+          Self Employed
           <Badge variant="secondary" className="ml-2 text-xs">
-            {data?.typeCounts?.mini_distributor || 0}
+            {data?.typeCounts?.self_employed || 0}
           </Badge>
         </Button>
       </div>
