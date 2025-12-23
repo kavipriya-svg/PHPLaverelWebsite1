@@ -159,6 +159,13 @@ export default function SubscriptionCustomers() {
   });
   const categoryDiscounts = categoryDiscountsData?.discounts || [];
 
+  // Fetch category discounts for the customer being viewed
+  const { data: viewCategoryDiscountsData } = useQuery<{ discounts: SubscriptionCategoryDiscount[] }>({
+    queryKey: ["/api/admin/subscription-customers", viewCustomer?.id, "category-discounts"],
+    enabled: !!viewCustomer?.id,
+  });
+  const viewCategoryDiscounts = viewCategoryDiscountsData?.discounts || [];
+
   // Create category discount mutation
   const createCategoryDiscountMutation = useMutation({
     mutationFn: async (data: CategoryDiscountFormData) => {
@@ -1028,90 +1035,187 @@ export default function SubscriptionCustomers() {
 
       {/* View Customer Dialog */}
       <Dialog open={!!viewCustomer} onOpenChange={(open) => !open && setViewCustomer(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Subscription Customer Details</DialogTitle>
+            <DialogDescription>Complete information for this subscription customer</DialogDescription>
           </DialogHeader>
 
           {viewCustomer && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Customer Info Section */}
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
+                <Avatar className="h-20 w-20">
                   <AvatarImage src={viewCustomer.profileImageUrl || undefined} />
-                  <AvatarFallback className="text-xl">
+                  <AvatarFallback className="text-2xl">
                     {viewCustomer.firstName?.[0] || viewCustomer.email?.[0]?.toUpperCase() || "S"}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <h3 className="text-lg font-semibold">
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold">
                     {viewCustomer.firstName} {viewCustomer.lastName}
                   </h3>
                   <p className="text-muted-foreground">{viewCustomer.email}</p>
-                  {viewCustomer.phone && <p className="text-sm">{viewCustomer.phone}</p>}
+                  {viewCustomer.phone && <p className="text-sm text-muted-foreground">{viewCustomer.phone}</p>}
+                  <div className="flex gap-2 mt-2">
+                    <Badge variant="secondary">Subscription Customer</Badge>
+                    {viewCustomer.orderCount !== undefined && viewCustomer.orderCount > 0 && (
+                      <Badge variant="outline">{viewCustomer.orderCount} Orders</Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <Separator />
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Regular Discount</p>
-                  <p className="font-medium">
-                    {getDiscountDisplay(viewCustomer.subscriptionDiscountType, viewCustomer.subscriptionDiscountValue)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Sale Item Discount</p>
-                  <p className="font-medium">
-                    {getDiscountDisplay(viewCustomer.subscriptionSaleDiscountType, viewCustomer.subscriptionSaleDiscountValue)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Delivery Fee</p>
-                  <p className="font-medium">
-                    {viewCustomer.subscriptionDeliveryFee 
-                      ? formatCurrency(parseFloat(viewCustomer.subscriptionDeliveryFee)) 
-                      : "-"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Delivery Schedule</p>
-                  <p className="font-medium capitalize">
-                    {viewCustomer.subscriptionDeliverySchedule || "-"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Start Date</p>
-                  <p className="font-medium">
-                    {viewCustomer.subscriptionStartDate 
-                      ? new Date(viewCustomer.subscriptionStartDate).toLocaleDateString() 
-                      : "-"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">End Date</p>
-                  <p className="font-medium">
-                    {viewCustomer.subscriptionEndDate 
-                      ? new Date(viewCustomer.subscriptionEndDate).toLocaleDateString() 
-                      : "-"}
-                  </p>
+              {/* Global Discount Settings */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Global Discount Settings
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-4 rounded-lg">
+                  <div>
+                    <p className="text-muted-foreground">Regular Product Discount</p>
+                    <p className="font-medium text-lg">
+                      {getDiscountDisplay(viewCustomer.subscriptionDiscountType, viewCustomer.subscriptionDiscountValue)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Sale Item Discount</p>
+                    <p className="font-medium text-lg">
+                      {getDiscountDisplay(viewCustomer.subscriptionSaleDiscountType, viewCustomer.subscriptionSaleDiscountValue)}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {viewCustomer.subscriptionNotes && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-muted-foreground text-sm mb-1">Notes</p>
-                    <p className="text-sm">{viewCustomer.subscriptionNotes}</p>
+              {/* Category-Specific Discounts */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Category-Specific Discounts
+                </h4>
+                {viewCategoryDiscounts.length > 0 ? (
+                  <div className="space-y-2">
+                    {viewCategoryDiscounts.map((discount) => (
+                      <div key={discount.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg text-sm">
+                        <span className="font-medium">{getCategoryName(discount.categoryId)}</span>
+                        <div className="flex gap-4">
+                          <span>
+                            Regular: <strong>{getDiscountDisplay(discount.discountType, discount.discountValue)}</strong>
+                          </span>
+                          {discount.saleDiscountValue && (
+                            <span>
+                              Sale: <strong>{getDiscountDisplay(discount.saleDiscountType, discount.saleDiscountValue)}</strong>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic bg-muted/50 p-3 rounded-lg">
+                    No category-specific discounts configured. Global discounts apply to all categories.
+                  </p>
+                )}
+              </div>
+
+              {/* Delivery & Subscription Period */}
+              <div>
+                <h4 className="font-semibold mb-3">Delivery & Subscription Period</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-4 rounded-lg">
+                  <div>
+                    <p className="text-muted-foreground">Delivery Fee</p>
+                    <p className="font-medium">
+                      {viewCustomer.subscriptionDeliveryFee 
+                        ? formatCurrency(parseFloat(viewCustomer.subscriptionDeliveryFee)) 
+                        : "Not set"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Delivery Schedule</p>
+                    <p className="font-medium capitalize">
+                      {viewCustomer.subscriptionDeliverySchedule || "Not set"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Subscription Start</p>
+                    <p className="font-medium">
+                      {viewCustomer.subscriptionStartDate 
+                        ? new Date(viewCustomer.subscriptionStartDate).toLocaleDateString('en-IN', { 
+                            year: 'numeric', month: 'long', day: 'numeric' 
+                          }) 
+                        : "Not set"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Subscription End</p>
+                    <p className="font-medium">
+                      {viewCustomer.subscriptionEndDate 
+                        ? new Date(viewCustomer.subscriptionEndDate).toLocaleDateString('en-IN', { 
+                            year: 'numeric', month: 'long', day: 'numeric' 
+                          }) 
+                        : "Not set"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              {(viewCustomer.orderCount !== undefined || viewCustomer.totalSpent !== undefined) && (
+                <div>
+                  <h4 className="font-semibold mb-3">Order Summary</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-4 rounded-lg">
+                    <div>
+                      <p className="text-muted-foreground">Total Orders</p>
+                      <p className="font-medium text-lg">{viewCustomer.orderCount || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Total Spent</p>
+                      <p className="font-medium text-lg">
+                        {viewCustomer.totalSpent ? formatCurrency(viewCustomer.totalSpent) : formatCurrency(0)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
+
+              {/* Notes Section */}
+              {viewCustomer.subscriptionNotes && (
+                <div>
+                  <h4 className="font-semibold mb-3">Notes</h4>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <p className="text-sm whitespace-pre-wrap">{viewCustomer.subscriptionNotes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Account Info */}
+              <div>
+                <h4 className="font-semibold mb-3">Account Information</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-4 rounded-lg">
+                  <div>
+                    <p className="text-muted-foreground">Customer ID</p>
+                    <p className="font-mono text-xs">{viewCustomer.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Account Created</p>
+                    <p className="font-medium">
+                      {viewCustomer.createdAt 
+                        ? new Date(viewCustomer.createdAt).toLocaleDateString('en-IN', { 
+                            year: 'numeric', month: 'long', day: 'numeric' 
+                          }) 
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setViewCustomer(null)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setViewCustomer(null)} data-testid="button-close-view">
               Close
             </Button>
             <Button onClick={() => {
@@ -1119,9 +1223,9 @@ export default function SubscriptionCustomers() {
                 handleEditCustomer(viewCustomer);
                 setViewCustomer(null);
               }
-            }}>
+            }} data-testid="button-edit-from-view">
               <Edit className="h-4 w-4 mr-2" />
-              Edit
+              Edit Customer
             </Button>
           </DialogFooter>
         </DialogContent>
