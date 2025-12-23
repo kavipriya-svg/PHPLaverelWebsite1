@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["zip"]
+packages = ["zip", "nano"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -41,3 +41,6 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_log_in_with_replit:1.0.0", "javascript_database:1.0.0", "javascript_object_storage:1.0.0"]
+
+[objectStorage]
+defaultBucketID = "replit-objstore-3ab8c2ab-5b2f-48d6-b091-cb75d8f5435f"

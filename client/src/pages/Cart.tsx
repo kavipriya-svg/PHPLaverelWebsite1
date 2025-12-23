@@ -1,17 +1,85 @@
 import { Link } from "wouter";
 import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Tag, X, Gift, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useStore } from "@/contexts/StoreContext";
+import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { ComboOffer } from "@shared/schema";
+import type { ComboOffer, User, SubscriptionCategoryDiscount } from "@shared/schema";
+
+interface UserWithDiscounts extends User {
+  categoryDiscounts?: SubscriptionCategoryDiscount[];
+}
+
+function calculateSubscriptionPrice(
+  basePrice: string | number,
+  salePrice: string | number | null | undefined,
+  user: UserWithDiscounts | null | undefined,
+  categoryId?: string | null
+): { finalPrice: number; hasSubscriptionDiscount: boolean; originalPrice: number } {
+  const base = parseFloat(String(basePrice));
+  const sale = salePrice ? parseFloat(String(salePrice)) : null;
+  const isOnSale = sale !== null && sale < base;
+  const currentPrice = isOnSale ? sale : base;
+  
+  if (!user || user.customerType !== 'subscription') {
+    return { finalPrice: Math.round(currentPrice * 100) / 100, hasSubscriptionDiscount: false, originalPrice: Math.round(currentPrice * 100) / 100 };
+  }
+  
+  let discountType: string | null = null;
+  let discountValue: number | null = null;
+  
+  if (categoryId && user.categoryDiscounts && user.categoryDiscounts.length > 0) {
+    const categoryDiscount = user.categoryDiscounts.find(d => d.categoryId === categoryId);
+    if (categoryDiscount) {
+      if (isOnSale && categoryDiscount.saleDiscountType && categoryDiscount.saleDiscountValue) {
+        discountType = categoryDiscount.saleDiscountType;
+        discountValue = parseFloat(String(categoryDiscount.saleDiscountValue));
+      } else {
+        discountType = categoryDiscount.discountType;
+        discountValue = parseFloat(String(categoryDiscount.discountValue));
+      }
+    }
+  }
+  
+  if (!discountType || !discountValue || discountValue <= 0) {
+    if (isOnSale) {
+      discountType = user.subscriptionSaleDiscountType || null;
+      discountValue = user.subscriptionSaleDiscountValue ? parseFloat(String(user.subscriptionSaleDiscountValue)) : null;
+    } else {
+      discountType = user.subscriptionDiscountType || null;
+      discountValue = user.subscriptionDiscountValue ? parseFloat(String(user.subscriptionDiscountValue)) : null;
+    }
+  }
+  
+  if (!discountType || !discountValue || discountValue <= 0) {
+    return { finalPrice: Math.round(currentPrice * 100) / 100, hasSubscriptionDiscount: false, originalPrice: Math.round(currentPrice * 100) / 100 };
+  }
+  
+  let finalPrice: number;
+  if (discountType === 'percentage') {
+    finalPrice = currentPrice * (1 - discountValue / 100);
+  } else {
+    finalPrice = currentPrice - discountValue;
+  }
+  
+  finalPrice = Math.max(0, Math.round(finalPrice * 100) / 100);
+  const roundedOriginal = Math.round(currentPrice * 100) / 100;
+  
+  return { 
+    finalPrice, 
+    hasSubscriptionDiscount: finalPrice < roundedOriginal, 
+    originalPrice: roundedOriginal 
+  };
+}
 
 interface AppliedCoupon {
   code: string;
@@ -22,9 +90,12 @@ interface AppliedCoupon {
 
 export default function Cart() {
   const { cartItems, cartTotal, updateCartItem, removeFromCart, isCartLoading } = useStore();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  
+  const isSubscriptionCustomer = user?.customerType === 'subscription';
 
   // Fetch combo offers to calculate combo discounts
   const { data: comboOffersData } = useQuery<{ offers: ComboOffer[] }>({
@@ -99,6 +170,47 @@ export default function Cart() {
     
     return totalComboDiscount;
   }, [cartItems, comboOffersData?.offers]);
+
+  // Calculate subscription-adjusted cart totals and per-item pricing
+  const subscriptionPricing = useMemo(() => {
+    if (!isSubscriptionCustomer) {
+      return {
+        adjustedTotal: cartTotal,
+        subscriptionDiscount: 0,
+        itemPrices: new Map<string, { finalPrice: number; originalPrice: number; hasDiscount: boolean }>()
+      };
+    }
+    
+    let adjustedTotal = 0;
+    let originalTotal = 0;
+    const itemPrices = new Map<string, { finalPrice: number; originalPrice: number; hasDiscount: boolean }>();
+    
+    cartItems.forEach(item => {
+      const basePrice = item.variant?.price || item.product.price;
+      const salePrice = item.variant?.salePrice || item.product.salePrice;
+      const { finalPrice, hasSubscriptionDiscount, originalPrice } = calculateSubscriptionPrice(
+        basePrice,
+        salePrice,
+        user as UserWithDiscounts,
+        item.product.categoryId
+      );
+      
+      itemPrices.set(item.id, { 
+        finalPrice: finalPrice * item.quantity, 
+        originalPrice: originalPrice * item.quantity,
+        hasDiscount: hasSubscriptionDiscount
+      });
+      
+      adjustedTotal += finalPrice * item.quantity;
+      originalTotal += originalPrice * item.quantity;
+    });
+    
+    return {
+      adjustedTotal,
+      subscriptionDiscount: originalTotal - adjustedTotal,
+      itemPrices
+    };
+  }, [cartItems, user, isSubscriptionCustomer, cartTotal]);
 
   // Load any previously applied coupon from localStorage on mount
   useEffect(() => {
@@ -201,7 +313,7 @@ export default function Cart() {
     );
   }
 
-  const subtotal = cartTotal;
+  const subtotal = isSubscriptionCustomer ? subscriptionPricing.adjustedTotal : cartTotal;
   const couponDiscount = calculateDiscount();
   const totalDiscount = couponDiscount + comboDiscount;
   const shipping = subtotal >= 500 ? 0 : 99;
@@ -218,6 +330,10 @@ export default function Cart() {
             const imageUrl = item.product.images?.find(img => img.isPrimary)?.url 
               || item.product.images?.[0]?.url
               || "/placeholder-product.jpg";
+            
+            const itemSubscriptionPricing = subscriptionPricing.itemPrices.get(item.id);
+            const displayPrice = itemSubscriptionPricing?.finalPrice ?? (parseFloat(price as string) * item.quantity);
+            const hasItemSubscriptionDiscount = itemSubscriptionPricing?.hasDiscount ?? false;
 
             return (
               <Card key={item.id} data-testid={`cart-item-${item.id}`}>
@@ -242,6 +358,12 @@ export default function Cart() {
                             <p className="text-sm text-muted-foreground mt-1">
                               {item.variant.optionName}: {item.variant.optionValue}
                             </p>
+                          )}
+                          {hasItemSubscriptionDiscount && (
+                            <Badge variant="secondary" className="mt-1 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                              <Tag className="h-3 w-3 mr-1" />
+                              Subscription Price
+                            </Badge>
                           )}
                         </div>
                         <Button
@@ -278,9 +400,22 @@ export default function Cart() {
                             <Plus className="h-4 w-4" />
                           </Button>
                         </div>
-                        <p className="font-semibold">
-                          {formatCurrency(parseFloat(price as string) * item.quantity)}
-                        </p>
+                        <div className="text-right">
+                          {hasItemSubscriptionDiscount ? (
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span className="font-semibold text-green-600">
+                                {formatCurrency(displayPrice)}
+                              </span>
+                              <span className="text-xs text-muted-foreground line-through">
+                                {formatCurrency(itemSubscriptionPricing?.originalPrice ?? 0)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="font-semibold">
+                              {formatCurrency(displayPrice)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -347,6 +482,17 @@ export default function Cart() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
+                {subscriptionPricing.subscriptionDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                    <span className="flex items-center gap-1">
+                      <Tag className="h-3 w-3" />
+                      Subscription Savings (included)
+                    </span>
+                    <span data-testid="text-subscription-discount">
+                      {formatCurrency(subscriptionPricing.subscriptionDiscount)}
+                    </span>
+                  </div>
+                )}
                 {comboDiscount > 0 && (
                   <div className="flex justify-between text-sm text-purple-600 dark:text-purple-400">
                     <span className="flex items-center gap-1">
