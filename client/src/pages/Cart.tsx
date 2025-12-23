@@ -1,19 +1,22 @@
 import { Link } from "wouter";
-import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Tag, X, Gift, Info } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Tag, X, Gift, Info, Calendar, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { ComboOffer, User, SubscriptionCategoryDiscount } from "@shared/schema";
+import { format, addDays } from "date-fns";
+import type { ComboOffer, User, SubscriptionCategoryDiscount, SubscriptionDeliveryTier } from "@shared/schema";
 
 interface UserWithDiscounts extends User {
   categoryDiscounts?: SubscriptionCategoryDiscount[];
@@ -96,10 +99,57 @@ export default function Cart() {
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   
   const isSubscriptionCustomer = user?.customerType === 'subscription';
+  const isAuthenticated = !!user;
+
+  // Fetch saved addresses for subscription customers to determine shipping region
+  interface SavedAddress {
+    id: string;
+    city: string;
+    isDefault?: boolean;
+    type?: string;
+  }
+  const { data: addressesData } = useQuery<{ addresses: SavedAddress[] }>({
+    queryKey: ["/api/addresses"],
+    enabled: isAuthenticated && isSubscriptionCustomer,
+  });
+
+  // Determine if default shipping address is Chennai
+  const defaultShippingCity = useMemo(() => {
+    const addresses = addressesData?.addresses;
+    if (!addresses || addresses.length === 0) return null;
+    const defaultAddr = addresses.find(addr => addr.isDefault && addr.type === 'shipping') 
+      || addresses.find(addr => addr.isDefault)
+      || addresses[0];
+    return defaultAddr?.city?.toLowerCase() || null;
+  }, [addressesData]);
 
   // Fetch combo offers to calculate combo discounts
   const { data: comboOffersData } = useQuery<{ offers: ComboOffer[] }>({
     queryKey: ["/api/combo-offers"],
+  });
+
+  // Fetch delivery tiers for subscription customers
+  const { data: deliveryTiersData } = useQuery<{ tiers: SubscriptionDeliveryTier[] }>({
+    queryKey: ["/api/subscription-delivery-tiers"],
+    enabled: isSubscriptionCustomer,
+  });
+
+  // Mutation to update cart item delivery date
+  const updateDeliveryDateMutation = useMutation({
+    mutationFn: async ({ itemId, deliveryDate }: { itemId: string; deliveryDate: string | null }) => {
+      const res = await apiRequest("PATCH", `/api/cart/${itemId}/delivery-date`, { deliveryDate });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Failed to update delivery date",
+        description: "Please try again.",
+      });
+    },
   });
 
   // Calculate GST included in cart items (for display purposes - GST is already in the price)
@@ -212,6 +262,62 @@ export default function Cart() {
     };
   }, [cartItems, user, isSubscriptionCustomer, cartTotal]);
 
+  // Calculate shipping grouped by delivery date for subscription customers
+  const deliveryDateShipping = useMemo(() => {
+    if (!isSubscriptionCustomer) {
+      return {
+        groups: new Map<string, { totalWeight: number; shippingFee: number; items: typeof cartItems }>(),
+        totalShipping: 0,
+        hasMultipleDeliveryDates: false,
+      };
+    }
+
+    const deliveryTiers = deliveryTiersData?.tiers || [];
+    const sortedTiers = [...deliveryTiers].filter(t => t.isActive).sort((a, b) => 
+      parseFloat(String(a.upToWeightKg)) - parseFloat(String(b.upToWeightKg))
+    );
+    
+    // Group cart items by delivery date
+    const groups = new Map<string, { totalWeight: number; shippingFee: number; items: typeof cartItems }>();
+    
+    cartItems.forEach(item => {
+      const deliveryDate = (item as any).deliveryDate || 'unassigned';
+      const itemWeight = parseFloat(String(item.product.weight || 0)) * item.quantity;
+      
+      if (!groups.has(deliveryDate)) {
+        groups.set(deliveryDate, { totalWeight: 0, shippingFee: 0, items: [] });
+      }
+      const group = groups.get(deliveryDate)!;
+      group.totalWeight += itemWeight;
+      group.items.push(item);
+    });
+    
+    // Calculate shipping fee for each group based on weight tier
+    // Use saved address city if available, otherwise show as estimate
+    let totalShipping = 0;
+    const isChennai = defaultShippingCity ? defaultShippingCity.includes('chennai') : true; // Default to Chennai if no address
+    const isEstimate = !defaultShippingCity; // Only estimate if no saved address
+    
+    groups.forEach((group, date) => {
+      if (sortedTiers.length === 0 || group.totalWeight === 0) {
+        group.shippingFee = 0;
+      } else {
+        const tier = sortedTiers.find(t => group.totalWeight <= parseFloat(String(t.upToWeightKg))) 
+          || sortedTiers[sortedTiers.length - 1];
+        group.shippingFee = parseFloat(String(isChennai ? tier.chennaiFee : tier.panIndiaFee));
+      }
+      totalShipping += group.shippingFee;
+    });
+    
+    return {
+      groups,
+      totalShipping,
+      hasMultipleDeliveryDates: groups.size > 1 || (groups.size === 1 && !groups.has('unassigned')),
+      isEstimate, // Only show estimate label if no saved address
+      isChennai,
+    };
+  }, [cartItems, isSubscriptionCustomer, deliveryTiersData, defaultShippingCity]);
+
   // Load any previously applied coupon from localStorage on mount
   useEffect(() => {
     const savedCoupon = localStorage.getItem("appliedCoupon");
@@ -316,7 +422,10 @@ export default function Cart() {
   const subtotal = isSubscriptionCustomer ? subscriptionPricing.adjustedTotal : cartTotal;
   const couponDiscount = calculateDiscount();
   const totalDiscount = couponDiscount + comboDiscount;
-  const shipping = subtotal >= 500 ? 0 : 99;
+  // For subscription customers, use weight-based shipping per delivery date; otherwise use default logic
+  const shipping = isSubscriptionCustomer 
+    ? deliveryDateShipping.totalShipping 
+    : (subtotal >= 500 ? 0 : 99);
   const total = subtotal - totalDiscount + shipping;
 
   return (
@@ -377,6 +486,55 @@ export default function Cart() {
                         </Button>
                       </div>
                       
+                      {isSubscriptionCustomer && (
+                        <div className="flex items-center gap-2 mt-3 p-2 bg-muted/50 rounded-md">
+                          <Truck className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="text-sm text-muted-foreground">Deliver on:</span>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="h-8 gap-1"
+                                data-testid={`button-delivery-date-${item.id}`}
+                              >
+                                <Calendar className="h-3 w-3" />
+                                {(item as any).deliveryDate 
+                                  ? format(new Date((item as any).deliveryDate), 'MMM d, yyyy')
+                                  : 'Select date'}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <CalendarComponent
+                                mode="single"
+                                selected={(item as any).deliveryDate ? new Date((item as any).deliveryDate) : undefined}
+                                onSelect={(date) => {
+                                  if (date) {
+                                    updateDeliveryDateMutation.mutate({
+                                      itemId: item.id,
+                                      deliveryDate: format(date, 'yyyy-MM-dd'),
+                                    });
+                                  }
+                                }}
+                                disabled={(date) => date < addDays(new Date(), 1)}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          {(item as any).deliveryDate && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground"
+                              onClick={() => updateDeliveryDateMutation.mutate({ itemId: item.id, deliveryDate: null })}
+                              data-testid={`button-clear-delivery-date-${item.id}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center border rounded-md">
                           <Button
@@ -508,14 +666,49 @@ export default function Cart() {
                     <span data-testid="text-coupon-discount">-{formatCurrency(couponDiscount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
-                </div>
-                {shipping > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    Free shipping on orders over {CURRENCY_SYMBOL}500
-                  </p>
+                {isSubscriptionCustomer && deliveryDateShipping.hasMultipleDeliveryDates ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                      <span>Delivery Charges</span>
+                      {deliveryDateShipping.isEstimate && (
+                        <span className="text-xs text-muted-foreground font-normal">(estimate)</span>
+                      )}
+                      {!deliveryDateShipping.isEstimate && !deliveryDateShipping.isChennai && (
+                        <Badge variant="outline" className="text-xs">PAN India</Badge>
+                      )}
+                    </div>
+                    {Array.from(deliveryDateShipping.groups.entries()).map(([date, group]) => (
+                      <div key={date} className="flex justify-between text-sm pl-6">
+                        <span className="text-muted-foreground">
+                          {date === 'unassigned' ? 'No date selected' : format(new Date(date), 'MMM d, yyyy')}
+                          <span className="text-xs ml-1">({group.totalWeight.toFixed(2)}kg)</span>
+                        </span>
+                        <span>{group.shippingFee === 0 ? "Free" : formatCurrency(group.shippingFee)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between text-sm pl-6 pt-1 border-t">
+                      <span className="text-muted-foreground font-medium">Total Shipping</span>
+                      <span className="font-medium">{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
+                    </div>
+                    {deliveryDateShipping.isEstimate && (
+                      <p className="text-xs text-muted-foreground mt-1 pl-6">
+                        Final shipping based on delivery address at checkout
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
+                    </div>
+                    {!isSubscriptionCustomer && shipping > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Free shipping on orders over {CURRENCY_SYMBOL}500
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 

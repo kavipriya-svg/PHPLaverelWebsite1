@@ -41,7 +41,8 @@ import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Address, ComboOffer, User, SubscriptionCategoryDiscount } from "@shared/schema";
+import type { Address, ComboOffer, User, SubscriptionCategoryDiscount, SubscriptionDeliveryTier } from "@shared/schema";
+import { format } from "date-fns";
 
 interface UserWithDiscounts extends User {
   categoryDiscounts?: SubscriptionCategoryDiscount[];
@@ -266,6 +267,69 @@ export default function Checkout() {
   }, [cartItems]);
 
   const isSubscriptionCustomer = user?.customerType === 'subscription';
+
+  // Fetch delivery tiers for subscription customers
+  const { data: deliveryTiersData } = useQuery<{ tiers: SubscriptionDeliveryTier[] }>({
+    queryKey: ["/api/subscription-delivery-tiers"],
+    enabled: isSubscriptionCustomer,
+  });
+
+  // Watch shipping city to determine Chennai vs PAN India rates
+  const shippingCity = form.watch("city");
+  
+  // Calculate shipping grouped by delivery date for subscription customers
+  const deliveryDateShipping = useMemo(() => {
+    if (!isSubscriptionCustomer) {
+      return {
+        groups: new Map<string, { totalWeight: number; shippingFee: number; items: typeof cartItems }>(),
+        totalShipping: 0,
+        hasMultipleDeliveryDates: false,
+      };
+    }
+
+    const deliveryTiers = deliveryTiersData?.tiers || [];
+    const sortedTiers = [...deliveryTiers].filter(t => t.isActive).sort((a, b) => 
+      parseFloat(String(a.upToWeightKg)) - parseFloat(String(b.upToWeightKg))
+    );
+    
+    // Group cart items by delivery date
+    const groups = new Map<string, { totalWeight: number; shippingFee: number; items: typeof cartItems }>();
+    
+    cartItems.forEach(item => {
+      const deliveryDate = (item as any).deliveryDate || 'unassigned';
+      const itemWeight = parseFloat(String(item.product.weight || 0)) * item.quantity;
+      
+      if (!groups.has(deliveryDate)) {
+        groups.set(deliveryDate, { totalWeight: 0, shippingFee: 0, items: [] });
+      }
+      const group = groups.get(deliveryDate)!;
+      group.totalWeight += itemWeight;
+      group.items.push(item);
+    });
+    
+    // Calculate shipping fee for each group based on weight tier
+    let totalShipping = 0;
+    // Determine if Chennai based on shipping city (case-insensitive match)
+    const isChennai = shippingCity?.toLowerCase().includes('chennai') || false;
+    
+    groups.forEach((group, date) => {
+      if (sortedTiers.length === 0 || group.totalWeight === 0) {
+        group.shippingFee = 0;
+      } else {
+        const tier = sortedTiers.find(t => group.totalWeight <= parseFloat(String(t.upToWeightKg))) 
+          || sortedTiers[sortedTiers.length - 1];
+        group.shippingFee = parseFloat(String(isChennai ? tier.chennaiFee : tier.panIndiaFee));
+      }
+      totalShipping += group.shippingFee;
+    });
+    
+    return {
+      groups,
+      totalShipping,
+      hasMultipleDeliveryDates: groups.size > 1 || (groups.size === 1 && !groups.has('unassigned')),
+      isChennai,
+    };
+  }, [cartItems, isSubscriptionCustomer, deliveryTiersData, shippingCity]);
 
   // Calculate subscription-adjusted cart totals
   const subscriptionPricing = useMemo(() => {
@@ -531,6 +595,21 @@ export default function Checkout() {
         gstNumber: data.billingGstNumber || "",
       };
       
+      // For subscription customers, always include delivery dates per item and shipping breakdown
+      const subscriptionShipping = isSubscriptionCustomer
+        ? {
+            isSubscriptionDelivery: true,
+            isChennai: deliveryDateShipping.isChennai,
+            shippingBreakdown: Array.from(deliveryDateShipping.groups.entries()).map(([date, group]) => ({
+              deliveryDate: date === 'unassigned' ? null : date,
+              totalWeight: group.totalWeight,
+              shippingFee: group.shippingFee,
+              itemCount: group.items.length,
+            })),
+            totalShipping: deliveryDateShipping.totalShipping,
+          }
+        : null;
+
       const orderData = {
         guestEmail: !isAuthenticated ? data.email : undefined,
         paymentMethod: data.paymentMethod,
@@ -538,6 +617,7 @@ export default function Checkout() {
         billingAddress,
         couponCode: appliedCoupon?.code,
         comboDiscount: comboDiscount,
+        subscriptionShipping, // Include per-date shipping breakdown for subscription customers
         items: cartItems.map(item => {
           const basePrice = item.variant?.price || item.product.price;
           const salePrice = item.variant?.salePrice || item.product.salePrice;
@@ -555,6 +635,7 @@ export default function Checkout() {
             sku: item.product.sku,
             imageUrl: primaryImage || "",
             gstRate: (item.product as any).gstRate || "18",
+            deliveryDate: isSubscriptionCustomer ? ((item as any).deliveryDate || null) : null, // Include delivery date per item
           };
         }),
       };
@@ -789,7 +870,10 @@ export default function Checkout() {
 
   const subtotal = isSubscriptionCustomer ? subscriptionPricing.adjustedTotal : cartTotal;
   const couponDiscount = calculateDiscount();
-  const shipping = subtotal >= 500 ? 0 : 99;
+  // For subscription customers, use weight-based shipping per delivery date; otherwise use default logic
+  const shipping = isSubscriptionCustomer 
+    ? deliveryDateShipping.totalShipping 
+    : (subtotal >= 500 ? 0 : 99);
   const total = subtotal - couponDiscount - comboDiscount + shipping;
 
   return (
@@ -1558,10 +1642,32 @@ export default function Checkout() {
                         <span data-testid="text-checkout-discount">-{formatCurrency(couponDiscount)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
-                    </div>
+                    {isSubscriptionCustomer && deliveryDateShipping.hasMultipleDeliveryDates ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Truck className="h-4 w-4 text-muted-foreground" />
+                          <span>Delivery Charges</span>
+                        </div>
+                        {Array.from(deliveryDateShipping.groups.entries()).map(([date, group]) => (
+                          <div key={date} className="flex justify-between text-sm pl-6">
+                            <span className="text-muted-foreground">
+                              {date === 'unassigned' ? 'No date selected' : format(new Date(date), 'MMM d, yyyy')}
+                              <span className="text-xs ml-1">({group.totalWeight.toFixed(2)}kg)</span>
+                            </span>
+                            <span>{group.shippingFee === 0 ? "Free" : formatCurrency(group.shippingFee)}</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between text-sm pl-6 pt-1 border-t">
+                          <span className="text-muted-foreground font-medium">Total Shipping</span>
+                          <span className="font-medium">{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Shipping</span>
+                        <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
+                      </div>
+                    )}
                   </div>
 
                   <Separator />
