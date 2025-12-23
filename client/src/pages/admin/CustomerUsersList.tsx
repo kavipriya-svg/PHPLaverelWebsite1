@@ -309,9 +309,19 @@ const getCustomerTypeBadgeVariant = (type: string): "default" | "secondary" | "o
   }
 };
 
-export default function CustomerUsersList() {
+interface CustomerUsersListProps {
+  fixedType?: string;
+  readOnly?: boolean;
+  pageTitle?: string;
+}
+
+export default function CustomerUsersList({ 
+  fixedType, 
+  readOnly = false,
+  pageTitle 
+}: CustomerUsersListProps = {}) {
   const [search, setSearch] = useState("");
-  const [selectedType, setSelectedType] = useState("all");
+  const [selectedType, setSelectedType] = useState(fixedType || "all");
   const [viewCustomer, setViewCustomer] = useState<CustomerWithStats | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -319,8 +329,10 @@ export default function CustomerUsersList() {
   const [newCustomerType, setNewCustomerType] = useState("");
   const { toast } = useToast();
 
+  const effectiveType = fixedType || selectedType;
+  
   const { data, isLoading } = useQuery<{ users: CustomerWithStats[]; total: number; typeCounts: Record<string, number> }>({
-    queryKey: ["/api/admin/users/customers", { search, customerType: selectedType }],
+    queryKey: ["/api/admin/users/customers", { search, customerType: effectiveType }],
   });
 
   const customerId = viewCustomer?.id;

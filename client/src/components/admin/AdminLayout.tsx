@@ -90,7 +90,12 @@ const adminMenuItems = [
 
 const userSubMenuItems = [
   { href: "/admin/users/admins", icon: Shield, label: "Admin Users" },
-  { href: "/admin/users/customers", icon: UserCircle, label: "Customers" },
+  { href: "/admin/users/customers", icon: UserCircle, label: "All Customers" },
+  { href: "/admin/users/customers/regular", icon: UserCircle, label: "Regular Customers" },
+  { href: "/admin/users/customers/subscription", icon: UserCircle, label: "Subscription" },
+  { href: "/admin/users/customers/retailer", icon: UserCircle, label: "Retailers" },
+  { href: "/admin/users/customers/distributor", icon: UserCircle, label: "Distributors" },
+  { href: "/admin/users/customers/mini-distributor", icon: UserCircle, label: "Mini Distributors" },
   { href: "/admin/users/roles", icon: Key, label: "Roles & Permissions" },
 ];
 
