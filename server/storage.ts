@@ -38,6 +38,7 @@ import {
   swimGroomProviders,
   swimGroomProviderServices,
   swimGroomProviderMedia,
+  swimGroomProviderVerificationDocs,
   swimGroomProviderSlots,
   swimGroomBookings,
   swimGroomProviderReviews,
@@ -118,6 +119,8 @@ import {
   type InsertSwimGroomProviderService,
   type SwimGroomProviderMedia,
   type InsertSwimGroomProviderMedia,
+  type SwimGroomProviderVerificationDoc,
+  type InsertSwimGroomProviderVerificationDoc,
   type SwimGroomProviderSlot,
   type InsertSwimGroomProviderSlot,
   type SwimGroomBooking,
@@ -391,6 +394,12 @@ export interface IStorage {
   addSwimGroomProviderMedia(media: InsertSwimGroomProviderMedia): Promise<SwimGroomProviderMedia>;
   updateSwimGroomProviderMedia(id: string, media: Partial<InsertSwimGroomProviderMedia>): Promise<SwimGroomProviderMedia | undefined>;
   removeSwimGroomProviderMedia(id: string): Promise<void>;
+
+  // Swimming & Grooming - Provider Verification Documents
+  getSwimGroomProviderVerificationDocs(providerId: string): Promise<SwimGroomProviderVerificationDoc[]>;
+  addSwimGroomProviderVerificationDoc(doc: InsertSwimGroomProviderVerificationDoc): Promise<SwimGroomProviderVerificationDoc>;
+  updateSwimGroomProviderVerificationDoc(id: string, doc: Partial<InsertSwimGroomProviderVerificationDoc>): Promise<SwimGroomProviderVerificationDoc | undefined>;
+  removeSwimGroomProviderVerificationDoc(id: string): Promise<void>;
 
   // Swimming & Grooming - Provider Slots
   getSwimGroomProviderSlots(providerId: string, filters?: SwimGroomSlotFilters): Promise<SwimGroomProviderSlot[]>;
@@ -2843,6 +2852,33 @@ export class DatabaseStorage implements IStorage {
 
   async removeSwimGroomProviderMedia(id: string): Promise<void> {
     await db.delete(swimGroomProviderMedia).where(eq(swimGroomProviderMedia.id, id));
+  }
+
+  // Provider Verification Documents
+  async getSwimGroomProviderVerificationDocs(providerId: string): Promise<SwimGroomProviderVerificationDoc[]> {
+    return await db
+      .select()
+      .from(swimGroomProviderVerificationDocs)
+      .where(eq(swimGroomProviderVerificationDocs.providerId, providerId))
+      .orderBy(desc(swimGroomProviderVerificationDocs.uploadedAt));
+  }
+
+  async addSwimGroomProviderVerificationDoc(doc: InsertSwimGroomProviderVerificationDoc): Promise<SwimGroomProviderVerificationDoc> {
+    const [created] = await db.insert(swimGroomProviderVerificationDocs).values(doc).returning();
+    return created;
+  }
+
+  async updateSwimGroomProviderVerificationDoc(id: string, doc: Partial<InsertSwimGroomProviderVerificationDoc>): Promise<SwimGroomProviderVerificationDoc | undefined> {
+    const [updated] = await db
+      .update(swimGroomProviderVerificationDocs)
+      .set(doc)
+      .where(eq(swimGroomProviderVerificationDocs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async removeSwimGroomProviderVerificationDoc(id: string): Promise<void> {
+    await db.delete(swimGroomProviderVerificationDocs).where(eq(swimGroomProviderVerificationDocs.id, id));
   }
 
   // Provider Slots

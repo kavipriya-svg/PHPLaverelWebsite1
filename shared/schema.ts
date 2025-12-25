@@ -1344,6 +1344,11 @@ export const swimGroomProviders = pgTable("swim_groom_providers", {
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   passwordHash: varchar("password_hash"), // For provider portal login
+  ownerType: varchar("owner_type").default("individual"), // "individual" or "business"
+  ownerVerificationStatus: varchar("owner_verification_status").default("pending"), // "pending", "verified", "rejected"
+  addressVerificationStatus: varchar("address_verification_status").default("pending"), // "pending", "verified", "rejected"
+  ownerVerificationNotes: text("owner_verification_notes"),
+  addressVerificationNotes: text("address_verification_notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1368,6 +1373,7 @@ export const swimGroomProvidersRelations = relations(swimGroomProviders, ({ one,
   services: many(swimGroomProviderServices),
   slots: many(swimGroomProviderSlots),
   media: many(swimGroomProviderMedia),
+  verificationDocs: many(swimGroomProviderVerificationDocs),
 }));
 
 export const insertSwimGroomProviderSchema = createInsertSchema(swimGroomProviders).omit({
@@ -1386,8 +1392,12 @@ export const swimGroomProviderServices = pgTable("swim_groom_provider_services",
   providerId: varchar("provider_id").notNull().references(() => swimGroomProviders.id, { onDelete: "cascade" }),
   serviceId: varchar("service_id").notNull().references(() => swimGroomServices.id, { onDelete: "cascade" }),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  discountType: varchar("discount_type").default("percentage"), // "percentage" or "fixed"
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).default("0.00"),
+  salePrice: decimal("sale_price", { precision: 10, scale: 2 }), // Calculated: price - discount
   duration: integer("duration").default(60), // Duration in minutes
   description: text("description"),
+  notes: text("notes"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -1435,6 +1445,39 @@ export const insertSwimGroomProviderMediaSchema = createInsertSchema(swimGroomPr
 });
 export type InsertSwimGroomProviderMedia = z.infer<typeof insertSwimGroomProviderMediaSchema>;
 export type SwimGroomProviderMedia = typeof swimGroomProviderMedia.$inferSelect;
+
+// Provider Verification Documents (for owner and address verification)
+export const swimGroomProviderVerificationDocs = pgTable("swim_groom_provider_verification_docs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  providerId: varchar("provider_id").notNull().references(() => swimGroomProviders.id, { onDelete: "cascade" }),
+  verificationType: varchar("verification_type").notNull(), // "owner" or "address"
+  documentLabel: varchar("document_label").notNull(), // e.g., "ID Proof", "Address Proof", "Business Registration"
+  documentUrl: varchar("document_url").notNull(),
+  status: varchar("status").default("pending"), // "pending", "approved", "rejected"
+  reviewNotes: text("review_notes"),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+});
+
+export const swimGroomProviderVerificationDocsRelations = relations(swimGroomProviderVerificationDocs, ({ one }) => ({
+  provider: one(swimGroomProviders, {
+    fields: [swimGroomProviderVerificationDocs.providerId],
+    references: [swimGroomProviders.id],
+  }),
+  reviewer: one(users, {
+    fields: [swimGroomProviderVerificationDocs.reviewedBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertSwimGroomProviderVerificationDocSchema = createInsertSchema(swimGroomProviderVerificationDocs).omit({
+  id: true,
+  uploadedAt: true,
+  reviewedAt: true,
+});
+export type InsertSwimGroomProviderVerificationDoc = z.infer<typeof insertSwimGroomProviderVerificationDocSchema>;
+export type SwimGroomProviderVerificationDoc = typeof swimGroomProviderVerificationDocs.$inferSelect;
 
 // Provider Time Slots
 export const swimGroomProviderSlots = pgTable("swim_groom_provider_slots", {

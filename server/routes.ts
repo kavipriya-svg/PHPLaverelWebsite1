@@ -6046,6 +6046,50 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  // Admin - Manage provider verification documents
+  app.get("/api/admin/swim-groom/providers/:id/verification-docs", isAdmin, async (req, res) => {
+    try {
+      const docs = await storage.getSwimGroomProviderVerificationDocs(req.params.id);
+      res.json({ docs });
+    } catch (error) {
+      console.error("Error fetching provider verification docs:", error);
+      res.status(500).json({ error: "Failed to fetch verification documents" });
+    }
+  });
+
+  app.post("/api/admin/swim-groom/providers/:id/verification-docs", isAdmin, async (req, res) => {
+    try {
+      const doc = await storage.addSwimGroomProviderVerificationDoc({
+        ...req.body,
+        providerId: req.params.id,
+      });
+      res.status(201).json(doc);
+    } catch (error) {
+      console.error("Error adding provider verification doc:", error);
+      res.status(500).json({ error: "Failed to add verification document" });
+    }
+  });
+
+  app.patch("/api/admin/swim-groom/verification-docs/:id", isAdmin, async (req, res) => {
+    try {
+      const doc = await storage.updateSwimGroomProviderVerificationDoc(req.params.id, req.body);
+      res.json(doc);
+    } catch (error) {
+      console.error("Error updating verification doc:", error);
+      res.status(500).json({ error: "Failed to update verification document" });
+    }
+  });
+
+  app.delete("/api/admin/swim-groom/verification-docs/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.removeSwimGroomProviderVerificationDoc(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting verification doc:", error);
+      res.status(500).json({ error: "Failed to delete verification document" });
+    }
+  });
+
   // Admin - Manage provider slots
   app.get("/api/admin/swim-groom/providers/:id/slots", isAdmin, async (req, res) => {
     try {
