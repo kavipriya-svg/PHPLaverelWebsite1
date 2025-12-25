@@ -497,10 +497,39 @@ function CategoryDialog({
 
   const flatCategories = flattenCategories(categories);
   
+  // Get all descendant IDs of the current category being edited to exclude them from parent options
+  const getDescendantIds = (cat: CategoryWithChildren): string[] => {
+    const ids: string[] = [cat.id];
+    if (cat.children) {
+      cat.children.forEach((child) => {
+        ids.push(...getDescendantIds(child));
+      });
+    }
+    return ids;
+  };
+  
+  const excludedIds = category ? getDescendantIds(category) : [];
+  
+  // Calculate the max depth of children under this category
+  const getMaxChildDepth = (cat: CategoryWithChildren): number => {
+    if (!cat.children || cat.children.length === 0) return 0;
+    return 1 + Math.max(...cat.children.map(getMaxChildDepth));
+  };
+  
+  const maxChildDepth = category ? getMaxChildDepth(category) : 0;
+  
   const eligibleParents = flatCategories.filter((c) => {
-    if (category && c.id === category.id) return false;
-    const depth = getDepth(c, flatCategories);
-    return depth < 2;
+    // Exclude the category itself and all its descendants
+    if (excludedIds.includes(c.id)) return false;
+    const parentDepth = getDepth(c, flatCategories);
+    // The new depth of the edited category would be parentDepth + 1
+    // The max total depth would be parentDepth + 1 + maxChildDepth
+    // This must be <= 2 (to maintain 3 levels: 0, 1, 2)
+    const newCategoryDepth = parentDepth + 1;
+    const totalMaxDepth = newCategoryDepth + maxChildDepth;
+    // Allow if this would keep hierarchy within 3 levels (max depth 2)
+    // For main category selection (parentId = "none"), this is always allowed if maxChildDepth <= 2
+    return totalMaxDepth <= 2;
   });
 
   const isSubOrChildCategory = parentId !== "none";
