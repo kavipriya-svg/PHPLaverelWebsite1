@@ -5824,6 +5824,51 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  // Admin - Get all localities
+  app.get("/api/admin/swim-groom/localities", isAdmin, async (req, res) => {
+    try {
+      const cityId = req.query.cityId as string | undefined;
+      const localities = await storage.getSwimGroomLocalities(cityId, false);
+      res.json({ localities });
+    } catch (error) {
+      console.error("Error fetching swim-groom localities:", error);
+      res.status(500).json({ error: "Failed to fetch localities" });
+    }
+  });
+
+  // Admin - Create locality
+  app.post("/api/admin/swim-groom/localities", isAdmin, async (req, res) => {
+    try {
+      const locality = await storage.createSwimGroomLocality(req.body);
+      res.status(201).json(locality);
+    } catch (error) {
+      console.error("Error creating swim-groom locality:", error);
+      res.status(500).json({ error: "Failed to create locality" });
+    }
+  });
+
+  // Admin - Update locality
+  app.patch("/api/admin/swim-groom/localities/:id", isAdmin, async (req, res) => {
+    try {
+      const locality = await storage.updateSwimGroomLocality(req.params.id, req.body);
+      res.json(locality);
+    } catch (error) {
+      console.error("Error updating swim-groom locality:", error);
+      res.status(500).json({ error: "Failed to update locality" });
+    }
+  });
+
+  // Admin - Delete locality
+  app.delete("/api/admin/swim-groom/localities/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSwimGroomLocality(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting swim-groom locality:", error);
+      res.status(500).json({ error: "Failed to delete locality" });
+    }
+  });
+
   // Admin - Get all providers
   app.get("/api/admin/swim-groom/providers", isAdmin, async (req, res) => {
     try {
