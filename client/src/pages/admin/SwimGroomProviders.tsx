@@ -498,12 +498,12 @@ function ProviderDialog({
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Country</Label>
-              <Select value={countryId} onValueChange={(v) => { setCountryId(v); setStateId(""); setCityId(""); }}>
+              <Select value={countryId || "none"} onValueChange={(v) => { setCountryId(v === "none" ? "" : v); setStateId(""); setCityId(""); }}>
                 <SelectTrigger data-testid="select-provider-country">
                   <SelectValue placeholder="Select Country" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not selected</SelectItem>
+                  <SelectItem value="none">Not selected</SelectItem>
                   {countries.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -512,12 +512,12 @@ function ProviderDialog({
             </div>
             <div className="space-y-2">
               <Label>State</Label>
-              <Select value={stateId} onValueChange={(v) => { setStateId(v); setCityId(""); }} disabled={!countryId}>
+              <Select value={stateId || "none"} onValueChange={(v) => { setStateId(v === "none" ? "" : v); setCityId(""); }} disabled={!countryId}>
                 <SelectTrigger data-testid="select-provider-state">
                   <SelectValue placeholder="Select State" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not selected</SelectItem>
+                  <SelectItem value="none">Not selected</SelectItem>
                   {states.map((s) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
@@ -526,12 +526,12 @@ function ProviderDialog({
             </div>
             <div className="space-y-2">
               <Label>City</Label>
-              <Select value={cityId} onValueChange={setCityId} disabled={!stateId}>
+              <Select value={cityId || "none"} onValueChange={(v) => setCityId(v === "none" ? "" : v)} disabled={!stateId}>
                 <SelectTrigger data-testid="select-provider-city">
                   <SelectValue placeholder="Select City" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not selected</SelectItem>
+                  <SelectItem value="none">Not selected</SelectItem>
                   {cities.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
