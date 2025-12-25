@@ -6226,21 +6226,27 @@ Sitemap: ${baseUrl}/sitemap.xml`;
   app.post("/api/provider/login", async (req, res) => {
     try {
       const { email, password } = req.body;
+      console.log("[Provider Login] Attempting login for:", email);
       
       if (!email || !password) {
+        console.log("[Provider Login] Missing email or password");
         return res.status(400).json({ error: "Email and password are required" });
       }
 
       const provider = await storage.getSwimGroomProviderByEmail(email);
+      console.log("[Provider Login] Provider found:", provider ? provider.email : "NOT FOUND");
       if (!provider) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
       if (!provider.passwordHash) {
+        console.log("[Provider Login] No password hash set for provider");
         return res.status(401).json({ error: "Provider account not set up for login" });
       }
 
+      console.log("[Provider Login] Verifying password...");
       const isValid = await verifyPassword(password, provider.passwordHash);
+      console.log("[Provider Login] Password valid:", isValid);
       if (!isValid) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
