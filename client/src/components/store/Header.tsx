@@ -312,7 +312,7 @@ export function Header() {
               data-testid="link-swim-groom"
             >
               <Waves className="h-4 w-4" />
-              Services
+              Swimming & Grooming
             </Link>
           </nav>
 
