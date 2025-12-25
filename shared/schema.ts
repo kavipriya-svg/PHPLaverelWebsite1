@@ -1291,6 +1291,31 @@ export const insertSwimGroomCitySchema = createInsertSchema(swimGroomCities).omi
 export type InsertSwimGroomCity = z.infer<typeof insertSwimGroomCitySchema>;
 export type SwimGroomCity = typeof swimGroomCities.$inferSelect;
 
+// Swimming & Grooming Locations - Localities/Areas
+export const swimGroomLocalities = pgTable("swim_groom_localities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  cityId: varchar("city_id").notNull().references(() => swimGroomCities.id, { onDelete: "cascade" }),
+  name: varchar("name").notNull(),
+  pincode: varchar("pincode"),
+  isActive: boolean("is_active").default(true),
+  position: integer("position").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const swimGroomLocalitiesRelations = relations(swimGroomLocalities, ({ one }) => ({
+  city: one(swimGroomCities, {
+    fields: [swimGroomLocalities.cityId],
+    references: [swimGroomCities.id],
+  }),
+}));
+
+export const insertSwimGroomLocalitySchema = createInsertSchema(swimGroomLocalities).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwimGroomLocality = z.infer<typeof insertSwimGroomLocalitySchema>;
+export type SwimGroomLocality = typeof swimGroomLocalities.$inferSelect;
+
 // Service Providers
 export const swimGroomProviders = pgTable("swim_groom_providers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

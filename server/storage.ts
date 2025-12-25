@@ -34,6 +34,7 @@ import {
   swimGroomCountries,
   swimGroomStates,
   swimGroomCities,
+  swimGroomLocalities,
   swimGroomProviders,
   swimGroomProviderServices,
   swimGroomProviderMedia,
@@ -109,6 +110,8 @@ import {
   type InsertSwimGroomState,
   type SwimGroomCity,
   type InsertSwimGroomCity,
+  type SwimGroomLocality,
+  type InsertSwimGroomLocality,
   type SwimGroomProvider,
   type InsertSwimGroomProvider,
   type SwimGroomProviderService,
@@ -150,6 +153,10 @@ export interface SwimGroomStateWithCountry extends SwimGroomState {
 
 export interface SwimGroomCityWithState extends SwimGroomCity {
   state?: SwimGroomStateWithCountry | null;
+}
+
+export interface SwimGroomLocalityWithCity extends SwimGroomLocality {
+  city?: SwimGroomCityWithState | null;
 }
 
 export interface IStorage {
@@ -357,6 +364,12 @@ export interface IStorage {
   createSwimGroomCity(city: InsertSwimGroomCity): Promise<SwimGroomCity>;
   updateSwimGroomCity(id: string, city: Partial<InsertSwimGroomCity>): Promise<SwimGroomCity | undefined>;
   deleteSwimGroomCity(id: string): Promise<void>;
+
+  // Swimming & Grooming - Localities
+  getSwimGroomLocalities(cityId?: string, activeOnly?: boolean): Promise<SwimGroomLocalityWithCity[]>;
+  createSwimGroomLocality(locality: InsertSwimGroomLocality): Promise<SwimGroomLocality>;
+  updateSwimGroomLocality(id: string, locality: Partial<InsertSwimGroomLocality>): Promise<SwimGroomLocality | undefined>;
+  deleteSwimGroomLocality(id: string): Promise<void>;
 
   // Swimming & Grooming - Providers
   getSwimGroomProviders(filters?: SwimGroomProviderFilters): Promise<{ providers: SwimGroomProviderWithDetails[]; total: number }>;
@@ -2590,6 +2603,47 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSwimGroomCity(id: string): Promise<void> {
     await db.delete(swimGroomCities).where(eq(swimGroomCities.id, id));
+  }
+
+  // Localities
+  async getSwimGroomLocalities(cityId?: string, activeOnly: boolean = false): Promise<SwimGroomLocalityWithCity[]> {
+    const conditions: any[] = [];
+    if (cityId) conditions.push(eq(swimGroomLocalities.cityId, cityId));
+    if (activeOnly) conditions.push(eq(swimGroomLocalities.isActive, true));
+
+    const results = await db
+      .select()
+      .from(swimGroomLocalities)
+      .leftJoin(swimGroomCities, eq(swimGroomLocalities.cityId, swimGroomCities.id))
+      .leftJoin(swimGroomStates, eq(swimGroomCities.stateId, swimGroomStates.id))
+      .leftJoin(swimGroomCountries, eq(swimGroomStates.countryId, swimGroomCountries.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(swimGroomLocalities.position, swimGroomLocalities.name);
+
+    return results.map(r => ({
+      ...r.swim_groom_localities,
+      city: r.swim_groom_cities ? {
+        ...r.swim_groom_cities,
+        state: r.swim_groom_states ? {
+          ...r.swim_groom_states,
+          country: r.swim_groom_countries || null,
+        } : null,
+      } : null,
+    }));
+  }
+
+  async createSwimGroomLocality(locality: InsertSwimGroomLocality): Promise<SwimGroomLocality> {
+    const [newLocality] = await db.insert(swimGroomLocalities).values(locality).returning();
+    return newLocality;
+  }
+
+  async updateSwimGroomLocality(id: string, locality: Partial<InsertSwimGroomLocality>): Promise<SwimGroomLocality | undefined> {
+    const [updated] = await db.update(swimGroomLocalities).set(locality).where(eq(swimGroomLocalities.id, id)).returning();
+    return updated;
+  }
+
+  async deleteSwimGroomLocality(id: string): Promise<void> {
+    await db.delete(swimGroomLocalities).where(eq(swimGroomLocalities.id, id));
   }
 
   // Providers
