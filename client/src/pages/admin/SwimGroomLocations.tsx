@@ -283,7 +283,7 @@ function StatesTab() {
   });
 
   const { data, isLoading } = useQuery<{ states: SwimGroomStateWithCountry[] }>({
-    queryKey: ["/api/admin/swim-groom/states", filterCountry],
+    queryKey: ["/api/admin/swim-groom/states"],
   });
 
   const deleteMutation = useMutation({
@@ -507,7 +507,7 @@ function CitiesTab() {
   });
 
   const { data, isLoading } = useQuery<{ cities: SwimGroomCityWithState[] }>({
-    queryKey: ["/api/admin/swim-groom/cities", filterState],
+    queryKey: ["/api/admin/swim-groom/cities"],
   });
 
   const deleteMutation = useMutation({
