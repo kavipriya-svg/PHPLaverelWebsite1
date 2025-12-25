@@ -60,7 +60,7 @@ const paymentColors: Record<string, string> = {
 
 export default function AdminSwimGroomBookings() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewBooking, setViewBooking] = useState<SwimGroomBookingWithDetails | null>(null);
   const { toast } = useToast();
 
@@ -69,7 +69,7 @@ export default function AdminSwimGroomBookings() {
   });
 
   const bookings = data?.bookings || [];
-  const filteredBookings = statusFilter 
+  const filteredBookings = statusFilter && statusFilter !== "all"
     ? bookings.filter(b => b.status === statusFilter)
     : bookings;
 
@@ -97,7 +97,7 @@ export default function AdminSwimGroomBookings() {
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="confirmed">Confirmed</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
