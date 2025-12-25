@@ -1,6 +1,23 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Plus,
   ChevronRight,
   ChevronDown,
@@ -60,6 +77,17 @@ export default function AdminCategories() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const { data, isLoading } = useQuery<{ categories: CategoryWithChildren[] }>({
     queryKey: ["/api/admin/categories"],
   });
@@ -78,9 +106,36 @@ export default function AdminCategories() {
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: async (updates: { id: string; position: number }[]) => {
+      await apiRequest("POST", "/api/admin/categories/reorder", { updates });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
+      toast({ title: "Categories reordered successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to reorder categories", variant: "destructive" });
+    },
+  });
+
   const categories = data?.categories || [];
 
   const rootCategories = categories.filter((c) => !c.parentId);
+
+  const handleDragEnd = (event: DragEndEvent, siblings: CategoryWithChildren[]) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = siblings.findIndex((c) => c.id === active.id);
+    const newIndex = siblings.findIndex((c) => c.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const reordered = arrayMove(siblings, oldIndex, newIndex);
+      const updates = reordered.map((cat, idx) => ({ id: cat.id, position: idx }));
+      reorderMutation.mutate(updates);
+    }
+  };
 
   return (
     <AdminLayout>
@@ -88,7 +143,7 @@ export default function AdminCategories() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold">Categories</h1>
-            <p className="text-muted-foreground">Manage your 3-level category hierarchy</p>
+            <p className="text-muted-foreground">Manage your 3-level category hierarchy. Drag to reorder.</p>
           </div>
           <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-category">
             <Plus className="h-4 w-4 mr-2" />
@@ -110,16 +165,28 @@ export default function AdminCategories() {
               </CardContent>
             </Card>
           ) : (
-            rootCategories.map((category) => (
-              <CategoryItem
-                key={category.id}
-                category={category}
-                allCategories={categories}
-                onEdit={setEditCategory}
-                onDelete={setDeleteCategory}
-                level={0}
-              />
-            ))
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={(event) => handleDragEnd(event, rootCategories)}
+            >
+              <SortableContext
+                items={rootCategories.map((c) => c.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {rootCategories.map((category) => (
+                  <SortableCategoryItem
+                    key={category.id}
+                    category={category}
+                    allCategories={categories}
+                    onEdit={setEditCategory}
+                    onDelete={setDeleteCategory}
+                    level={0}
+                    onReorder={(siblings, event) => handleDragEnd(event, siblings)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
 
@@ -164,21 +231,50 @@ export default function AdminCategories() {
   );
 }
 
-function CategoryItem({
+function SortableCategoryItem({
   category,
   allCategories,
   onEdit,
   onDelete,
   level,
+  onReorder,
 }: {
   category: CategoryWithChildren;
   allCategories: CategoryWithChildren[];
   onEdit: (cat: CategoryWithChildren) => void;
   onDelete: (cat: CategoryWithChildren) => void;
   level: number;
+  onReorder: (siblings: CategoryWithChildren[], event: DragEndEvent) => void;
 }) {
   const [expanded, setExpanded] = useState(level < 1);
   const { toast } = useToast();
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    marginLeft: `${level * 24}px`,
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const toggleStatusMutation = useMutation({
     mutationFn: async () => {
@@ -197,17 +293,22 @@ function CategoryItem({
     },
   });
 
-  // Use nested children from the category object (tree structure from API)
   const children = category.children || [];
   const hasChildren = children.length > 0;
 
   return (
-    <div>
+    <div ref={setNodeRef} style={style}>
       <div
         className="flex items-center gap-2 p-3 border rounded-lg bg-card hover-elevate"
-        style={{ marginLeft: `${level * 24}px` }}
       >
-        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing touch-none"
+          data-testid={`drag-handle-${category.id}`}
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
 
         {hasChildren ? (
           <Button
@@ -286,16 +387,28 @@ function CategoryItem({
 
       {expanded && hasChildren && (
         <div className="mt-2 space-y-2">
-          {children.map((child) => (
-            <CategoryItem
-              key={child.id}
-              category={child}
-              allCategories={allCategories}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              level={level + 1}
-            />
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(event) => onReorder(children, event)}
+          >
+            <SortableContext
+              items={children.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {children.map((child) => (
+                <SortableCategoryItem
+                  key={child.id}
+                  category={child}
+                  allCategories={allCategories}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  level={level + 1}
+                  onReorder={onReorder}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         </div>
       )}
     </div>

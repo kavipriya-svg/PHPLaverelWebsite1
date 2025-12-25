@@ -3051,6 +3051,34 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.post("/api/admin/categories/reorder", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { updates } = req.body;
+      if (!Array.isArray(updates)) {
+        return res.status(400).json({ error: "Updates must be an array" });
+      }
+      
+      // Validate all updates before applying any
+      for (const update of updates) {
+        if (!update.id || typeof update.position !== "number") {
+          return res.status(400).json({ error: "Each update must have an id and position" });
+        }
+      }
+      
+      // Apply all updates (positions are unique per parent group, so this is safe)
+      await Promise.all(
+        updates.map((update) => 
+          storage.updateCategory(update.id, { position: update.position })
+        )
+      );
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Reorder categories error:", error);
+      res.status(500).json({ error: "Failed to reorder categories" });
+    }
+  });
+
   app.get("/api/admin/brands", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const brands = await storage.getBrands();
