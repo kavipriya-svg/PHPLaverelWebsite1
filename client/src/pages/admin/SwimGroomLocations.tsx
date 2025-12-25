@@ -275,7 +275,7 @@ function StatesTab() {
   const [editItem, setEditItem] = useState<SwimGroomStateWithCountry | null>(null);
   const [deleteItem, setDeleteItem] = useState<SwimGroomStateWithCountry | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [filterCountry, setFilterCountry] = useState<string>("");
+  const [filterCountry, setFilterCountry] = useState<string>("all");
   const { toast } = useToast();
 
   const { data: countriesData } = useQuery<{ countries: SwimGroomCountry[] }>({
@@ -302,7 +302,7 @@ function StatesTab() {
 
   const countries = countriesData?.countries || [];
   const states = data?.states || [];
-  const filteredStates = filterCountry ? states.filter(s => s.countryId === filterCountry) : states;
+  const filteredStates = filterCountry && filterCountry !== "all" ? states.filter(s => s.countryId === filterCountry) : states;
 
   return (
     <>
@@ -314,7 +314,7 @@ function StatesTab() {
               <SelectValue placeholder="All Countries" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Countries</SelectItem>
+              <SelectItem value="all">All Countries</SelectItem>
               {countries.map(c => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
@@ -499,7 +499,7 @@ function CitiesTab() {
   const [editItem, setEditItem] = useState<SwimGroomCityWithState | null>(null);
   const [deleteItem, setDeleteItem] = useState<SwimGroomCityWithState | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [filterState, setFilterState] = useState<string>("");
+  const [filterState, setFilterState] = useState<string>("all");
   const { toast } = useToast();
 
   const { data: statesData } = useQuery<{ states: SwimGroomStateWithCountry[] }>({
@@ -526,7 +526,7 @@ function CitiesTab() {
 
   const states = statesData?.states || [];
   const cities = data?.cities || [];
-  const filteredCities = filterState ? cities.filter(c => c.stateId === filterState) : cities;
+  const filteredCities = filterState && filterState !== "all" ? cities.filter(c => c.stateId === filterState) : cities;
 
   return (
     <>
@@ -538,7 +538,7 @@ function CitiesTab() {
               <SelectValue placeholder="All States" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All States</SelectItem>
+              <SelectItem value="all">All States</SelectItem>
               {states.map(s => (
                 <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
               ))}
