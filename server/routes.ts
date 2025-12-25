@@ -1728,16 +1728,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const sessionId = (req as any).guestSessionId || req.cookies?.sessionId;
       const { deliveryDate } = req.body;
       
+      console.log('[DUPLICATE] Request:', { itemId: req.params.id, deliveryDate, userId: userInfo?.id, sessionId });
+      
       if (!deliveryDate || typeof deliveryDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(deliveryDate)) {
         return res.status(400).json({ error: "Valid delivery date (YYYY-MM-DD) is required" });
       }
       
       const cart = await storage.getCartItems(userInfo?.id, sessionId);
+      console.log('[DUPLICATE] Cart items found:', cart.length);
       const existingItem = cart.find((item: any) => item.id === req.params.id);
       
       if (!existingItem) {
+        console.log('[DUPLICATE] Cart item not found:', req.params.id);
         return res.status(404).json({ error: "Cart item not found" });
       }
+      
+      console.log('[DUPLICATE] Existing item:', { productId: existingItem.productId, variantId: existingItem.variantId });
       
       const newItem = await storage.addToCart({
         userId: userInfo?.id,
@@ -1748,8 +1754,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         comboOfferId: existingItem.comboOfferId || undefined,
         deliveryDate,
       });
+      console.log('[DUPLICATE] New item created:', { id: newItem.id, deliveryDate: newItem.deliveryDate });
       res.json({ item: newItem });
     } catch (error) {
+      console.error('[DUPLICATE] Error:', error);
       res.status(500).json({ error: "Failed to duplicate cart item" });
     }
   });
