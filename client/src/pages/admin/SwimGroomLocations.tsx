@@ -42,10 +42,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { SwimGroomCountry, SwimGroomState, SwimGroomCity } from "@shared/schema";
+import type { SwimGroomCountry, SwimGroomState, SwimGroomCity, SwimGroomLocality } from "@shared/schema";
 
 type SwimGroomStateWithCountry = SwimGroomState & { country?: SwimGroomCountry | null };
 type SwimGroomCityWithState = SwimGroomCity & { state?: SwimGroomStateWithCountry | null };
+type SwimGroomLocalityWithCity = SwimGroomLocality & { city?: SwimGroomCityWithState | null };
 
 export default function AdminSwimGroomLocations() {
   const [activeTab, setActiveTab] = useState("countries");
@@ -55,7 +56,7 @@ export default function AdminSwimGroomLocations() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Location Management</h1>
-          <p className="text-muted-foreground">Manage countries, states, and cities for service providers</p>
+          <p className="text-muted-foreground">Manage countries, states, cities, and localities for service providers</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -63,6 +64,7 @@ export default function AdminSwimGroomLocations() {
             <TabsTrigger value="countries" data-testid="tab-countries">Countries</TabsTrigger>
             <TabsTrigger value="states" data-testid="tab-states">States</TabsTrigger>
             <TabsTrigger value="cities" data-testid="tab-cities">Cities</TabsTrigger>
+            <TabsTrigger value="localities" data-testid="tab-localities">Localities/Areas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="countries" className="mt-4">
@@ -73,6 +75,9 @@ export default function AdminSwimGroomLocations() {
           </TabsContent>
           <TabsContent value="cities" className="mt-4">
             <CitiesTab />
+          </TabsContent>
+          <TabsContent value="localities" className="mt-4">
+            <LocalitiesTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -712,6 +717,252 @@ function CityDialog({ open, onOpenChange, city, states }: {
           <Button onClick={handleSubmit} disabled={isLoading} data-testid="button-save-city">
             {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {city ? "Update" : "Create"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function LocalitiesTab() {
+  const [editItem, setEditItem] = useState<SwimGroomLocalityWithCity | null>(null);
+  const [deleteItem, setDeleteItem] = useState<SwimGroomLocalityWithCity | null>(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [filterCity, setFilterCity] = useState<string>("all");
+  const { toast } = useToast();
+
+  const { data: citiesData } = useQuery<{ cities: SwimGroomCityWithState[] }>({
+    queryKey: ["/api/admin/swim-groom/cities"],
+  });
+
+  const { data, isLoading } = useQuery<{ localities: SwimGroomLocalityWithCity[] }>({
+    queryKey: ["/api/admin/swim-groom/localities"],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/admin/swim-groom/localities/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/localities"] });
+      toast({ title: "Locality deleted successfully" });
+      setDeleteItem(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to delete locality", variant: "destructive" });
+    },
+  });
+
+  const cities = citiesData?.cities || [];
+  const localities = data?.localities || [];
+  const filteredLocalities = filterCity && filterCity !== "all" ? localities.filter(l => l.cityId === filterCity) : localities;
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-4 gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-semibold">{filteredLocalities.length} Localities</h2>
+          <Select value={filterCity} onValueChange={setFilterCity}>
+            <SelectTrigger className="w-48" data-testid="select-filter-city">
+              <SelectValue placeholder="All Cities" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Cities</SelectItem>
+              {cities.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={() => setIsAddOpen(true)} data-testid="button-add-locality">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Locality
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+      ) : filteredLocalities.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            No localities yet. Add your first locality.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {filteredLocalities.map((locality) => (
+            <Card key={locality.id} className="hover-elevate">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{locality.name}</div>
+                    {locality.pincode && (
+                      <Badge variant="outline" className="text-xs mt-1">{locality.pincode}</Badge>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {locality.city?.state?.country?.name} <ChevronRight className="h-3 w-3 inline" /> {locality.city?.state?.name} <ChevronRight className="h-3 w-3 inline" /> {locality.city?.name}
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setEditItem(locality)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteItem(locality)}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <LocalityDialog
+        open={isAddOpen || !!editItem}
+        onOpenChange={(o) => { setIsAddOpen(false); setEditItem(null); }}
+        locality={editItem}
+        cities={cities}
+      />
+
+      <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Locality</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this locality?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteItem && deleteMutation.mutate(deleteItem.id)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+function LocalityDialog({ open, onOpenChange, locality, cities }: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  locality: SwimGroomLocalityWithCity | null;
+  cities: SwimGroomCityWithState[];
+}) {
+  const { toast } = useToast();
+  const [name, setName] = useState("");
+  const [cityId, setCityId] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [isActive, setIsActive] = useState(true);
+
+  const resetForm = () => {
+    if (locality) {
+      setName(locality.name);
+      setCityId(locality.cityId);
+      setPincode(locality.pincode || "");
+      setIsActive(locality.isActive ?? true);
+    } else {
+      setName("");
+      setCityId("");
+      setPincode("");
+      setIsActive(true);
+    }
+  };
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/admin/swim-groom/localities", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/localities"] });
+      toast({ title: "Locality created successfully" });
+      onOpenChange(false);
+    },
+    onError: () => toast({ title: "Failed to create locality", variant: "destructive" }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("PATCH", `/api/admin/swim-groom/localities/${locality?.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/localities"] });
+      toast({ title: "Locality updated successfully" });
+      onOpenChange(false);
+    },
+    onError: () => toast({ title: "Failed to update locality", variant: "destructive" }),
+  });
+
+  const handleSubmit = () => {
+    if (!name.trim()) return toast({ title: "Name is required", variant: "destructive" });
+    if (!cityId) return toast({ title: "City is required", variant: "destructive" });
+    const data = { name: name.trim(), cityId, pincode: pincode.trim() || null, isActive };
+    locality ? updateMutation.mutate(data) : createMutation.mutate(data);
+  };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onOpenChange(false); else resetForm(); }}>
+      <DialogContent onOpenAutoFocus={resetForm}>
+        <DialogHeader>
+          <DialogTitle>{locality ? "Edit Locality" : "Add Locality"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>City</Label>
+            <Select value={cityId} onValueChange={setCityId}>
+              <SelectTrigger data-testid="select-locality-city">
+                <SelectValue placeholder="Select City" />
+              </SelectTrigger>
+              <SelectContent>
+                {cities.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.state?.country?.name} - {c.state?.name} - {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Locality/Area Name</Label>
+            <Input 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              placeholder="e.g., T. Nagar, Anna Nagar" 
+              data-testid="input-locality-name" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Pincode</Label>
+            <Input 
+              value={pincode} 
+              onChange={(e) => setPincode(e.target.value)} 
+              placeholder="e.g., 600017" 
+              data-testid="input-locality-pincode" 
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch checked={isActive} onCheckedChange={setIsActive} />
+            <Label>Active</Label>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={isLoading} data-testid="button-save-locality">
+            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {locality ? "Update" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>
