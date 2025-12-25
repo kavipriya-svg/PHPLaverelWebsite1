@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, MoreHorizontal, Edit, Trash2, Eye, Building2, Loader2, MapPin, Star, Calendar, CheckCircle, XCircle } from "lucide-react";
+import { Plus, MoreHorizontal, Edit, Trash2, Eye, Building2, Loader2, MapPin, Star, Calendar, CheckCircle, XCircle, Upload, Image, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -55,12 +55,15 @@ import type { SwimGroomProvider, SwimGroomCountry, SwimGroomService } from "@sha
 
 type SwimGroomState = { id: string; name: string; countryId: string; country?: SwimGroomCountry | null };
 type SwimGroomCity = { id: string; name: string; stateId: string; state?: SwimGroomState | null };
+type SwimGroomLocality = { id: string; name: string; pincode?: string | null; cityId: string; isActive: boolean };
+type SwimGroomProviderMedia = { id: string; providerId: string; mediaType: string; mediaUrl: string; title?: string | null; position: number };
 type SwimGroomProviderWithDetails = SwimGroomProvider & {
   country?: SwimGroomCountry | null;
   state?: SwimGroomState | null;
   city?: SwimGroomCity | null;
+  locality?: SwimGroomLocality | null;
   services?: any[];
-  media?: any[];
+  media?: SwimGroomProviderMedia[];
 };
 
 export default function AdminSwimGroomProviders() {
@@ -285,10 +288,18 @@ function ProviderDialog({
   const [countryId, setCountryId] = useState("");
   const [stateId, setStateId] = useState("");
   const [cityId, setCityId] = useState("");
+  const [localityId, setLocalityId] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [gstNumber, setGstNumber] = useState("");
+  const [gstName, setGstName] = useState("");
   const [commissionType, setCommissionType] = useState<"percentage" | "fixed">("percentage");
   const [commissionValue, setCommissionValue] = useState("10");
   const [isActive, setIsActive] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<SwimGroomProviderMedia[]>([]);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const { data: countriesData } = useQuery<{ countries: SwimGroomCountry[] }>({
     queryKey: ["/api/admin/swim-groom/countries"],
@@ -304,9 +315,15 @@ function ProviderDialog({
     enabled: !!stateId,
   });
 
+  const { data: localitiesData } = useQuery<{ localities: SwimGroomLocality[] }>({
+    queryKey: ["/api/admin/swim-groom/localities", cityId],
+    enabled: !!cityId,
+  });
+
   const countries = countriesData?.countries || [];
   const states = statesData?.states?.filter(s => !countryId || s.countryId === countryId) || [];
   const cities = citiesData?.cities?.filter(c => !stateId || c.stateId === stateId) || [];
+  const localities = localitiesData?.localities?.filter(l => !cityId || l.cityId === cityId) || [];
 
   const resetForm = () => {
     if (provider) {
@@ -319,10 +336,15 @@ function ProviderDialog({
       setCountryId(provider.countryId || "");
       setStateId(provider.stateId || "");
       setCityId(provider.cityId || "");
+      setLocalityId(provider.localityId || "");
+      setPincode(provider.pincode || "");
+      setGstNumber(provider.gstNumber || "");
+      setGstName(provider.gstName || "");
       setCommissionType((provider.commissionType as "percentage" | "fixed") || "percentage");
       setCommissionValue(provider.commissionValue || "10");
       setIsActive(provider.isActive ?? true);
       setIsVerified(provider.isVerified ?? false);
+      setMediaFiles(provider.media || []);
     } else {
       setName("");
       setEmail("");
@@ -333,10 +355,15 @@ function ProviderDialog({
       setCountryId(countries[0]?.id || "");
       setStateId("");
       setCityId("");
+      setLocalityId("");
+      setPincode("");
+      setGstNumber("");
+      setGstName("");
       setCommissionType("percentage");
       setCommissionValue("10");
       setIsActive(true);
       setIsVerified(false);
+      setMediaFiles([]);
     }
   };
 
@@ -391,6 +418,10 @@ function ProviderDialog({
       countryId: countryId || null,
       stateId: stateId || null,
       cityId: cityId || null,
+      localityId: localityId || null,
+      pincode: pincode.trim() || null,
+      gstNumber: gstNumber.trim() || null,
+      gstName: gstName.trim() || null,
       commissionType,
       commissionValue,
       isActive,
@@ -498,7 +529,7 @@ function ProviderDialog({
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Country</Label>
-              <Select value={countryId || "none"} onValueChange={(v) => { setCountryId(v === "none" ? "" : v); setStateId(""); setCityId(""); }}>
+              <Select value={countryId || "none"} onValueChange={(v) => { setCountryId(v === "none" ? "" : v); setStateId(""); setCityId(""); setLocalityId(""); setPincode(""); }}>
                 <SelectTrigger data-testid="select-provider-country">
                   <SelectValue placeholder="Select Country" />
                 </SelectTrigger>
@@ -512,7 +543,7 @@ function ProviderDialog({
             </div>
             <div className="space-y-2">
               <Label>State</Label>
-              <Select value={stateId || "none"} onValueChange={(v) => { setStateId(v === "none" ? "" : v); setCityId(""); }} disabled={!countryId}>
+              <Select value={stateId || "none"} onValueChange={(v) => { setStateId(v === "none" ? "" : v); setCityId(""); setLocalityId(""); setPincode(""); }} disabled={!countryId}>
                 <SelectTrigger data-testid="select-provider-state">
                   <SelectValue placeholder="Select State" />
                 </SelectTrigger>
@@ -526,7 +557,7 @@ function ProviderDialog({
             </div>
             <div className="space-y-2">
               <Label>City</Label>
-              <Select value={cityId || "none"} onValueChange={(v) => setCityId(v === "none" ? "" : v)} disabled={!stateId}>
+              <Select value={cityId || "none"} onValueChange={(v) => { setCityId(v === "none" ? "" : v); setLocalityId(""); setPincode(""); }} disabled={!stateId}>
                 <SelectTrigger data-testid="select-provider-city">
                   <SelectValue placeholder="Select City" />
                 </SelectTrigger>
@@ -537,6 +568,67 @@ function ProviderDialog({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Locality / Area</Label>
+              <Select 
+                value={localityId || "none"} 
+                onValueChange={(v) => { 
+                  const id = v === "none" ? "" : v;
+                  setLocalityId(id);
+                  const selectedLocality = localities.find(l => l.id === id);
+                  if (selectedLocality?.pincode) {
+                    setPincode(selectedLocality.pincode);
+                  }
+                }} 
+                disabled={!cityId}
+              >
+                <SelectTrigger data-testid="select-provider-locality">
+                  <SelectValue placeholder="Select Locality" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not selected</SelectItem>
+                  {localities.filter(l => l.isActive).map((l) => (
+                    <SelectItem key={l.id} value={l.id}>{l.name} {l.pincode ? `(${l.pincode})` : ""}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pincode">Pincode</Label>
+              <Input
+                id="pincode"
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value)}
+                placeholder="Pincode"
+                data-testid="input-provider-pincode"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="gstNumber">GST Number</Label>
+              <Input
+                id="gstNumber"
+                value={gstNumber}
+                onChange={(e) => setGstNumber(e.target.value)}
+                placeholder="e.g., 22AAAAA0000A1Z5"
+                data-testid="input-provider-gst-number"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gstName">GST Name</Label>
+              <Input
+                id="gstName"
+                value={gstName}
+                onChange={(e) => setGstName(e.target.value)}
+                placeholder="Business name as per GST"
+                data-testid="input-provider-gst-name"
+              />
             </div>
           </div>
 
@@ -564,6 +656,160 @@ function ProviderDialog({
               />
             </div>
           </div>
+
+          {provider && (
+            <div className="space-y-2">
+              <Label>Gallery (Images & Videos)</Label>
+              <div className="border rounded-md p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={async (e) => {
+                      const files = e.target.files;
+                      if (!files || files.length === 0) return;
+                      setUploadingMedia(true);
+                      try {
+                        for (const file of Array.from(files)) {
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          const res = await fetch("/api/admin/upload", {
+                            method: "POST",
+                            body: formData,
+                          });
+                          if (res.ok) {
+                            const { url } = await res.json();
+                            await apiRequest("POST", `/api/admin/swim-groom/providers/${provider.id}/media`, {
+                              mediaType: "image",
+                              mediaUrl: url,
+                              title: file.name,
+                              position: mediaFiles.length,
+                            });
+                          }
+                        }
+                        queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers"] });
+                        toast({ title: "Images uploaded successfully" });
+                      } catch (err) {
+                        toast({ title: "Failed to upload images", variant: "destructive" });
+                      } finally {
+                        setUploadingMedia(false);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }
+                    }}
+                    data-testid="input-provider-images"
+                  />
+                  <input
+                    type="file"
+                    ref={videoInputRef}
+                    accept="video/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploadingMedia(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        const res = await fetch("/api/admin/upload", {
+                          method: "POST",
+                          body: formData,
+                        });
+                        if (res.ok) {
+                          const { url } = await res.json();
+                          await apiRequest("POST", `/api/admin/swim-groom/providers/${provider.id}/media`, {
+                            mediaType: "video",
+                            mediaUrl: url,
+                            title: file.name,
+                            position: mediaFiles.length,
+                          });
+                          queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers"] });
+                          toast({ title: "Video uploaded successfully" });
+                        }
+                      } catch (err) {
+                        toast({ title: "Failed to upload video", variant: "destructive" });
+                      } finally {
+                        setUploadingMedia(false);
+                        if (videoInputRef.current) videoInputRef.current.value = "";
+                      }
+                    }}
+                    data-testid="input-provider-video"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingMedia}
+                    data-testid="button-upload-images"
+                  >
+                    <Image className="h-4 w-4 mr-2" />
+                    Upload Images
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => videoInputRef.current?.click()}
+                    disabled={uploadingMedia}
+                    data-testid="button-upload-video"
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    Upload Video
+                  </Button>
+                  {uploadingMedia && <Loader2 className="h-4 w-4 animate-spin" />}
+                </div>
+                {mediaFiles.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2">
+                    {mediaFiles.map((m) => (
+                      <div key={m.id} className="relative group">
+                        {m.mediaType === "video" ? (
+                          <video
+                            src={m.mediaUrl}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                        ) : (
+                          <img
+                            src={m.mediaUrl}
+                            alt={m.title || ""}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                        )}
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={async () => {
+                            try {
+                              await apiRequest("DELETE", `/api/admin/swim-groom/providers/${provider.id}/media/${m.id}`);
+                              setMediaFiles(mediaFiles.filter(mf => mf.id !== m.id));
+                              queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers"] });
+                              toast({ title: "Media deleted" });
+                            } catch {
+                              toast({ title: "Failed to delete media", variant: "destructive" });
+                            }
+                          }}
+                          data-testid={`button-delete-media-${m.id}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                        <Badge variant="secondary" className="absolute bottom-1 left-1 text-xs">
+                          {m.mediaType}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No media uploaded yet. Upload images and videos to showcase the provider.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">

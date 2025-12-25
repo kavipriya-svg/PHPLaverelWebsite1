@@ -6036,6 +6036,16 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  app.delete("/api/admin/swim-groom/providers/:providerId/media/:mediaId", isAdmin, async (req, res) => {
+    try {
+      await storage.removeSwimGroomProviderMedia(req.params.mediaId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing provider media:", error);
+      res.status(500).json({ error: "Failed to remove provider media" });
+    }
+  });
+
   // Admin - Manage provider slots
   app.get("/api/admin/swim-groom/providers/:id/slots", isAdmin, async (req, res) => {
     try {
