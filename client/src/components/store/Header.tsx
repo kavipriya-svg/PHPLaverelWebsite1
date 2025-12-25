@@ -11,7 +11,8 @@ import {
   Package,
   LogIn,
   LogOut,
-  Home
+  Home,
+  Waves
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -223,6 +224,15 @@ export function Header() {
                     >
                       Featured Products
                     </Link>
+                    <Link 
+                      href="/swim-groom" 
+                      className="flex items-center gap-2 px-2 py-2 text-sm hover-elevate rounded-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                      data-testid="link-swim-groom-mobile"
+                    >
+                      <Waves className="h-4 w-4" />
+                      Swimming & Grooming
+                    </Link>
                   </div>
                 </nav>
               </SheetContent>
@@ -295,6 +305,14 @@ export function Header() {
               data-testid="link-combo-offers"
             >
               Combos
+            </Link>
+            <Link
+              href="/swim-groom"
+              className="flex items-center gap-1 px-4 py-2 text-base font-semibold hover-elevate rounded-md"
+              data-testid="link-swim-groom"
+            >
+              <Waves className="h-4 w-4" />
+              Services
             </Link>
           </nav>
 

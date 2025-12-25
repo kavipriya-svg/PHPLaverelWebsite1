@@ -121,12 +121,12 @@ export default function SwimGroom() {
             data-testid="input-search-swim-groom"
           />
         </div>
-        <Select value={selectedCity} onValueChange={setSelectedCity}>
+        <Select value={selectedCity || "all"} onValueChange={(v) => setSelectedCity(v === "all" ? "" : v)}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="All Cities" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Cities</SelectItem>
+            <SelectItem value="all">All Cities</SelectItem>
             {cities.map((city) => (
               <SelectItem key={city.id} value={city.id}>
                 {city.name}
