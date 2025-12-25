@@ -306,17 +306,17 @@ function ProviderDialog({
   });
 
   const { data: statesData } = useQuery<{ states: SwimGroomState[] }>({
-    queryKey: ["/api/admin/swim-groom/states", countryId],
+    queryKey: [`/api/admin/swim-groom/states?countryId=${countryId}`],
     enabled: !!countryId,
   });
 
   const { data: citiesData } = useQuery<{ cities: SwimGroomCity[] }>({
-    queryKey: ["/api/admin/swim-groom/cities", stateId],
+    queryKey: [`/api/admin/swim-groom/cities?stateId=${stateId}`],
     enabled: !!stateId,
   });
 
   const { data: localitiesData } = useQuery<{ localities: SwimGroomLocality[] }>({
-    queryKey: ["/api/admin/swim-groom/localities", cityId],
+    queryKey: [`/api/admin/swim-groom/localities?cityId=${cityId}`],
     enabled: !!cityId,
   });
 
