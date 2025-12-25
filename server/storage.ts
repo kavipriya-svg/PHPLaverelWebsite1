@@ -29,6 +29,17 @@ import {
   rolePermissions,
   subscriptionCategoryDiscounts,
   subscriptionDeliveryTiers,
+  swimGroomPageConfig,
+  swimGroomServices,
+  swimGroomCountries,
+  swimGroomStates,
+  swimGroomCities,
+  swimGroomProviders,
+  swimGroomProviderServices,
+  swimGroomProviderMedia,
+  swimGroomProviderSlots,
+  swimGroomBookings,
+  swimGroomProviderReviews,
   type User,
   type UpsertUser,
   type Category,
@@ -88,11 +99,57 @@ import {
   type InsertAdminRole,
   type RolePermission,
   type InsertRolePermission,
+  type SwimGroomPageConfig,
+  type InsertSwimGroomPageConfig,
+  type SwimGroomService,
+  type InsertSwimGroomService,
+  type SwimGroomCountry,
+  type InsertSwimGroomCountry,
+  type SwimGroomState,
+  type InsertSwimGroomState,
+  type SwimGroomCity,
+  type InsertSwimGroomCity,
+  type SwimGroomProvider,
+  type InsertSwimGroomProvider,
+  type SwimGroomProviderService,
+  type InsertSwimGroomProviderService,
+  type SwimGroomProviderMedia,
+  type InsertSwimGroomProviderMedia,
+  type SwimGroomProviderSlot,
+  type InsertSwimGroomProviderSlot,
+  type SwimGroomBooking,
+  type InsertSwimGroomBooking,
+  type SwimGroomProviderReview,
+  type InsertSwimGroomProviderReview,
 } from "@shared/schema";
 
 // Extended type for combo offer with full product details
 export interface ComboOfferWithProducts extends ComboOffer {
   products: ProductWithDetails[];
+}
+
+// Extended types for Swimming & Grooming
+export interface SwimGroomProviderWithDetails extends SwimGroomProvider {
+  city?: SwimGroomCity | null;
+  state?: SwimGroomState | null;
+  country?: SwimGroomCountry | null;
+  services?: (SwimGroomProviderService & { service?: SwimGroomService })[];
+  media?: SwimGroomProviderMedia[];
+}
+
+export interface SwimGroomBookingWithDetails extends SwimGroomBooking {
+  customer?: User | null;
+  provider?: SwimGroomProvider | null;
+  slot?: SwimGroomProviderSlot | null;
+  service?: SwimGroomService | null;
+}
+
+export interface SwimGroomStateWithCountry extends SwimGroomState {
+  country?: SwimGroomCountry | null;
+}
+
+export interface SwimGroomCityWithState extends SwimGroomCity {
+  state?: SwimGroomStateWithCountry | null;
 }
 
 export interface IStorage {
@@ -269,6 +326,82 @@ export interface IStorage {
   createSubscriptionDeliveryTier(tier: InsertSubscriptionDeliveryTier): Promise<SubscriptionDeliveryTier>;
   updateSubscriptionDeliveryTier(id: string, tier: Partial<InsertSubscriptionDeliveryTier>): Promise<SubscriptionDeliveryTier | undefined>;
   deleteSubscriptionDeliveryTier(id: string): Promise<void>;
+
+  // Swimming & Grooming - Page Config
+  getSwimGroomPageConfigs(activeOnly?: boolean): Promise<SwimGroomPageConfig[]>;
+  createSwimGroomPageConfig(config: InsertSwimGroomPageConfig): Promise<SwimGroomPageConfig>;
+  updateSwimGroomPageConfig(id: string, config: Partial<InsertSwimGroomPageConfig>): Promise<SwimGroomPageConfig | undefined>;
+  deleteSwimGroomPageConfig(id: string): Promise<void>;
+
+  // Swimming & Grooming - Services
+  getSwimGroomServices(activeOnly?: boolean): Promise<SwimGroomService[]>;
+  getSwimGroomServiceById(id: string): Promise<SwimGroomService | undefined>;
+  createSwimGroomService(service: InsertSwimGroomService): Promise<SwimGroomService>;
+  updateSwimGroomService(id: string, service: Partial<InsertSwimGroomService>): Promise<SwimGroomService | undefined>;
+  deleteSwimGroomService(id: string): Promise<void>;
+
+  // Swimming & Grooming - Countries
+  getSwimGroomCountries(activeOnly?: boolean): Promise<SwimGroomCountry[]>;
+  createSwimGroomCountry(country: InsertSwimGroomCountry): Promise<SwimGroomCountry>;
+  updateSwimGroomCountry(id: string, country: Partial<InsertSwimGroomCountry>): Promise<SwimGroomCountry | undefined>;
+  deleteSwimGroomCountry(id: string): Promise<void>;
+
+  // Swimming & Grooming - States
+  getSwimGroomStates(countryId?: string, activeOnly?: boolean): Promise<SwimGroomStateWithCountry[]>;
+  createSwimGroomState(state: InsertSwimGroomState): Promise<SwimGroomState>;
+  updateSwimGroomState(id: string, state: Partial<InsertSwimGroomState>): Promise<SwimGroomState | undefined>;
+  deleteSwimGroomState(id: string): Promise<void>;
+
+  // Swimming & Grooming - Cities
+  getSwimGroomCities(stateId?: string, activeOnly?: boolean): Promise<SwimGroomCityWithState[]>;
+  createSwimGroomCity(city: InsertSwimGroomCity): Promise<SwimGroomCity>;
+  updateSwimGroomCity(id: string, city: Partial<InsertSwimGroomCity>): Promise<SwimGroomCity | undefined>;
+  deleteSwimGroomCity(id: string): Promise<void>;
+
+  // Swimming & Grooming - Providers
+  getSwimGroomProviders(filters?: SwimGroomProviderFilters): Promise<{ providers: SwimGroomProviderWithDetails[]; total: number }>;
+  getSwimGroomProviderById(id: string): Promise<SwimGroomProviderWithDetails | undefined>;
+  getSwimGroomProviderBySlug(slug: string): Promise<SwimGroomProviderWithDetails | undefined>;
+  getSwimGroomProviderByEmail(email: string): Promise<SwimGroomProvider | undefined>;
+  createSwimGroomProvider(provider: InsertSwimGroomProvider): Promise<SwimGroomProvider>;
+  updateSwimGroomProvider(id: string, provider: Partial<InsertSwimGroomProvider>): Promise<SwimGroomProvider | undefined>;
+  deleteSwimGroomProvider(id: string): Promise<void>;
+
+  // Swimming & Grooming - Provider Services
+  getSwimGroomProviderServices(providerId: string): Promise<(SwimGroomProviderService & { service?: SwimGroomService })[]>;
+  addSwimGroomProviderService(providerService: InsertSwimGroomProviderService): Promise<SwimGroomProviderService>;
+  updateSwimGroomProviderService(id: string, providerService: Partial<InsertSwimGroomProviderService>): Promise<SwimGroomProviderService | undefined>;
+  removeSwimGroomProviderService(id: string): Promise<void>;
+
+  // Swimming & Grooming - Provider Media
+  getSwimGroomProviderMedia(providerId: string): Promise<SwimGroomProviderMedia[]>;
+  addSwimGroomProviderMedia(media: InsertSwimGroomProviderMedia): Promise<SwimGroomProviderMedia>;
+  updateSwimGroomProviderMedia(id: string, media: Partial<InsertSwimGroomProviderMedia>): Promise<SwimGroomProviderMedia | undefined>;
+  removeSwimGroomProviderMedia(id: string): Promise<void>;
+
+  // Swimming & Grooming - Provider Slots
+  getSwimGroomProviderSlots(providerId: string, filters?: SwimGroomSlotFilters): Promise<SwimGroomProviderSlot[]>;
+  getSwimGroomProviderSlotById(id: string): Promise<SwimGroomProviderSlot | undefined>;
+  createSwimGroomProviderSlot(slot: InsertSwimGroomProviderSlot): Promise<SwimGroomProviderSlot>;
+  updateSwimGroomProviderSlot(id: string, slot: Partial<InsertSwimGroomProviderSlot>): Promise<SwimGroomProviderSlot | undefined>;
+  deleteSwimGroomProviderSlot(id: string): Promise<void>;
+  incrementSwimGroomSlotBookedCount(slotId: string): Promise<void>;
+  decrementSwimGroomSlotBookedCount(slotId: string): Promise<void>;
+
+  // Swimming & Grooming - Bookings
+  getSwimGroomBookings(filters?: SwimGroomBookingFilters): Promise<{ bookings: SwimGroomBookingWithDetails[]; total: number }>;
+  getSwimGroomBookingById(id: string): Promise<SwimGroomBookingWithDetails | undefined>;
+  getSwimGroomBookingByNumber(bookingNumber: string): Promise<SwimGroomBookingWithDetails | undefined>;
+  createSwimGroomBooking(booking: InsertSwimGroomBooking): Promise<SwimGroomBooking>;
+  updateSwimGroomBooking(id: string, booking: Partial<InsertSwimGroomBooking>): Promise<SwimGroomBooking | undefined>;
+  cancelSwimGroomBooking(id: string): Promise<SwimGroomBooking | undefined>;
+
+  // Swimming & Grooming - Provider Reviews
+  getSwimGroomProviderReviews(providerId: string, approvedOnly?: boolean): Promise<(SwimGroomProviderReview & { customer?: User })[]>;
+  createSwimGroomProviderReview(review: InsertSwimGroomProviderReview): Promise<SwimGroomProviderReview>;
+  updateSwimGroomProviderReview(id: string, review: Partial<InsertSwimGroomProviderReview>): Promise<SwimGroomProviderReview | undefined>;
+  deleteSwimGroomProviderReview(id: string): Promise<void>;
+  updateSwimGroomProviderRating(providerId: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -305,6 +438,37 @@ export interface ReviewFilters {
   isApproved?: boolean;
   minRating?: number;
   maxRating?: number;
+  limit?: number;
+  offset?: number;
+}
+
+export interface SwimGroomProviderFilters {
+  search?: string;
+  serviceId?: string;
+  countryId?: string;
+  stateId?: string;
+  cityId?: string;
+  isActive?: boolean;
+  isVerified?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export interface SwimGroomSlotFilters {
+  serviceId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  status?: string;
+}
+
+export interface SwimGroomBookingFilters {
+  search?: string;
+  providerId?: string;
+  customerId?: string;
+  status?: string;
+  paymentStatus?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
   limit?: number;
   offset?: number;
 }
@@ -2253,6 +2417,622 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(subscriptionDeliveryTiers)
       .where(eq(subscriptionDeliveryTiers.id, id));
+  }
+
+  // =====================================================
+  // SWIMMING & GROOMING IMPLEMENTATIONS
+  // =====================================================
+
+  // Page Config
+  async getSwimGroomPageConfigs(activeOnly: boolean = false): Promise<SwimGroomPageConfig[]> {
+    const conditions = activeOnly ? eq(swimGroomPageConfig.isActive, true) : undefined;
+    return await db
+      .select()
+      .from(swimGroomPageConfig)
+      .where(conditions)
+      .orderBy(asc(swimGroomPageConfig.position));
+  }
+
+  async createSwimGroomPageConfig(config: InsertSwimGroomPageConfig): Promise<SwimGroomPageConfig> {
+    const [created] = await db.insert(swimGroomPageConfig).values(config).returning();
+    return created;
+  }
+
+  async updateSwimGroomPageConfig(id: string, config: Partial<InsertSwimGroomPageConfig>): Promise<SwimGroomPageConfig | undefined> {
+    const [updated] = await db
+      .update(swimGroomPageConfig)
+      .set({ ...config, updatedAt: new Date() })
+      .where(eq(swimGroomPageConfig.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSwimGroomPageConfig(id: string): Promise<void> {
+    await db.delete(swimGroomPageConfig).where(eq(swimGroomPageConfig.id, id));
+  }
+
+  // Services
+  async getSwimGroomServices(activeOnly: boolean = false): Promise<SwimGroomService[]> {
+    const conditions = activeOnly ? eq(swimGroomServices.isActive, true) : undefined;
+    return await db
+      .select()
+      .from(swimGroomServices)
+      .where(conditions)
+      .orderBy(asc(swimGroomServices.position));
+  }
+
+  async getSwimGroomServiceById(id: string): Promise<SwimGroomService | undefined> {
+    const [service] = await db.select().from(swimGroomServices).where(eq(swimGroomServices.id, id));
+    return service;
+  }
+
+  async createSwimGroomService(service: InsertSwimGroomService): Promise<SwimGroomService> {
+    const [created] = await db.insert(swimGroomServices).values(service).returning();
+    return created;
+  }
+
+  async updateSwimGroomService(id: string, service: Partial<InsertSwimGroomService>): Promise<SwimGroomService | undefined> {
+    const [updated] = await db
+      .update(swimGroomServices)
+      .set({ ...service, updatedAt: new Date() })
+      .where(eq(swimGroomServices.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSwimGroomService(id: string): Promise<void> {
+    await db.delete(swimGroomServices).where(eq(swimGroomServices.id, id));
+  }
+
+  // Countries
+  async getSwimGroomCountries(activeOnly: boolean = false): Promise<SwimGroomCountry[]> {
+    const conditions = activeOnly ? eq(swimGroomCountries.isActive, true) : undefined;
+    return await db
+      .select()
+      .from(swimGroomCountries)
+      .where(conditions)
+      .orderBy(asc(swimGroomCountries.position));
+  }
+
+  async createSwimGroomCountry(country: InsertSwimGroomCountry): Promise<SwimGroomCountry> {
+    const [created] = await db.insert(swimGroomCountries).values(country).returning();
+    return created;
+  }
+
+  async updateSwimGroomCountry(id: string, country: Partial<InsertSwimGroomCountry>): Promise<SwimGroomCountry | undefined> {
+    const [updated] = await db
+      .update(swimGroomCountries)
+      .set(country)
+      .where(eq(swimGroomCountries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSwimGroomCountry(id: string): Promise<void> {
+    await db.delete(swimGroomCountries).where(eq(swimGroomCountries.id, id));
+  }
+
+  // States
+  async getSwimGroomStates(countryId?: string, activeOnly: boolean = false): Promise<SwimGroomStateWithCountry[]> {
+    const conditions: any[] = [];
+    if (countryId) conditions.push(eq(swimGroomStates.countryId, countryId));
+    if (activeOnly) conditions.push(eq(swimGroomStates.isActive, true));
+
+    const statesResult = await db
+      .select()
+      .from(swimGroomStates)
+      .leftJoin(swimGroomCountries, eq(swimGroomStates.countryId, swimGroomCountries.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(swimGroomStates.position));
+
+    return statesResult.map((row) => ({
+      ...row.swim_groom_states,
+      country: row.swim_groom_countries,
+    }));
+  }
+
+  async createSwimGroomState(state: InsertSwimGroomState): Promise<SwimGroomState> {
+    const [created] = await db.insert(swimGroomStates).values(state).returning();
+    return created;
+  }
+
+  async updateSwimGroomState(id: string, state: Partial<InsertSwimGroomState>): Promise<SwimGroomState | undefined> {
+    const [updated] = await db
+      .update(swimGroomStates)
+      .set(state)
+      .where(eq(swimGroomStates.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSwimGroomState(id: string): Promise<void> {
+    await db.delete(swimGroomStates).where(eq(swimGroomStates.id, id));
+  }
+
+  // Cities
+  async getSwimGroomCities(stateId?: string, activeOnly: boolean = false): Promise<SwimGroomCityWithState[]> {
+    const conditions: any[] = [];
+    if (stateId) conditions.push(eq(swimGroomCities.stateId, stateId));
+    if (activeOnly) conditions.push(eq(swimGroomCities.isActive, true));
+
+    const citiesResult = await db
+      .select()
+      .from(swimGroomCities)
+      .leftJoin(swimGroomStates, eq(swimGroomCities.stateId, swimGroomStates.id))
+      .leftJoin(swimGroomCountries, eq(swimGroomStates.countryId, swimGroomCountries.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(swimGroomCities.position));
+
+    return citiesResult.map((row) => ({
+      ...row.swim_groom_cities,
+      state: row.swim_groom_states
+        ? {
+            ...row.swim_groom_states,
+            country: row.swim_groom_countries,
+          }
+        : null,
+    }));
+  }
+
+  async createSwimGroomCity(city: InsertSwimGroomCity): Promise<SwimGroomCity> {
+    const [created] = await db.insert(swimGroomCities).values(city).returning();
+    return created;
+  }
+
+  async updateSwimGroomCity(id: string, city: Partial<InsertSwimGroomCity>): Promise<SwimGroomCity | undefined> {
+    const [updated] = await db
+      .update(swimGroomCities)
+      .set(city)
+      .where(eq(swimGroomCities.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSwimGroomCity(id: string): Promise<void> {
+    await db.delete(swimGroomCities).where(eq(swimGroomCities.id, id));
+  }
+
+  // Providers
+  async getSwimGroomProviders(filters: SwimGroomProviderFilters = {}): Promise<{ providers: SwimGroomProviderWithDetails[]; total: number }> {
+    const conditions: any[] = [];
+
+    if (filters.search) {
+      conditions.push(
+        or(
+          like(swimGroomProviders.name, `%${filters.search}%`),
+          like(swimGroomProviders.email, `%${filters.search}%`)
+        )
+      );
+    }
+    if (filters.countryId) conditions.push(eq(swimGroomProviders.countryId, filters.countryId));
+    if (filters.stateId) conditions.push(eq(swimGroomProviders.stateId, filters.stateId));
+    if (filters.cityId) conditions.push(eq(swimGroomProviders.cityId, filters.cityId));
+    if (filters.isActive !== undefined) conditions.push(eq(swimGroomProviders.isActive, filters.isActive));
+    if (filters.isVerified !== undefined) conditions.push(eq(swimGroomProviders.isVerified, filters.isVerified));
+
+    const limit = filters.limit || 50;
+    const offset = filters.offset || 0;
+
+    const baseQuery = db
+      .select()
+      .from(swimGroomProviders)
+      .leftJoin(swimGroomCities, eq(swimGroomProviders.cityId, swimGroomCities.id))
+      .leftJoin(swimGroomStates, eq(swimGroomProviders.stateId, swimGroomStates.id))
+      .leftJoin(swimGroomCountries, eq(swimGroomProviders.countryId, swimGroomCountries.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(swimGroomProviders)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    const providersResult = await baseQuery
+      .orderBy(desc(swimGroomProviders.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const providers: SwimGroomProviderWithDetails[] = [];
+
+    for (const row of providersResult) {
+      const providerServices = await this.getSwimGroomProviderServices(row.swim_groom_providers.id);
+      const providerMedia = await this.getSwimGroomProviderMedia(row.swim_groom_providers.id);
+
+      providers.push({
+        ...row.swim_groom_providers,
+        city: row.swim_groom_cities,
+        state: row.swim_groom_states,
+        country: row.swim_groom_countries,
+        services: providerServices,
+        media: providerMedia,
+      });
+    }
+
+    // Filter by serviceId if specified
+    let filteredProviders = providers;
+    if (filters.serviceId) {
+      filteredProviders = providers.filter((p) =>
+        p.services?.some((s) => s.serviceId === filters.serviceId)
+      );
+    }
+
+    return { providers: filteredProviders, total: Number(countResult?.count || 0) };
+  }
+
+  async getSwimGroomProviderById(id: string): Promise<SwimGroomProviderWithDetails | undefined> {
+    const [row] = await db
+      .select()
+      .from(swimGroomProviders)
+      .leftJoin(swimGroomCities, eq(swimGroomProviders.cityId, swimGroomCities.id))
+      .leftJoin(swimGroomStates, eq(swimGroomProviders.stateId, swimGroomStates.id))
+      .leftJoin(swimGroomCountries, eq(swimGroomProviders.countryId, swimGroomCountries.id))
+      .where(eq(swimGroomProviders.id, id));
+
+    if (!row) return undefined;
+
+    const providerServices = await this.getSwimGroomProviderServices(row.swim_groom_providers.id);
+    const providerMedia = await this.getSwimGroomProviderMedia(row.swim_groom_providers.id);
+
+    return {
+      ...row.swim_groom_providers,
+      city: row.swim_groom_cities,
+      state: row.swim_groom_states,
+      country: row.swim_groom_countries,
+      services: providerServices,
+      media: providerMedia,
+    };
+  }
+
+  async getSwimGroomProviderBySlug(slug: string): Promise<SwimGroomProviderWithDetails | undefined> {
+    const [row] = await db
+      .select()
+      .from(swimGroomProviders)
+      .leftJoin(swimGroomCities, eq(swimGroomProviders.cityId, swimGroomCities.id))
+      .leftJoin(swimGroomStates, eq(swimGroomProviders.stateId, swimGroomStates.id))
+      .leftJoin(swimGroomCountries, eq(swimGroomProviders.countryId, swimGroomCountries.id))
+      .where(eq(swimGroomProviders.slug, slug));
+
+    if (!row) return undefined;
+
+    const providerServices = await this.getSwimGroomProviderServices(row.swim_groom_providers.id);
+    const providerMedia = await this.getSwimGroomProviderMedia(row.swim_groom_providers.id);
+
+    return {
+      ...row.swim_groom_providers,
+      city: row.swim_groom_cities,
+      state: row.swim_groom_states,
+      country: row.swim_groom_countries,
+      services: providerServices,
+      media: providerMedia,
+    };
+  }
+
+  async getSwimGroomProviderByEmail(email: string): Promise<SwimGroomProvider | undefined> {
+    const [provider] = await db
+      .select()
+      .from(swimGroomProviders)
+      .where(eq(swimGroomProviders.email, email.toLowerCase().trim()));
+    return provider;
+  }
+
+  async createSwimGroomProvider(provider: InsertSwimGroomProvider): Promise<SwimGroomProvider> {
+    const [created] = await db.insert(swimGroomProviders).values(provider).returning();
+    return created;
+  }
+
+  async updateSwimGroomProvider(id: string, provider: Partial<InsertSwimGroomProvider>): Promise<SwimGroomProvider | undefined> {
+    const [updated] = await db
+      .update(swimGroomProviders)
+      .set({ ...provider, updatedAt: new Date() })
+      .where(eq(swimGroomProviders.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSwimGroomProvider(id: string): Promise<void> {
+    await db.delete(swimGroomProviders).where(eq(swimGroomProviders.id, id));
+  }
+
+  // Provider Services
+  async getSwimGroomProviderServices(providerId: string): Promise<(SwimGroomProviderService & { service?: SwimGroomService })[]> {
+    const result = await db
+      .select()
+      .from(swimGroomProviderServices)
+      .leftJoin(swimGroomServices, eq(swimGroomProviderServices.serviceId, swimGroomServices.id))
+      .where(eq(swimGroomProviderServices.providerId, providerId));
+
+    return result.map((row) => ({
+      ...row.swim_groom_provider_services,
+      service: row.swim_groom_services || undefined,
+    }));
+  }
+
+  async addSwimGroomProviderService(providerService: InsertSwimGroomProviderService): Promise<SwimGroomProviderService> {
+    const [created] = await db.insert(swimGroomProviderServices).values(providerService).returning();
+    return created;
+  }
+
+  async updateSwimGroomProviderService(id: string, providerService: Partial<InsertSwimGroomProviderService>): Promise<SwimGroomProviderService | undefined> {
+    const [updated] = await db
+      .update(swimGroomProviderServices)
+      .set(providerService)
+      .where(eq(swimGroomProviderServices.id, id))
+      .returning();
+    return updated;
+  }
+
+  async removeSwimGroomProviderService(id: string): Promise<void> {
+    await db.delete(swimGroomProviderServices).where(eq(swimGroomProviderServices.id, id));
+  }
+
+  // Provider Media
+  async getSwimGroomProviderMedia(providerId: string): Promise<SwimGroomProviderMedia[]> {
+    return await db
+      .select()
+      .from(swimGroomProviderMedia)
+      .where(eq(swimGroomProviderMedia.providerId, providerId))
+      .orderBy(asc(swimGroomProviderMedia.position));
+  }
+
+  async addSwimGroomProviderMedia(media: InsertSwimGroomProviderMedia): Promise<SwimGroomProviderMedia> {
+    const [created] = await db.insert(swimGroomProviderMedia).values(media).returning();
+    return created;
+  }
+
+  async updateSwimGroomProviderMedia(id: string, media: Partial<InsertSwimGroomProviderMedia>): Promise<SwimGroomProviderMedia | undefined> {
+    const [updated] = await db
+      .update(swimGroomProviderMedia)
+      .set(media)
+      .where(eq(swimGroomProviderMedia.id, id))
+      .returning();
+    return updated;
+  }
+
+  async removeSwimGroomProviderMedia(id: string): Promise<void> {
+    await db.delete(swimGroomProviderMedia).where(eq(swimGroomProviderMedia.id, id));
+  }
+
+  // Provider Slots
+  async getSwimGroomProviderSlots(providerId: string, filters: SwimGroomSlotFilters = {}): Promise<SwimGroomProviderSlot[]> {
+    const conditions: any[] = [eq(swimGroomProviderSlots.providerId, providerId)];
+
+    if (filters.serviceId) conditions.push(eq(swimGroomProviderSlots.serviceId, filters.serviceId));
+    if (filters.dateFrom) conditions.push(gte(swimGroomProviderSlots.date, filters.dateFrom));
+    if (filters.dateTo) conditions.push(lte(swimGroomProviderSlots.date, filters.dateTo));
+    if (filters.status) conditions.push(eq(swimGroomProviderSlots.status, filters.status));
+
+    return await db
+      .select()
+      .from(swimGroomProviderSlots)
+      .where(and(...conditions))
+      .orderBy(asc(swimGroomProviderSlots.date), asc(swimGroomProviderSlots.startTime));
+  }
+
+  async getSwimGroomProviderSlotById(id: string): Promise<SwimGroomProviderSlot | undefined> {
+    const [slot] = await db.select().from(swimGroomProviderSlots).where(eq(swimGroomProviderSlots.id, id));
+    return slot;
+  }
+
+  async createSwimGroomProviderSlot(slot: InsertSwimGroomProviderSlot): Promise<SwimGroomProviderSlot> {
+    const [created] = await db.insert(swimGroomProviderSlots).values(slot).returning();
+    return created;
+  }
+
+  async updateSwimGroomProviderSlot(id: string, slot: Partial<InsertSwimGroomProviderSlot>): Promise<SwimGroomProviderSlot | undefined> {
+    const [updated] = await db
+      .update(swimGroomProviderSlots)
+      .set({ ...slot, updatedAt: new Date() })
+      .where(eq(swimGroomProviderSlots.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSwimGroomProviderSlot(id: string): Promise<void> {
+    await db.delete(swimGroomProviderSlots).where(eq(swimGroomProviderSlots.id, id));
+  }
+
+  async incrementSwimGroomSlotBookedCount(slotId: string): Promise<void> {
+    await db
+      .update(swimGroomProviderSlots)
+      .set({
+        bookedCount: sql`${swimGroomProviderSlots.bookedCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(swimGroomProviderSlots.id, slotId));
+  }
+
+  async decrementSwimGroomSlotBookedCount(slotId: string): Promise<void> {
+    await db
+      .update(swimGroomProviderSlots)
+      .set({
+        bookedCount: sql`GREATEST(${swimGroomProviderSlots.bookedCount} - 1, 0)`,
+        updatedAt: new Date(),
+      })
+      .where(eq(swimGroomProviderSlots.id, slotId));
+  }
+
+  // Bookings
+  async getSwimGroomBookings(filters: SwimGroomBookingFilters = {}): Promise<{ bookings: SwimGroomBookingWithDetails[]; total: number }> {
+    const conditions: any[] = [];
+
+    if (filters.search) {
+      conditions.push(
+        or(
+          like(swimGroomBookings.bookingNumber, `%${filters.search}%`),
+          like(swimGroomBookings.serviceName, `%${filters.search}%`),
+          like(swimGroomBookings.providerName, `%${filters.search}%`)
+        )
+      );
+    }
+    if (filters.providerId) conditions.push(eq(swimGroomBookings.providerId, filters.providerId));
+    if (filters.customerId) conditions.push(eq(swimGroomBookings.customerId, filters.customerId));
+    if (filters.status) conditions.push(eq(swimGroomBookings.status, filters.status));
+    if (filters.paymentStatus) conditions.push(eq(swimGroomBookings.paymentStatus, filters.paymentStatus));
+    if (filters.dateFrom) conditions.push(gte(swimGroomBookings.bookingDate, filters.dateFrom));
+    if (filters.dateTo) conditions.push(lte(swimGroomBookings.bookingDate, filters.dateTo));
+
+    const limit = filters.limit || 50;
+    const offset = filters.offset || 0;
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(swimGroomBookings)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    const result = await db
+      .select()
+      .from(swimGroomBookings)
+      .leftJoin(users, eq(swimGroomBookings.customerId, users.id))
+      .leftJoin(swimGroomProviders, eq(swimGroomBookings.providerId, swimGroomProviders.id))
+      .leftJoin(swimGroomProviderSlots, eq(swimGroomBookings.slotId, swimGroomProviderSlots.id))
+      .leftJoin(swimGroomServices, eq(swimGroomBookings.serviceId, swimGroomServices.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(swimGroomBookings.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const bookings: SwimGroomBookingWithDetails[] = result.map((row) => ({
+      ...row.swim_groom_bookings,
+      customer: row.users,
+      provider: row.swim_groom_providers,
+      slot: row.swim_groom_provider_slots,
+      service: row.swim_groom_services,
+    }));
+
+    return { bookings, total: Number(countResult?.count || 0) };
+  }
+
+  async getSwimGroomBookingById(id: string): Promise<SwimGroomBookingWithDetails | undefined> {
+    const [row] = await db
+      .select()
+      .from(swimGroomBookings)
+      .leftJoin(users, eq(swimGroomBookings.customerId, users.id))
+      .leftJoin(swimGroomProviders, eq(swimGroomBookings.providerId, swimGroomProviders.id))
+      .leftJoin(swimGroomProviderSlots, eq(swimGroomBookings.slotId, swimGroomProviderSlots.id))
+      .leftJoin(swimGroomServices, eq(swimGroomBookings.serviceId, swimGroomServices.id))
+      .where(eq(swimGroomBookings.id, id));
+
+    if (!row) return undefined;
+
+    return {
+      ...row.swim_groom_bookings,
+      customer: row.users,
+      provider: row.swim_groom_providers,
+      slot: row.swim_groom_provider_slots,
+      service: row.swim_groom_services,
+    };
+  }
+
+  async getSwimGroomBookingByNumber(bookingNumber: string): Promise<SwimGroomBookingWithDetails | undefined> {
+    const [row] = await db
+      .select()
+      .from(swimGroomBookings)
+      .leftJoin(users, eq(swimGroomBookings.customerId, users.id))
+      .leftJoin(swimGroomProviders, eq(swimGroomBookings.providerId, swimGroomProviders.id))
+      .leftJoin(swimGroomProviderSlots, eq(swimGroomBookings.slotId, swimGroomProviderSlots.id))
+      .leftJoin(swimGroomServices, eq(swimGroomBookings.serviceId, swimGroomServices.id))
+      .where(eq(swimGroomBookings.bookingNumber, bookingNumber));
+
+    if (!row) return undefined;
+
+    return {
+      ...row.swim_groom_bookings,
+      customer: row.users,
+      provider: row.swim_groom_providers,
+      slot: row.swim_groom_provider_slots,
+      service: row.swim_groom_services,
+    };
+  }
+
+  async createSwimGroomBooking(booking: InsertSwimGroomBooking): Promise<SwimGroomBooking> {
+    // Generate booking number
+    const prefix = "SG";
+    const randomPart = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const bookingNumber = `${prefix}-${randomPart}`;
+
+    const [created] = await db
+      .insert(swimGroomBookings)
+      .values({ ...booking, bookingNumber })
+      .returning();
+    return created;
+  }
+
+  async updateSwimGroomBooking(id: string, booking: Partial<InsertSwimGroomBooking>): Promise<SwimGroomBooking | undefined> {
+    const [updated] = await db
+      .update(swimGroomBookings)
+      .set({ ...booking, updatedAt: new Date() })
+      .where(eq(swimGroomBookings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async cancelSwimGroomBooking(id: string): Promise<SwimGroomBooking | undefined> {
+    const booking = await this.getSwimGroomBookingById(id);
+    if (!booking) return undefined;
+
+    // Decrement slot booked count
+    await this.decrementSwimGroomSlotBookedCount(booking.slotId);
+
+    const [updated] = await db
+      .update(swimGroomBookings)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(eq(swimGroomBookings.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Provider Reviews
+  async getSwimGroomProviderReviews(providerId: string, approvedOnly: boolean = false): Promise<(SwimGroomProviderReview & { customer?: User })[]> {
+    const conditions: any[] = [eq(swimGroomProviderReviews.providerId, providerId)];
+    if (approvedOnly) conditions.push(eq(swimGroomProviderReviews.status, "approved"));
+
+    const result = await db
+      .select()
+      .from(swimGroomProviderReviews)
+      .leftJoin(users, eq(swimGroomProviderReviews.customerId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(swimGroomProviderReviews.createdAt));
+
+    return result.map((row) => ({
+      ...row.swim_groom_provider_reviews,
+      customer: row.users || undefined,
+    }));
+  }
+
+  async createSwimGroomProviderReview(review: InsertSwimGroomProviderReview): Promise<SwimGroomProviderReview> {
+    const [created] = await db.insert(swimGroomProviderReviews).values(review).returning();
+    return created;
+  }
+
+  async updateSwimGroomProviderReview(id: string, review: Partial<InsertSwimGroomProviderReview>): Promise<SwimGroomProviderReview | undefined> {
+    const [updated] = await db
+      .update(swimGroomProviderReviews)
+      .set({ ...review, updatedAt: new Date() })
+      .where(eq(swimGroomProviderReviews.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSwimGroomProviderReview(id: string): Promise<void> {
+    await db.delete(swimGroomProviderReviews).where(eq(swimGroomProviderReviews.id, id));
+  }
+
+  async updateSwimGroomProviderRating(providerId: string): Promise<void> {
+    const reviews = await this.getSwimGroomProviderReviews(providerId, true);
+    if (reviews.length === 0) {
+      await db
+        .update(swimGroomProviders)
+        .set({ rating: "0.00", reviewCount: 0 })
+        .where(eq(swimGroomProviders.id, providerId));
+      return;
+    }
+
+    const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+    const avgRating = (totalRating / reviews.length).toFixed(2);
+
+    await db
+      .update(swimGroomProviders)
+      .set({ rating: avgRating, reviewCount: reviews.length })
+      .where(eq(swimGroomProviders.id, providerId));
   }
 }
 

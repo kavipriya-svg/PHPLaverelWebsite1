@@ -72,6 +72,17 @@ const AdminMarketing = lazy(() => import("@/pages/admin/Marketing"));
 const AdminPOS = lazy(() => import("@/pages/admin/POS"));
 const AdminDeliverySettings = lazy(() => import("@/pages/admin/DeliverySettings"));
 const QuickPage = lazy(() => import("@/pages/QuickPage"));
+const AdminSwimGroomServices = lazy(() => import("@/pages/admin/SwimGroomServices"));
+const AdminSwimGroomLocations = lazy(() => import("@/pages/admin/SwimGroomLocations"));
+const AdminSwimGroomProviders = lazy(() => import("@/pages/admin/SwimGroomProviders"));
+const AdminSwimGroomBookings = lazy(() => import("@/pages/admin/SwimGroomBookings"));
+const SwimGroom = lazy(() => import("@/pages/SwimGroom"));
+const SwimGroomProvider = lazy(() => import("@/pages/SwimGroomProvider"));
+const ProviderLogin = lazy(() => import("@/pages/provider/ProviderLogin"));
+const ProviderDashboard = lazy(() => import("@/pages/provider/ProviderDashboard"));
+const ProviderBookings = lazy(() => import("@/pages/provider/ProviderBookings"));
+const ProviderSlots = lazy(() => import("@/pages/provider/ProviderSlots"));
+const ProviderProfile = lazy(() => import("@/pages/provider/ProviderProfile"));
 
 function PageLoader() {
   return (
@@ -181,6 +192,18 @@ function Router() {
       <Route path="/combo-offers">
         <StoreLayout>
           <ComboOffers />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/swim-groom">
+        <StoreLayout>
+          <SwimGroom />
+        </StoreLayout>
+      </Route>
+      
+      <Route path="/swim-groom/provider/:slug">
+        <StoreLayout>
+          <SwimGroomProvider />
         </StoreLayout>
       </Route>
       
@@ -449,6 +472,53 @@ function Router() {
         <AdminLayout>
           <AdminMarketing />
         </AdminLayout>
+      </Route>
+      <Route path="/admin/swim-groom/services">
+        <AdminLayout>
+          <AdminSwimGroomServices />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/swim-groom/locations">
+        <AdminLayout>
+          <AdminSwimGroomLocations />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/swim-groom/providers">
+        <AdminLayout>
+          <AdminSwimGroomProviders />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/swim-groom/bookings">
+        <AdminLayout>
+          <AdminSwimGroomBookings />
+        </AdminLayout>
+      </Route>
+
+      {/* Provider Portal Routes */}
+      <Route path="/provider/login">
+        <Suspense fallback={<PageLoader />}>
+          <ProviderLogin />
+        </Suspense>
+      </Route>
+      <Route path="/provider/dashboard">
+        <Suspense fallback={<PageLoader />}>
+          <ProviderDashboard />
+        </Suspense>
+      </Route>
+      <Route path="/provider/bookings">
+        <Suspense fallback={<PageLoader />}>
+          <ProviderBookings />
+        </Suspense>
+      </Route>
+      <Route path="/provider/slots">
+        <Suspense fallback={<PageLoader />}>
+          <ProviderSlots />
+        </Suspense>
+      </Route>
+      <Route path="/provider/profile">
+        <Suspense fallback={<PageLoader />}>
+          <ProviderProfile />
+        </Suspense>
       </Route>
 
       {/* Public Quick Pages */}

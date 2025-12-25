@@ -42,6 +42,22 @@ This is a full-stack eCommerce web application built with a modern tech stack. T
 - Ability to add the same product multiple times for different delivery dates (duplicate cart item feature)
 - Weight-based shipping calculation grouped by delivery date with Chennai vs PAN India rate differentiation
 - Automatic Chennai/PAN India detection from saved shipping address (falls back to estimate if no address saved)
+- **Swimming & Grooming Service Booking Module:**
+  - Complete service booking system for pet swimming and grooming services
+  - Three-tier access: Customer booking interface, Admin panel management, Provider portal
+  - Hierarchical location management (Country → State → City) for provider filtering
+  - Service categories with slug-based routing and customizable icons/images
+  - Provider profiles with ratings, reviews, verification status, and commission tracking
+  - Time slot management with capacity controls (max capacity, booked count)
+  - Real-time slot availability and booking creation
+  - Booking status workflow: pending → confirmed → completed (or cancelled/no-show)
+  - Payment status tracking: pending, paid, refunded, failed
+  - Commission calculation per booking (percentage or fixed amount)
+  - Provider portal with separate authentication (email/password)
+  - Provider dashboard with booking stats, revenue tracking, and recent bookings
+  - Provider self-management: profile updates, slot management, booking confirmations
+  - Admin controls: service CRUD, location hierarchy, provider management, booking oversight
+  - Customer notes and provider notes on bookings
 
 ## User Preferences
 

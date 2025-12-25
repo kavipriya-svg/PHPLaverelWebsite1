@@ -5357,5 +5357,1078 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  // =====================================================
+  // SWIMMING & GROOMING API ROUTES
+  // =====================================================
+
+  // Public - Get page configuration (banners, videos, ads)
+  app.get("/api/swim-groom/config", async (req, res) => {
+    try {
+      const configs = await storage.getSwimGroomPageConfigs(true);
+      res.json({ configs });
+    } catch (error) {
+      console.error("Error fetching swim-groom config:", error);
+      res.status(500).json({ error: "Failed to fetch page configuration" });
+    }
+  });
+
+  // Public - Get active services
+  app.get("/api/swim-groom/services", async (req, res) => {
+    try {
+      const services = await storage.getSwimGroomServices(true);
+      res.json({ services });
+    } catch (error) {
+      console.error("Error fetching swim-groom services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
+  });
+
+  // Public - Get countries
+  app.get("/api/swim-groom/countries", async (req, res) => {
+    try {
+      const countries = await storage.getSwimGroomCountries(true);
+      res.json({ countries });
+    } catch (error) {
+      console.error("Error fetching swim-groom countries:", error);
+      res.status(500).json({ error: "Failed to fetch countries" });
+    }
+  });
+
+  // Public - Get states by country
+  app.get("/api/swim-groom/states", async (req, res) => {
+    try {
+      const countryId = req.query.countryId as string | undefined;
+      const states = await storage.getSwimGroomStates(countryId, true);
+      res.json({ states });
+    } catch (error) {
+      console.error("Error fetching swim-groom states:", error);
+      res.status(500).json({ error: "Failed to fetch states" });
+    }
+  });
+
+  // Public - Get cities by state
+  app.get("/api/swim-groom/cities", async (req, res) => {
+    try {
+      const stateId = req.query.stateId as string | undefined;
+      const cities = await storage.getSwimGroomCities(stateId, true);
+      res.json({ cities });
+    } catch (error) {
+      console.error("Error fetching swim-groom cities:", error);
+      res.status(500).json({ error: "Failed to fetch cities" });
+    }
+  });
+
+  // Public - Get providers with filters
+  app.get("/api/swim-groom/providers", async (req, res) => {
+    try {
+      const filters = {
+        serviceId: req.query.serviceId as string | undefined,
+        countryId: req.query.countryId as string | undefined,
+        stateId: req.query.stateId as string | undefined,
+        cityId: req.query.cityId as string | undefined,
+        search: req.query.search as string | undefined,
+        isActive: true,
+        limit: parseInt(req.query.limit as string) || 50,
+        offset: parseInt(req.query.offset as string) || 0,
+      };
+      const result = await storage.getSwimGroomProviders(filters);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching swim-groom providers:", error);
+      res.status(500).json({ error: "Failed to fetch providers" });
+    }
+  });
+
+  // Public - Get provider by slug
+  app.get("/api/swim-groom/providers/:slug", async (req, res) => {
+    try {
+      const provider = await storage.getSwimGroomProviderBySlug(req.params.slug);
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+      // Remove password hash from response
+      const { passwordHash, ...providerData } = provider;
+      res.json(providerData);
+    } catch (error) {
+      console.error("Error fetching swim-groom provider:", error);
+      res.status(500).json({ error: "Failed to fetch provider" });
+    }
+  });
+
+  // Protected - Get provider slots (requires authentication to see full details)
+  app.get("/api/swim-groom/providers/:id/slots", async (req, res) => {
+    try {
+      const filters = {
+        serviceId: req.query.serviceId as string | undefined,
+        dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
+        dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
+        status: "available",
+      };
+      const slots = await storage.getSwimGroomProviderSlots(req.params.id, filters);
+      res.json({ slots });
+    } catch (error) {
+      console.error("Error fetching provider slots:", error);
+      res.status(500).json({ error: "Failed to fetch slots" });
+    }
+  });
+
+  // Protected - Create booking (requires customer login)
+  app.post("/api/swim-groom/bookings", isAuthenticated, async (req, res) => {
+    try {
+      const user = await getUserInfo(req);
+      if (!user?.id) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { slotId, serviceId, customerNotes } = req.body;
+
+      // Validate slot exists and is available
+      const slot = await storage.getSwimGroomProviderSlotById(slotId);
+      if (!slot) {
+        return res.status(404).json({ error: "Slot not found" });
+      }
+      if (slot.status !== "available") {
+        return res.status(400).json({ error: "Slot is not available" });
+      }
+      if (slot.bookedCount && slot.capacity && slot.bookedCount >= slot.capacity) {
+        return res.status(400).json({ error: "Slot is full" });
+      }
+
+      // Get provider and service details
+      const provider = await storage.getSwimGroomProviderById(slot.providerId);
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+
+      let service;
+      if (serviceId) {
+        service = await storage.getSwimGroomServiceById(serviceId);
+      }
+
+      // Calculate commission
+      const price = parseFloat(slot.price?.toString() || "0");
+      let commissionAmount = 0;
+      if (provider.commissionType === "percentage") {
+        commissionAmount = price * (parseFloat(provider.commissionValue?.toString() || "0") / 100);
+      } else {
+        commissionAmount = parseFloat(provider.commissionValue?.toString() || "0");
+      }
+
+      // Create booking
+      const booking = await storage.createSwimGroomBooking({
+        customerId: user.id,
+        providerId: provider.id,
+        slotId: slot.id,
+        serviceId: serviceId || null,
+        serviceName: service?.name || null,
+        providerName: provider.name,
+        bookingDate: slot.date,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        price: price.toString(),
+        status: "pending",
+        paymentStatus: "pending",
+        customerNotes: customerNotes || null,
+        providerNotes: null,
+        adminNotes: null,
+      });
+
+      // Update booking with commission
+      await storage.updateSwimGroomBooking(booking.id, {
+        commissionAmount: commissionAmount.toFixed(2),
+      } as any);
+
+      // Increment slot booked count
+      await storage.incrementSwimGroomSlotBookedCount(slotId);
+
+      res.status(201).json(booking);
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      res.status(500).json({ error: "Failed to create booking" });
+    }
+  });
+
+  // Protected - Get customer's bookings
+  app.get("/api/swim-groom/my-bookings", isAuthenticated, async (req, res) => {
+    try {
+      const user = await getUserInfo(req);
+      if (!user?.id) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const result = await storage.getSwimGroomBookings({
+        customerId: user.id,
+        limit: parseInt(req.query.limit as string) || 50,
+        offset: parseInt(req.query.offset as string) || 0,
+      });
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching customer bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
+  // Protected - Cancel booking
+  app.post("/api/swim-groom/bookings/:id/cancel", isAuthenticated, async (req, res) => {
+    try {
+      const user = await getUserInfo(req);
+      if (!user?.id) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const booking = await storage.getSwimGroomBookingById(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      if (booking.customerId !== user.id) {
+        return res.status(403).json({ error: "Not authorized to cancel this booking" });
+      }
+      if (booking.status === "cancelled") {
+        return res.status(400).json({ error: "Booking is already cancelled" });
+      }
+      if (booking.status === "completed") {
+        return res.status(400).json({ error: "Cannot cancel a completed booking" });
+      }
+
+      const cancelled = await storage.cancelSwimGroomBooking(req.params.id);
+      res.json(cancelled);
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      res.status(500).json({ error: "Failed to cancel booking" });
+    }
+  });
+
+  // =====================================================
+  // ADMIN - SWIMMING & GROOMING MANAGEMENT
+  // =====================================================
+
+  // Admin - Get all page configs
+  app.get("/api/admin/swim-groom/configs", isAdmin, async (req, res) => {
+    try {
+      const configs = await storage.getSwimGroomPageConfigs(false);
+      res.json({ configs });
+    } catch (error) {
+      console.error("Error fetching swim-groom configs:", error);
+      res.status(500).json({ error: "Failed to fetch configs" });
+    }
+  });
+
+  // Admin - Create page config
+  app.post("/api/admin/swim-groom/configs", isAdmin, async (req, res) => {
+    try {
+      const config = await storage.createSwimGroomPageConfig(req.body);
+      res.status(201).json(config);
+    } catch (error) {
+      console.error("Error creating swim-groom config:", error);
+      res.status(500).json({ error: "Failed to create config" });
+    }
+  });
+
+  // Admin - Update page config
+  app.patch("/api/admin/swim-groom/configs/:id", isAdmin, async (req, res) => {
+    try {
+      const config = await storage.updateSwimGroomPageConfig(req.params.id, req.body);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating swim-groom config:", error);
+      res.status(500).json({ error: "Failed to update config" });
+    }
+  });
+
+  // Admin - Delete page config
+  app.delete("/api/admin/swim-groom/configs/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSwimGroomPageConfig(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting swim-groom config:", error);
+      res.status(500).json({ error: "Failed to delete config" });
+    }
+  });
+
+  // Admin - Get all services
+  app.get("/api/admin/swim-groom/services", isAdmin, async (req, res) => {
+    try {
+      const services = await storage.getSwimGroomServices(false);
+      res.json({ services });
+    } catch (error) {
+      console.error("Error fetching swim-groom services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
+  });
+
+  // Admin - Create service
+  app.post("/api/admin/swim-groom/services", isAdmin, async (req, res) => {
+    try {
+      const service = await storage.createSwimGroomService(req.body);
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error creating swim-groom service:", error);
+      res.status(500).json({ error: "Failed to create service" });
+    }
+  });
+
+  // Admin - Update service
+  app.patch("/api/admin/swim-groom/services/:id", isAdmin, async (req, res) => {
+    try {
+      const service = await storage.updateSwimGroomService(req.params.id, req.body);
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating swim-groom service:", error);
+      res.status(500).json({ error: "Failed to update service" });
+    }
+  });
+
+  // Admin - Delete service
+  app.delete("/api/admin/swim-groom/services/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSwimGroomService(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting swim-groom service:", error);
+      res.status(500).json({ error: "Failed to delete service" });
+    }
+  });
+
+  // Admin - Get all countries
+  app.get("/api/admin/swim-groom/countries", isAdmin, async (req, res) => {
+    try {
+      const countries = await storage.getSwimGroomCountries(false);
+      res.json({ countries });
+    } catch (error) {
+      console.error("Error fetching swim-groom countries:", error);
+      res.status(500).json({ error: "Failed to fetch countries" });
+    }
+  });
+
+  // Admin - Create country
+  app.post("/api/admin/swim-groom/countries", isAdmin, async (req, res) => {
+    try {
+      const country = await storage.createSwimGroomCountry(req.body);
+      res.status(201).json(country);
+    } catch (error) {
+      console.error("Error creating swim-groom country:", error);
+      res.status(500).json({ error: "Failed to create country" });
+    }
+  });
+
+  // Admin - Update country
+  app.patch("/api/admin/swim-groom/countries/:id", isAdmin, async (req, res) => {
+    try {
+      const country = await storage.updateSwimGroomCountry(req.params.id, req.body);
+      res.json(country);
+    } catch (error) {
+      console.error("Error updating swim-groom country:", error);
+      res.status(500).json({ error: "Failed to update country" });
+    }
+  });
+
+  // Admin - Delete country
+  app.delete("/api/admin/swim-groom/countries/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSwimGroomCountry(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting swim-groom country:", error);
+      res.status(500).json({ error: "Failed to delete country" });
+    }
+  });
+
+  // Admin - Get all states
+  app.get("/api/admin/swim-groom/states", isAdmin, async (req, res) => {
+    try {
+      const countryId = req.query.countryId as string | undefined;
+      const states = await storage.getSwimGroomStates(countryId, false);
+      res.json({ states });
+    } catch (error) {
+      console.error("Error fetching swim-groom states:", error);
+      res.status(500).json({ error: "Failed to fetch states" });
+    }
+  });
+
+  // Admin - Create state
+  app.post("/api/admin/swim-groom/states", isAdmin, async (req, res) => {
+    try {
+      const state = await storage.createSwimGroomState(req.body);
+      res.status(201).json(state);
+    } catch (error) {
+      console.error("Error creating swim-groom state:", error);
+      res.status(500).json({ error: "Failed to create state" });
+    }
+  });
+
+  // Admin - Update state
+  app.patch("/api/admin/swim-groom/states/:id", isAdmin, async (req, res) => {
+    try {
+      const state = await storage.updateSwimGroomState(req.params.id, req.body);
+      res.json(state);
+    } catch (error) {
+      console.error("Error updating swim-groom state:", error);
+      res.status(500).json({ error: "Failed to update state" });
+    }
+  });
+
+  // Admin - Delete state
+  app.delete("/api/admin/swim-groom/states/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSwimGroomState(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting swim-groom state:", error);
+      res.status(500).json({ error: "Failed to delete state" });
+    }
+  });
+
+  // Admin - Get all cities
+  app.get("/api/admin/swim-groom/cities", isAdmin, async (req, res) => {
+    try {
+      const stateId = req.query.stateId as string | undefined;
+      const cities = await storage.getSwimGroomCities(stateId, false);
+      res.json({ cities });
+    } catch (error) {
+      console.error("Error fetching swim-groom cities:", error);
+      res.status(500).json({ error: "Failed to fetch cities" });
+    }
+  });
+
+  // Admin - Create city
+  app.post("/api/admin/swim-groom/cities", isAdmin, async (req, res) => {
+    try {
+      const city = await storage.createSwimGroomCity(req.body);
+      res.status(201).json(city);
+    } catch (error) {
+      console.error("Error creating swim-groom city:", error);
+      res.status(500).json({ error: "Failed to create city" });
+    }
+  });
+
+  // Admin - Update city
+  app.patch("/api/admin/swim-groom/cities/:id", isAdmin, async (req, res) => {
+    try {
+      const city = await storage.updateSwimGroomCity(req.params.id, req.body);
+      res.json(city);
+    } catch (error) {
+      console.error("Error updating swim-groom city:", error);
+      res.status(500).json({ error: "Failed to update city" });
+    }
+  });
+
+  // Admin - Delete city
+  app.delete("/api/admin/swim-groom/cities/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSwimGroomCity(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting swim-groom city:", error);
+      res.status(500).json({ error: "Failed to delete city" });
+    }
+  });
+
+  // Admin - Get all providers
+  app.get("/api/admin/swim-groom/providers", isAdmin, async (req, res) => {
+    try {
+      const filters = {
+        search: req.query.search as string | undefined,
+        serviceId: req.query.serviceId as string | undefined,
+        countryId: req.query.countryId as string | undefined,
+        stateId: req.query.stateId as string | undefined,
+        cityId: req.query.cityId as string | undefined,
+        limit: parseInt(req.query.limit as string) || 50,
+        offset: parseInt(req.query.offset as string) || 0,
+      };
+      const result = await storage.getSwimGroomProviders(filters);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching swim-groom providers:", error);
+      res.status(500).json({ error: "Failed to fetch providers" });
+    }
+  });
+
+  // Admin - Get provider by ID
+  app.get("/api/admin/swim-groom/providers/:id", isAdmin, async (req, res) => {
+    try {
+      const provider = await storage.getSwimGroomProviderById(req.params.id);
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+      res.json(provider);
+    } catch (error) {
+      console.error("Error fetching swim-groom provider:", error);
+      res.status(500).json({ error: "Failed to fetch provider" });
+    }
+  });
+
+  // Admin - Create provider
+  app.post("/api/admin/swim-groom/providers", isAdmin, async (req, res) => {
+    try {
+      const { password, ...providerData } = req.body;
+      
+      // Generate slug if not provided
+      if (!providerData.slug) {
+        providerData.slug = providerData.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      }
+
+      // Hash password if provided
+      if (password) {
+        providerData.passwordHash = await hashPassword(password);
+      }
+
+      const provider = await storage.createSwimGroomProvider(providerData);
+      res.status(201).json(provider);
+    } catch (error: any) {
+      console.error("Error creating swim-groom provider:", error);
+      if (error.message?.includes("duplicate")) {
+        return res.status(400).json({ error: "Provider with this email or slug already exists" });
+      }
+      res.status(500).json({ error: "Failed to create provider" });
+    }
+  });
+
+  // Admin - Update provider
+  app.patch("/api/admin/swim-groom/providers/:id", isAdmin, async (req, res) => {
+    try {
+      const { password, ...providerData } = req.body;
+      
+      // Hash new password if provided
+      if (password) {
+        providerData.passwordHash = await hashPassword(password);
+      }
+
+      const provider = await storage.updateSwimGroomProvider(req.params.id, providerData);
+      res.json(provider);
+    } catch (error) {
+      console.error("Error updating swim-groom provider:", error);
+      res.status(500).json({ error: "Failed to update provider" });
+    }
+  });
+
+  // Admin - Delete provider
+  app.delete("/api/admin/swim-groom/providers/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSwimGroomProvider(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting swim-groom provider:", error);
+      res.status(500).json({ error: "Failed to delete provider" });
+    }
+  });
+
+  // Admin - Manage provider services
+  app.get("/api/admin/swim-groom/providers/:id/services", isAdmin, async (req, res) => {
+    try {
+      const services = await storage.getSwimGroomProviderServices(req.params.id);
+      res.json({ services });
+    } catch (error) {
+      console.error("Error fetching provider services:", error);
+      res.status(500).json({ error: "Failed to fetch provider services" });
+    }
+  });
+
+  app.post("/api/admin/swim-groom/providers/:id/services", isAdmin, async (req, res) => {
+    try {
+      const service = await storage.addSwimGroomProviderService({
+        ...req.body,
+        providerId: req.params.id,
+      });
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error adding provider service:", error);
+      res.status(500).json({ error: "Failed to add provider service" });
+    }
+  });
+
+  app.patch("/api/admin/swim-groom/provider-services/:id", isAdmin, async (req, res) => {
+    try {
+      const service = await storage.updateSwimGroomProviderService(req.params.id, req.body);
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating provider service:", error);
+      res.status(500).json({ error: "Failed to update provider service" });
+    }
+  });
+
+  app.delete("/api/admin/swim-groom/provider-services/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.removeSwimGroomProviderService(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing provider service:", error);
+      res.status(500).json({ error: "Failed to remove provider service" });
+    }
+  });
+
+  // Admin - Manage provider media
+  app.get("/api/admin/swim-groom/providers/:id/media", isAdmin, async (req, res) => {
+    try {
+      const media = await storage.getSwimGroomProviderMedia(req.params.id);
+      res.json({ media });
+    } catch (error) {
+      console.error("Error fetching provider media:", error);
+      res.status(500).json({ error: "Failed to fetch provider media" });
+    }
+  });
+
+  app.post("/api/admin/swim-groom/providers/:id/media", isAdmin, async (req, res) => {
+    try {
+      const media = await storage.addSwimGroomProviderMedia({
+        ...req.body,
+        providerId: req.params.id,
+      });
+      res.status(201).json(media);
+    } catch (error) {
+      console.error("Error adding provider media:", error);
+      res.status(500).json({ error: "Failed to add provider media" });
+    }
+  });
+
+  app.delete("/api/admin/swim-groom/provider-media/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.removeSwimGroomProviderMedia(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing provider media:", error);
+      res.status(500).json({ error: "Failed to remove provider media" });
+    }
+  });
+
+  // Admin - Manage provider slots
+  app.get("/api/admin/swim-groom/providers/:id/slots", isAdmin, async (req, res) => {
+    try {
+      const filters = {
+        serviceId: req.query.serviceId as string | undefined,
+        dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
+        dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
+        status: req.query.status as string | undefined,
+      };
+      const slots = await storage.getSwimGroomProviderSlots(req.params.id, filters);
+      res.json({ slots });
+    } catch (error) {
+      console.error("Error fetching provider slots:", error);
+      res.status(500).json({ error: "Failed to fetch provider slots" });
+    }
+  });
+
+  app.post("/api/admin/swim-groom/providers/:id/slots", isAdmin, async (req, res) => {
+    try {
+      const slot = await storage.createSwimGroomProviderSlot({
+        ...req.body,
+        providerId: req.params.id,
+      });
+      res.status(201).json(slot);
+    } catch (error) {
+      console.error("Error creating provider slot:", error);
+      res.status(500).json({ error: "Failed to create provider slot" });
+    }
+  });
+
+  app.patch("/api/admin/swim-groom/slots/:id", isAdmin, async (req, res) => {
+    try {
+      const slot = await storage.updateSwimGroomProviderSlot(req.params.id, req.body);
+      res.json(slot);
+    } catch (error) {
+      console.error("Error updating provider slot:", error);
+      res.status(500).json({ error: "Failed to update provider slot" });
+    }
+  });
+
+  app.delete("/api/admin/swim-groom/slots/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSwimGroomProviderSlot(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting provider slot:", error);
+      res.status(500).json({ error: "Failed to delete provider slot" });
+    }
+  });
+
+  // Admin - Get all bookings
+  app.get("/api/admin/swim-groom/bookings", isAdmin, async (req, res) => {
+    try {
+      const filters = {
+        search: req.query.search as string | undefined,
+        providerId: req.query.providerId as string | undefined,
+        status: req.query.status as string | undefined,
+        paymentStatus: req.query.paymentStatus as string | undefined,
+        dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
+        dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
+        limit: parseInt(req.query.limit as string) || 50,
+        offset: parseInt(req.query.offset as string) || 0,
+      };
+      const result = await storage.getSwimGroomBookings(filters);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching swim-groom bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
+  // Admin - Get booking by ID
+  app.get("/api/admin/swim-groom/bookings/:id", isAdmin, async (req, res) => {
+    try {
+      const booking = await storage.getSwimGroomBookingById(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      console.error("Error fetching swim-groom booking:", error);
+      res.status(500).json({ error: "Failed to fetch booking" });
+    }
+  });
+
+  // Admin - Update booking
+  app.patch("/api/admin/swim-groom/bookings/:id", isAdmin, async (req, res) => {
+    try {
+      const booking = await storage.updateSwimGroomBooking(req.params.id, req.body);
+      res.json(booking);
+    } catch (error) {
+      console.error("Error updating swim-groom booking:", error);
+      res.status(500).json({ error: "Failed to update booking" });
+    }
+  });
+
+  // Admin - Get provider reviews
+  app.get("/api/admin/swim-groom/reviews", isAdmin, async (req, res) => {
+    try {
+      const providerId = req.query.providerId as string;
+      if (!providerId) {
+        return res.status(400).json({ error: "Provider ID is required" });
+      }
+      const reviews = await storage.getSwimGroomProviderReviews(providerId, false);
+      res.json({ reviews });
+    } catch (error) {
+      console.error("Error fetching swim-groom reviews:", error);
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  // Admin - Update review status (approve/reject)
+  app.patch("/api/admin/swim-groom/reviews/:id", isAdmin, async (req, res) => {
+    try {
+      const review = await storage.updateSwimGroomProviderReview(req.params.id, req.body);
+      
+      // Update provider rating if review was approved
+      if (req.body.status === "approved" && review) {
+        await storage.updateSwimGroomProviderRating(review.providerId);
+      }
+      
+      res.json(review);
+    } catch (error) {
+      console.error("Error updating swim-groom review:", error);
+      res.status(500).json({ error: "Failed to update review" });
+    }
+  });
+
+  // =====================================================
+  // SERVICE PROVIDER PORTAL API ROUTES
+  // =====================================================
+
+  // Provider login
+  app.post("/api/provider/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+
+      const provider = await storage.getSwimGroomProviderByEmail(email);
+      if (!provider) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      if (!provider.passwordHash) {
+        return res.status(401).json({ error: "Provider account not set up for login" });
+      }
+
+      const isValid = await verifyPassword(password, provider.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      if (!provider.isActive) {
+        return res.status(403).json({ error: "Provider account is inactive" });
+      }
+
+      // Store provider ID in session
+      (req.session as any).providerId = provider.id;
+      
+      const { passwordHash, ...providerData } = provider;
+      res.json({ provider: providerData });
+    } catch (error) {
+      console.error("Provider login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  // Provider logout
+  app.post("/api/provider/logout", async (req, res) => {
+    try {
+      delete (req.session as any).providerId;
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Provider logout error:", error);
+      res.status(500).json({ error: "Logout failed" });
+    }
+  });
+
+  // Middleware to check provider authentication
+  const isProvider = async (req: Request, res: Response, next: NextFunction) => {
+    const providerId = (req.session as any).providerId;
+    if (!providerId) {
+      return res.status(401).json({ error: "Provider authentication required" });
+    }
+    const provider = await storage.getSwimGroomProviderById(providerId);
+    if (!provider || !provider.isActive) {
+      return res.status(401).json({ error: "Provider authentication required" });
+    }
+    (req as any).provider = provider;
+    next();
+  };
+
+  // Provider - Get current provider info
+  app.get("/api/provider/me", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const { passwordHash, ...providerData } = provider;
+      res.json({ provider: providerData });
+    } catch (error) {
+      console.error("Error fetching provider info:", error);
+      res.status(500).json({ error: "Failed to fetch provider info" });
+    }
+  });
+
+  // Provider - Dashboard
+  app.get("/api/provider/dashboard", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const { passwordHash, ...providerData } = provider;
+      
+      // Get bookings for stats with customer details
+      const { bookings } = await storage.getSwimGroomBookings({ providerId: provider.id });
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0];
+      
+      const stats = {
+        totalBookings: bookings.length,
+        pendingBookings: bookings.filter(b => b.status === 'pending').length,
+        todayBookings: bookings.filter(b => {
+          if (!b.bookingDate) return false;
+          const bookingDateStr = new Date(b.bookingDate).toISOString().split('T')[0];
+          return bookingDateStr === todayStr;
+        }).length,
+        revenue: bookings
+          .filter(b => b.status === 'completed' && b.paymentStatus === 'paid')
+          .reduce((sum, b) => sum + parseFloat(b.price || '0'), 0),
+      };
+      
+      // Get recent bookings with customer details (already includes customer from getSwimGroomBookings)
+      const recentBookings = bookings.slice(0, 10);
+      
+      res.json({
+        provider: providerData,
+        stats,
+        recentBookings,
+      });
+    } catch (error) {
+      console.error("Error fetching provider dashboard:", error);
+      res.status(500).json({ error: "Failed to fetch dashboard" });
+    }
+  });
+
+  // Provider - Change password
+  app.post("/api/provider/change-password", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Current and new passwords are required" });
+      }
+      
+      if (newPassword.length < 8) {
+        return res.status(400).json({ error: "New password must be at least 8 characters" });
+      }
+      
+      // Verify current password
+      const fullProvider = await storage.getSwimGroomProviderById(provider.id);
+      if (!fullProvider?.passwordHash) {
+        return res.status(400).json({ error: "Password verification failed" });
+      }
+      
+      const bcrypt = require("bcrypt");
+      const isValid = await bcrypt.compare(currentPassword, fullProvider.passwordHash);
+      if (!isValid) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+      
+      // Update password
+      const newPasswordHash = await hashPassword(newPassword);
+      await storage.updateSwimGroomProvider(provider.id, { passwordHash: newPasswordHash });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error changing provider password:", error);
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+
+  // Provider - Update own profile
+  app.patch("/api/provider/profile", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const { password, email, commissionType, commissionValue, isVerified, isActive, ...updateData } = req.body;
+      
+      // Provider can only update certain fields
+      const allowedUpdate = {
+        ...updateData,
+        phone: req.body.phone,
+        description: req.body.description,
+        address: req.body.address,
+        logoUrl: req.body.logoUrl,
+        bannerUrl: req.body.bannerUrl,
+        videoUrl: req.body.videoUrl,
+      };
+      
+      // Hash new password if provided
+      if (password) {
+        (allowedUpdate as any).passwordHash = await hashPassword(password);
+      }
+
+      const updated = await storage.updateSwimGroomProvider(provider.id, allowedUpdate);
+      const { passwordHash, ...updatedData } = updated || {};
+      res.json(updatedData);
+    } catch (error) {
+      console.error("Error updating provider profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Provider - Get own slots
+  app.get("/api/provider/slots", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const filters = {
+        serviceId: req.query.serviceId as string | undefined,
+        dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
+        dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
+        status: req.query.status as string | undefined,
+      };
+      const slots = await storage.getSwimGroomProviderSlots(provider.id, filters);
+      res.json({ slots });
+    } catch (error) {
+      console.error("Error fetching provider slots:", error);
+      res.status(500).json({ error: "Failed to fetch slots" });
+    }
+  });
+
+  // Provider - Create slot
+  app.post("/api/provider/slots", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const slot = await storage.createSwimGroomProviderSlot({
+        ...req.body,
+        providerId: provider.id,
+      });
+      res.status(201).json(slot);
+    } catch (error) {
+      console.error("Error creating provider slot:", error);
+      res.status(500).json({ error: "Failed to create slot" });
+    }
+  });
+
+  // Provider - Update own slot
+  app.patch("/api/provider/slots/:id", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const slot = await storage.getSwimGroomProviderSlotById(req.params.id);
+      
+      if (!slot || slot.providerId !== provider.id) {
+        return res.status(404).json({ error: "Slot not found" });
+      }
+
+      const updated = await storage.updateSwimGroomProviderSlot(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating provider slot:", error);
+      res.status(500).json({ error: "Failed to update slot" });
+    }
+  });
+
+  // Provider - Delete own slot
+  app.delete("/api/provider/slots/:id", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const slot = await storage.getSwimGroomProviderSlotById(req.params.id);
+      
+      if (!slot || slot.providerId !== provider.id) {
+        return res.status(404).json({ error: "Slot not found" });
+      }
+
+      await storage.deleteSwimGroomProviderSlot(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting provider slot:", error);
+      res.status(500).json({ error: "Failed to delete slot" });
+    }
+  });
+
+  // Provider - Get own bookings
+  app.get("/api/provider/bookings", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const filters = {
+        providerId: provider.id,
+        status: req.query.status as string | undefined,
+        dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
+        dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
+        limit: parseInt(req.query.limit as string) || 50,
+        offset: parseInt(req.query.offset as string) || 0,
+      };
+      const result = await storage.getSwimGroomBookings(filters);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching provider bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
+  // Provider - Update booking (status, notes)
+  app.patch("/api/provider/bookings/:id", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const booking = await storage.getSwimGroomBookingById(req.params.id);
+      
+      if (!booking || booking.providerId !== provider.id) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Provider can only update certain fields
+      const allowedUpdate: any = {};
+      if (req.body.status) allowedUpdate.status = req.body.status;
+      if (req.body.providerNotes !== undefined) allowedUpdate.providerNotes = req.body.providerNotes;
+
+      const updated = await storage.updateSwimGroomBooking(req.params.id, allowedUpdate);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating provider booking:", error);
+      res.status(500).json({ error: "Failed to update booking" });
+    }
+  });
+
+  // Provider - Get own reviews
+  app.get("/api/provider/reviews", isProvider, async (req, res) => {
+    try {
+      const provider = (req as any).provider;
+      const reviews = await storage.getSwimGroomProviderReviews(provider.id, false);
+      res.json({ reviews });
+    } catch (error) {
+      console.error("Error fetching provider reviews:", error);
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
   return httpServer;
 }

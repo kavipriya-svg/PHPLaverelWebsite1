@@ -1173,3 +1173,361 @@ export const ADMIN_MODULES = [
 ] as const;
 
 export type AdminModuleKey = typeof ADMIN_MODULES[number]["key"];
+
+// =====================================================
+// SWIMMING & GROOMING MODULE
+// =====================================================
+
+// Swimming & Grooming Page Configuration (banners, videos, ads)
+export const swimGroomPageConfig = pgTable("swim_groom_page_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  configType: varchar("config_type").notNull(), // "hero_banner", "hero_video", "ad_banner", "ad_video"
+  title: varchar("title"),
+  subtitle: text("subtitle"),
+  mediaUrl: varchar("media_url"),
+  linkUrl: varchar("link_url"),
+  placement: varchar("placement").default("top"), // "top", "middle", "bottom", "sidebar"
+  position: integer("position").default(0),
+  isActive: boolean("is_active").default(true),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSwimGroomPageConfigSchema = createInsertSchema(swimGroomPageConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSwimGroomPageConfig = z.infer<typeof insertSwimGroomPageConfigSchema>;
+export type SwimGroomPageConfig = typeof swimGroomPageConfig.$inferSelect;
+
+// Swimming & Grooming Services Catalog
+export const swimGroomServices = pgTable("swim_groom_services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  slug: varchar("slug").notNull().unique(),
+  description: text("description"),
+  iconUrl: varchar("icon_url"),
+  imageUrl: varchar("image_url"),
+  position: integer("position").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSwimGroomServiceSchema = createInsertSchema(swimGroomServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSwimGroomService = z.infer<typeof insertSwimGroomServiceSchema>;
+export type SwimGroomService = typeof swimGroomServices.$inferSelect;
+
+// Swimming & Grooming Locations - Countries
+export const swimGroomCountries = pgTable("swim_groom_countries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull().unique(),
+  code: varchar("code", { length: 10 }),
+  isActive: boolean("is_active").default(true),
+  position: integer("position").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSwimGroomCountrySchema = createInsertSchema(swimGroomCountries).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwimGroomCountry = z.infer<typeof insertSwimGroomCountrySchema>;
+export type SwimGroomCountry = typeof swimGroomCountries.$inferSelect;
+
+// Swimming & Grooming Locations - States
+export const swimGroomStates = pgTable("swim_groom_states", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  countryId: varchar("country_id").notNull().references(() => swimGroomCountries.id, { onDelete: "cascade" }),
+  name: varchar("name").notNull(),
+  code: varchar("code", { length: 10 }),
+  isActive: boolean("is_active").default(true),
+  position: integer("position").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const swimGroomStatesRelations = relations(swimGroomStates, ({ one }) => ({
+  country: one(swimGroomCountries, {
+    fields: [swimGroomStates.countryId],
+    references: [swimGroomCountries.id],
+  }),
+}));
+
+export const insertSwimGroomStateSchema = createInsertSchema(swimGroomStates).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwimGroomState = z.infer<typeof insertSwimGroomStateSchema>;
+export type SwimGroomState = typeof swimGroomStates.$inferSelect;
+
+// Swimming & Grooming Locations - Cities
+export const swimGroomCities = pgTable("swim_groom_cities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  stateId: varchar("state_id").notNull().references(() => swimGroomStates.id, { onDelete: "cascade" }),
+  name: varchar("name").notNull(),
+  isActive: boolean("is_active").default(true),
+  position: integer("position").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const swimGroomCitiesRelations = relations(swimGroomCities, ({ one }) => ({
+  state: one(swimGroomStates, {
+    fields: [swimGroomCities.stateId],
+    references: [swimGroomStates.id],
+  }),
+}));
+
+export const insertSwimGroomCitySchema = createInsertSchema(swimGroomCities).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwimGroomCity = z.infer<typeof insertSwimGroomCitySchema>;
+export type SwimGroomCity = typeof swimGroomCities.$inferSelect;
+
+// Service Providers
+export const swimGroomProviders = pgTable("swim_groom_providers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  slug: varchar("slug").notNull().unique(),
+  email: varchar("email").notNull().unique(),
+  phone: varchar("phone"),
+  description: text("description"),
+  address: text("address"),
+  cityId: varchar("city_id").references(() => swimGroomCities.id),
+  stateId: varchar("state_id").references(() => swimGroomStates.id),
+  countryId: varchar("country_id").references(() => swimGroomCountries.id),
+  logoUrl: varchar("logo_url"),
+  bannerUrl: varchar("banner_url"),
+  videoUrl: varchar("video_url"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  commissionType: varchar("commission_type").default("percentage"), // "percentage" or "fixed"
+  commissionValue: decimal("commission_value", { precision: 10, scale: 2 }).default("10.00"),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
+  reviewCount: integer("review_count").default(0),
+  isVerified: boolean("is_verified").default(false),
+  isActive: boolean("is_active").default(true),
+  passwordHash: varchar("password_hash"), // For provider portal login
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const swimGroomProvidersRelations = relations(swimGroomProviders, ({ one, many }) => ({
+  city: one(swimGroomCities, {
+    fields: [swimGroomProviders.cityId],
+    references: [swimGroomCities.id],
+  }),
+  state: one(swimGroomStates, {
+    fields: [swimGroomProviders.stateId],
+    references: [swimGroomStates.id],
+  }),
+  country: one(swimGroomCountries, {
+    fields: [swimGroomProviders.countryId],
+    references: [swimGroomCountries.id],
+  }),
+  services: many(swimGroomProviderServices),
+  slots: many(swimGroomProviderSlots),
+  media: many(swimGroomProviderMedia),
+}));
+
+export const insertSwimGroomProviderSchema = createInsertSchema(swimGroomProviders).omit({
+  id: true,
+  rating: true,
+  reviewCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSwimGroomProvider = z.infer<typeof insertSwimGroomProviderSchema>;
+export type SwimGroomProvider = typeof swimGroomProviders.$inferSelect;
+
+// Provider Services - Many-to-many relationship between providers and services
+export const swimGroomProviderServices = pgTable("swim_groom_provider_services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  providerId: varchar("provider_id").notNull().references(() => swimGroomProviders.id, { onDelete: "cascade" }),
+  serviceId: varchar("service_id").notNull().references(() => swimGroomServices.id, { onDelete: "cascade" }),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  duration: integer("duration").default(60), // Duration in minutes
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const swimGroomProviderServicesRelations = relations(swimGroomProviderServices, ({ one }) => ({
+  provider: one(swimGroomProviders, {
+    fields: [swimGroomProviderServices.providerId],
+    references: [swimGroomProviders.id],
+  }),
+  service: one(swimGroomServices, {
+    fields: [swimGroomProviderServices.serviceId],
+    references: [swimGroomServices.id],
+  }),
+}));
+
+export const insertSwimGroomProviderServiceSchema = createInsertSchema(swimGroomProviderServices).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwimGroomProviderService = z.infer<typeof insertSwimGroomProviderServiceSchema>;
+export type SwimGroomProviderService = typeof swimGroomProviderServices.$inferSelect;
+
+// Provider Media (additional banners, videos, gallery images)
+export const swimGroomProviderMedia = pgTable("swim_groom_provider_media", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  providerId: varchar("provider_id").notNull().references(() => swimGroomProviders.id, { onDelete: "cascade" }),
+  mediaType: varchar("media_type").notNull(), // "image", "video", "banner"
+  mediaUrl: varchar("media_url").notNull(),
+  title: varchar("title"),
+  position: integer("position").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const swimGroomProviderMediaRelations = relations(swimGroomProviderMedia, ({ one }) => ({
+  provider: one(swimGroomProviders, {
+    fields: [swimGroomProviderMedia.providerId],
+    references: [swimGroomProviders.id],
+  }),
+}));
+
+export const insertSwimGroomProviderMediaSchema = createInsertSchema(swimGroomProviderMedia).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwimGroomProviderMedia = z.infer<typeof insertSwimGroomProviderMediaSchema>;
+export type SwimGroomProviderMedia = typeof swimGroomProviderMedia.$inferSelect;
+
+// Provider Time Slots
+export const swimGroomProviderSlots = pgTable("swim_groom_provider_slots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  providerId: varchar("provider_id").notNull().references(() => swimGroomProviders.id, { onDelete: "cascade" }),
+  serviceId: varchar("service_id").references(() => swimGroomServices.id),
+  date: timestamp("date").notNull(),
+  startTime: varchar("start_time").notNull(), // "09:00"
+  endTime: varchar("end_time").notNull(), // "10:00"
+  capacity: integer("capacity").default(1), // Number of bookings allowed
+  bookedCount: integer("booked_count").default(0),
+  price: decimal("price", { precision: 10, scale: 2 }),
+  status: varchar("status").default("available"), // "available", "full", "blocked"
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const swimGroomProviderSlotsRelations = relations(swimGroomProviderSlots, ({ one }) => ({
+  provider: one(swimGroomProviders, {
+    fields: [swimGroomProviderSlots.providerId],
+    references: [swimGroomProviders.id],
+  }),
+  service: one(swimGroomServices, {
+    fields: [swimGroomProviderSlots.serviceId],
+    references: [swimGroomServices.id],
+  }),
+}));
+
+export const insertSwimGroomProviderSlotSchema = createInsertSchema(swimGroomProviderSlots).omit({
+  id: true,
+  bookedCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSwimGroomProviderSlot = z.infer<typeof insertSwimGroomProviderSlotSchema>;
+export type SwimGroomProviderSlot = typeof swimGroomProviderSlots.$inferSelect;
+
+// Bookings
+export const swimGroomBookings = pgTable("swim_groom_bookings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingNumber: varchar("booking_number").notNull().unique(),
+  customerId: varchar("customer_id").notNull().references(() => users.id),
+  providerId: varchar("provider_id").notNull().references(() => swimGroomProviders.id),
+  slotId: varchar("slot_id").notNull().references(() => swimGroomProviderSlots.id),
+  serviceId: varchar("service_id").references(() => swimGroomServices.id),
+  serviceName: varchar("service_name"), // Snapshot at booking time
+  providerName: varchar("provider_name"), // Snapshot at booking time
+  bookingDate: timestamp("booking_date").notNull(),
+  startTime: varchar("start_time").notNull(),
+  endTime: varchar("end_time").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).default("0.00"),
+  status: varchar("status").default("pending"), // "pending", "confirmed", "completed", "cancelled", "no_show"
+  paymentStatus: varchar("payment_status").default("pending"), // "pending", "paid", "refunded"
+  customerNotes: text("customer_notes"),
+  providerNotes: text("provider_notes"),
+  adminNotes: text("admin_notes"),
+  contactViewedAt: timestamp("contact_viewed_at"), // When customer viewed contact info
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const swimGroomBookingsRelations = relations(swimGroomBookings, ({ one }) => ({
+  customer: one(users, {
+    fields: [swimGroomBookings.customerId],
+    references: [users.id],
+  }),
+  provider: one(swimGroomProviders, {
+    fields: [swimGroomBookings.providerId],
+    references: [swimGroomProviders.id],
+  }),
+  slot: one(swimGroomProviderSlots, {
+    fields: [swimGroomBookings.slotId],
+    references: [swimGroomProviderSlots.id],
+  }),
+  service: one(swimGroomServices, {
+    fields: [swimGroomBookings.serviceId],
+    references: [swimGroomServices.id],
+  }),
+}));
+
+export const insertSwimGroomBookingSchema = createInsertSchema(swimGroomBookings).omit({
+  id: true,
+  bookingNumber: true,
+  commissionAmount: true,
+  contactViewedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSwimGroomBooking = z.infer<typeof insertSwimGroomBookingSchema>;
+export type SwimGroomBooking = typeof swimGroomBookings.$inferSelect;
+
+// Provider Reviews
+export const swimGroomProviderReviews = pgTable("swim_groom_provider_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  providerId: varchar("provider_id").notNull().references(() => swimGroomProviders.id, { onDelete: "cascade" }),
+  customerId: varchar("customer_id").notNull().references(() => users.id),
+  bookingId: varchar("booking_id").references(() => swimGroomBookings.id),
+  rating: integer("rating").notNull(), // 1-5
+  title: varchar("title"),
+  content: text("content"),
+  status: varchar("status").default("pending"), // "pending", "approved", "rejected"
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const swimGroomProviderReviewsRelations = relations(swimGroomProviderReviews, ({ one }) => ({
+  provider: one(swimGroomProviders, {
+    fields: [swimGroomProviderReviews.providerId],
+    references: [swimGroomProviders.id],
+  }),
+  customer: one(users, {
+    fields: [swimGroomProviderReviews.customerId],
+    references: [users.id],
+  }),
+  booking: one(swimGroomBookings, {
+    fields: [swimGroomProviderReviews.bookingId],
+    references: [swimGroomBookings.id],
+  }),
+}));
+
+export const insertSwimGroomProviderReviewSchema = createInsertSchema(swimGroomProviderReviews).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSwimGroomProviderReview = z.infer<typeof insertSwimGroomProviderReviewSchema>;
+export type SwimGroomProviderReview = typeof swimGroomProviderReviews.$inferSelect;

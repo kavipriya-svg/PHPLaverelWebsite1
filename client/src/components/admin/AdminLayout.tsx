@@ -33,6 +33,11 @@ import {
   UserCircle,
   Key,
   Megaphone,
+  Waves,
+  Dog,
+  MapPin,
+  Building2,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -99,10 +104,18 @@ const userSubMenuItems = [
   { href: "/admin/users/roles", icon: Key, label: "Roles & Permissions" },
 ];
 
+const swimGroomSubMenuItems = [
+  { href: "/admin/swim-groom/services", icon: Waves, label: "Services" },
+  { href: "/admin/swim-groom/locations", icon: MapPin, label: "Locations" },
+  { href: "/admin/swim-groom/providers", icon: Building2, label: "Providers" },
+  { href: "/admin/swim-groom/bookings", icon: Calendar, label: "Bookings" },
+];
+
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
   const [usersOpen, setUsersOpen] = useState(location.startsWith("/admin/users"));
+  const [swimGroomOpen, setSwimGroomOpen] = useState(location.startsWith("/admin/swim-groom"));
 
   if (isLoading) {
     return (
@@ -203,6 +216,35 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       <CollapsibleContent>
                         <SidebarMenuSub>
                           {userSubMenuItems.map((item) => (
+                            <SidebarMenuSubItem key={item.href}>
+                              <SidebarMenuSubButton asChild isActive={location === item.href}>
+                                <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                                  <item.icon className="h-4 w-4" />
+                                  <span>{item.label}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                  
+                  <Collapsible open={swimGroomOpen} onOpenChange={setSwimGroomOpen} className="group/collapsible-sg">
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton 
+                          isActive={location.startsWith("/admin/swim-groom")}
+                          data-testid="link-admin-swim-groom"
+                        >
+                          <Dog className="h-4 w-4" />
+                          <span>Swimming & Grooming</span>
+                          <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible-sg:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {swimGroomSubMenuItems.map((item) => (
                             <SidebarMenuSubItem key={item.href}>
                               <SidebarMenuSubButton asChild isActive={location === item.href}>
                                 <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
