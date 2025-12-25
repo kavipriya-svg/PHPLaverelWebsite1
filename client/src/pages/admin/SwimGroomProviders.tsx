@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, MoreHorizontal, Edit, Trash2, Eye, Building2, Loader2, MapPin, Star, Calendar, CheckCircle, XCircle, Upload, Image, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -272,13 +272,14 @@ export default function AdminSwimGroomProviders() {
 function ProviderDialog({
   open,
   onOpenChange,
-  provider,
+  provider: initialProvider,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   provider: SwimGroomProviderWithDetails | null;
 }) {
   const { toast } = useToast();
+  const [currentProvider, setCurrentProvider] = useState<SwimGroomProviderWithDetails | null>(initialProvider);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -300,6 +301,12 @@ function ProviderDialog({
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  
+  const provider = currentProvider;
+  
+  useEffect(() => {
+    setCurrentProvider(initialProvider);
+  }, [initialProvider]);
 
   const { data: countriesData } = useQuery<{ countries: SwimGroomCountry[] }>({
     queryKey: ["/api/admin/swim-groom/countries"],
@@ -369,12 +376,14 @@ function ProviderDialog({
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/admin/swim-groom/providers", data);
+      const response = await apiRequest("POST", "/api/admin/swim-groom/providers", data);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (createdProvider: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers"] });
-      toast({ title: "Provider created successfully" });
-      onOpenChange(false);
+      toast({ title: "Provider created successfully. You can now upload images and videos." });
+      setCurrentProvider({ ...createdProvider, media: [], services: [] });
+      setMediaFiles([]);
     },
     onError: (error: any) => {
       toast({ title: error.message || "Failed to create provider", variant: "destructive" });
@@ -657,9 +666,14 @@ function ProviderDialog({
             </div>
           </div>
 
-          {provider && (
-            <div className="space-y-2">
-              <Label>Gallery (Images & Videos)</Label>
+          <div className="space-y-2">
+            <Label>Gallery (Images & Videos)</Label>
+            {!provider ? (
+              <div className="border rounded-md p-4 text-center py-6 text-muted-foreground">
+                <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Save the provider first to upload images and videos</p>
+              </div>
+            ) : (
               <div className="border rounded-md p-4 space-y-4">
                 <div className="flex items-center gap-2">
                   <input
@@ -808,8 +822,8 @@ function ProviderDialog({
                   </p>
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
