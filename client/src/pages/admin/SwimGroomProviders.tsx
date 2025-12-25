@@ -59,6 +59,33 @@ type SwimGroomLocality = { id: string; name: string; pincode?: string | null; ci
 type SwimGroomProviderMedia = { id: string; providerId: string; mediaType: string; mediaUrl: string; title?: string | null; position: number };
 type SwimGroomProviderService = { id: string; providerId: string; serviceId: string; price: string; discountType: string; discountValue: string; salePrice?: string | null; duration: number; description?: string | null; notes?: string | null; isActive: boolean; service?: SwimGroomService };
 type SwimGroomVerificationDoc = { id: string; providerId: string; verificationType: string; documentLabel: string; documentUrl: string; status: string; reviewNotes?: string | null; uploadedAt: string; };
+
+async function uploadFile(file: File): Promise<string> {
+  const uploadRes = await fetch("/api/admin/upload", {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!uploadRes.ok) throw new Error("Failed to get upload URL");
+  const { uploadURL } = await uploadRes.json();
+  if (!uploadURL) throw new Error("No upload URL received");
+  
+  const putRes = await fetch(uploadURL, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type },
+  });
+  if (!putRes.ok) throw new Error("Failed to upload file");
+  
+  const finalizeRes = await fetch("/api/admin/upload/finalize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uploadURL }),
+    credentials: "include",
+  });
+  if (!finalizeRes.ok) throw new Error("Failed to finalize upload");
+  const { objectPath } = await finalizeRes.json();
+  return objectPath;
+}
 type SwimGroomProviderWithDetails = SwimGroomProvider & {
   country?: SwimGroomCountry | null;
   state?: SwimGroomState | null;
@@ -808,25 +835,18 @@ function ProviderDialog({
                       setUploadingMedia(true);
                       try {
                         for (const file of Array.from(files)) {
-                          const formData = new FormData();
-                          formData.append("file", file);
-                          const res = await fetch("/api/admin/upload", {
-                            method: "POST",
-                            body: formData,
+                          const objectPath = await uploadFile(file);
+                          await apiRequest("POST", `/api/admin/swim-groom/providers/${provider.id}/media`, {
+                            mediaType: "image",
+                            mediaUrl: objectPath,
+                            title: file.name,
+                            position: mediaFiles.length,
                           });
-                          if (res.ok) {
-                            const { url } = await res.json();
-                            await apiRequest("POST", `/api/admin/swim-groom/providers/${provider.id}/media`, {
-                              mediaType: "image",
-                              mediaUrl: url,
-                              title: file.name,
-                              position: mediaFiles.length,
-                            });
-                          }
                         }
                         queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers"] });
                         toast({ title: "Images uploaded successfully" });
                       } catch (err) {
+                        console.error("Image upload error:", err);
                         toast({ title: "Failed to upload images", variant: "destructive" });
                       } finally {
                         setUploadingMedia(false);
@@ -845,24 +865,17 @@ function ProviderDialog({
                       if (!file) return;
                       setUploadingMedia(true);
                       try {
-                        const formData = new FormData();
-                        formData.append("file", file);
-                        const res = await fetch("/api/admin/upload", {
-                          method: "POST",
-                          body: formData,
+                        const objectPath = await uploadFile(file);
+                        await apiRequest("POST", `/api/admin/swim-groom/providers/${provider.id}/media`, {
+                          mediaType: "video",
+                          mediaUrl: objectPath,
+                          title: file.name,
+                          position: mediaFiles.length,
                         });
-                        if (res.ok) {
-                          const { url } = await res.json();
-                          await apiRequest("POST", `/api/admin/swim-groom/providers/${provider.id}/media`, {
-                            mediaType: "video",
-                            mediaUrl: url,
-                            title: file.name,
-                            position: mediaFiles.length,
-                          });
-                          queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers"] });
-                          toast({ title: "Video uploaded successfully" });
-                        }
+                        queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers"] });
+                        toast({ title: "Video uploaded successfully" });
                       } catch (err) {
+                        console.error("Video upload error:", err);
                         toast({ title: "Failed to upload video", variant: "destructive" });
                       } finally {
                         setUploadingMedia(false);
@@ -1226,19 +1239,15 @@ function ProviderDialog({
                           if (!file) return;
                           setUploadingDoc(true);
                           try {
-                            const formData = new FormData();
-                            formData.append("file", file);
-                            const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
-                            if (res.ok) {
-                              const { url } = await res.json();
-                              addVerificationDocMutation.mutate({
-                                verificationType: "owner",
-                                documentLabel: file.name,
-                                documentUrl: url,
-                                status: "pending",
-                              });
-                            }
-                          } catch {
+                            const objectPath = await uploadFile(file);
+                            addVerificationDocMutation.mutate({
+                              verificationType: "owner",
+                              documentLabel: file.name,
+                              documentUrl: objectPath,
+                              status: "pending",
+                            });
+                          } catch (err) {
+                            console.error("Owner doc upload error:", err);
                             toast({ title: "Failed to upload document", variant: "destructive" });
                           } finally {
                             setUploadingDoc(false);
@@ -1343,19 +1352,15 @@ function ProviderDialog({
                           if (!file) return;
                           setUploadingDoc(true);
                           try {
-                            const formData = new FormData();
-                            formData.append("file", file);
-                            const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
-                            if (res.ok) {
-                              const { url } = await res.json();
-                              addVerificationDocMutation.mutate({
-                                verificationType: "address",
-                                documentLabel: file.name,
-                                documentUrl: url,
-                                status: "pending",
-                              });
-                            }
-                          } catch {
+                            const objectPath = await uploadFile(file);
+                            addVerificationDocMutation.mutate({
+                              verificationType: "address",
+                              documentLabel: file.name,
+                              documentUrl: objectPath,
+                              status: "pending",
+                            });
+                          } catch (err) {
+                            console.error("Address doc upload error:", err);
                             toast({ title: "Failed to upload document", variant: "destructive" });
                           } finally {
                             setUploadingDoc(false);
