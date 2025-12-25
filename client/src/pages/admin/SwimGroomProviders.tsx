@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, MoreHorizontal, Edit, Trash2, Eye, Building2, Loader2, MapPin, Star, Calendar, CheckCircle, XCircle, Upload, Image, Video, X } from "lucide-react";
+import { Plus, MoreHorizontal, Edit, Trash2, Eye, Building2, Loader2, MapPin, Star, Calendar, CheckCircle, XCircle, Upload, Image, Video, X, FileText, AlertCircle, IndianRupee, Percent, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +57,8 @@ type SwimGroomState = { id: string; name: string; countryId: string; country?: S
 type SwimGroomCity = { id: string; name: string; stateId: string; state?: SwimGroomState | null };
 type SwimGroomLocality = { id: string; name: string; pincode?: string | null; cityId: string; isActive: boolean };
 type SwimGroomProviderMedia = { id: string; providerId: string; mediaType: string; mediaUrl: string; title?: string | null; position: number };
+type SwimGroomProviderService = { id: string; providerId: string; serviceId: string; price: string; discountType: string; discountValue: string; salePrice?: string | null; duration: number; description?: string | null; notes?: string | null; isActive: boolean; service?: SwimGroomService };
+type SwimGroomVerificationDoc = { id: string; providerId: string; verificationType: string; documentLabel: string; documentUrl: string; status: string; reviewNotes?: string | null; uploadedAt: string; };
 type SwimGroomProviderWithDetails = SwimGroomProvider & {
   country?: SwimGroomCountry | null;
   state?: SwimGroomState | null;
@@ -299,8 +301,18 @@ function ProviderDialog({
   const [isVerified, setIsVerified] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<SwimGroomProviderMedia[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [ownerType, setOwnerType] = useState<"individual" | "business">("individual");
+  const [ownerVerificationStatus, setOwnerVerificationStatus] = useState("pending");
+  const [addressVerificationStatus, setAddressVerificationStatus] = useState("pending");
+  const [ownerVerificationNotes, setOwnerVerificationNotes] = useState("");
+  const [addressVerificationNotes, setAddressVerificationNotes] = useState("");
+  const [verificationDocs, setVerificationDocs] = useState<SwimGroomVerificationDoc[]>([]);
+  const [providerServices, setProviderServices] = useState<SwimGroomProviderService[]>([]);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const ownerDocInputRef = useRef<HTMLInputElement>(null);
+  const addressDocInputRef = useRef<HTMLInputElement>(null);
   
   const provider = currentProvider;
   
@@ -327,6 +339,97 @@ function ProviderDialog({
     enabled: !!cityId,
   });
 
+  const { data: allServicesData } = useQuery<{ services: SwimGroomService[] }>({
+    queryKey: ["/api/admin/swim-groom/services"],
+  });
+
+  const { data: providerServicesData } = useQuery<{ services: SwimGroomProviderService[] }>({
+    queryKey: ["/api/admin/swim-groom/providers", provider?.id, "services"],
+    enabled: !!provider?.id,
+  });
+
+  const { data: verificationDocsData } = useQuery<{ docs: SwimGroomVerificationDoc[] }>({
+    queryKey: ["/api/admin/swim-groom/providers", provider?.id, "verification-docs"],
+    enabled: !!provider?.id,
+  });
+
+  useEffect(() => {
+    if (providerServicesData?.services) {
+      setProviderServices(providerServicesData.services);
+    }
+  }, [providerServicesData]);
+
+  useEffect(() => {
+    if (verificationDocsData?.docs) {
+      setVerificationDocs(verificationDocsData.docs);
+    }
+  }, [verificationDocsData]);
+
+  const addServiceMutation = useMutation({
+    mutationFn: async (data: { serviceId: string; price: string; discountType: string; discountValue: string; duration: number; isActive: boolean }) => {
+      return await apiRequest("POST", `/api/admin/swim-groom/providers/${provider?.id}/services`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers", provider?.id, "services"] });
+      toast({ title: "Service added" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add service", variant: "destructive" });
+    },
+  });
+
+  const updateServiceMutation = useMutation({
+    mutationFn: async ({ serviceId, data }: { serviceId: string; data: Partial<SwimGroomProviderService> }) => {
+      return await apiRequest("PATCH", `/api/admin/swim-groom/providers/${provider?.id}/services/${serviceId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers", provider?.id, "services"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to update service", variant: "destructive" });
+    },
+  });
+
+  const removeServiceMutation = useMutation({
+    mutationFn: async (serviceId: string) => {
+      return await apiRequest("DELETE", `/api/admin/swim-groom/providers/${provider?.id}/services/${serviceId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers", provider?.id, "services"] });
+      toast({ title: "Service removed" });
+    },
+    onError: () => {
+      toast({ title: "Failed to remove service", variant: "destructive" });
+    },
+  });
+
+  const addVerificationDocMutation = useMutation({
+    mutationFn: async (data: { verificationType: string; documentLabel: string; documentUrl: string; status: string }) => {
+      return await apiRequest("POST", `/api/admin/swim-groom/providers/${provider?.id}/verification-docs`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers", provider?.id, "verification-docs"] });
+      toast({ title: "Document uploaded" });
+    },
+    onError: () => {
+      toast({ title: "Failed to upload document", variant: "destructive" });
+    },
+  });
+
+  const deleteVerificationDocMutation = useMutation({
+    mutationFn: async (docId: string) => {
+      return await apiRequest("DELETE", `/api/admin/swim-groom/verification-docs/${docId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/swim-groom/providers", provider?.id, "verification-docs"] });
+      toast({ title: "Document deleted" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete document", variant: "destructive" });
+    },
+  });
+
+  const allServices = allServicesData?.services || [];
   const countries = countriesData?.countries || [];
   const states = statesData?.states?.filter(s => !countryId || s.countryId === countryId) || [];
   const cities = citiesData?.cities?.filter(c => !stateId || c.stateId === stateId) || [];
@@ -352,6 +455,11 @@ function ProviderDialog({
       setIsActive(provider.isActive ?? true);
       setIsVerified(provider.isVerified ?? false);
       setMediaFiles(provider.media || []);
+      setOwnerType((provider.ownerType as "individual" | "business") || "individual");
+      setOwnerVerificationStatus(provider.ownerVerificationStatus || "pending");
+      setAddressVerificationStatus(provider.addressVerificationStatus || "pending");
+      setOwnerVerificationNotes(provider.ownerVerificationNotes || "");
+      setAddressVerificationNotes(provider.addressVerificationNotes || "");
     } else {
       setName("");
       setEmail("");
@@ -371,6 +479,13 @@ function ProviderDialog({
       setIsActive(true);
       setIsVerified(false);
       setMediaFiles([]);
+      setOwnerType("individual");
+      setOwnerVerificationStatus("pending");
+      setAddressVerificationStatus("pending");
+      setOwnerVerificationNotes("");
+      setAddressVerificationNotes("");
+      setVerificationDocs([]);
+      setProviderServices([]);
     }
   };
 
@@ -435,6 +550,11 @@ function ProviderDialog({
       commissionValue,
       isActive,
       isVerified,
+      ownerType,
+      ownerVerificationStatus,
+      addressVerificationStatus,
+      ownerVerificationNotes: ownerVerificationNotes.trim() || null,
+      addressVerificationNotes: addressVerificationNotes.trim() || null,
     };
 
     if (password) {
@@ -823,6 +943,469 @@ function ProviderDialog({
                 )}
               </div>
             )}
+          </div>
+
+          {/* Services Section */}
+          <div className="space-y-2">
+            <Label>Services & Pricing</Label>
+            {!provider ? (
+              <div className="border rounded-md p-4 text-center py-6 text-muted-foreground">
+                <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Save the provider first to manage services and pricing</p>
+              </div>
+            ) : (
+              <div className="border rounded-md p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">Assign services and set custom pricing</p>
+                  <Select 
+                    value="" 
+                    onValueChange={(serviceId) => {
+                      if (!serviceId) return;
+                      const existingService = providerServices.find(ps => ps.serviceId === serviceId);
+                      if (existingService) {
+                        toast({ title: "Service already assigned", variant: "destructive" });
+                        return;
+                      }
+                      addServiceMutation.mutate({
+                        serviceId,
+                        price: "0",
+                        discountType: "percentage",
+                        discountValue: "0",
+                        duration: 60,
+                        isActive: true,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="w-48" data-testid="select-add-service">
+                      <SelectValue placeholder="Add Service..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allServices.filter(s => s.isActive && !providerServices.find(ps => ps.serviceId === s.id)).map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {providerServices.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No services assigned yet. Add services from the dropdown above.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {providerServices.map((ps) => {
+                      const serviceName = allServices.find(s => s.id === ps.serviceId)?.name || "Unknown Service";
+                      const basePrice = parseFloat(ps.price) || 0;
+                      const discountValue = parseFloat(ps.discountValue) || 0;
+                      let salePrice = basePrice;
+                      if (ps.discountType === "percentage" && discountValue > 0) {
+                        salePrice = basePrice - (basePrice * discountValue / 100);
+                      } else if (ps.discountType === "fixed" && discountValue > 0) {
+                        salePrice = basePrice - discountValue;
+                      }
+                      salePrice = Math.max(0, salePrice);
+
+                      return (
+                        <div key={ps.id} className="border rounded p-3 space-y-2" data-testid={`provider-service-${ps.id}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge variant={ps.isActive ? "default" : "secondary"}>{serviceName}</Badge>
+                              <span className="text-sm text-muted-foreground">
+                                <Clock className="h-3 w-3 inline mr-1" />{ps.duration} min
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => removeServiceMutation.mutate(ps.id)}
+                              data-testid={`button-remove-service-${ps.id}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            <div>
+                              <Label className="text-xs">Base Price (₹)</Label>
+                              <Input
+                                type="number"
+                                value={ps.price}
+                                onChange={(e) => {
+                                  const newPrice = e.target.value;
+                                  setProviderServices(prev => prev.map(p => p.id === ps.id ? { ...p, price: newPrice } : p));
+                                }}
+                                onBlur={() => {
+                                  const currentService = providerServices.find(p => p.id === ps.id);
+                                  if (currentService) {
+                                    updateServiceMutation.mutate({ serviceId: ps.id, data: { price: currentService.price } });
+                                  }
+                                }}
+                                className="h-8"
+                                data-testid={`input-price-${ps.id}`}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Discount Type</Label>
+                              <Select 
+                                value={ps.discountType} 
+                                onValueChange={(v) => {
+                                  if (v === "percentage" || v === "fixed") {
+                                    setProviderServices(prev => prev.map(p => p.id === ps.id ? { ...p, discountType: v } : p));
+                                    updateServiceMutation.mutate({ serviceId: ps.id, data: { discountType: v } });
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="h-8" data-testid={`select-discount-type-${ps.id}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="percentage"><Percent className="h-3 w-3 inline mr-1" />Percentage</SelectItem>
+                                  <SelectItem value="fixed"><IndianRupee className="h-3 w-3 inline mr-1" />Fixed</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label className="text-xs">Discount {ps.discountType === "percentage" ? "%" : "₹"}</Label>
+                              <Input
+                                type="number"
+                                value={ps.discountValue}
+                                onChange={(e) => {
+                                  const newVal = e.target.value;
+                                  setProviderServices(prev => prev.map(p => p.id === ps.id ? { ...p, discountValue: newVal } : p));
+                                }}
+                                onBlur={() => {
+                                  const currentService = providerServices.find(p => p.id === ps.id);
+                                  if (currentService) {
+                                    updateServiceMutation.mutate({ serviceId: ps.id, data: { discountValue: currentService.discountValue } });
+                                  }
+                                }}
+                                className="h-8"
+                                data-testid={`input-discount-${ps.id}`}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Sale Price</Label>
+                              <div className="h-8 px-3 py-1 border rounded-md bg-muted flex items-center">
+                                <span className="text-sm font-medium">₹{salePrice.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label className="text-xs">Duration (minutes)</Label>
+                              <Input
+                                type="number"
+                                value={ps.duration}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value) || 60;
+                                  setProviderServices(prev => prev.map(p => p.id === ps.id ? { ...p, duration: val } : p));
+                                }}
+                                onBlur={() => {
+                                  const currentService = providerServices.find(p => p.id === ps.id);
+                                  if (currentService) {
+                                    updateServiceMutation.mutate({ serviceId: ps.id, data: { duration: currentService.duration } });
+                                  }
+                                }}
+                                className="h-8"
+                                data-testid={`input-duration-${ps.id}`}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Active</Label>
+                              <div className="h-8 flex items-center">
+                                <Switch 
+                                  checked={ps.isActive} 
+                                  onCheckedChange={(checked) => {
+                                    setProviderServices(prev => prev.map(p => p.id === ps.id ? { ...p, isActive: checked } : p));
+                                    updateServiceMutation.mutate({ serviceId: ps.id, data: { isActive: checked } });
+                                  }}
+                                  data-testid={`switch-service-active-${ps.id}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-xs">Notes (optional)</Label>
+                            <Textarea
+                              value={ps.notes || ""}
+                              onChange={(e) => {
+                                setProviderServices(prev => prev.map(p => p.id === ps.id ? { ...p, notes: e.target.value } : p));
+                              }}
+                              onBlur={() => {
+                                const currentService = providerServices.find(p => p.id === ps.id);
+                                if (currentService) {
+                                  updateServiceMutation.mutate({ serviceId: ps.id, data: { notes: currentService.notes || null } });
+                                }
+                              }}
+                              placeholder="Any special notes for this service..."
+                              rows={2}
+                              data-testid={`input-notes-${ps.id}`}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Verification Section */}
+          <div className="space-y-2">
+            <Label>Verification</Label>
+            <div className="border rounded-md p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Owner Type</Label>
+                  <Select value={ownerType} onValueChange={(v: "individual" | "business") => setOwnerType(v)}>
+                    <SelectTrigger data-testid="select-owner-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div />
+              </div>
+
+              {/* Owner Verification */}
+              <div className="border rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    <span className="font-medium text-sm">Owner Verification</span>
+                    <Badge variant={
+                      ownerVerificationStatus === "verified" ? "default" :
+                      ownerVerificationStatus === "rejected" ? "destructive" : "secondary"
+                    }>
+                      {ownerVerificationStatus === "verified" && <CheckCircle className="h-3 w-3 mr-1" />}
+                      {ownerVerificationStatus === "rejected" && <XCircle className="h-3 w-3 mr-1" />}
+                      {ownerVerificationStatus === "pending" && <AlertCircle className="h-3 w-3 mr-1" />}
+                      {ownerVerificationStatus}
+                    </Badge>
+                  </div>
+                  <Select value={ownerVerificationStatus} onValueChange={setOwnerVerificationStatus}>
+                    <SelectTrigger className="w-32" data-testid="select-owner-verification-status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs">Review Notes</Label>
+                  <Textarea
+                    value={ownerVerificationNotes}
+                    onChange={(e) => setOwnerVerificationNotes(e.target.value)}
+                    placeholder="Add notes about the verification..."
+                    rows={2}
+                    data-testid="input-owner-verification-notes"
+                  />
+                </div>
+
+                {!provider ? (
+                  <p className="text-sm text-muted-foreground text-center py-2">Save provider to upload documents</p>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        ref={ownerDocInputRef}
+                        accept="image/*,application/pdf"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingDoc(true);
+                          try {
+                            const formData = new FormData();
+                            formData.append("file", file);
+                            const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+                            if (res.ok) {
+                              const { url } = await res.json();
+                              addVerificationDocMutation.mutate({
+                                verificationType: "owner",
+                                documentLabel: file.name,
+                                documentUrl: url,
+                                status: "pending",
+                              });
+                            }
+                          } catch {
+                            toast({ title: "Failed to upload document", variant: "destructive" });
+                          } finally {
+                            setUploadingDoc(false);
+                            if (ownerDocInputRef.current) ownerDocInputRef.current.value = "";
+                          }
+                        }}
+                        data-testid="input-owner-doc"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => ownerDocInputRef.current?.click()}
+                        disabled={uploadingDoc}
+                        data-testid="button-upload-owner-doc"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload {ownerType === "business" ? "Business Proof" : "ID Proof"}
+                      </Button>
+                      {uploadingDoc && <Loader2 className="h-4 w-4 animate-spin" />}
+                    </div>
+                    <div className="space-y-1">
+                      {verificationDocs.filter(d => d.verificationType === "owner").map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                          <a href={doc.documentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:underline">
+                            <FileText className="h-3 w-3" />
+                            {doc.documentLabel}
+                          </a>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={doc.status === "approved" ? "default" : doc.status === "rejected" ? "destructive" : "secondary"} className="text-xs">
+                              {doc.status}
+                            </Badge>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => deleteVerificationDocMutation.mutate(doc.id)}
+                              data-testid={`button-delete-owner-doc-${doc.id}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Address Verification */}
+              <div className="border rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span className="font-medium text-sm">Address Verification</span>
+                    <Badge variant={
+                      addressVerificationStatus === "verified" ? "default" :
+                      addressVerificationStatus === "rejected" ? "destructive" : "secondary"
+                    }>
+                      {addressVerificationStatus === "verified" && <CheckCircle className="h-3 w-3 mr-1" />}
+                      {addressVerificationStatus === "rejected" && <XCircle className="h-3 w-3 mr-1" />}
+                      {addressVerificationStatus === "pending" && <AlertCircle className="h-3 w-3 mr-1" />}
+                      {addressVerificationStatus}
+                    </Badge>
+                  </div>
+                  <Select value={addressVerificationStatus} onValueChange={setAddressVerificationStatus}>
+                    <SelectTrigger className="w-32" data-testid="select-address-verification-status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Review Notes</Label>
+                  <Textarea
+                    value={addressVerificationNotes}
+                    onChange={(e) => setAddressVerificationNotes(e.target.value)}
+                    placeholder="Add notes about the address verification..."
+                    rows={2}
+                    data-testid="input-address-verification-notes"
+                  />
+                </div>
+
+                {!provider ? (
+                  <p className="text-sm text-muted-foreground text-center py-2">Save provider to upload documents</p>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        ref={addressDocInputRef}
+                        accept="image/*,application/pdf"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingDoc(true);
+                          try {
+                            const formData = new FormData();
+                            formData.append("file", file);
+                            const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+                            if (res.ok) {
+                              const { url } = await res.json();
+                              addVerificationDocMutation.mutate({
+                                verificationType: "address",
+                                documentLabel: file.name,
+                                documentUrl: url,
+                                status: "pending",
+                              });
+                            }
+                          } catch {
+                            toast({ title: "Failed to upload document", variant: "destructive" });
+                          } finally {
+                            setUploadingDoc(false);
+                            if (addressDocInputRef.current) addressDocInputRef.current.value = "";
+                          }
+                        }}
+                        data-testid="input-address-doc"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addressDocInputRef.current?.click()}
+                        disabled={uploadingDoc}
+                        data-testid="button-upload-address-doc"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Address Proof
+                      </Button>
+                      {uploadingDoc && <Loader2 className="h-4 w-4 animate-spin" />}
+                    </div>
+                    <div className="space-y-1">
+                      {verificationDocs.filter(d => d.verificationType === "address").map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                          <a href={doc.documentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:underline">
+                            <FileText className="h-3 w-3" />
+                            {doc.documentLabel}
+                          </a>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={doc.status === "approved" ? "default" : doc.status === "rejected" ? "destructive" : "secondary"} className="text-xs">
+                              {doc.status}
+                            </Badge>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => deleteVerificationDocMutation.mutate(doc.id)}
+                              data-testid={`button-delete-address-doc-${doc.id}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-6">
