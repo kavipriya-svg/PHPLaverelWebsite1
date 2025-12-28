@@ -43,16 +43,14 @@ type SwimGroomSlot = {
   providerId: string;
   serviceId: string;
   service?: SwimGroomService | null;
-  dayOfWeek: number;
+  date: string;
   startTime: string;
   endTime: string;
-  maxCapacity: number;
+  capacity: number;
   bookedCount: number;
   price: string;
-  isActive: boolean;
+  status: string;
 };
-
-const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default function ProviderSlots() {
   const [, setLocation] = useLocation();
@@ -111,12 +109,19 @@ export default function ProviderSlots() {
   const slots = data?.slots || [];
   const services = servicesData?.services || [];
 
-  const slotsByDay = slots.reduce((acc, slot) => {
-    const day = slot.dayOfWeek;
-    if (!acc[day]) acc[day] = [];
-    acc[day].push(slot);
+  // Group slots by date
+  const slotsByDate = slots.reduce((acc, slot) => {
+    const dateStr = slot.date ? new Date(slot.date).toISOString().split('T')[0] : 'unknown';
+    if (!acc[dateStr]) acc[dateStr] = [];
+    acc[dateStr].push(slot);
     return acc;
-  }, {} as Record<number, SwimGroomSlot[]>);
+  }, {} as Record<string, SwimGroomSlot[]>);
+  
+  const formatDate = (dateStr: string) => {
+    if (dateStr === 'unknown') return 'Unknown Date';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+  };
 
   return (
     <ProviderLayout provider={providerData?.provider} onLogout={() => logoutMutation.mutate()}>
@@ -138,7 +143,7 @@ export default function ProviderSlots() {
               <Skeleton key={i} className="h-32" />
             ))}
           </div>
-        ) : Object.keys(slotsByDay).length === 0 ? (
+        ) : Object.keys(slotsByDate).length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
               <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -148,16 +153,16 @@ export default function ProviderSlots() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {Object.entries(slotsByDay)
-              .sort(([a], [b]) => parseInt(a) - parseInt(b))
-              .map(([day, daySlots]) => (
-                <Card key={day}>
+            {Object.entries(slotsByDate)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([dateStr, dateSlots]) => (
+                <Card key={dateStr}>
                   <CardHeader className="py-3">
-                    <CardTitle className="text-lg">{dayNames[parseInt(day)]}</CardTitle>
+                    <CardTitle className="text-lg">{formatDate(dateStr)}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-3">
-                      {daySlots.map((slot) => (
+                      {dateSlots.map((slot) => (
                         <div
                           key={slot.id}
                           className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
@@ -172,13 +177,13 @@ export default function ProviderSlots() {
                               </div>
                             </div>
                             <Badge variant="outline">
-                              {slot.bookedCount}/{slot.maxCapacity} booked
+                              {slot.bookedCount}/{slot.capacity} booked
                             </Badge>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="font-medium">₹{slot.price}</span>
-                            <Badge variant={slot.isActive ? "default" : "outline"}>
-                              {slot.isActive ? "Active" : "Inactive"}
+                            <Badge variant={slot.status === "available" ? "default" : "outline"}>
+                              {slot.status === "available" ? "Available" : slot.status}
                             </Badge>
                             <Button
                               size="icon"
@@ -252,30 +257,33 @@ function SlotDialog({
 }) {
   const { toast } = useToast();
   const [serviceId, setServiceId] = useState("");
-  const [dayOfWeek, setDayOfWeek] = useState("1");
+  const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
-  const [maxCapacity, setMaxCapacity] = useState("5");
+  const [capacity, setCapacity] = useState("1");
   const [price, setPrice] = useState("500");
-  const [isActive, setIsActive] = useState(true);
+  const [status, setStatus] = useState("available");
 
   const resetForm = () => {
     if (slot) {
       setServiceId(slot.serviceId);
-      setDayOfWeek(slot.dayOfWeek.toString());
+      setDate(slot.date ? new Date(slot.date).toISOString().split('T')[0] : "");
       setStartTime(slot.startTime);
       setEndTime(slot.endTime);
-      setMaxCapacity(slot.maxCapacity.toString());
+      setCapacity(slot.capacity.toString());
       setPrice(slot.price);
-      setIsActive(slot.isActive);
+      setStatus(slot.status || "available");
     } else {
       setServiceId(services[0]?.id || "");
-      setDayOfWeek("1");
+      // Set default date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setDate(tomorrow.toISOString().split('T')[0]);
       setStartTime("09:00");
       setEndTime("10:00");
-      setMaxCapacity("5");
+      setCapacity("1");
       setPrice("500");
-      setIsActive(true);
+      setStatus("available");
     }
   };
 
@@ -312,15 +320,19 @@ function SlotDialog({
       toast({ title: "Please select a service", variant: "destructive" });
       return;
     }
+    if (!date) {
+      toast({ title: "Please select a date", variant: "destructive" });
+      return;
+    }
 
     const data = {
       serviceId,
-      dayOfWeek: parseInt(dayOfWeek),
+      date,
       startTime,
       endTime,
-      maxCapacity: parseInt(maxCapacity),
+      capacity: parseInt(capacity),
       price,
-      isActive,
+      status,
     };
 
     if (slot) {
@@ -362,19 +374,14 @@ function SlotDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Day of Week</Label>
-            <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {dayNames.map((day, index) => (
-                  <SelectItem key={index} value={index.toString()}>
-                    {day}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -400,12 +407,12 @@ function SlotDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="maxCapacity">Max Capacity</Label>
+              <Label htmlFor="capacity">Capacity</Label>
               <Input
-                id="maxCapacity"
+                id="capacity"
                 type="number"
-                value={maxCapacity}
-                onChange={(e) => setMaxCapacity(e.target.value)}
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
                 min="1"
               />
             </div>
@@ -420,9 +427,17 @@ function SlotDialog({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} />
-            <Label htmlFor="isActive">Active</Label>
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="unavailable">Unavailable</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
