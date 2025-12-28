@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, MoreHorizontal, Edit, Trash2, Eye, Building2, Loader2, MapPin, Star, Calendar, CheckCircle, XCircle, Upload, Image, Video, X, FileText, AlertCircle, IndianRupee, Percent, Clock } from "lucide-react";
+import { Plus, MoreHorizontal, Edit, Trash2, Eye, Building2, Loader2, MapPin, Star, Calendar, CheckCircle, XCircle, Upload, Image, Video, X, FileText, AlertCircle, IndianRupee, Percent, Clock, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +99,7 @@ export default function AdminSwimGroomProviders() {
   const [search, setSearch] = useState("");
   const [editProvider, setEditProvider] = useState<SwimGroomProviderWithDetails | null>(null);
   const [deleteProvider, setDeleteProvider] = useState<SwimGroomProviderWithDetails | null>(null);
+  const [slotsProvider, setSlotsProvider] = useState<SwimGroomProviderWithDetails | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -244,6 +245,10 @@ export default function AdminSwimGroomProviders() {
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSlotsProvider(provider)}>
+                              <CalendarClock className="h-4 w-4 mr-2" />
+                              Manage Slots
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => window.open(`/swim-groom/providers/${provider.slug}`, "_blank")}>
                               <Eye className="h-4 w-4 mr-2" />
                               View Page
@@ -293,6 +298,12 @@ export default function AdminSwimGroomProviders() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <ProviderSlotsDialog
+          open={!!slotsProvider}
+          onOpenChange={(o) => !o && setSlotsProvider(null)}
+          provider={slotsProvider}
+        />
       </div>
     </AdminLayout>
   );
@@ -1431,6 +1442,414 @@ function ProviderDialog({
           <Button onClick={handleSubmit} disabled={isLoading} data-testid="button-save-provider">
             {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {provider ? "Update" : "Create"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type SwimGroomSlot = {
+  id: string;
+  providerId: string;
+  serviceId: string;
+  service?: SwimGroomService | null;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  bookedCount: number;
+  price: string;
+  isActive: boolean;
+};
+
+const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function ProviderSlotsDialog({
+  open,
+  onOpenChange,
+  provider,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  provider: SwimGroomProviderWithDetails | null;
+}) {
+  const { toast } = useToast();
+  const [editSlot, setEditSlot] = useState<SwimGroomSlot | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [deleteSlot, setDeleteSlot] = useState<SwimGroomSlot | null>(null);
+
+  const { data, isLoading } = useQuery<{ slots: SwimGroomSlot[] }>({
+    queryKey: [`/api/admin/swim-groom/providers/${provider?.id}/slots`],
+    enabled: !!provider?.id && open,
+  });
+
+  const { data: servicesData } = useQuery<{ services: SwimGroomService[] }>({
+    queryKey: ["/api/swim-groom/services"],
+    enabled: open,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/admin/swim-groom/slots/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/swim-groom/providers/${provider?.id}/slots`] });
+      toast({ title: "Slot deleted successfully" });
+      setDeleteSlot(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to delete slot", variant: "destructive" });
+    },
+  });
+
+  if (!provider) return null;
+
+  const slots = data?.slots || [];
+  const services = servicesData?.services || [];
+
+  const slotsByDay = slots.reduce((acc, slot) => {
+    const day = slot.dayOfWeek;
+    if (!acc[day]) acc[day] = [];
+    acc[day].push(slot);
+    return acc;
+  }, {} as Record<number, SwimGroomSlot[]>);
+
+  // Sort slots within each day by start time
+  Object.values(slotsByDay).forEach(daySlots => {
+    daySlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Manage Slots - {provider.name}</DialogTitle>
+        </DialogHeader>
+        
+        <div className="flex items-center justify-end mb-4">
+          <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-provider-slot">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Slot
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-20" />
+            ))}
+          </div>
+        ) : Object.keys(slotsByDay).length === 0 ? (
+          <div className="py-8 text-center text-muted-foreground">
+            <CalendarClock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No time slots created yet.</p>
+            <p className="text-sm">Add slots to enable booking for this provider.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(slotsByDay)
+              .sort(([a], [b]) => parseInt(a) - parseInt(b))
+              .map(([day, daySlots]) => (
+                <Card key={day}>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-lg">{dayNames[parseInt(day)]}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3">
+                      {daySlots.map((slot) => (
+                        <div
+                          key={slot.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <div className="font-medium">
+                                {slot.startTime} - {slot.endTime}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {slot.service?.name || "Service not specified"}
+                              </div>
+                            </div>
+                            <Badge variant="outline">
+                              {slot.bookedCount}/{slot.maxCapacity} booked
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium">₹{slot.price}</span>
+                            <Badge variant={slot.isActive ? "default" : "outline"}>
+                              {slot.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setEditSlot(slot)}
+                              data-testid={`button-edit-slot-${slot.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setDeleteSlot(slot)}
+                              data-testid={`button-delete-slot-${slot.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+        )}
+
+        <AdminSlotFormDialog
+          open={isAddDialogOpen || !!editSlot}
+          onOpenChange={(o) => {
+            if (!o) {
+              setIsAddDialogOpen(false);
+              setEditSlot(null);
+            }
+          }}
+          slot={editSlot}
+          providerId={provider.id}
+          services={services}
+        />
+
+        <AlertDialog open={!!deleteSlot} onOpenChange={() => setDeleteSlot(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Slot</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this time slot? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteSlot && deleteMutation.mutate(deleteSlot.id)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AdminSlotFormDialog({
+  open,
+  onOpenChange,
+  slot,
+  providerId,
+  services,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  slot: SwimGroomSlot | null;
+  providerId: string;
+  services: SwimGroomService[];
+}) {
+  const { toast } = useToast();
+  const [serviceId, setServiceId] = useState("");
+  const [dayOfWeek, setDayOfWeek] = useState("1");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
+  const [maxCapacity, setMaxCapacity] = useState("5");
+  const [price, setPrice] = useState("500");
+  const [isActive, setIsActive] = useState(true);
+
+  const resetForm = () => {
+    if (slot) {
+      setServiceId(slot.serviceId);
+      setDayOfWeek(slot.dayOfWeek.toString());
+      setStartTime(slot.startTime);
+      setEndTime(slot.endTime);
+      setMaxCapacity(slot.maxCapacity.toString());
+      setPrice(slot.price);
+      setIsActive(slot.isActive);
+    } else {
+      setServiceId(services[0]?.id || "");
+      setDayOfWeek("1");
+      setStartTime("09:00");
+      setEndTime("10:00");
+      setMaxCapacity("5");
+      setPrice("500");
+      setIsActive(true);
+    }
+  };
+
+  useEffect(() => {
+    if (open) resetForm();
+  }, [open, slot]);
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", `/api/admin/swim-groom/providers/${providerId}/slots`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/swim-groom/providers/${providerId}/slots`] });
+      toast({ title: "Slot created successfully" });
+      onOpenChange(false);
+    },
+    onError: (error: any) => {
+      toast({ title: error.message || "Failed to create slot", variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("PATCH", `/api/admin/swim-groom/slots/${slot?.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/swim-groom/providers/${providerId}/slots`] });
+      toast({ title: "Slot updated successfully" });
+      onOpenChange(false);
+    },
+    onError: (error: any) => {
+      toast({ title: error.message || "Failed to update slot", variant: "destructive" });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!serviceId) {
+      toast({ title: "Please select a service", variant: "destructive" });
+      return;
+    }
+    if (!startTime || !endTime) {
+      toast({ title: "Please enter start and end times", variant: "destructive" });
+      return;
+    }
+    if (startTime >= endTime) {
+      toast({ title: "Start time must be before end time", variant: "destructive" });
+      return;
+    }
+    const capacity = parseInt(maxCapacity);
+    if (isNaN(capacity) || capacity < 1) {
+      toast({ title: "Capacity must be at least 1", variant: "destructive" });
+      return;
+    }
+    const priceNum = parseFloat(price);
+    if (isNaN(priceNum) || priceNum < 0) {
+      toast({ title: "Price must be a valid positive number", variant: "destructive" });
+      return;
+    }
+
+    const data = {
+      serviceId,
+      dayOfWeek: parseInt(dayOfWeek),
+      startTime,
+      endTime,
+      maxCapacity: capacity,
+      price,
+      isActive,
+    };
+
+    if (slot) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const isLoadingSubmit = createMutation.isPending || updateMutation.isPending;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md" onOpenAutoFocus={() => resetForm()}>
+        <DialogHeader>
+          <DialogTitle>{slot ? "Edit Time Slot" : "Add Time Slot"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Service</Label>
+            <Select value={serviceId} onValueChange={setServiceId}>
+              <SelectTrigger data-testid="select-slot-service">
+                <SelectValue placeholder="Select a service" />
+              </SelectTrigger>
+              <SelectContent>
+                {services.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Day of Week</Label>
+            <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
+              <SelectTrigger data-testid="select-slot-day">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {dayNames.map((name, index) => (
+                  <SelectItem key={index} value={index.toString()}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Start Time</Label>
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                data-testid="input-slot-start-time"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>End Time</Label>
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                data-testid="input-slot-end-time"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Max Capacity</Label>
+              <Input
+                type="number"
+                min="1"
+                value={maxCapacity}
+                onChange={(e) => setMaxCapacity(e.target.value)}
+                data-testid="input-slot-capacity"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Price (₹)</Label>
+              <Input
+                type="number"
+                min="0"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                data-testid="input-slot-price"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Switch id="slotActive" checked={isActive} onCheckedChange={setIsActive} data-testid="switch-slot-active" />
+            <Label htmlFor="slotActive">Active</Label>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoadingSubmit}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isLoadingSubmit} data-testid="button-save-slot">
+            {isLoadingSubmit && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {slot ? "Update" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>
