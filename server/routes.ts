@@ -463,6 +463,96 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
   });
 
+  // Unified login - handles admin, provider, and customer logins
+  app.post("/api/auth/unified-login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+      
+      // First, check if it's a user (admin or customer)
+      const user = await storage.getUserByEmail(email);
+      
+      if (user && user.passwordHash) {
+        const isValid = await verifyPassword(password, user.passwordHash);
+        
+        if (isValid) {
+          // Determine if admin or customer - check both legacy role AND dynamic adminRoleId
+          const hasLegacyAdminRole = ["admin", "manager", "support"].includes(user.role);
+          const hasDynamicRole = !!user.adminRoleId;
+          const isAdminUser = hasLegacyAdminRole || hasDynamicRole;
+          
+          // Create session for the user
+          const sessionUser = {
+            claims: { 
+              sub: user.id,
+              email: user.email,
+              first_name: user.firstName,
+              last_name: user.lastName,
+            },
+            dbUser: user,
+            isAdminAuth: isAdminUser,
+          };
+          
+          return req.login(sessionUser, (err) => {
+            if (err) {
+              return res.status(500).json({ error: "Failed to create session" });
+            }
+            res.json({ 
+              success: true,
+              userType: isAdminUser ? "admin" : "customer",
+              user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role,
+              }
+            });
+          });
+        }
+      }
+      
+      // Check if it's a provider
+      const provider = await storage.getSwimGroomProviderByEmail(email);
+      
+      if (provider && provider.passwordHash) {
+        const isValid = await verifyPassword(password, provider.passwordHash);
+        
+        if (isValid) {
+          if (!provider.isActive) {
+            return res.status(403).json({ error: "Provider account is inactive" });
+          }
+          
+          // Store provider ID in session and save explicitly
+          (req.session as any).providerId = provider.id;
+          
+          return req.session.save((err) => {
+            if (err) {
+              console.error("Session save error:", err);
+              return res.status(500).json({ error: "Failed to create session" });
+            }
+            
+            const { passwordHash, ...providerData } = provider;
+            res.json({ 
+              success: true,
+              userType: "provider",
+              provider: providerData 
+            });
+          });
+        }
+      }
+      
+      // No valid credentials found
+      return res.status(401).json({ error: "Invalid email or password" });
+    } catch (error) {
+      console.error("Unified login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
   // Generate OTP code
   function generateOtpCode(length: number = 6): string {
     const digits = '0123456789';

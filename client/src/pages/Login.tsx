@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { LogIn, ShoppingBag, Heart, Package, Shield, Loader2, Eye, EyeOff } from "lucide-react";
+import { LogIn, ShoppingBag, Heart, Package, Shield, Loader2, Eye, EyeOff, Users, Briefcase, Store } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -21,6 +21,23 @@ const defaultBranding: BrandingSettings = {
   showStoreName: true,
 };
 
+interface UnifiedLoginResponse {
+  success: boolean;
+  userType: "admin" | "customer" | "provider";
+  user?: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    role: string;
+  };
+  provider?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -36,17 +53,39 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/auth/login", credentials);
-      return response.json();
+      const response = await apiRequest("POST", "/api/auth/unified-login", credentials);
+      return response.json() as Promise<UnifiedLoginResponse>;
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-        });
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        setLocation("/");
+        // Redirect based on user type
+        switch (data.userType) {
+          case "admin":
+            toast({
+              title: "Welcome back, Admin!",
+              description: "Redirecting to admin dashboard...",
+            });
+            queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+            setLocation("/admin");
+            break;
+          case "provider":
+            toast({
+              title: `Welcome back, ${data.provider?.name || "Provider"}!`,
+              description: "Redirecting to your provider portal...",
+            });
+            queryClient.invalidateQueries({ queryKey: ["/api/provider/me"] });
+            setLocation("/provider/dashboard");
+            break;
+          case "customer":
+          default:
+            toast({
+              title: "Welcome back!",
+              description: "You have successfully signed in.",
+            });
+            queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+            setLocation("/");
+            break;
+        }
       }
     },
     onError: (error: Error) => {
@@ -103,7 +142,7 @@ export default function Login() {
             <CardHeader className="text-center">
               <CardTitle>Sign In</CardTitle>
               <CardDescription>
-                Enter your email and password to continue
+                Customers, providers, and admins can all sign in here
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -193,36 +232,36 @@ export default function Login() {
           </Card>
 
           <div className="grid grid-cols-3 gap-4 mb-8">
-            <Card className="p-4" data-testid="card-feature-orders">
+            <Card className="p-4" data-testid="card-feature-customers">
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ShoppingBag className="w-5 h-5 text-primary" />
+                  <Users className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-sm">Orders</h3>
-                  <p className="text-xs text-muted-foreground">View history</p>
+                  <h3 className="font-medium text-sm">Customers</h3>
+                  <p className="text-xs text-muted-foreground">Shop & track</p>
                 </div>
               </div>
             </Card>
-            <Card className="p-4" data-testid="card-feature-wishlist">
+            <Card className="p-4" data-testid="card-feature-providers">
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Heart className="w-5 h-5 text-primary" />
+                  <Briefcase className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-sm">Wishlist</h3>
-                  <p className="text-xs text-muted-foreground">Saved items</p>
+                  <h3 className="font-medium text-sm">Providers</h3>
+                  <p className="text-xs text-muted-foreground">Manage services</p>
                 </div>
               </div>
             </Card>
-            <Card className="p-4" data-testid="card-feature-tracking">
+            <Card className="p-4" data-testid="card-feature-admins">
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Package className="w-5 h-5 text-primary" />
+                  <Store className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-sm">Tracking</h3>
-                  <p className="text-xs text-muted-foreground">Live updates</p>
+                  <h3 className="font-medium text-sm">Admins</h3>
+                  <p className="text-xs text-muted-foreground">Full control</p>
                 </div>
               </div>
             </Card>

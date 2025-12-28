@@ -37,7 +37,6 @@ const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
-const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const AdminProducts = lazy(() => import("@/pages/admin/Products"));
 const AdminProductForm = lazy(() => import("@/pages/admin/ProductForm"));
@@ -78,7 +77,6 @@ const AdminSwimGroomProviders = lazy(() => import("@/pages/admin/SwimGroomProvid
 const AdminSwimGroomBookings = lazy(() => import("@/pages/admin/SwimGroomBookings"));
 const SwimGroom = lazy(() => import("@/pages/SwimGroom"));
 const SwimGroomProvider = lazy(() => import("@/pages/SwimGroomProvider"));
-const ProviderLogin = lazy(() => import("@/pages/provider/ProviderLogin"));
 const ProviderDashboard = lazy(() => import("@/pages/provider/ProviderDashboard"));
 const ProviderBookings = lazy(() => import("@/pages/provider/ProviderBookings"));
 const ProviderSlots = lazy(() => import("@/pages/provider/ProviderSlots"));
@@ -304,9 +302,9 @@ function Router() {
       </Route>
 
       <Route path="/admin/login">
-        <AdminLayout>
-          <AdminLogin />
-        </AdminLayout>
+        <Suspense fallback={<PageLoader />}>
+          <Login />
+        </Suspense>
       </Route>
       <Route path="/admin">
         <AdminLayout>
@@ -497,7 +495,7 @@ function Router() {
       {/* Provider Portal Routes */}
       <Route path="/provider/login">
         <Suspense fallback={<PageLoader />}>
-          <ProviderLogin />
+          <Login />
         </Suspense>
       </Route>
       <Route path="/provider/dashboard">
