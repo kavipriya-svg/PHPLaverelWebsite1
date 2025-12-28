@@ -1454,16 +1454,14 @@ type SwimGroomSlot = {
   providerId: string;
   serviceId: string;
   service?: SwimGroomService | null;
-  dayOfWeek: number;
+  date: string;
   startTime: string;
   endTime: string;
-  maxCapacity: number;
+  capacity: number;
   bookedCount: number;
   price: string;
-  isActive: boolean;
+  status: string;
 };
-
-const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function ProviderSlotsDialog({
   open,
@@ -1508,17 +1506,23 @@ function ProviderSlotsDialog({
   const slots = data?.slots || [];
   const services = servicesData?.services || [];
 
-  const slotsByDay = slots.reduce((acc, slot) => {
-    const day = slot.dayOfWeek;
-    if (!acc[day]) acc[day] = [];
-    acc[day].push(slot);
+  // Group slots by date and sort
+  const slotsByDate = slots.reduce((acc, slot) => {
+    const dateKey = slot.date.split('T')[0]; // Get YYYY-MM-DD
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(slot);
     return acc;
-  }, {} as Record<number, SwimGroomSlot[]>);
+  }, {} as Record<string, SwimGroomSlot[]>);
 
-  // Sort slots within each day by start time
-  Object.values(slotsByDay).forEach(daySlots => {
-    daySlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  // Sort slots within each date by start time
+  Object.values(slotsByDate).forEach(dateSlots => {
+    dateSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
   });
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1540,7 +1544,7 @@ function ProviderSlotsDialog({
               <Skeleton key={i} className="h-20" />
             ))}
           </div>
-        ) : Object.keys(slotsByDay).length === 0 ? (
+        ) : Object.keys(slotsByDate).length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
             <CalendarClock className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No time slots created yet.</p>
@@ -1548,16 +1552,16 @@ function ProviderSlotsDialog({
           </div>
         ) : (
           <div className="space-y-4">
-            {Object.entries(slotsByDay)
-              .sort(([a], [b]) => parseInt(a) - parseInt(b))
-              .map(([day, daySlots]) => (
-                <Card key={day}>
+            {Object.entries(slotsByDate)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([dateKey, dateSlots]) => (
+                <Card key={dateKey}>
                   <CardHeader className="py-3">
-                    <CardTitle className="text-lg">{dayNames[parseInt(day)]}</CardTitle>
+                    <CardTitle className="text-lg">{formatDate(dateKey)}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-3">
-                      {daySlots.map((slot) => (
+                      {dateSlots.map((slot) => (
                         <div
                           key={slot.id}
                           className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
@@ -1572,13 +1576,13 @@ function ProviderSlotsDialog({
                               </div>
                             </div>
                             <Badge variant="outline">
-                              {slot.bookedCount}/{slot.maxCapacity} booked
+                              {slot.bookedCount}/{slot.capacity} booked
                             </Badge>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="font-medium">₹{slot.price}</span>
-                            <Badge variant={slot.isActive ? "default" : "outline"}>
-                              {slot.isActive ? "Active" : "Inactive"}
+                            <Badge variant={slot.status === "available" ? "default" : "outline"}>
+                              {slot.status}
                             </Badge>
                             <Button
                               size="icon"
@@ -1657,30 +1661,33 @@ function AdminSlotFormDialog({
 }) {
   const { toast } = useToast();
   const [serviceId, setServiceId] = useState("");
-  const [dayOfWeek, setDayOfWeek] = useState("1");
+  const [slotDate, setSlotDate] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
-  const [maxCapacity, setMaxCapacity] = useState("5");
+  const [capacity, setCapacity] = useState("5");
   const [price, setPrice] = useState("500");
-  const [isActive, setIsActive] = useState(true);
+  const [status, setStatus] = useState("available");
 
   const resetForm = () => {
     if (slot) {
-      setServiceId(slot.serviceId);
-      setDayOfWeek(slot.dayOfWeek.toString());
+      setServiceId(slot.serviceId || "");
+      setSlotDate(slot.date ? slot.date.split('T')[0] : "");
       setStartTime(slot.startTime);
       setEndTime(slot.endTime);
-      setMaxCapacity(slot.maxCapacity.toString());
-      setPrice(slot.price);
-      setIsActive(slot.isActive);
+      setCapacity(slot.capacity?.toString() || "5");
+      setPrice(slot.price || "500");
+      setStatus(slot.status || "available");
     } else {
       setServiceId(services[0]?.id || "");
-      setDayOfWeek("1");
+      // Default to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setSlotDate(tomorrow.toISOString().split('T')[0]);
       setStartTime("09:00");
       setEndTime("10:00");
-      setMaxCapacity("5");
+      setCapacity("5");
       setPrice("500");
-      setIsActive(true);
+      setStatus("available");
     }
   };
 
@@ -1721,6 +1728,10 @@ function AdminSlotFormDialog({
       toast({ title: "Please select a service", variant: "destructive" });
       return;
     }
+    if (!slotDate) {
+      toast({ title: "Please select a date", variant: "destructive" });
+      return;
+    }
     if (!startTime || !endTime) {
       toast({ title: "Please enter start and end times", variant: "destructive" });
       return;
@@ -1729,8 +1740,8 @@ function AdminSlotFormDialog({
       toast({ title: "Start time must be before end time", variant: "destructive" });
       return;
     }
-    const capacity = parseInt(maxCapacity);
-    if (isNaN(capacity) || capacity < 1) {
+    const capacityNum = parseInt(capacity);
+    if (isNaN(capacityNum) || capacityNum < 1) {
       toast({ title: "Capacity must be at least 1", variant: "destructive" });
       return;
     }
@@ -1742,12 +1753,12 @@ function AdminSlotFormDialog({
 
     const data = {
       serviceId,
-      dayOfWeek: parseInt(dayOfWeek),
+      date: new Date(slotDate).toISOString(),
       startTime,
       endTime,
-      maxCapacity: capacity,
+      capacity: capacityNum,
       price,
-      isActive,
+      status,
     };
 
     if (slot) {
@@ -1781,17 +1792,13 @@ function AdminSlotFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Day of Week</Label>
-            <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-              <SelectTrigger data-testid="select-slot-day">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {dayNames.map((name, index) => (
-                  <SelectItem key={index} value={index.toString()}>{name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Date</Label>
+            <Input
+              type="date"
+              value={slotDate}
+              onChange={(e) => setSlotDate(e.target.value)}
+              data-testid="input-slot-date"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -1817,12 +1824,12 @@ function AdminSlotFormDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Max Capacity</Label>
+              <Label>Capacity</Label>
               <Input
                 type="number"
                 min="1"
-                value={maxCapacity}
-                onChange={(e) => setMaxCapacity(e.target.value)}
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
                 data-testid="input-slot-capacity"
               />
             </div>
@@ -1838,9 +1845,18 @@ function AdminSlotFormDialog({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Switch id="slotActive" checked={isActive} onCheckedChange={setIsActive} data-testid="switch-slot-active" />
-            <Label htmlFor="slotActive">Active</Label>
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger data-testid="select-slot-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="full">Full</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
