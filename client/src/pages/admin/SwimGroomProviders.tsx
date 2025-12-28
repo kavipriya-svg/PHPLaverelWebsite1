@@ -356,6 +356,32 @@ function ProviderDialog({
   
   useEffect(() => {
     setCurrentProvider(initialProvider);
+    // Reset form when provider changes
+    if (initialProvider) {
+      setName(initialProvider.name);
+      setEmail(initialProvider.email || "");
+      setPassword("");
+      setPhone(initialProvider.phone || "");
+      setDescription(initialProvider.description || "");
+      setAddress(initialProvider.address || "");
+      setCountryId(initialProvider.countryId || "");
+      setStateId(initialProvider.stateId || "");
+      setCityId(initialProvider.cityId || "");
+      setLocalityId(initialProvider.localityId || "");
+      setPincode(initialProvider.pincode || "");
+      setGstNumber(initialProvider.gstNumber || "");
+      setGstName(initialProvider.gstName || "");
+      setCommissionType((initialProvider.commissionType as "percentage" | "fixed") || "percentage");
+      setCommissionValue(initialProvider.commissionValue || "10");
+      setIsActive(initialProvider.isActive ?? true);
+      setIsVerified(initialProvider.isVerified ?? false);
+      setMediaFiles(initialProvider.media || []);
+      setOwnerType((initialProvider.ownerType as "individual" | "business") || "individual");
+      setOwnerVerificationStatus(initialProvider.ownerVerificationStatus || "pending");
+      setAddressVerificationStatus(initialProvider.addressVerificationStatus || "pending");
+      setOwnerVerificationNotes(initialProvider.ownerVerificationNotes || "");
+      setAddressVerificationNotes(initialProvider.addressVerificationNotes || "");
+    }
   }, [initialProvider]);
 
   const { data: countriesData } = useQuery<{ countries: SwimGroomCountry[] }>({
