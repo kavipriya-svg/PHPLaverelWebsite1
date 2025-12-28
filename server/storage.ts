@@ -2903,14 +2903,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSwimGroomProviderSlot(slot: InsertSwimGroomProviderSlot): Promise<SwimGroomProviderSlot> {
-    const [created] = await db.insert(swimGroomProviderSlots).values(slot).returning();
+    // Ensure date is a Date object for Drizzle timestamp column
+    const slotData = {
+      ...slot,
+      date: typeof slot.date === 'string' ? new Date(slot.date) : slot.date,
+    };
+    const [created] = await db.insert(swimGroomProviderSlots).values(slotData).returning();
     return created;
   }
 
   async updateSwimGroomProviderSlot(id: string, slot: Partial<InsertSwimGroomProviderSlot>): Promise<SwimGroomProviderSlot | undefined> {
+    // Ensure date is a Date object for Drizzle timestamp column
+    const slotData = {
+      ...slot,
+      ...(slot.date && { date: typeof slot.date === 'string' ? new Date(slot.date) : slot.date }),
+      updatedAt: new Date(),
+    };
     const [updated] = await db
       .update(swimGroomProviderSlots)
-      .set({ ...slot, updatedAt: new Date() })
+      .set(slotData)
       .where(eq(swimGroomProviderSlots.id, id))
       .returning();
     return updated;
