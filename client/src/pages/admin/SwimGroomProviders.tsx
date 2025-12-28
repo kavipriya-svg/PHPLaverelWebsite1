@@ -381,6 +381,33 @@ function ProviderDialog({
       setAddressVerificationStatus(initialProvider.addressVerificationStatus || "pending");
       setOwnerVerificationNotes(initialProvider.ownerVerificationNotes || "");
       setAddressVerificationNotes(initialProvider.addressVerificationNotes || "");
+    } else {
+      // Reset to blank for new provider
+      setName("");
+      setEmail("");
+      setPassword("");
+      setPhone("");
+      setDescription("");
+      setAddress("");
+      setCountryId("");
+      setStateId("");
+      setCityId("");
+      setLocalityId("");
+      setPincode("");
+      setGstNumber("");
+      setGstName("");
+      setCommissionType("percentage");
+      setCommissionValue("10");
+      setIsActive(true);
+      setIsVerified(false);
+      setMediaFiles([]);
+      setOwnerType("individual");
+      setOwnerVerificationStatus("pending");
+      setAddressVerificationStatus("pending");
+      setOwnerVerificationNotes("");
+      setAddressVerificationNotes("");
+      setVerificationDocs([]);
+      setProviderServices([]);
     }
   }, [initialProvider]);
 
@@ -639,10 +666,9 @@ function ProviderDialog({
       open={open}
       onOpenChange={(o) => {
         if (!o) onOpenChange(false);
-        else resetForm();
       }}
     >
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onOpenAutoFocus={() => resetForm()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{provider ? "Edit Provider" : "Add Provider"}</DialogTitle>
         </DialogHeader>
