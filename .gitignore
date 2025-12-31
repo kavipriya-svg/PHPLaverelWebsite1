@@ -10,3 +10,7 @@ full_backup.zip
 uploads/*
 !uploads/.gitkeep
 
+*.zip
+*.tar.gz
+backup/
+
