@@ -1151,6 +1151,60 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Finalize customer upload - sets ACL and saves local copy
+  app.post("/api/user/upload/finalize", isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = getUserInfo(req);
+      if (!userInfo) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      if (!req.body.uploadURL) {
+        return res.status(400).json({ error: "uploadURL is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.uploadURL,
+        {
+          owner: userInfo.id,
+          visibility: "public",
+        }
+      );
+
+      // Also save a copy to local uploads folder
+      try {
+        const uploadsDir = path.join(process.cwd(), "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        const filename = objectPath.split("/").pop();
+        if (filename) {
+          const localFilePath = path.join(uploadsDir, filename);
+          const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+          const writeStream = fs.createWriteStream(localFilePath);
+          
+          await new Promise<void>((resolve, reject) => {
+            objectFile.createReadStream()
+              .on("error", reject)
+              .pipe(writeStream)
+              .on("finish", resolve)
+              .on("error", reject);
+          });
+          console.log("[User Upload Finalize] Saved local copy to:", localFilePath);
+        }
+      } catch (localSaveError) {
+        console.error("[User Upload Finalize] Failed to save local copy:", localSaveError);
+      }
+
+      res.json({ objectPath });
+    } catch (error) {
+      console.error("Error finalizing user upload:", error);
+      res.status(500).json({ error: "Failed to finalize upload" });
+    }
+  });
+
   // Get user addresses
   app.get("/api/addresses", isAuthenticated, async (req, res) => {
     try {
@@ -2892,6 +2946,44 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         }
       );
       console.log("[Upload Finalize] Finalized object path:", objectPath);
+
+      // Also save a copy to local uploads folder
+      try {
+        const uploadsDir = path.join(process.cwd(), "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        // Extract filename from objectPath (format: /objects/uploads/uuid)
+        const filename = objectPath.split("/").pop();
+        if (filename) {
+          const localFilePath = path.join(uploadsDir, filename);
+          
+          // Download from object storage and save locally
+          const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+          const writeStream = fs.createWriteStream(localFilePath);
+          
+          await new Promise<void>((resolve, reject) => {
+            objectFile.createReadStream()
+              .on("error", (err) => {
+                console.error("[Upload Finalize] Error downloading from object storage:", err);
+                reject(err);
+              })
+              .pipe(writeStream)
+              .on("finish", () => {
+                console.log("[Upload Finalize] Saved local copy to:", localFilePath);
+                resolve();
+              })
+              .on("error", (err) => {
+                console.error("[Upload Finalize] Error writing local file:", err);
+                reject(err);
+              });
+          });
+        }
+      } catch (localSaveError) {
+        // Log but don't fail the request - object storage is the primary storage
+        console.error("[Upload Finalize] Failed to save local copy:", localSaveError);
+      }
 
       res.json({ objectPath });
     } catch (error) {
