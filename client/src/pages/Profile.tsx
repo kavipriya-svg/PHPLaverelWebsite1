@@ -133,7 +133,12 @@ export default function Profile() {
         throw new Error("Failed to upload image");
       }
 
-      const imageUrl = `/objects/${objectPath}`;
+      // Finalize upload to set ACL and save local copy
+      const finalizeResponse = await apiRequest("POST", "/api/user/upload/finalize", {
+        uploadURL: presignedUrl,
+      });
+      const finalizeData = await finalizeResponse.json();
+      const imageUrl = finalizeData.objectPath || `/objects/${objectPath}`;
 
       const profileResponse = await apiRequest("PUT", "/api/user/profile", {
         ...form.getValues(),
