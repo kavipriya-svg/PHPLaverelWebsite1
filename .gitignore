@@ -3,4 +3,10 @@ dist
 .DS_Store
 server/public
 vite.config.ts.*
-*.tar.gzfull_backup.zip
+*.tar.gz
+full_backup.zip
+
+# uploads folder (keep folder, ignore files)
+uploads/*
+!uploads/.gitkeep
+
