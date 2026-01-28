@@ -376,42 +376,29 @@ export default function ProductForm() {
     saveMutation.mutate(data);
   };
 
-  // Handle file upload to object storage
+  // Handle file upload to local /uploads folder
   const handleFileUpload = async (file: File, mediaType: "image" | "video") => {
     setIsUploading(true);
     try {
       console.log("[Upload] Starting upload for:", file.name, file.type);
       
-      // Get presigned URL for upload
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "products",
+      // Upload file directly to /uploads folder
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const uploadResponse = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
-      const { presignedUrl, objectPath } = await presignedResponse.json();
-      console.log("[Upload] Got presigned URL:", presignedUrl);
-      console.log("[Upload] Object path:", objectPath);
-
-      // Upload file directly to storage
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-      console.log("[Upload] Upload response status:", uploadResponse.status);
-
-      // Finalize upload to set ACL policy for public access
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      const finalizedResult = await finalizeResponse.json();
-      console.log("[Upload] Finalized result:", finalizedResult);
-
-      // Add to media items using the finalized object path
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
-      console.log("[Upload] Final URL for media:", finalUrl);
+      
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file");
+      }
+      
+      const uploadData = await uploadResponse.json();
+      const finalUrl = uploadData.url;
+      console.log("[Upload] File saved to:", finalUrl);
       
       const newMedia: MediaItem = {
         url: finalUrl,
@@ -1343,20 +1330,16 @@ export default function ProductForm() {
                           const file = e.target.files?.[0];
                           if (file) {
                             try {
-                              const presignedRes = await apiRequest("POST", "/api/upload/presigned-url", {
-                                filename: file.name,
-                                contentType: file.type,
+                              const formData = new FormData();
+                              formData.append("file", file);
+                              const uploadRes = await fetch("/api/upload/file", {
+                                method: "POST",
+                                body: formData,
+                                credentials: "include",
                               });
-                              const presignedData = await presignedRes.json();
-                              const { presignedUrl, objectPath } = presignedData;
-                              await fetch(presignedUrl, {
-                                method: "PUT",
-                                body: file,
-                                headers: { "Content-Type": file.type },
-                              });
-                              const finalizeRes = await apiRequest("POST", "/api/admin/upload/finalize", { uploadURL: presignedUrl });
-                              const finalizeData = await finalizeRes.json();
-                              form.setValue("bannerUrl", finalizeData.objectPath || `/objects/${objectPath}`);
+                              if (!uploadRes.ok) throw new Error("Upload failed");
+                              const uploadData = await uploadRes.json();
+                              form.setValue("bannerUrl", uploadData.url);
                               toast({ title: "Banner uploaded successfully" });
                             } catch (error) {
                               toast({ title: "Failed to upload banner", variant: "destructive" });

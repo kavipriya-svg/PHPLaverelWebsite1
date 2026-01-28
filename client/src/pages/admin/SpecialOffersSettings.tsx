@@ -103,45 +103,24 @@ export default function SpecialOffersSettingsPage() {
     setUploading(true);
 
     try {
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "special-offers",
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
       
-      if (!presignedResponse.ok) {
-        throw new Error("Failed to get upload URL");
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
       }
       
-      const { presignedUrl, objectPath } = await presignedResponse.json();
-
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage");
-      }
-
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      
-      if (!finalizeResponse.ok) {
-        throw new Error("Failed to finalize upload");
-      }
-      
-      const finalizedResult = await finalizeResponse.json();
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      const uploadData = await uploadRes.json();
       
       if (type === "banner") {
-        setSettings(prev => ({ ...prev, bannerUrl: finalUrl }));
+        setSettings(prev => ({ ...prev, bannerUrl: uploadData.url }));
       } else {
-        setSettings(prev => ({ ...prev, sectionImageUrl: finalUrl }));
+        setSettings(prev => ({ ...prev, sectionImageUrl: uploadData.url }));
       }
       
       toast({ title: `${type === "banner" ? "Banner" : "Section image"} uploaded successfully` });

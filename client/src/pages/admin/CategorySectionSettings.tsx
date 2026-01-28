@@ -113,45 +113,24 @@ export default function CategorySectionSettingsPage() {
     setUploadingId(categoryId);
 
     try {
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "categories",
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
       
-      if (!presignedResponse.ok) {
-        throw new Error("Failed to get upload URL");
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
       }
       
-      const { presignedUrl, objectPath } = await presignedResponse.json();
-
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file");
-      }
-
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      
-      if (!finalizeResponse.ok) {
-        throw new Error("Failed to finalize upload");
-      }
-      
-      const finalizedResult = await finalizeResponse.json();
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      const uploadData = await uploadRes.json();
       
       setSettings(prev => ({
         ...prev,
         categories: prev.categories.map(cat => 
-          cat.id === categoryId ? { ...cat, imageUrl: finalUrl } : cat
+          cat.id === categoryId ? { ...cat, imageUrl: uploadData.url } : cat
         )
       }));
       

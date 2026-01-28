@@ -61,30 +61,16 @@ type SwimGroomProviderService = { id: string; providerId: string; serviceId: str
 type SwimGroomVerificationDoc = { id: string; providerId: string; verificationType: string; documentLabel: string; documentUrl: string; status: string; reviewNotes?: string | null; uploadedAt: string; };
 
 async function uploadFile(file: File): Promise<string> {
-  const uploadRes = await fetch("/api/admin/upload", {
+  const formData = new FormData();
+  formData.append("file", file);
+  const uploadRes = await fetch("/api/upload/file", {
     method: "POST",
+    body: formData,
     credentials: "include",
   });
-  if (!uploadRes.ok) throw new Error("Failed to get upload URL");
-  const { uploadURL } = await uploadRes.json();
-  if (!uploadURL) throw new Error("No upload URL received");
-  
-  const putRes = await fetch(uploadURL, {
-    method: "PUT",
-    body: file,
-    headers: { "Content-Type": file.type },
-  });
-  if (!putRes.ok) throw new Error("Failed to upload file");
-  
-  const finalizeRes = await fetch("/api/admin/upload/finalize", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uploadURL }),
-    credentials: "include",
-  });
-  if (!finalizeRes.ok) throw new Error("Failed to finalize upload");
-  const { objectPath } = await finalizeRes.json();
-  return objectPath;
+  if (!uploadRes.ok) throw new Error("Upload failed");
+  const uploadData = await uploadRes.json();
+  return uploadData.url;
 }
 type SwimGroomProviderWithDetails = SwimGroomProvider & {
   country?: SwimGroomCountry | null;

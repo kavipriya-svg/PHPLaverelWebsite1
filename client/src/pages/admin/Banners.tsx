@@ -308,15 +308,15 @@ function BannerDialog({
   const handleFileUpload = async (file: File, uploadType: "image" | "video") => {
     setIsUploading(true);
     try {
-      // Get presigned URL for upload
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "banners",
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
       
-      // Check if we got an unauthorized response
-      if (presignedResponse.status === 401) {
+      if (uploadRes.status === 401) {
         toast({ 
           title: "Session expired", 
           description: "Please log in again to upload files.",
@@ -325,51 +325,17 @@ function BannerDialog({
         return;
       }
       
-      if (!presignedResponse.ok) {
-        throw new Error("Failed to get upload URL");
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
       }
       
-      const { presignedUrl, objectPath } = await presignedResponse.json();
-
-      // Upload file directly to storage
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage");
-      }
-
-      // Finalize upload to set ACL policy for public access
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      
-      if (finalizeResponse.status === 401) {
-        toast({ 
-          title: "Session expired", 
-          description: "Please log in again to complete the upload.",
-          variant: "destructive" 
-        });
-        return;
-      }
-      
-      if (!finalizeResponse.ok) {
-        throw new Error("Failed to finalize upload");
-      }
-      
-      const finalizedResult = await finalizeResponse.json();
+      const uploadData = await uploadRes.json();
 
       // Set the URL based on upload type
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
       if (uploadType === "image") {
-        setMediaUrl(finalUrl);
+        setMediaUrl(uploadData.url);
       } else {
-        setVideoUrl(finalUrl);
+        setVideoUrl(uploadData.url);
       }
       toast({ title: `${uploadType === "video" ? "Video" : "Image"} uploaded successfully` });
     } catch (error) {

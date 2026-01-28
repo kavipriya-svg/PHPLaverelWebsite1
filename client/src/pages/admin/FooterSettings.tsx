@@ -116,42 +116,21 @@ export default function FooterSettingsPage() {
 
     setIsUploading(true);
     try {
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "footer",
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
       
-      if (!presignedResponse.ok) {
-        throw new Error("Failed to get upload URL");
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
       }
       
-      const { presignedUrl, objectPath } = await presignedResponse.json();
-
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
+      const uploadData = await uploadRes.json();
       
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage");
-      }
-
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      
-      if (!finalizeResponse.ok) {
-        throw new Error("Failed to finalize upload");
-      }
-      
-      const finalizedResult = await finalizeResponse.json();
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
-      
-      setSettings(prev => ({ ...prev, logoUrl: finalUrl }));
+      setSettings(prev => ({ ...prev, logoUrl: uploadData.url }));
       toast({ title: "Logo uploaded successfully" });
     } catch (error) {
       console.error("Upload error:", error);

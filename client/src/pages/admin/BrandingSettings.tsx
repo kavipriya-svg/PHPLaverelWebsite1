@@ -72,48 +72,24 @@ export default function BrandingSettingsPage() {
     setUploading(true);
 
     try {
-      // Get presigned URL for upload
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "branding",
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
       
-      if (!presignedResponse.ok) {
-        throw new Error("Failed to get upload URL");
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
       }
       
-      const { presignedUrl, objectPath } = await presignedResponse.json();
-
-      // Upload file directly to storage
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage");
-      }
-
-      // Finalize upload to set ACL policy for public access
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      
-      if (!finalizeResponse.ok) {
-        throw new Error("Failed to finalize upload");
-      }
-      
-      const finalizedResult = await finalizeResponse.json();
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      const uploadData = await uploadRes.json();
       
       if (type === "logo") {
-        setSettings(prev => ({ ...prev, logoUrl: finalUrl }));
+        setSettings(prev => ({ ...prev, logoUrl: uploadData.url }));
       } else {
-        setSettings(prev => ({ ...prev, faviconUrl: finalUrl }));
+        setSettings(prev => ({ ...prev, faviconUrl: uploadData.url }));
       }
       
       toast({ title: `${type === "logo" ? "Logo" : "Favicon"} uploaded successfully` });

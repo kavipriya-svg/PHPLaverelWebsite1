@@ -6,7 +6,50 @@ import { emailService } from "./email";
 import { randomUUID, createHmac } from "crypto";
 import path from "path";
 import fs from "fs";
+import multer from "multer";
+import express from "express";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+
+// Configure multer for local file uploads
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = randomUUID();
+    const ext = path.extname(file.originalname);
+    cb(null, `${uniqueSuffix}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage: multerStorage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "image/svg+xml",
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type"));
+    }
+  },
+});
 import Razorpay from "razorpay";
 import { hashPassword, verifyPassword, validatePasswordStrength } from "./password";
 import {
@@ -174,6 +217,39 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
+
+  // Serve uploaded files statically
+  app.use("/uploads", express.static(uploadsDir));
+
+  // Direct file upload endpoint (admin)
+  app.post("/api/upload/file", isAuthenticated, isAdmin, upload.single("file"), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      const fileUrl = `/uploads/${req.file.filename}`;
+      console.log("[Upload] File saved to:", fileUrl);
+      res.json({ url: fileUrl, filename: req.file.filename });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ error: "Failed to upload file" });
+    }
+  });
+
+  // Direct file upload endpoint (customer)
+  app.post("/api/user/upload/file", isAuthenticated, upload.single("file"), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      const fileUrl = `/uploads/${req.file.filename}`;
+      console.log("[Upload] User file saved to:", fileUrl);
+      res.json({ url: fileUrl, filename: req.file.filename });
+    } catch (error) {
+      console.error("Error uploading user file:", error);
+      res.status(500).json({ error: "Failed to upload file" });
+    }
+  });
 
   // Project backup download routes
   app.get("/api/download/project", (req, res) => {

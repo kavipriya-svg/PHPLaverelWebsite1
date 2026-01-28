@@ -118,27 +118,22 @@ export default function Profile() {
       const localPreview = URL.createObjectURL(file);
       setPreviewUrl(localPreview);
 
-      const urlResponse = await apiRequest("POST", "/api/user/profile-photo-url", {});
-      const { presignedUrl, objectPath } = await urlResponse.json();
-
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
+      // Upload file directly to /uploads folder
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const uploadResponse = await fetch("/api/user/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
 
       if (!uploadResponse.ok) {
         throw new Error("Failed to upload image");
       }
 
-      // Finalize upload to set ACL and save local copy
-      const finalizeResponse = await apiRequest("POST", "/api/user/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      const finalizeData = await finalizeResponse.json();
-      const imageUrl = finalizeData.objectPath || `/objects/${objectPath}`;
+      const uploadData = await uploadResponse.json();
+      const imageUrl = uploadData.url;
 
       const profileResponse = await apiRequest("PUT", "/api/user/profile", {
         ...form.getValues(),

@@ -63,14 +63,15 @@ export default function InvoiceSettingsPage() {
   const handleLogoUpload = async (file: File) => {
     setIsUploading(true);
     try {
-      // Get presigned URL for upload
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "invoice-logos",
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
       
-      if (presignedResponse.status === 401) {
+      if (uploadRes.status === 401) {
         toast({ 
           title: "Session expired", 
           description: "Please log in again to upload files.",
@@ -79,48 +80,14 @@ export default function InvoiceSettingsPage() {
         return;
       }
       
-      if (!presignedResponse.ok) {
-        throw new Error("Failed to get upload URL");
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
       }
       
-      const { presignedUrl, objectPath } = await presignedResponse.json();
-
-      // Upload file directly to storage
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage");
-      }
-
-      // Finalize upload to set ACL policy for public access
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      
-      if (finalizeResponse.status === 401) {
-        toast({ 
-          title: "Session expired", 
-          description: "Please log in again to complete the upload.",
-          variant: "destructive" 
-        });
-        return;
-      }
-      
-      if (!finalizeResponse.ok) {
-        throw new Error("Failed to finalize upload");
-      }
-      
-      const finalizedResult = await finalizeResponse.json();
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
+      const uploadData = await uploadRes.json();
       
       // Update the form with the new logo URL
-      form.setValue("logoUrl", finalUrl);
+      form.setValue("logoUrl", uploadData.url);
       toast({ title: "Logo uploaded successfully" });
     } catch (error) {
       console.error("Upload error:", error);

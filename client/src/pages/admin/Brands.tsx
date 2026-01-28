@@ -223,22 +223,20 @@ function BrandDialog({
 
     setIsUploading(true);
     try {
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "brands"
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
-      const { presignedUrl, publicUrl } = await presignedResponse.json() as { presignedUrl: string; publicUrl: string };
-
-      await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type }
-      });
-
-      await apiRequest("POST", "/api/admin/upload/finalize", { publicUrl });
       
-      setLogoUrl(publicUrl);
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
+      }
+      
+      const uploadData = await uploadRes.json();
+      setLogoUrl(uploadData.url);
       toast({ title: "Logo uploaded successfully" });
     } catch (error) {
       console.error("Upload error:", error);

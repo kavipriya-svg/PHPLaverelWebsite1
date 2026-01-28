@@ -94,42 +94,21 @@ export default function BlogSettingsPage() {
     setIsUploadingImage(true);
 
     try {
-      const presignedResponse = await apiRequest("POST", "/api/upload/presigned-url", {
-        filename: file.name,
-        contentType: file.type,
-        folder: "blog",
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
       
-      if (!presignedResponse.ok) {
-        throw new Error("Failed to get upload URL");
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
       }
       
-      const { presignedUrl, objectPath } = await presignedResponse.json();
-
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
+      const uploadData = await uploadRes.json();
       
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file");
-      }
-
-      const finalizeResponse = await apiRequest("POST", "/api/admin/upload/finalize", {
-        uploadURL: presignedUrl,
-      });
-      
-      if (!finalizeResponse.ok) {
-        throw new Error("Failed to finalize upload");
-      }
-      
-      const finalizedResult = await finalizeResponse.json();
-      const finalUrl = finalizedResult.objectPath || `/objects/${objectPath}`;
-      
-      setPostForm(prev => ({ ...prev, imageUrl: finalUrl }));
+      setPostForm(prev => ({ ...prev, imageUrl: uploadData.url }));
       toast({ title: "Image uploaded successfully" });
     } catch (error) {
       console.error("Upload error:", error);
