@@ -63,7 +63,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 const adminMenuItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
@@ -116,6 +117,25 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
   const [usersOpen, setUsersOpen] = useState(location.startsWith("/admin/users"));
   const [swimGroomOpen, setSwimGroomOpen] = useState(location.startsWith("/admin/swim-groom"));
+
+  const { data: brandingData } = useQuery<{ settings: { faviconUrl?: string } }>({
+    queryKey: ["/api/settings/branding"],
+  });
+
+  useEffect(() => {
+    const faviconUrl = brandingData?.settings?.faviconUrl;
+    if (faviconUrl) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.href = faviconUrl;
+      link.type = faviconUrl.endsWith(".svg") ? "image/svg+xml" :
+                  faviconUrl.endsWith(".ico") ? "image/x-icon" : "image/png";
+    }
+  }, [brandingData?.settings?.faviconUrl]);
 
   if (isLoading) {
     return (

@@ -77,6 +77,20 @@ export function Header() {
   const categories = categoriesData?.categories || [];
   const branding = brandingData?.settings ? { ...defaultBranding, ...brandingData.settings } : defaultBranding;
 
+  useEffect(() => {
+    if (branding.faviconUrl) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.href = branding.faviconUrl;
+      link.type = branding.faviconUrl.endsWith(".svg") ? "image/svg+xml" :
+                  branding.faviconUrl.endsWith(".ico") ? "image/x-icon" : "image/png";
+    }
+  }, [branding.faviconUrl]);
+
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", "/api/auth/logout");
