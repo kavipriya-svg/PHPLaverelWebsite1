@@ -66,32 +66,33 @@ import {
 import { ReactNode, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-const adminMenuItems = [
+const overviewItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
+];
+
+const catalogItems = [
   { href: "/admin/products", icon: Package, label: "Products" },
   { href: "/admin/categories", icon: FolderTree, label: "Categories" },
   { href: "/admin/brands", icon: Tag, label: "Brands" },
+  { href: "/admin/inventory", icon: Warehouse, label: "Inventory" },
+];
+
+const salesItems = [
   { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
   { href: "/admin/pos", icon: Store, label: "POS" },
-  { href: "/admin/inventory", icon: Warehouse, label: "Inventory" },
-  { href: "/admin/reviews", icon: Star, label: "Reviews" },
+  { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
+  { href: "/admin/combo-offers", icon: Gift, label: "Combo Offers" },
+];
+
+const contentItems = [
   { href: "/admin/banners", icon: Image, label: "Banners" },
   { href: "/admin/home-blocks", icon: LayoutGrid, label: "Home Blocks" },
   { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },
-  { href: "/admin/blog", icon: BookOpen, label: "Blog" },
-  { href: "/admin/quick-pages", icon: FileText, label: "Quick Pages" },
-  { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
-  { href: "/admin/combo-offers", icon: Gift, label: "Combo Offers" },
-  { href: "/admin/communication", icon: MessageSquare, label: "Communication" },
-  { href: "/admin/marketing", icon: Megaphone, label: "Marketing" },
-  { href: "/admin/seo", icon: Search, label: "SEO" },
-  { href: "/admin/invoice", icon: FileText, label: "Invoice" },
-  { href: "/admin/branding", icon: Paintbrush, label: "Branding" },
   { href: "/admin/special-offers", icon: Percent, label: "Special Offers Page" },
   { href: "/admin/combo-offers-settings", icon: Gift, label: "Combo Offers Page" },
-  { href: "/admin/footer", icon: PanelBottom, label: "Footer" },
-  { href: "/admin/settings", icon: Settings, label: "Settings" },
+  { href: "/admin/blog", icon: BookOpen, label: "Blog" },
+  { href: "/admin/quick-pages", icon: FileText, label: "Quick Pages" },
 ];
 
 const userSubMenuItems = [
@@ -110,6 +111,20 @@ const swimGroomSubMenuItems = [
   { href: "/admin/swim-groom/locations", icon: MapPin, label: "Locations" },
   { href: "/admin/swim-groom/providers", icon: Building2, label: "Providers" },
   { href: "/admin/swim-groom/bookings", icon: Calendar, label: "Bookings" },
+];
+
+const marketingItems = [
+  { href: "/admin/reviews", icon: Star, label: "Reviews" },
+  { href: "/admin/communication", icon: MessageSquare, label: "Communication" },
+  { href: "/admin/marketing", icon: Megaphone, label: "Marketing" },
+  { href: "/admin/seo", icon: Search, label: "SEO" },
+];
+
+const configItems = [
+  { href: "/admin/branding", icon: Paintbrush, label: "Branding" },
+  { href: "/admin/invoice", icon: FileText, label: "Invoice" },
+  { href: "/admin/footer", icon: PanelBottom, label: "Footer" },
+  { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {
@@ -207,10 +222,10 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Management</SidebarGroupLabel>
+              <SidebarGroupLabel>Overview</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {adminMenuItems.slice(0, 15).map((item) => (
+                  {overviewItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild isActive={location === item.href}>
                         <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
@@ -220,7 +235,68 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
-                  
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Catalog</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {catalogItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={location === item.href}>
+                        <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Sales</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {salesItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={location === item.href}>
+                        <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Content</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {contentItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={location === item.href}>
+                        <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>People</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
                   <Collapsible open={usersOpen} onOpenChange={setUsersOpen} className="group/collapsible">
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
@@ -249,7 +325,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       </CollapsibleContent>
                     </SidebarMenuItem>
                   </Collapsible>
-                  
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Services</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
                   <Collapsible open={swimGroomOpen} onOpenChange={setSwimGroomOpen} className="group/collapsible-sg">
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
@@ -278,8 +361,33 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       </CollapsibleContent>
                     </SidebarMenuItem>
                   </Collapsible>
-                  
-                  {adminMenuItems.slice(15).map((item) => (
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Marketing</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {marketingItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={location === item.href}>
+                        <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Configuration</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {configItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild isActive={location === item.href}>
                         <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
