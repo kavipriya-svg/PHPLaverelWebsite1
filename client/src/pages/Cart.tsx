@@ -97,6 +97,8 @@ export default function Cart() {
   const { toast } = useToast();
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [duplicatePopoverOpenId, setDuplicatePopoverOpenId] = useState<string | null>(null);
+  const [duplicatingItemId, setDuplicatingItemId] = useState<string | null>(null);
   
   const isSubscriptionCustomer = user?.customerType === 'subscription';
   const isAuthenticated = !!user;
@@ -155,10 +157,13 @@ export default function Cart() {
   // Mutation to duplicate cart item with a different delivery date
   const duplicateCartItemMutation = useMutation({
     mutationFn: async ({ itemId, deliveryDate }: { itemId: string; deliveryDate: string }) => {
+      setDuplicatingItemId(itemId);
       const res = await apiRequest("POST", `/api/cart/${itemId}/duplicate`, { deliveryDate });
       return res.json();
     },
     onSuccess: () => {
+      setDuplicatePopoverOpenId(null);
+      setDuplicatingItemId(null);
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({
         title: "Item added for another delivery date",
@@ -166,6 +171,8 @@ export default function Cart() {
       });
     },
     onError: () => {
+      setDuplicatePopoverOpenId(null);
+      setDuplicatingItemId(null);
       toast({
         variant: "destructive",
         title: "Failed to add item",
@@ -556,24 +563,27 @@ export default function Cart() {
                               </Button>
                             )}
                           </div>
-                          <Popover>
+                          <Popover
+                            open={duplicatePopoverOpenId === item.id}
+                            onOpenChange={(open) => setDuplicatePopoverOpenId(open ? item.id : null)}
+                          >
                             <PopoverTrigger asChild>
                               <Button 
                                 variant="ghost" 
                                 size="sm"
                                 className="h-7 gap-1 text-xs text-muted-foreground w-fit"
-                                disabled={duplicateCartItemMutation.isPending}
+                                disabled={duplicatingItemId === item.id}
                                 data-testid={`button-add-another-date-${item.id}`}
                               >
                                 <Copy className="h-3 w-3" />
-                                {duplicateCartItemMutation.isPending ? 'Adding...' : 'Add for another delivery date'}
+                                {duplicatingItemId === item.id ? 'Adding...' : 'Add for another delivery date'}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
                               <CalendarComponent
                                 mode="single"
                                 onSelect={(date) => {
-                                  if (date && !duplicateCartItemMutation.isPending) {
+                                  if (date && duplicatingItemId !== item.id) {
                                     duplicateCartItemMutation.mutate({
                                       itemId: item.id,
                                       deliveryDate: format(date, 'yyyy-MM-dd'),
