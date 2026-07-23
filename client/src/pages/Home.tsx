@@ -962,8 +962,8 @@ function EditorialFooter() {
 
 // ─── Main Home Page ────────────────────────────────────────────────
 export default function Home() {
-  const { data: featuredData } = useQuery<{ products: any[] }>({
-    queryKey: ["/api/products?featured=true&limit=4"],
+  const { data: treatsData } = useQuery<{ products: any[] }>({
+    queryKey: ["/api/products?categorySlug=wild-treats&limit=4"],
   });
 
   const { data: trendingData } = useQuery<{ products: any[] }>({
@@ -988,7 +988,7 @@ export default function Home() {
       <EditorialHeader />
       <HeroSection />
       <CategoryHub categories={topCategories} />
-      <BestSellersSection products={featuredData?.products || []} />
+      <BestSellersSection products={treatsData?.products || []} />
       <AncestralPhilosophySection />
       <TrendingApparelSection products={trendingData?.products || []} />
       <WolfPrincipleSection />

@@ -1431,9 +1431,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         brandIds = [req.query.brandId as string];
       }
 
+      // Resolve categorySlug → categoryId
+      let resolvedCategoryId = req.query.categoryId as string | undefined;
+      if (req.query.categorySlug && !resolvedCategoryId) {
+        const cat = await storage.getCategoryBySlug(req.query.categorySlug as string);
+        if (cat) resolvedCategoryId = cat.id;
+      }
+
       const filters = {
         search: req.query.search as string,
-        categoryId: req.query.categoryId as string,
+        categoryId: resolvedCategoryId,
         brandIds,
         minPrice: req.query.minPrice ? parseFloat(req.query.minPrice as string) : undefined,
         maxPrice: req.query.maxPrice ? parseFloat(req.query.maxPrice as string) : undefined,
