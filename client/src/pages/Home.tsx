@@ -58,11 +58,15 @@ function Reveal({ children, delay = 0, className = "" }: {
   );
 }
 
-// ─── Product image helper ──────────────────────────────────────────
+// ─── Image helpers ─────────────────────────────────────────────────
 function getProductImage(product: any): string {
   return product?.images?.find((i: any) => i.isPrimary)?.url
     || product?.images?.[0]?.url
-    || "https://lh3.googleusercontent.com/aida-public/AB6AXuBPcYcHlncUNn6qI9gIWdccIu-HWBHYSopDGUki5XiRWhdx0ijxQdFsGnkwfjYUQ5bkXlmu524LIeCzE8u4jOmmjFSAg8qImjz-ykysFBK2py4c6Szog0vBV941Wv-BH7-WPEsjLwKACVEc7Rg_jNiwxmhJdxX8iY4Xm-16cnznQPs8-3frzVTRYGCmPAxzOzyst3xbd7nChvkh36hiVPzynrdktOHdtBbLc-ewjkvDGpjmfpBYZYhFb2MO8OuXTphQXcCRTOkCCNQa";
+    || "";
+}
+
+function getCategoryImage(category: any): string {
+  return category?.bannerUrl || category?.iconUrl || category?.imageUrl || "";
 }
 
 // ─── 1. Editorial Header ───────────────────────────────────────────
@@ -279,9 +283,10 @@ function CategoryHub({ categories }: { categories: any[] }) {
           <div className="hard-shadow overflow-hidden relative" style={{ height: 600, backgroundColor: C.surfaceContainer }}>
             <img
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              src={cats[0]?.imageUrl || CATEGORY_FALLBACK_IMAGES[0]}
+              src={getCategoryImage(cats[0]) || CATEGORY_FALLBACK_IMAGES[0]}
               alt={cats[0]?.name || "Biological Food"}
               loading="lazy"
+              onError={(e) => { e.currentTarget.src = CATEGORY_FALLBACK_IMAGES[0]; }}
             />
             <div className="absolute bottom-10 left-10 p-8 max-w-sm" style={{ backgroundColor: C.primary, color: C.white }}>
               <h3 className="font-playfair text-headline-md mb-2">{cats[0]?.name || "Biological Food"}</h3>
@@ -300,9 +305,10 @@ function CategoryHub({ categories }: { categories: any[] }) {
           <div className="hard-shadow overflow-hidden relative group" style={{ height: 450, backgroundColor: C.surfaceContainer }}>
             <img
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              src={cats[1]?.imageUrl || CATEGORY_FALLBACK_IMAGES[1]}
+              src={getCategoryImage(cats[1]) || CATEGORY_FALLBACK_IMAGES[1]}
               alt={cats[1]?.name || "Modern Apparel"}
               loading="lazy"
+              onError={(e) => { e.currentTarget.src = CATEGORY_FALLBACK_IMAGES[1]; }}
             />
             <div className="absolute inset-0 flex flex-col justify-end p-8" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)" }}>
               <h3 className="font-playfair text-headline-md" style={{ color: C.white }}>{cats[1]?.name || "Modern Apparel"}</h3>
@@ -318,9 +324,10 @@ function CategoryHub({ categories }: { categories: any[] }) {
           <div className="hard-shadow overflow-hidden relative group mt-12" style={{ height: 400, backgroundColor: C.surfaceContainer }}>
             <img
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              src={cats[2]?.imageUrl || CATEGORY_FALLBACK_IMAGES[2]}
+              src={getCategoryImage(cats[2]) || CATEGORY_FALLBACK_IMAGES[2]}
               alt={cats[2]?.name || "High Protein Treats"}
               loading="lazy"
+              onError={(e) => { e.currentTarget.src = CATEGORY_FALLBACK_IMAGES[2]; }}
             />
             <div
               className="absolute inset-0 flex flex-col justify-center items-center text-center p-8 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -341,9 +348,10 @@ function CategoryHub({ categories }: { categories: any[] }) {
           <div className="hard-shadow overflow-hidden relative group mt-6" style={{ height: 400, backgroundColor: C.surfaceContainer }}>
             <img
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              src={cats[3]?.imageUrl || CATEGORY_FALLBACK_IMAGES[3]}
+              src={getCategoryImage(cats[3]) || CATEGORY_FALLBACK_IMAGES[3]}
               alt={cats[3]?.name || "Twinning"}
               loading="lazy"
+              onError={(e) => { e.currentTarget.src = CATEGORY_FALLBACK_IMAGES[3]; }}
             />
             <div className="absolute top-8 right-8 p-4" style={{ backgroundColor: "rgba(255,255,255,0.9)", backdropFilter: "blur(4px)" }}>
               <p className="font-inter text-label-caps" style={{ color: C.primary }}>NEW ARRIVAL</p>
@@ -401,6 +409,7 @@ function BestSellersSection({ products }: { products: any[] }) {
                   src={getProductImage(p) || fallbackImgs[i]}
                   alt={p.title}
                   loading="lazy"
+                  onError={(e) => { e.currentTarget.src = fallbackImgs[i]; }}
                 />
                 {p.id && (
                   <button
@@ -535,6 +544,7 @@ function TrendingApparelSection({ products }: { products: any[] }) {
                     src={getProductImage(item) || item.img}
                     alt={item.title}
                     loading="lazy"
+                    onError={(e) => { if (item.img) e.currentTarget.src = item.img; }}
                   />
                   <div className="absolute bottom-6 left-6 flex gap-2">
                     <button className="w-4 h-4 rounded-full border border-white" style={{ backgroundColor: C.primary }} aria-label="Color option 1" />
