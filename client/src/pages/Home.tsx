@@ -966,8 +966,8 @@ export default function Home() {
     queryKey: ["/api/products?categorySlug=wild-treats&limit=4"],
   });
 
-  const { data: trendingData } = useQuery<{ products: any[] }>({
-    queryKey: ["/api/products?trending=true&limit=3"],
+  const { data: clothingData } = useQuery<{ products: any[] }>({
+    queryKey: ["/api/products?categorySlug=clothing&limit=3"],
   });
 
   const { data: categoriesData } = useQuery<{ categories: any[] }>({
@@ -990,7 +990,7 @@ export default function Home() {
       <CategoryHub categories={topCategories} />
       <BestSellersSection products={treatsData?.products || []} />
       <AncestralPhilosophySection />
-      <TrendingApparelSection products={trendingData?.products || []} />
+      <TrendingApparelSection products={clothingData?.products || []} />
       <WolfPrincipleSection />
       <FounderMissionSection />
       <GiftSetsSection />
