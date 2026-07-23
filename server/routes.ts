@@ -1767,6 +1767,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Homepage Settings - GET (public)
+  app.get("/api/settings/homepage", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("homepage_settings");
+      if (setting?.value) {
+        try {
+          res.json({ settings: JSON.parse(setting.value) });
+        } catch {
+          res.json({ settings: {} });
+        }
+      } else {
+        res.json({ settings: {} });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch homepage settings" });
+    }
+  });
+
+  // Homepage Settings - PUT (Admin only)
+  app.put("/api/settings/homepage", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({
+        homepage_settings: JSON.stringify(req.body),
+      });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update homepage settings" });
+    }
+  });
+
   // Special Offers Page Settings - GET
   app.get("/api/settings/special-offers", async (req, res) => {
     try {

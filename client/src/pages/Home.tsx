@@ -7,6 +7,11 @@ import {
   ShoppingBag, Plus, ShieldCheck, FlaskConical, Leaf, Droplets,
   PawPrint, Globe, Camera, PlayCircle, Quote, Menu, X,
 } from "lucide-react";
+import {
+  DEFAULT_HOMEPAGE_SETTINGS,
+  mergeHomepageSettings,
+  HomepageSettings,
+} from "@/lib/homepageDefaults";
 
 // ─── Editorial Color Palette ───────────────────────────────────────
 const C = {
@@ -60,133 +65,101 @@ function Reveal({ children, delay = 0, className = "" }: {
 
 // ─── Image helpers ─────────────────────────────────────────────────
 function getProductImage(product: any): string {
-  return product?.images?.find((i: any) => i.isPrimary)?.url
-    || product?.images?.[0]?.url
-    || "";
+  if (!product) return "";
+  const imgs = product.images || product.productImages || [];
+  const primary = imgs.find((i: any) => i.isPrimary) || imgs[0];
+  return primary?.url || primary?.imageUrl || product.imageUrl || product.image || "";
 }
 
 function getCategoryImage(category: any): string {
-  return category?.bannerUrl || category?.iconUrl || category?.imageUrl || "";
+  if (!category) return "";
+  return category.bannerUrl || category.iconUrl || category.imageUrl || "";
 }
 
 // ─── 1. Editorial Header ───────────────────────────────────────────
-function EditorialHeader() {
-  const { cartItems } = useStore();
-  const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0);
-  const [mobileOpen, setMobileOpen] = useState(false);
+function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header
-      className="fixed top-0 w-full z-50 backdrop-blur-md border-b"
-      style={{ backgroundColor: "rgba(249,250,246,0.85)", borderColor: `${C.outlineVariant}4D` }}
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-margin-desktop py-6"
+      style={{ backgroundColor: `${C.surface}F2`, backdropFilter: "blur(12px)" }}
     >
-      <div className="px-margin-desktop py-4 flex justify-between items-center gap-8">
-        <Link href="/">
-          <span
-            className="font-playfair font-bold uppercase tracking-tight cursor-pointer"
-            style={{ fontSize: 28, color: C.primary }}
-          >
-            19 DOGS
-          </span>
-        </Link>
+      <Link href="/">
+        <span
+          className="font-playfair font-bold cursor-pointer select-none"
+          style={{ fontSize: 24, letterSpacing: "0.1em", color: C.primary }}
+        >
+          19 DOGS
+        </span>
+      </Link>
 
-        <nav className="hidden md:flex gap-8 items-center">
-          <Link href="/shop">
+      <nav className="hidden md:flex items-center gap-8">
+        {nav.links.map((link) => (
+          <Link key={link.href + link.label} href={link.href}>
             <span
-              className="font-inter text-label-md font-bold border-b-2 pb-1 cursor-pointer"
-              style={{ color: C.primary, borderColor: C.primary }}
+              className="font-inter text-body-sm cursor-pointer transition-opacity hover:opacity-60"
+              style={{ color: C.onSurface }}
             >
-              Shop Food
+              {link.label}
             </span>
           </Link>
-          <Link href="/category/clothing">
-            <span
-              className="font-inter text-body-md cursor-pointer transition-colors duration-300 hover:opacity-70"
-              style={{ color: C.onSurfaceVariant }}
-            >
-              Dog Clothing
-            </span>
-          </Link>
-          <Link href="/combo-offers">
-            <span
-              className="font-inter text-body-md cursor-pointer transition-colors duration-300 hover:opacity-70"
-              style={{ color: C.onSurfaceVariant }}
-            >
-              Twinning
-            </span>
-          </Link>
-          <Link href="/about">
-            <span
-              className="font-inter text-body-md cursor-pointer transition-colors duration-300 hover:opacity-70"
-              style={{ color: C.onSurfaceVariant }}
-            >
-              Our Story
-            </span>
-          </Link>
-        </nav>
+        ))}
+      </nav>
 
-        <div className="flex items-center gap-6">
-          <Link href="/signup">
-            <button
-              className="hidden md:block font-inter text-label-caps uppercase tracking-widest px-6 py-2 transition-colors duration-200 cursor-pointer"
-              style={{ backgroundColor: C.primary, color: C.white }}
-              onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
-              onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
-            >
-              Join the Pack
-            </button>
-          </Link>
-          <Link href="/cart">
-            <div className="relative cursor-pointer" style={{ color: C.primary }}>
-              <ShoppingBag className="w-6 h-6" />
-              {cartCount > 0 && (
-                <span
-                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center font-inter text-[10px] font-bold"
-                  style={{ backgroundColor: C.secondary, color: C.white }}
-                >
-                  {cartCount}
-                </span>
-              )}
-            </div>
-          </Link>
+      <div className="flex items-center gap-4">
+        <Link href={nav.ctaHref}>
           <button
-            className="md:hidden"
-            style={{ color: C.primary }}
-            onClick={() => setMobileOpen(v => !v)}
-            aria-label="Toggle menu"
+            className="hidden md:block font-inter text-label-caps uppercase tracking-widest px-6 py-3 transition-all duration-200 cursor-pointer"
+            style={{ backgroundColor: C.primary, color: C.white }}
+            onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
+            onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
+            data-testid="button-join-the-pack"
           >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {nav.ctaText}
           </button>
-        </div>
+        </Link>
+        <Link href="/cart">
+          <ShoppingBag
+            className="w-6 h-6 cursor-pointer transition-opacity hover:opacity-60"
+            style={{ color: C.onSurface }}
+            data-testid="icon-cart-header"
+          />
+        </Link>
+        <button
+          className="md:hidden"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
+          data-testid="button-mobile-menu"
+          style={{ color: C.onSurface }}
+        >
+          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
       </div>
 
-      {mobileOpen && (
+      {menuOpen && (
         <div
-          className="md:hidden border-t py-4 px-margin-mobile flex flex-col gap-4"
-          style={{ backgroundColor: C.surface, borderColor: C.outlineVariant }}
+          className="absolute top-full left-0 right-0 flex flex-col py-6 px-margin-desktop gap-6"
+          style={{ backgroundColor: C.surface, borderTop: `1px solid ${C.outlineVariant}` }}
         >
-          {[
-            { label: "Shop Food", href: "/shop" },
-            { label: "Dog Clothing", href: "/category/clothing" },
-            { label: "Twinning", href: "/combo-offers" },
-            { label: "Our Story", href: "/about" },
-          ].map(({ label, href }) => (
-            <Link key={href} href={href}>
+          {nav.links.map((link) => (
+            <Link key={link.href + link.label} href={link.href}>
               <span
-                className="block font-inter text-body-md py-2 cursor-pointer"
-                style={{ color: C.onSurface }}
-                onClick={() => setMobileOpen(false)}
+                className="font-playfair text-headline-md cursor-pointer"
+                style={{ color: C.primary }}
+                onClick={() => setMenuOpen(false)}
               >
-                {label}
+                {link.label}
               </span>
             </Link>
           ))}
-          <Link href="/signup">
+          <Link href={nav.ctaHref}>
             <button
-              className="w-full font-inter text-label-caps uppercase tracking-widest py-3 mt-2"
+              className="font-inter text-label-caps uppercase tracking-widest px-6 py-3 w-fit cursor-pointer"
               style={{ backgroundColor: C.primary, color: C.white }}
+              onClick={() => setMenuOpen(false)}
             >
-              Join the Pack
+              {nav.ctaText}
             </button>
           </Link>
         </div>
@@ -196,13 +169,14 @@ function EditorialHeader() {
 }
 
 // ─── 2. Hero Section ───────────────────────────────────────────────
-function HeroSection() {
+function HeroSection({ hero }: { hero: HomepageSettings["hero"] }) {
+  const headlineLines = hero.headline.split("\n");
   return (
     <section className="relative h-screen w-full flex items-center justify-start overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img
           className="w-full h-full object-cover"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdkohNsQkc6S0JbtaIdAsey35kS83tN7AxGpjRpAEY6S8vlm1OfDJT8e1toInI93OCV6GXmPPSNZcmwQBurGV0Z4jImz7G7Vr83FyIm8xvBZ7Z5yPkk4iE8HFKnljeRThKTYB6WXyFbWEuGGosOCzrONRMOtxipUEyHyAq7qsJ9GOgaYZhxWgmLyjyP4xxxjtwxRdsetLwrdjReF7QRNZLkggMIOtIFhX37a8_jhOmCC4kEangu5Vt6btzNECH7utpQ3frHfld6Z_f"
+          src={hero.bgImageUrl}
           alt="19 Dogs editorial hero"
           loading="eager"
         />
@@ -213,39 +187,41 @@ function HeroSection() {
           className="font-inter text-label-caps uppercase mb-4"
           style={{ color: C.onPrimaryContainer }}
         >
-          Biological Excellence
+          {hero.label}
         </p>
         <h1
           className="font-playfair italic leading-tight mb-6"
           style={{ fontSize: "clamp(48px,8vw,84px)", lineHeight: "1.05", letterSpacing: "-0.02em", fontWeight: 700, color: C.primary }}
         >
-          The Modern <br />Wolf Manual.
+          {headlineLines.map((line, i) => (
+            <span key={i}>{line}{i < headlineLines.length - 1 && <br />}</span>
+          ))}
         </h1>
         <p
           className="font-playfair text-headline-md italic mb-10"
           style={{ color: C.primaryContainer }}
         >
-          Issue No. 01 — Biological Wellness
+          {hero.subheadline}
         </p>
         <div className="flex flex-wrap gap-4">
-          <Link href="/shop">
+          <Link href={hero.cta1Href}>
             <button
               className="font-inter text-label-caps uppercase tracking-widest px-10 py-4 transition-all duration-200 cursor-pointer"
               style={{ backgroundColor: C.primary, color: C.white }}
               onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
               onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
             >
-              Shop Nutrition
+              {hero.cta1Text}
             </button>
           </Link>
-          <Link href="/category/clothing">
+          <Link href={hero.cta2Href}>
             <button
               className="font-inter text-label-caps uppercase tracking-widest px-10 py-4 border transition-all duration-200 cursor-pointer"
               style={{ borderColor: C.secondary, color: C.secondary, backgroundColor: "transparent" }}
               onMouseOver={e => { e.currentTarget.style.backgroundColor = C.secondary; e.currentTarget.style.color = C.white; }}
               onMouseOut={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = C.secondary; }}
             >
-              The Collection
+              {hero.cta2Text}
             </button>
           </Link>
         </div>
@@ -264,16 +240,24 @@ const CATEGORY_FALLBACK_IMAGES = [
 
 const CATEGORY_CTAS = ["EXPLORE DIETS", "VIEW CLOTHING", "SHOP TREATS", "VIEW ALL"];
 
-function CategoryHub({ categories }: { categories: any[] }) {
+function CategoryHub({
+  categories,
+  categoryHub,
+}: {
+  categories: any[];
+  categoryHub: HomepageSettings["categoryHub"];
+}) {
   const cats = categories.slice(0, 4);
 
   return (
     <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surface }}>
       <div className="grid grid-cols-12 gap-gutter items-end mb-stack-md">
         <Reveal className="col-span-12 md:col-span-7">
-          <p className="font-inter text-label-caps mb-2" style={{ color: C.secondary }}>CURATED SELECTIONS</p>
+          <p className="font-inter text-label-caps mb-2" style={{ color: C.secondary }}>
+            {categoryHub.label}
+          </p>
           <h2 className="font-playfair text-headline-lg mb-8" style={{ color: C.primary }}>
-            The Core Biological Systems
+            {categoryHub.title}
           </h2>
         </Reveal>
       </div>
@@ -365,7 +349,13 @@ function CategoryHub({ categories }: { categories: any[] }) {
 }
 
 // ─── 4. Best Sellers ───────────────────────────────────────────────
-function BestSellersSection({ products }: { products: any[] }) {
+function BestSellersSection({
+  products,
+  bestSellers,
+}: {
+  products: any[];
+  bestSellers: HomepageSettings["bestSellers"];
+}) {
   const { addToCart } = useStore();
   const { toast } = useToast();
 
@@ -388,28 +378,28 @@ function BestSellersSection({ products }: { products: any[] }) {
     <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surfaceContainerLow }}>
       <div className="flex justify-between items-baseline mb-stack-md flex-wrap gap-4">
         <Reveal>
-          <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>Top Tier Fuel</h2>
+          <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>{bestSellers.title}</h2>
         </Reveal>
-        <Link href="/shop">
+        <Link href={bestSellers.browseHref}>
           <span
             className="font-inter text-label-caps cursor-pointer hover:underline"
             style={{ color: C.secondary }}
           >
-            BROWSE ALL NUTRITION
+            {bestSellers.browseText}
           </span>
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter">
-        {items.slice(0, 4).map((p: any, i: number) => (
+        {items.slice(0, bestSellers.limit).map((p: any, i: number) => (
           <Reveal key={p.id || i} delay={i * 100}>
             <div className="group cursor-pointer">
               <div className="relative overflow-hidden mb-4" style={{ aspectRatio: "4/5", backgroundColor: C.white }}>
                 <img
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  src={getProductImage(p) || fallbackImgs[i]}
+                  src={getProductImage(p) || fallbackImgs[i % fallbackImgs.length]}
                   alt={p.title}
                   loading="lazy"
-                  onError={(e) => { e.currentTarget.src = fallbackImgs[i]; }}
+                  onError={(e) => { e.currentTarget.src = fallbackImgs[i % fallbackImgs.length]; }}
                 />
                 {p.id && (
                   <button
@@ -449,22 +439,11 @@ function BestSellersSection({ products }: { products: any[] }) {
 }
 
 // ─── 5. Ancestral Philosophy ───────────────────────────────────────
-function AncestralPhilosophySection() {
-  const principles = [
-    {
-      num: "01", title: "Species Appropriate",
-      desc: "Mirroring the raw, varied diet of the wild ancestor to ensure optimal metabolic function.",
-    },
-    {
-      num: "02", title: "Cellular Integrity",
-      desc: "Cold-pressed and air-dried methods that preserve the delicate enzyme and vitamin structures.",
-    },
-    {
-      num: "03", title: "Ecological Harmony",
-      desc: "Sourcing from regenerative farms that respect the biological cycle of the entire ecosystem.",
-    },
-  ];
-
+function AncestralPhilosophySection({
+  philosophy,
+}: {
+  philosophy: HomepageSettings["philosophy"];
+}) {
   return (
     <section className="py-stack-lg px-margin-desktop overflow-hidden">
       <div className="grid grid-cols-12 gap-gutter items-center">
@@ -473,7 +452,7 @@ function AncestralPhilosophySection() {
             <img
               className="w-full object-cover"
               style={{ aspectRatio: "1/1" }}
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUPbA6QLtiVP5qe4diYDj9zfUXu2q50MzPgx4QdZkay0OYtQZDeAZGh-fkPEYOFZC0abgHT4hDnZFzRDjceSyJY5FBzv459HOZcSYjAGL_M8fPcHhPLqFFhNtFP53a9aYakL-ZksBCHjMK0XZapOm1GJASdtfBlbf12iC6DIDgaH_ULQdEuQVMMM9Vm_Fv6QzWsMCRnyOUndrGF2OWm3EEOD4d3y1O2HOENxT2BLUKJ2qb-5uWjQvC7TOjYfegJP4tcXKX357bGI7t"
+              src={philosophy.imageUrl}
               alt="Ancestral precision philosophy"
               loading="lazy"
             />
@@ -491,17 +470,23 @@ function AncestralPhilosophySection() {
               className="font-playfair text-headline-md italic leading-snug"
               style={{ color: C.primary }}
             >
-              "Nature does not build in excess; every ingredient must serve the biological blueprint."
+              "{philosophy.quote}"
             </p>
-            <p className="font-inter text-label-caps mt-6" style={{ color: C.onSurfaceVariant }}>— ARIA VANCE, FOUNDER</p>
+            <p className="font-inter text-label-caps mt-6" style={{ color: C.onSurfaceVariant }}>
+              — {philosophy.quoteAuthor}
+            </p>
           </div>
         </Reveal>
 
         <Reveal className="col-span-12 md:col-span-5 md:col-start-8 mt-24 md:mt-0" delay={150}>
-          <p className="font-inter text-label-caps uppercase mb-4" style={{ color: C.secondary }}>The Philosophy</p>
-          <h2 className="font-playfair text-headline-lg mb-8" style={{ color: C.primary }}>Ancestral Precision</h2>
+          <p className="font-inter text-label-caps uppercase mb-4" style={{ color: C.secondary }}>
+            {philosophy.label}
+          </p>
+          <h2 className="font-playfair text-headline-lg mb-8" style={{ color: C.primary }}>
+            {philosophy.title}
+          </h2>
           <ul className="space-y-8">
-            {principles.map(p => (
+            {philosophy.principles.map(p => (
               <li key={p.num} className="flex gap-4">
                 <span className="font-playfair text-headline-md shrink-0" style={{ color: C.secondary }}>{p.num}</span>
                 <div>
@@ -518,20 +503,26 @@ function AncestralPhilosophySection() {
 }
 
 // ─── 6. Trending Apparel ───────────────────────────────────────────
-function TrendingApparelSection({ products }: { products: any[] }) {
+function TrendingApparelSection({
+  products,
+  apparel,
+}: {
+  products: any[];
+  apparel: HomepageSettings["apparel"];
+}) {
   const fallbacks = [
     { title: "Technical Parka 01", price: "120.00", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB4p5wMd6nWLiWwi9q7jgBakAQautr8BBMcalRpDV3Kq_AIBBidaaRXlBGZGRyurX4DplAp0Lw7gdHzuLmBZwVay8ICPVRDdUHvO9PEuopxKGaiJz_8Lf1nFG6vt1AG1fXjbEDhThYlS17A2vcxBJmjFkI1FesS721EF0wH3qTcAkSZFnez2McqUpyMQecby7evNyc72V2qX1VmxxAiejtHf2cC8YW8MVK1kb-rtMdmDlsn2uXDwgEhTd6nOPJ4GDLs-l7BkowafE_j" },
     { title: "Heritage Knit", price: "95.00", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBXSi19gYrwB0gDOYdWXbQFZT10xU34XZyt_hDm8VS0erwto6In5iXvY1Lz-pqBANPYK0Co8Hkk60govuOx3zSMnk4ri6LpyfeQiW4oXG3FMRdRAxuMVxs5mGIBOZb4E7dlIjZgjqDwOqzgHZcBWruV87m_L0mMhfSIbyQW7wxi0ITuYQMhenW7dqwgo2KxCNf6ktWBtmj83rUGZ_pyeWIo32pYDvCEzANF4a26FTGU0CemOMoq9Koj7_MKQho_8FdJjWd3KwbNpPO" },
     { title: "Field Harness Pro", price: "78.00", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuD2gmiXeEW4z_y8Z0AP6XMHKsyxu0_lqz3PR9Vbxsgh2VF0-QfeRjdEucit3cI27xGy1MIIHBHyGhuTAuuK3YehOB7Ojl83MgydgpxS4T-PjU-JHivP5S4HQBRCYX8ECdLucSVM9g4KQ1rCzweSHfAGW_2GDV84fK_5KLA3evaJ7x_oe_1g974K--dnQdP5Y0WpF7rTDWgdNN2ls-0yXF7kDGVMiZf6oFlEJcWur3lSVJyOzH-SxfpFRy2WQRA-OWoQanxrXNcVwT" },
   ];
 
-  const items = products.length > 0 ? products.slice(0, 3) : fallbacks;
+  const items = products.length > 0 ? products.slice(0, apparel.limit) : fallbacks.slice(0, apparel.limit);
 
   return (
     <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.white }}>
       <Reveal className="text-center mb-stack-md">
-        <p className="font-inter text-label-caps mb-2" style={{ color: C.outline }}>THE WARDROBE</p>
-        <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>Apparel for the Modern Pack</h2>
+        <p className="font-inter text-label-caps mb-2" style={{ color: C.outline }}>{apparel.label}</p>
+        <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>{apparel.title}</h2>
       </Reveal>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
         {items.map((item: any, i: number) => (
@@ -566,7 +557,11 @@ function TrendingApparelSection({ products }: { products: any[] }) {
 }
 
 // ─── 7. Wolf Principle ─────────────────────────────────────────────
-function WolfPrincipleSection() {
+function WolfPrincipleSection({
+  wolfPrinciple,
+}: {
+  wolfPrinciple: HomepageSettings["wolfPrinciple"];
+}) {
   return (
     <section className="py-32 relative overflow-hidden" style={{ backgroundColor: C.primary }}>
       <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none">
@@ -575,28 +570,28 @@ function WolfPrincipleSection() {
       <div className="relative z-10 px-margin-desktop text-center max-w-4xl mx-auto">
         <Reveal>
           <p className="font-inter text-label-caps tracking-widest mb-6" style={{ color: C.onPrimaryContainer }}>
-            THE BIOLOGICAL CONSTANT
+            {wolfPrinciple.label}
           </p>
           <h2
             className="font-playfair italic mb-10"
             style={{ fontSize: "clamp(40px,6vw,84px)", lineHeight: "1.05", fontWeight: 700, color: C.white }}
           >
-            99% DNA Match to Wolves.
+            {wolfPrinciple.headline}
           </h2>
           <p
             className="font-playfair text-headline-md italic mb-12"
             style={{ color: C.primaryFixed }}
           >
-            Treating them like the ancient predators they still are, behind the domestic mask.
+            {wolfPrinciple.body}
           </p>
-          <Link href="/about">
+          <Link href={wolfPrinciple.ctaHref}>
             <button
               className="font-inter text-label-caps tracking-widest uppercase px-12 py-5 transition-all duration-200 cursor-pointer"
               style={{ backgroundColor: C.white, color: C.primary }}
               onMouseOver={e => { e.currentTarget.style.backgroundColor = C.secondary; e.currentTarget.style.color = C.white; }}
               onMouseOut={e => { e.currentTarget.style.backgroundColor = C.white; e.currentTarget.style.color = C.primary; }}
             >
-              Read the Whitepaper
+              {wolfPrinciple.ctaText}
             </button>
           </Link>
         </Reveal>
@@ -606,19 +601,23 @@ function WolfPrincipleSection() {
 }
 
 // ─── 8. Founder's Mission ──────────────────────────────────────────
-function FounderMissionSection() {
+function FounderMissionSection({
+  founder,
+}: {
+  founder: HomepageSettings["founder"];
+}) {
   return (
     <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surface }}>
       <div className="grid grid-cols-12 gap-gutter items-center">
         <Reveal className="col-span-12 md:col-span-5">
-          <p className="font-inter text-label-caps mb-4" style={{ color: C.secondary }}>OUR PROMISE</p>
-          <h2 className="font-playfair text-headline-lg mb-8" style={{ color: C.primary }}>Engineering a Longer Life.</h2>
+          <p className="font-inter text-label-caps mb-4" style={{ color: C.secondary }}>{founder.label}</p>
+          <h2 className="font-playfair text-headline-lg mb-8" style={{ color: C.primary }}>{founder.title}</h2>
           <p className="font-inter text-body-lg mb-10" style={{ color: C.onSurfaceVariant }}>
-            "We started 19 DOGS because the standard for canine health was mediocre. We wanted to apply the same rigor of human longevity science to our dogs. Every product is a result of years of biological research and ethical sourcing."
+            "{founder.quote}"
           </p>
           <div className="flex items-center gap-4">
             <div className="w-16 h-px" style={{ backgroundColor: C.primary }} />
-            <p className="font-playfair text-headline-md italic" style={{ color: C.onSurface }}>Aria Vance</p>
+            <p className="font-playfair text-headline-md italic" style={{ color: C.onSurface }}>{founder.name}</p>
           </div>
         </Reveal>
         <Reveal className="col-span-12 md:col-span-6 md:col-start-7" delay={150}>
@@ -626,8 +625,8 @@ function FounderMissionSection() {
             <img
               className="w-full object-cover"
               style={{ aspectRatio: "4/5" }}
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCT959MkYVXHNXu8tEpfjHyDHaCffizClKWinko31EvcF_ck2vVCRD3dBsHSTD06-dTSeCvn9xnGa1uqf9bwDjlKBGn9Uw6FPdc75WzlGBXdDw1IzBgq2ePwamoP3NTuineTLIQz2HSsi95k-Nfd89ggitlNW4eeWfo72M8dQD8z625TkluKUQDfzKiatqra0XOsNjsEuDN9FoE0u-GOUGdmTdxaAunFGirlkltBmckZla91KlOvOED_M3UsfNW-yHbgbWHCNbUwti7"
-              alt="Aria Vance, Founder of 19 DOGS"
+              src={founder.imageUrl}
+              alt={`${founder.name}, Founder of 19 DOGS`}
               loading="lazy"
             />
           </div>
@@ -638,38 +637,21 @@ function FounderMissionSection() {
 }
 
 // ─── 9. Gift Sets ──────────────────────────────────────────────────
-const GIFT_SETS = [
-  {
-    title: "The Puppy Foundation",
-    desc: "Everything needed for the first 12 months of biological development.",
-    price: "$150",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCUFNxzofl3tnaHIeQskcnhNVHDm6VY7_pCm85cyRSJNXyGdaAoNXS0dEcQ_3qD6NCXwNaWh2jbNqZi1LrZkY5NsQqlYQ2u816hRkH71LGy97RtJS1EQUazpulX0bSrTLEtpH871J7Oi-sp8wrtXdl3JClqqZ8NIWit2ybaA8VP9PK-tSiRGO4DJz2uIeyHmJjCgqLgUEDAl8lZqyyUTmvCE4eVbR39Tu3CQ6IERBdXdfA8Vs05PK",
-  },
-  {
-    title: "The Longevity Pack",
-    desc: "Our best-selling supplements and foods for the senior canine athlete.",
-    price: "$210",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuC1Tfza6Z1fJEYwdzTRyRtcdKfBRqJmxeYo27FXabQRxGaQQpdThOG7WiCbHlOHJiqK802ed2VrRtWk8pZXWjtl18zDiyG3fGiCrGBX61JVqy6CUW4tqKAkWqsFZwE0qCE3WqNcCtwqJQUcF-b1wxFbZGeDpxkiU_DGBL3bVduOvsvDvEEWH0x9c50ibFKJoPa1sTQ-x_sfW-thhhd6EXhFN-dzuxXgkN0I0exkXoyVft71OJuEPjVBF9JRqs2FGGntXNqIWeSIuv1A",
-  },
-  {
-    title: "The Weekend Duo",
-    desc: "Matching apparel and travel bowls for the adventurous pair.",
-    price: "$125",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB1WxM1VknR5KblHPXR_XT8x-a0VvIVVIPAI75KhH-D2kR3SXBZmwyb_MxN1PkamYk6cyiTmCLoTmSq2nznoWkXy5la5Qv6KnM1RLxnsvCwSr3WjbZQ6DydGrIe-AQl7R5K4hsjfdAem1Cr6r72Vz7PtMiqc2VG0iH4-9A0_UgZWcleCM52unPMaorMqwKjq0tiOPqx_yLHd_YaluudbQQ8vF1pv_h-9J00_X8cOZ4YBabUDJ8aRMo3wrEk96kVXJeJecg-zhwWXVahY",
-  },
-];
-
-function GiftSetsSection() {
+function GiftSetsSection({
+  giftSets,
+}: {
+  giftSets: HomepageSettings["giftSets"];
+}) {
   return (
     <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surfaceContainerLow }}>
       <Reveal>
         <h2 className="font-playfair text-headline-lg text-center mb-stack-md" style={{ color: C.primary }}>
-          The Editorial Gift Series
+          {giftSets.sectionTitle}
         </h2>
       </Reveal>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-        {GIFT_SETS.map((g, i) => (
-          <Reveal key={g.title} delay={i * 100}>
+        {giftSets.items.map((g, i) => (
+          <Reveal key={g.title || i} delay={i * 100}>
             <div
               className="border flex flex-col justify-between p-8 h-full"
               style={{ backgroundColor: C.white, borderColor: C.outlineVariant }}
@@ -682,7 +664,7 @@ function GiftSetsSection() {
                 <img
                   className="w-full object-cover mb-6"
                   style={{ aspectRatio: "16/9" }}
-                  src={g.img}
+                  src={g.imageUrl}
                   alt={g.title}
                   loading="lazy"
                 />
@@ -704,14 +686,13 @@ function GiftSetsSection() {
 }
 
 // ─── 10. Trust Badges ─────────────────────────────────────────────
-const TRUST_ITEMS = [
-  { icon: ShieldCheck, label: "HUMAN-GRADE INGREDIENTS" },
-  { icon: FlaskConical, label: "VET-FORMULATED SCIENCE" },
-  { icon: Leaf, label: "REGENERATIVE SOURCING" },
-  { icon: Droplets, label: "ZERO SYNTHETIC FILLERS" },
-];
+const TRUST_ICONS = [ShieldCheck, FlaskConical, Leaf, Droplets, PawPrint, Globe];
 
-function TrustBadgesSection() {
+function TrustBadgesSection({
+  trustBadges,
+}: {
+  trustBadges: HomepageSettings["trustBadges"];
+}) {
   return (
     <section
       className="py-16 border-y"
@@ -719,12 +700,15 @@ function TrustBadgesSection() {
     >
       <Reveal>
         <div className="px-margin-desktop flex flex-wrap justify-center md:justify-between gap-12">
-          {TRUST_ITEMS.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex flex-col items-center text-center max-w-[200px]">
-              <Icon className="w-10 h-10 mb-4" style={{ color: C.primary }} />
-              <p className="font-inter text-label-caps" style={{ color: C.primary }}>{label}</p>
-            </div>
-          ))}
+          {trustBadges.items.map(({ label }, i) => {
+            const Icon = TRUST_ICONS[i % TRUST_ICONS.length];
+            return (
+              <div key={label || i} className="flex flex-col items-center text-center max-w-[200px]">
+                <Icon className="w-10 h-10 mb-4" style={{ color: C.primary }} />
+                <p className="font-inter text-label-caps" style={{ color: C.primary }}>{label}</p>
+              </div>
+            );
+          })}
         </div>
       </Reveal>
     </section>
@@ -735,28 +719,29 @@ function TrustBadgesSection() {
 const COMMUNITY_IMGS = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuC6N0ilLgFZ2pfWx5oB1ZzkMo-iWwAQv_pvxL0Ho6Qd4YUq4dB6NIo9AmntMUB9OSXuDXbPNyct2iAja1gMXb_h-PGVUGZECuAII5ypzCJQVMQa1-E-QLfgf4Kbm4YH0ks0s_6kDGlTMoG158cGcR42CYflkPkmmV1BOuY9N1FZ2Kc5LaHtRoAQsmJ7peujRNHJpEvVKXchcKZlGoqOiNnp6sg1NLD_rSbfzOUCzdQ_QqXJ9aSJ9Fg53Gs99a8r0Q2GLYTpIuhZpxW_",
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDOFQi7i7OKf2n03685JClNUwEOfJDAA2EtYsHH4ZkGTMM0DWm9Z9mlLlScl3DKvK9mJhzSUU2hCnbIVyePhGiU83VPln-03GpRjbNcvHe6hZhFiLHgcGsk_6r2L_240jfuPXlHfKp8wWmLEMwL-EbWnTflYz8FfbTzrlwKtdwTGU0p6kJXTGJRi7hSJCy8XXDBhKAFE2KDqqc6-mOUL9x3pTcrTFG8agt7zez0BG9o57YIU1qznIcwdh2nRYZ6kQG83otrB1RN8HZR",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAJaEuWpIkZ_zxluR44EP7n7QCe1h2nRGwiby6kpsneUrQcunmLZWqGUPEkRyR9nz6Hvs6MUV4wOaY0VMpXn22aqdoeZTMD2cizeHUjZG6P3xVk_lm7RLP_ChVHcKio9gWJScQ_SVzbOwrJmT6wm4QCZE0avG6IHPCNBqE7FFRF3chOz2-ROSIJ4CXH7l6MxEEIU03Z9eGXTYhfB5PncD4B_DsddzxEySNMkFJUvGNEZUgQfwsnAjbMVi98snLBRg1Z3L4vg6z1q5Z",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuD0YHPA_9H7hPEaLMsFgaZHgkk0BlCTRRpNMMn1GTJlZlVyLgW950Rqj9Wzw0ttbwpZf1XL1NNnl_sz1dqhQO-UTAK5JJAtk6mv5cOzGIgOojtaJvWLM012b3cWCfQUSXw5_mLff9E_lFXhl_S8YPTHyXvrJP0XU1OIsPShPplo1-Qo__YLR8_n-k0z4wjB3pfVTWG",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuAJaEuWpIkZ_zxluR44EP7n7QCe1h2nRGwiby6kpsneUrQcunmLZWqGUPEkRyR9nz6Hvs6MUV4wOaY0VMpXn22aqdoeZTMD2cizeHUjZG6P3xVk_ChVHcKio9gWJScQ_SVzbOwrJmT6wm4QCZE0avG6IHPCNBqE7FFRF3chOz2-ROSIJ4CXH7l6MxEEIU03Z9eGXTYhfB5PncD4B_DsddzxEySNMkFJUvGNEZUgQfwsnAjbMVi98snLBRg1Z3L4vg6z1q5Z",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuD0YHPA_9H7hPEaLMsFgaZHgkk0BlCTRRpNMMn1GTJlZlVyLgW950Rqj9Wzw0ttbwpZf1XL1NNnl_sz1dqhQO-UTAK5JJAtk6mv5cOzGIgOojtaJvWLM012b3cWCfQUSXw5_mLff9E_lFXhl_S8YPTHyXvrJP0XU1OIsPShPplo1-Qo__YLR8_n-k0z4wjB3pfVTWF",
 ];
 
-const FALLBACK_TESTIMONIALS = [
-  { quote: "Since switching to the Biological Starter Kit, my Shepherd's energy levels have stabilized and her coat has never been shinier. It's more than food; it's a transformation.", author: "MARCO S., NEW YORK" },
-  { quote: "The technical apparel actually fits! Most brands don't design for the active dog's movement, but 19 DOGS clearly does. The Technical Parka is a masterpiece.", author: "ELENA L., OSLO" },
-];
-
-function CommunityPackSection({ reviews }: { reviews: any[] }) {
+function CommunityPackSection({
+  reviews,
+  communityPack,
+}: {
+  reviews: any[];
+  communityPack: HomepageSettings["communityPack"];
+}) {
   const testimonials = reviews.length > 0
     ? reviews.slice(0, 2).map((r: any) => ({
         quote: r.content || r.review,
         author: `${r.user?.firstName || "Customer"} ${r.user?.lastName?.[0] || ""}., ${r.product?.title || "Verified Purchase"}`.toUpperCase(),
       }))
-    : FALLBACK_TESTIMONIALS;
+    : communityPack.testimonials;
 
   return (
     <section className="px-margin-desktop py-stack-lg">
       <Reveal className="text-center mb-16">
-        <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>The Community Pack</h2>
-        <p className="font-inter text-body-lg mt-2" style={{ color: C.onSurfaceVariant }}>Sharing the journey of biological wellness.</p>
+        <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>{communityPack.title}</h2>
+        <p className="font-inter text-body-lg mt-2" style={{ color: C.onSurfaceVariant }}>{communityPack.subtitle}</p>
       </Reveal>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-20">
@@ -786,7 +771,11 @@ function CommunityPackSection({ reviews }: { reviews: any[] }) {
 }
 
 // ─── 12. Newsletter ────────────────────────────────────────────────
-function NewsletterSection() {
+function NewsletterSection({
+  newsletter,
+}: {
+  newsletter: HomepageSettings["newsletter"];
+}) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -820,16 +809,16 @@ function NewsletterSection() {
     <section className="py-stack-lg px-margin-desktop" style={{ backgroundColor: C.primaryContainer }}>
       <Reveal className="max-w-4xl mx-auto text-center">
         <p className="font-inter text-label-caps tracking-[0.2em] mb-6" style={{ color: C.onPrimaryContainer }}>
-          STAY INFORMED
+          {newsletter.label}
         </p>
         <h2
           className="font-playfair italic leading-none mb-10"
           style={{ fontSize: "clamp(40px,6vw,64px)", color: C.white }}
         >
-          The Dispatch
+          {newsletter.title}
         </h2>
         <p className="font-playfair text-headline-md italic mb-12" style={{ color: C.primaryFixed }}>
-          Deep dives into canine biology and exclusive pack access.
+          {newsletter.subtitle}
         </p>
         {submitted ? (
           <p className="font-inter text-label-caps" style={{ color: C.primaryFixed }}>
@@ -869,7 +858,7 @@ function NewsletterSection() {
               onMouseOut={e => { e.currentTarget.style.backgroundColor = C.white; }}
               data-testid="button-newsletter-subscribe"
             >
-              {loading ? "SUBSCRIBING..." : "SUBSCRIBE"}
+              {loading ? "SUBSCRIBING..." : newsletter.ctaText}
             </button>
           </form>
         )}
@@ -882,7 +871,7 @@ function NewsletterSection() {
 }
 
 // ─── 13. Editorial Footer ──────────────────────────────────────────
-function EditorialFooter() {
+function EditorialFooter({ footer }: { footer: HomepageSettings["footer"] }) {
   return (
     <footer
       className="border-t pt-stack-lg pb-stack-sm"
@@ -892,7 +881,7 @@ function EditorialFooter() {
         <div className="col-span-12 md:col-span-4">
           <div className="font-playfair font-bold mb-8" style={{ fontSize: 40, color: C.primary }}>19 DOGS</div>
           <p className="font-inter text-body-md max-w-xs" style={{ color: C.onSurfaceVariant }}>
-            Precision in every bowl. High-performance biological wellness for the modern canine.
+            {footer.tagline}
           </p>
         </div>
 
@@ -935,8 +924,8 @@ function EditorialFooter() {
         <div className="col-span-12 md:col-span-4">
           <h5 className="font-inter text-label-caps mb-6" style={{ color: C.primary }}>CONNECT</h5>
           <div className="font-inter text-body-md mb-6" style={{ color: C.onSurfaceVariant }}>
-            <p>info@19dogs.com</p>
-            <p>+91 99414 43009</p>
+            <p>{footer.email}</p>
+            <p>{footer.phone}</p>
           </div>
           <div className="flex gap-4" style={{ color: C.outline }}>
             <Globe className="w-6 h-6 cursor-pointer hover:opacity-70 transition-opacity" />
@@ -951,7 +940,7 @@ function EditorialFooter() {
         style={{ borderColor: `${C.outlineVariant}4D` }}
       >
         <p className="font-inter text-body-md" style={{ color: C.onSurfaceVariant }}>
-          © 2024 19 DOGS. All rights reserved. Precision in every bowl.
+          {footer.copyright}
         </p>
         <div className="flex gap-8 flex-wrap">
           {[{ l: "Privacy Policy", h: "/privacy" }, { l: "Terms of Service", h: "/terms" }, { l: "Accessibility", h: "/" }].map(({ l, h }) => (
@@ -972,12 +961,20 @@ function EditorialFooter() {
 
 // ─── Main Home Page ────────────────────────────────────────────────
 export default function Home() {
+  const { data: settingsData } = useQuery<{ settings: Partial<HomepageSettings> }>({
+    queryKey: ["/api/settings/homepage"],
+  });
+
+  const s = settingsData
+    ? mergeHomepageSettings(settingsData.settings || {})
+    : DEFAULT_HOMEPAGE_SETTINGS;
+
   const { data: treatsData } = useQuery<{ products: any[] }>({
-    queryKey: ["/api/products?categorySlug=wild-treats&limit=4"],
+    queryKey: [`/api/products?categorySlug=${s.bestSellers.categorySlug}&limit=${s.bestSellers.limit}`],
   });
 
   const { data: clothingData } = useQuery<{ products: any[] }>({
-    queryKey: ["/api/products?categorySlug=clothing&limit=3"],
+    queryKey: [`/api/products?categorySlug=${s.apparel.categorySlug}&limit=${s.apparel.limit}`],
   });
 
   const { data: categoriesData } = useQuery<{ categories: any[] }>({
@@ -995,19 +992,39 @@ export default function Home() {
       className="overflow-x-hidden font-inter"
       style={{ backgroundColor: C.surface, color: C.onSurface }}
     >
-      <EditorialHeader />
-      <HeroSection />
-      <CategoryHub categories={topCategories} />
-      <BestSellersSection products={treatsData?.products || []} />
-      <AncestralPhilosophySection />
-      <TrendingApparelSection products={clothingData?.products || []} />
-      <WolfPrincipleSection />
-      <FounderMissionSection />
-      <GiftSetsSection />
-      <TrustBadgesSection />
-      <CommunityPackSection reviews={reviewsData?.reviews || []} />
-      <NewsletterSection />
-      <EditorialFooter />
+      <EditorialHeader nav={s.nav} />
+      {s.hero.visible !== false && <HeroSection hero={s.hero} />}
+      {s.categoryHub.visible !== false && (
+        <CategoryHub categories={topCategories} categoryHub={s.categoryHub} />
+      )}
+      {s.bestSellers.visible !== false && (
+        <BestSellersSection products={treatsData?.products || []} bestSellers={s.bestSellers} />
+      )}
+      {s.philosophy.visible !== false && (
+        <AncestralPhilosophySection philosophy={s.philosophy} />
+      )}
+      {s.apparel.visible !== false && (
+        <TrendingApparelSection products={clothingData?.products || []} apparel={s.apparel} />
+      )}
+      {s.wolfPrinciple.visible !== false && (
+        <WolfPrincipleSection wolfPrinciple={s.wolfPrinciple} />
+      )}
+      {s.founder.visible !== false && (
+        <FounderMissionSection founder={s.founder} />
+      )}
+      {s.giftSets.visible !== false && (
+        <GiftSetsSection giftSets={s.giftSets} />
+      )}
+      {s.trustBadges.visible !== false && (
+        <TrustBadgesSection trustBadges={s.trustBadges} />
+      )}
+      {s.communityPack.visible !== false && (
+        <CommunityPackSection reviews={reviewsData?.reviews || []} communityPack={s.communityPack} />
+      )}
+      {s.newsletter.visible !== false && (
+        <NewsletterSection newsletter={s.newsletter} />
+      )}
+      <EditorialFooter footer={s.footer} />
     </div>
   );
 }

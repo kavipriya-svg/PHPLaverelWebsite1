@@ -75,6 +75,7 @@ const AdminSwimGroomServices = lazy(() => import("@/pages/admin/SwimGroomService
 const AdminSwimGroomLocations = lazy(() => import("@/pages/admin/SwimGroomLocations"));
 const AdminSwimGroomProviders = lazy(() => import("@/pages/admin/SwimGroomProviders"));
 const AdminSwimGroomBookings = lazy(() => import("@/pages/admin/SwimGroomBookings"));
+const AdminHomepageSettings = lazy(() => import("@/pages/admin/HomepageSettings"));
 const SwimGroom = lazy(() => import("@/pages/SwimGroom"));
 const SwimGroomProvider = lazy(() => import("@/pages/SwimGroomProvider"));
 const ProviderDashboard = lazy(() => import("@/pages/provider/ProviderDashboard"));
@@ -437,6 +438,11 @@ function Router() {
       <Route path="/admin/branding">
         <AdminLayout>
           <AdminBrandingSettings />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/homepage">
+        <AdminLayout>
+          <AdminHomepageSettings />
         </AdminLayout>
       </Route>
       <Route path="/admin/special-offers">
