@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>19 DOGS — Biological Wellness Editorial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Inter:wght@300;400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#eeeeeb",
+                    "on-error": "#ffffff",
+                    "secondary-container": "#fe9e71",
+                    "primary-fixed": "#c0edd4",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "surface": "#f9faf6",
+                    "on-primary-container": "#6d9681",
+                    "secondary-fixed": "#ffdbcc",
+                    "tertiary-fixed-dim": "#ffb694",
+                    "tertiary-fixed": "#ffdbcc",
+                    "tertiary-container": "#471800",
+                    "outline": "#717973",
+                    "surface-container-low": "#f3f4f0",
+                    "surface-container-highest": "#e2e3e0",
+                    "on-tertiary-fixed": "#351000",
+                    "on-secondary-fixed-variant": "#76330e",
+                    "on-primary-fixed-variant": "#264e3c",
+                    "on-tertiary": "#ffffff",
+                    "primary": "#00160c",
+                    "on-secondary-container": "#77330e",
+                    "on-tertiary-container": "#ce774c",
+                    "secondary": "#944923",
+                    "on-secondary": "#ffffff",
+                    "inverse-surface": "#2f312f",
+                    "primary-fixed-dim": "#a5d0b8",
+                    "surface-bright": "#f9faf6",
+                    "on-tertiary-fixed-variant": "#76330d",
+                    "background": "#f9faf6",
+                    "inverse-primary": "#a5d0b8",
+                    "tertiary": "#260900",
+                    "outline-variant": "#c1c8c2",
+                    "on-primary-fixed": "#002114",
+                    "on-surface-variant": "#414844",
+                    "surface-dim": "#dadad7",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#f0f1ee",
+                    "on-secondary-fixed": "#351000",
+                    "error": "#ba1a1a",
+                    "primary-container": "#012d1d",
+                    "secondary-fixed-dim": "#ffb695",
+                    "surface-variant": "#e2e3e0",
+                    "on-primary": "#ffffff",
+                    "on-surface": "#1a1c1a",
+                    "on-background": "#1a1c1a",
+                    "surface-container-high": "#e8e8e5",
+                    "surface-tint": "#3e6653"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0px",
+                    "lg": "0px",
+                    "xl": "0px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "80px",
+                    "gutter": "24px",
+                    "stack-sm": "12px",
+                    "margin-mobile": "20px",
+                    "stack-md": "32px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Playfair Display"],
+                    "headline-lg-mobile": ["Playfair Display"],
+                    "label-md": ["Inter"],
+                    "display-lg": ["Playfair Display"],
+                    "label-caps": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Playfair Display"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["36px", {"lineHeight": "44px", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "display-lg": ["84px", {"lineHeight": "92px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "300"}],
+                    "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .hard-shadow {
+            box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+        }
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .editorial-img-hover img {
+            filter: grayscale(100%);
+            transition: filter 0.5s ease;
+        }
+        .editorial-img-hover:hover img {
+            filter: grayscale(0%);
+        }
+        .border-b-only {
+            border-bottom-width: 1px;
+            border-color: #DBDAD5;
+        }
+        .border-b-only:focus {
+            outline: none;
+            border-color: #012d1d;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-background font-body-md overflow-x-hidden">
+<!-- 1. Header -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 px-margin-desktop py-4 flex justify-between items-center">
+<div class="font-headline-md text-headline-md font-bold text-primary uppercase tracking-tight">19 DOGS</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="font-label-md text-primary font-bold border-b-2 border-primary pb-1" href="#">Shop Food</a>
+<a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors duration-300" href="#">Dog Clothing</a>
+<a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors duration-300" href="#">Twinning</a>
+<a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors duration-300" href="#">Our Story</a>
+</nav>
+<div class="flex items-center gap-6">
+<button class="bg-primary text-on-primary px-6 py-2 uppercase font-label-caps tracking-widest hover:bg-secondary transition-colors">Join the Pack</button>
+<span class="material-symbols-outlined text-primary cursor-pointer">shopping_bag</span>
+</div>
+</header>
+<!-- 2. Hero Section -->
+<section class="relative h-screen w-full flex items-center justify-start overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-fashion editorial portrait of a majestic Czechoslovakian Wolfdog standing nobly in a foggy, minimalist forest. The lighting is soft and high-key, with muted earthy tones and a premium biological wellness aesthetic. The dog's piercing gaze is directed towards the camera, conveying wisdom and ancestral health. Sharp focus on texture of the fur." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdkohNsQkc6S0JbtaIdAsey35kS83tN7AxGpjRpAEY6S8vlm1OfDJT8e1toInI93OCV6GXmPPSNZcmwQBurGV0Z4jImz7G7Vr83FyIm8xvBZ7Z5yPkk4iE8HFKnljeRThKTYB6WXyFbWEuGGosOCzrONRMOtxipUEyHyAq7qsJ9GOgaYZhxWgmLyjyP4xxxjtwxRdsetLwrdjReF7QRNZLkggMIOtIFhX37a8_jhOmCC4kEangu5Vt6btzNECH7utpQ3frHfld6Z_f"/>
+<div class="absolute inset-0 bg-primary/10"></div>
+</div>
+<div class="relative z-10 px-margin-desktop mt-20 max-w-4xl">
+<p class="font-label-caps text-on-primary-container mb-4 uppercase">Biological Excellence</p>
+<h1 class="font-display-lg text-display-lg italic text-primary leading-tight mb-6">The Modern <br/>Wolf Manual.</h1>
+<p class="font-headline-md text-headline-md text-primary-container mb-10 italic">Issue No. 01 — Biological Wellness</p>
+<div class="flex gap-4">
+<button class="bg-primary text-on-primary px-10 py-4 uppercase font-label-caps tracking-widest hover:bg-secondary transition-all">Shop Nutrition</button>
+<button class="border border-secondary text-secondary px-10 py-4 uppercase font-label-caps tracking-widest hover:bg-secondary hover:text-white transition-all">The Collection</button>
+</div>
+</div>
+</section>
+<!-- 3. Category Hub -->
+<section class="px-margin-desktop py-stack-lg bg-surface">
+<div class="grid grid-cols-12 gap-gutter items-end mb-stack-md">
+<div class="col-span-12 md:col-span-7 reveal">
+<p class="font-label-caps text-secondary mb-2">CURATED SELECTIONS</p>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8">The Core Biological Systems</h2>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Large Card -->
+<div class="col-span-12 md:col-span-7 relative group reveal">
+<div class="hard-shadow bg-surface-container overflow-hidden h-[600px]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Overhead shot of premium raw dog food ingredients arranged with editorial precision. Fresh kale, wild-caught salmon, and medicinal mushrooms are placed on a matte stone surface. The composition is minimalist and high-end, utilizing the primary green and earthy neutral palette of the 19 DOGS brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_hXasSEKk8hmcQOZGd4ggdnSJIg4qplSEBX9mvvRyQF2q9SEFl-1rqn1fk74EKSwIrmzyTZ4Dxtv1Jje92SdridvnqHCBbPOxjF9L9F4Q8qWgZXkKdfLQ1c0Phv7eGwPiot5-TBUVnf8epSVIjh40zsh1qxPWGjajB8IxAF6uUqtw4g7sz6FgmOoWip3Kkih_Ibq5EEvnfwC9iytFBJgNfJTa2IlmmWU5Mvw0R2M_6SC5BS6XtnkkJezu5zWh2ywkmZQftOX5Gqsv"/>
+<div class="absolute bottom-10 left-10 text-white bg-primary p-8 max-w-sm">
+<h3 class="font-headline-md text-headline-md mb-2">Biological Food</h3>
+<p class="font-body-md mb-4">Precision nutrition designed for the canine predator.</p>
+<a class="font-label-caps border-b border-white pb-1" href="#">EXPLORE DIETS</a>
+</div>
+</div>
+</div>
+<!-- Offset Small Card -->
+<div class="col-span-12 md:col-span-4 md:col-start-9 mt-stack-md md:mt-24 reveal">
+<div class="hard-shadow bg-surface-container overflow-hidden h-[450px] relative group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A fashion-forward grey Greyhound wearing a bespoke, high-fashion forest green knit sweater. The dog is posed against a minimalist white studio background. The lighting is sharp, emphasizing the high-quality textile textures and the sleek silhouette of the canine. Editorial minimalism style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfwiCVkAPqHg1ySjuYK0VtiK3i_CmkQrxJHNIqk1yPDx7WiqzemXvfaJzo4Qo963LsuIEyzCOGqPefsiyj3D7nyqKD1Cld6GrIduu-D2cVNXNP_hL2xK53PKjX6KIq8Be_bgF2--WMOj3h_NZ-YDQP2In7Bjbfm7EYbOuY_QWMc9zhxa8BsnOzXxDgpeHT-TEGJvWp_5M2TRc3h0yE_TCqPyziXDIINmgvKrte2685KkTmwNcBQbzreUM-djlWYEtNQFssp-SITnrp"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex flex-col justify-end p-8">
+<h3 class="font-headline-md text-headline-md text-white">Modern Apparel</h3>
+<a class="font-label-caps text-white mt-2" href="#">VIEW CLOTHING</a>
+</div>
+</div>
+</div>
+<!-- Secondary Cards -->
+<div class="col-span-12 md:col-span-5 reveal">
+<div class="hard-shadow bg-surface-container overflow-hidden h-[400px] relative group mt-12">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Close-up of high-protein dehydrated jerky treats for dogs, styled elegantly in a handcrafted ceramic bowl. The scene includes sprigs of rosemary and cracked black pepper for a culinary, gourmet aesthetic. Muted tones and professional food photography lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHW_A5xnUOSgtg7KfSKR4qCS5IPsEaIxWBIR9ZT_lHGf9uYcdZ32oEo4BRckh7wsQB0K4rtrsYTeVziQz4hZivRJur-cf2BOBj4EREkMr_Lr5HQ20H-yknxWHC5VSiU71jbCN-xyPgagcvYjT4xfOLnid0c2D1mhFg_rWJtPQSSdi9QTPX8mZ2cTgjnGLs994OrC0BbkXnslrZAFBNykwz5118RF1AFdmWyOB2IDTUrlwKZtlRvoQrWbWnkjQPShhuNhrTUnj4gi-3"/>
+<div class="absolute inset-0 bg-primary/20 flex flex-col justify-center items-center text-center p-8 opacity-0 group-hover:opacity-100 transition-opacity">
+<h3 class="font-headline-md text-headline-md text-white">High Protein Treats</h3>
+<button class="mt-4 bg-white text-primary px-6 py-2 font-label-caps">SHOP TREATS</button>
+</div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-6 md:col-start-7 reveal">
+<div class="hard-shadow bg-surface-container overflow-hidden h-[400px] relative group mt-6">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A heartwarming yet stylish portrait of a woman and her Golden Retriever both wearing matching minimalist beige trench coats. They are walking through a clean, architectural city plaza with sharp shadows and modern brutalist undertones. High-fashion brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhnR0MUApTUHKiliF37T8XkidY5NqkyVv8QrNwTv9lwlk3lAmWK7bgPAnQ9SOqWOoBQaf26WN412-Mpq1aqLJ-dCjc_q-ulgR8SDt3-Jwq5jBTeQSg6hvPOiR8iiYq2QepSDXbqzhjzt19tRpj4hpqjln3rwm3sJWZUpBwAr7CvmSa7_eo37nuTZFjDuS867jyf-05-l9OQ89mdoLB94KA4eB3t_FYa5jGhcZ3TokkhBBldkHtlRqt2Wo_SWvvPBPAv69qYCpYQjk0"/>
+<div class="absolute top-8 right-8 bg-white/90 backdrop-blur p-4">
+<p class="font-label-caps text-primary">NEW ARRIVAL</p>
+<h3 class="font-headline-md text-headline-md text-primary">Twinning</h3>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. Best Selling Nutrition -->
+<section class="px-margin-desktop py-stack-lg bg-surface-container-low">
+<div class="flex justify-between items-baseline mb-stack-md reveal">
+<h2 class="font-headline-lg text-headline-lg text-primary">Top Tier Fuel</h2>
+<a class="font-label-caps text-secondary hover:underline" href="#">BROWSE ALL NUTRITION</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<!-- Product Item -->
+<div class="group reveal">
+<div class="aspect-[4/5] bg-white relative overflow-hidden mb-4">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A minimalist product shot of a '19 DOGS' premium dog food bag. The packaging is matte black with crisp white typography and a small forest green wolf logo. It sits on a clean white surface with a sharp, hard drop shadow in translucent green. High-end pet supplement aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPcYcHlncUNn6qI9gIWdccIu-HWBHYSopDGUki5XiRWhdx0ijxQdFsGnkwfjYUQ5bkXlmu524LIeCzE8u4jOmmjFSAg8qImjz-ykysFBK2py4c6Szog0vBV941Wv-BH7-WPEsjLwKACVEc7Rg_jNiwxmhJdxX8iY4Xm-16cnznQPs8-3frzVTRYGCmPAxzOzyst3xbd7nChvkh36hiVPzynrdktOHdtBbLc-ewjkvDGpjmfpBYZYhFb2MO8OuXTphQXcCRTOkCCNQa"/>
+<button class="absolute bottom-4 right-4 bg-primary text-white w-12 h-12 flex items-center justify-center group-hover:bg-secondary transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<p class="font-label-caps text-outline mb-1">RAW REVOLUTION</p>
+<h4 class="font-headline-md text-[24px] text-primary mb-2">Ancestral Beef &amp; Organ</h4>
+<p class="text-secondary font-bold">$84.00</p>
+</div>
+<!-- Product Item -->
+<div class="group reveal" style="transition-delay: 100ms;">
+<div class="aspect-[4/5] bg-white relative overflow-hidden mb-4">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Minimalist white bottle of 19 DOGS Salmon Oil supplement. The label features clean serif typography and medical-grade layout. The bottle is placed on a light grey concrete block with hard, intentional lighting creating strong shadows. Premium veterinary aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDm0XP20ShWtMUi4wczdFCRqzjg0uL0svm_F69UAye4Ds9jP-g_56o4_OmnMntVjkH91MwrDL6BE4FxUeZYFIkMznQv_PRqxhAAeRED0pF8A5uizgIbSkckr3yp8OAuYt-WuAZc0BJRvJqEnI2F9a9Y5uhhwAUEkxbKR72OGhEmENO_RnctjHYInr6yUfFa1o_Wv4q_HIhHED22iSZBDmjr9uaJqz1sFw-zJImQsOwv2s7RlE5VXdSRikBN0mqAN0jGJlVCbxjlP39n"/>
+<button class="absolute bottom-4 right-4 bg-primary text-white w-12 h-12 flex items-center justify-center group-hover:bg-secondary transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<p class="font-label-caps text-outline mb-1">BIOME BOOST</p>
+<h4 class="font-headline-md text-[24px] text-primary mb-2">Wild Caught Omega-3</h4>
+<p class="text-secondary font-bold">$42.00</p>
+</div>
+<!-- Product Item -->
+<div class="group reveal" style="transition-delay: 200ms;">
+<div class="aspect-[4/5] bg-white relative overflow-hidden mb-4">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A sleek glass jar filled with dark, high-quality air-dried bison treats. The 19 DOGS branding is etched into the glass. The jar is set against a dark forest green background, emphasizing a luxury biological wellness theme. Hard lighting from the side." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQND1L00AfgJDdPBsX9N92IzkSmyii1ccMikeNgTv_jqUZWiZIbK83IRGpr87P9KqLCCOwkp69A5JXXnKgmpkfSoqGastzLhvKE0j5MHN6WQdhzHsT9wLVd0l4jFi1iE8cZcTUzv6-zAB6HW9gclBijAhKzg7kCpGwywGlNHqvH0gjR6UcJjH0Z7FMUveeQ0cJSFakWzxWcfU1-L2dvl4Q_4U3PHEYtKCgWnaxjzO3CMWZKe9mkXhNxY49Uphqwkl4l9MxSFE5adjd"/>
+<button class="absolute bottom-4 right-4 bg-primary text-white w-12 h-12 flex items-center justify-center group-hover:bg-secondary transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<p class="font-label-caps text-outline mb-1">THE HUNT SERIES</p>
+<h4 class="font-headline-md text-[24px] text-primary mb-2">Air-Dried Bison Heart</h4>
+<p class="text-secondary font-bold">$28.00</p>
+</div>
+<!-- Product Item -->
+<div class="group reveal" style="transition-delay: 300ms;">
+<div class="aspect-[4/5] bg-white relative overflow-hidden mb-4">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Eco-friendly cardboard box containing a curated 'Starter Pack' of biological dog food samples. The box has a premium opening experience with 19 DOGS branding inside the lid. Clean, high-key studio lighting with neutral colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOTM01jJkzk10_4FxikakQi0AhXe2qc_xCreZN4IahYMGr3rHF1jpV2I0IVz3uNmJati-t5vg0lXATDFAhaJ-AbFe7kcb79iuTHUsIBpAuyt-JTs9kAxnxLvaIpEYWe8vZ_FnpziMbrbNaHWUTklouLeY8cqQTrNYqS2BrT5q66dl6QXWGGszX8vfoJBBCfscGpewrMPHL7gXrDDChxE4q6e8QjtOhMocCa-Lt5nvpvkPXwwqPvGZnbQmjqwSdWbicnPkTbLJW6PqW"/>
+<button class="absolute bottom-4 right-4 bg-primary text-white w-12 h-12 flex items-center justify-center group-hover:bg-secondary transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<p class="font-label-caps text-outline mb-1">TRIAL PACK</p>
+<h4 class="font-headline-md text-[24px] text-primary mb-2">The Biological Starter Kit</h4>
+<p class="text-secondary font-bold">$55.00</p>
+</div>
+</div>
+</section>
+<!-- 5. Ancestral Solutions (Editorial Split) -->
+<section class="py-stack-lg px-margin-desktop overflow-hidden">
+<div class="grid grid-cols-12 gap-gutter items-center">
+<div class="col-span-12 md:col-span-6 relative reveal">
+<div class="hard-shadow">
+<img class="w-full aspect-square object-cover" data-alt="A rugged, weathered wooden table with various wild herbs, raw meats, and a vintage biology diagram of a wolf's digestive system. The aesthetic is 'Modern Scientist meets Ancestral Hunter.' Moody, low-key lighting with deep greens and warm browns." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUPbA6QLtiVP5qe4diYDj9zfUXu2q50MzPgx4QdZkay0OYtQZDeAZGh-fkPEYOFZC0abgHT4hDnZFzRDjceSyJY5FBzv459HOZcSYjAGL_M8fPcHhPLqFFhNtFP53a9aYakL-ZksBCHjMK0XZapOm1GJASdtfBlbf12iC6DIDgaH_ULQdEuQVMMM9Vm_Fv6QzWsMCRnyOUndrGF2OWm3EEOD4d3y1O2HOENxT2BLUKJ2qb-5uWjQvC7TOjYfegJP4tcXKX357bGI7t"/>
+</div>
+<div class="absolute -bottom-10 -right-10 md:right-0 bg-surface p-10 border border-outline-variant shadow-xl max-w-sm">
+<span class="material-symbols-outlined text-secondary text-4xl mb-4">format_quote</span>
+<p class="font-headline-md text-headline-md italic text-primary leading-snug">"Nature does not build in excess; every ingredient must serve the biological blueprint."</p>
+<p class="font-label-caps mt-6">— ARIA VANCE, FOUNDER</p>
+</div>
+</div>
+<div class="col-span-12 md:col-span-5 md:col-start-8 mt-24 md:mt-0 reveal">
+<p class="font-label-caps text-secondary mb-4 uppercase">The Philosophy</p>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8">Ancestral Precision</h2>
+<ul class="space-y-8">
+<li class="flex gap-4">
+<span class="font-headline-md text-secondary">01</span>
+<div>
+<h4 class="font-label-md text-primary uppercase mb-2">Species Appropriate</h4>
+<p class="text-on-surface-variant font-body-md">Mirroring the raw, varied diet of the wild ancestor to ensure optimal metabolic function.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="font-headline-md text-secondary">02</span>
+<div>
+<h4 class="font-label-md text-primary uppercase mb-2">Cellular Integrity</h4>
+<p class="text-on-surface-variant font-body-md">Cold-pressed and air-dried methods that preserve the delicate enzyme and vitamin structures.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="font-headline-md text-secondary">03</span>
+<div>
+<h4 class="font-label-md text-primary uppercase mb-2">Ecological Harmony</h4>
+<p class="text-on-surface-variant font-body-md">Sourcing from regenerative farms that respect the biological cycle of the entire ecosystem.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- 6. Trending Apparel -->
+<section class="px-margin-desktop py-stack-lg bg-white">
+<div class="text-center mb-stack-md reveal">
+<p class="font-label-caps text-outline mb-2">THE WARDROBE</p>
+<h2 class="font-headline-lg text-headline-lg text-primary">Apparel for the Modern Pack</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="reveal">
+<div class="relative overflow-hidden aspect-[3/4] mb-4">
+<img class="w-full h-full object-cover" data-alt="A Doberman Pinscher wearing a sleek, high-neck waterproof jacket in deep charcoal grey. The dog is posed against a brutalist concrete wall. High-fashion streetwear aesthetic for dogs. Sharp angles and professional lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4p5wMd6nWLiWwi9q7jgBakAQautr8BBMcalRpDV3Kq_AIBBidaaRXlBGZGRyurX4DplAp0Lw7gdHzuLmBZwVay8ICPVRDdUHvO9PEuopxKGaiJz_8Lf1nFG6vt1AG1fXjbEDhThYlS17A2vcxBJmjFkI1FesS721EF0wH3qTcAkSZFnez2McqUpyMQecby7evNyc72V2qX1VmxxAiejtHf2cC8YW8MVK1kb-rtMdmDlsn2uXDwgEhTd6nOPJ4GDLs-l7BkowafE_j"/>
+<div class="absolute bottom-6 left-6 flex gap-2">
+<button class="w-4 h-4 rounded-full bg-primary border border-white"></button>
+<button class="w-4 h-4 rounded-full bg-secondary border border-white"></button>
+<button class="w-4 h-4 rounded-full bg-outline border border-white"></button>
+</div>
+</div>
+<h4 class="font-headline-md text-[24px]">Technical Parka 01</h4>
+<p class="text-on-surface-variant">$120.00</p>
+</div>
+<div class="reveal" style="transition-delay: 100ms;">
+<div class="relative overflow-hidden aspect-[3/4] mb-4">
+<img class="w-full h-full object-cover" data-alt="A fluffy white Samoyed dog wearing a thick, chunky knit wool sweater in a cream and peach pattern. Soft, warm lighting in a minimalist interior setting. Editorial lifestyle photography for premium pet brands." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXSi19gYrwB0gDOYdWXbQFZT10xU34XZyt_hDm8VS0erwto6In5iXvY1Lz-pqBANPYK0Co8Hkk60govuOx3zSMnk4ri6LpyfeQiW4oXG3FMRdRDAxuMVxs5mGIBOZb4E7dlIjZgjqDwOqzgHZcBWruV87m_L0mMhfSIbyQW7wxi0ITuYQMhenW7dqwgo2KxCNf6ktWBtmj83rUGZ_pyeWIo32pYDvCEzANF4a26FTGU0CemOMoq9Koj7_MKQho_8FdJjWd3KwbNpPO"/>
+<div class="absolute bottom-6 left-6 flex gap-2">
+<button class="w-4 h-4 rounded-full bg-surface-container-highest border border-white"></button>
+<button class="w-4 h-4 rounded-full bg-secondary-container border border-white"></button>
+</div>
+</div>
+<h4 class="font-headline-md text-[24px]">Heritage Knit</h4>
+<p class="text-on-surface-variant">$95.00</p>
+</div>
+<div class="reveal" style="transition-delay: 200ms;">
+<div class="relative overflow-hidden aspect-[3/4] mb-4">
+<img class="w-full h-full object-cover" data-alt="A sleek black Labrador wearing a high-visibility, neon-accented tactical harness and leash set. Urban night-time setting with blurred city lights in the background. Modern, tech-focused pet gear aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2gmiXeEW4z_y8Z0AP6XMHKsyxu0_lqz3PR9Vbxsgh2VF0-QfeRjdEucit3cI27xGy1MIIHMEBHyGhuTAuuK3YehOB7Ojl83MgydgpxS4T-PjU-JHivP5S4HQBRCYX8ECdLucSVM9g4KQ1rCzweSHfAGW_2GDV84fK_5KLA3evaJ7x_oe_1g974K--dnQdP5Y0WpF7rTDWgdNN2ls-0yXF7kDGVMiZf6oFlEJcWur3lSVJyOzH-SxfpFRy2WQRA-OWoQanxrXNcVwT"/>
+<div class="absolute bottom-6 left-6 flex gap-2">
+<button class="w-4 h-4 rounded-full bg-black border border-white"></button>
+<button class="w-4 h-4 rounded-full bg-error border border-white"></button>
+</div>
+</div>
+<h4 class="font-headline-md text-[24px]">Field Harness Pro</h4>
+<p class="text-on-surface-variant">$78.00</p>
+</div>
+</div>
+</section>
+<!-- 8. The Wolf Principle -->
+<section class="bg-primary py-32 relative overflow-hidden">
+<div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[600px] text-white select-none">pets</span>
+</div>
+<div class="relative z-10 px-margin-desktop text-center max-w-4xl mx-auto reveal">
+<p class="font-label-caps text-on-primary-container mb-6 tracking-widest">THE BIOLOGICAL CONSTANT</p>
+<h2 class="font-display-lg text-display-lg text-white mb-10">99% DNA Match to Wolves.</h2>
+<p class="text-primary-fixed text-headline-md italic mb-12">Treating them like the ancient predators they still are, behind the domestic mask.</p>
+<button class="bg-white text-primary px-12 py-5 font-label-caps tracking-widest hover:bg-secondary hover:text-white transition-all uppercase">Read the Whitepaper</button>
+</div>
+</section>
+<!-- 9. Founder's Mission -->
+<section class="px-margin-desktop py-stack-lg bg-surface">
+<div class="grid grid-cols-12 gap-gutter items-center">
+<div class="col-span-12 md:col-span-5 reveal">
+<p class="font-label-caps text-secondary mb-4">OUR PROMISE</p>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8">Engineering a Longer Life.</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10">"We started 19 DOGS because the standard for canine health was mediocre. We wanted to apply the same rigor of human longevity science to our dogs. Every product is a result of years of biological research and ethical sourcing."</p>
+<div class="flex items-center gap-4">
+<div class="w-16 h-[1px] bg-primary"></div>
+<p class="font-headline-md italic">Aria Vance</p>
+</div>
+</div>
+<div class="col-span-12 md:col-span-6 md:col-start-7 reveal">
+<div class="hard-shadow">
+<img class="w-full aspect-[4/5] object-cover" data-alt="A professional yet soulful portrait of a woman (Aria Vance) in her late 30s, wearing a minimalist black turtleneck, looking thoughtfully away from the camera. She is in a bright, modern laboratory setting that also feels like a high-end designer studio. In the foreground, a large, calm dog is partially visible. High-fashion editorial photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCT959MkYVXHNXu8tEpfjHyDHaCffizClKWinko31EvcF_ck2vVCRD3dBsHSTD06-dTSeCvn9xnGa1uqf9bwDjlKBGn9Uw6FPdc75WzlGBXdDw1IzBgq2ePwamoP3NTuineTLIQz2HSsi95k-Nfd89ggitlNW4eeWfo72M8dQD8z625TkluKUQDfzKiatqra0XOsNjsEuDN9FoE0u-GOUGdmTdxaAunFGirlkltBmckZla91KlOvOED_M3UsfNW-yHbgbWHCNbUwti7"/>
+</div>
+</div>
+</div>
+</section>
+<!-- 10. Gift Sets -->
+<section class="px-margin-desktop py-stack-lg bg-surface-container-low">
+<h2 class="font-headline-lg text-headline-lg text-primary text-center mb-stack-md reveal">The Editorial Gift Series</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="bg-white border border-outline-variant p-8 flex flex-col justify-between reveal">
+<div>
+<h3 class="font-headline-md text-headline-md mb-4">The Puppy Foundation</h3>
+<p class="text-on-surface-variant mb-8">Everything needed for the first 12 months of biological development.</p>
+</div>
+<div class="mt-auto">
+<img class="w-full aspect-video object-cover mb-6" data-alt="A beautifully packaged gift box for a new puppy. The box is cream with gold foil lettering. Inside are minimalist toys, a small bag of food, and a leather collar. The scene is bright and joyful, with a clean editorial look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUFNxzofl3tnaHIeQskcnhNVHDm6VY7_pCm85cyRSJNXyGdaAoNXS0dEcQ_3qD6NCXwNaWh2jbNqZi1LrZkY5NsQqlYQ2u816hRkH71LGy97RtJS1EQUazpulX0bSrTLEtpH871J7Oi-sp8wrtXdl3JHGHhg8ag6Ee8XzI_3s27RecKoCF1qqZ8NIWit2ybaA8VP9PK-tSiRGO4DJz2uIeyHmJjCgqLgUEDAl8lZqyyUTmvCE4eVbR39Tu3CQ6IERBdXdfA8Vs05PK"/>
+<button class="w-full py-4 border border-primary font-label-caps hover:bg-primary hover:text-white transition-all uppercase">Shop Kit — $150</button>
+</div>
+</div>
+<div class="bg-white border border-outline-variant p-8 flex flex-col justify-between reveal" style="transition-delay: 100ms;">
+<div>
+<h3 class="font-headline-md text-headline-md mb-4">The Longevity Pack</h3>
+<p class="text-on-surface-variant mb-8">Our best-selling supplements and foods for the senior canine athlete.</p>
+</div>
+<div class="mt-auto">
+<img class="w-full aspect-video object-cover mb-6" data-alt="A luxury hamper containing jars of raw supplements, air-dried treats, and a premium orthopedic travel mat. Dark forest green accents and high-end materials. Minimalist background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1Tfza6Z1fJEYwdzTRyRtcdKfBRqJmxeYo27FXabQRxGaQQpdThOG7WiCbHlOHJiqK802ed2VrRtWk8pZXWjtl18zDiyG3fGiCrGBX61JVqy6CUW4tqKAkWqsFZwE0qCE3WqNcCtwqJQUcF-b1wxFbZGeDpxkiU_DGBL3bVduOvsvDvEEWH0x9c50ibFKJoPa1sTQ-x_sfW-thhhd6EXhFN-dzuxXgkN0I0exkXoyVft71OJuEPjVBF9JRqs2FGGntXNqIWeSIuv1A"/>
+<button class="w-full py-4 border border-primary font-label-caps hover:bg-primary hover:text-white transition-all uppercase">Shop Kit — $210</button>
+</div>
+</div>
+<div class="bg-white border border-outline-variant p-8 flex flex-col justify-between reveal" style="transition-delay: 200ms;">
+<div>
+<h3 class="font-headline-md text-headline-md mb-4">The Weekend Duo</h3>
+<p class="text-on-surface-variant mb-8">Matching apparel and travel bowls for the adventurous pair.</p>
+</div>
+<div class="mt-auto">
+<img class="w-full aspect-video object-cover mb-6" data-alt="A set containing a matching human hoodie and dog sweater in a soft muted rust color, along with two collapsible silicone bowls in a forest green. Clean studio product photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1WxM1VknR5KblHPXR_XT8x-a0VvIVVIPAI75KhH-D2kR3SXBZmwyb_MxN1PkamYk6cyiTCLoTmSq2nznoWkXy5la5Qv6KnM1RLxnsvCwSr3WjbZQ6DydGrIe-AQl7R5K4hsjfdAem1Cr6r72Vz7PtMiqc2VG0iH4-9A0_UgZWcleCM52unPMaorMqwKjq0tiOPqx_yLHd_YaluudbQQ8vF1pv_h-9J00_X8cOZ4YBabUDJ8aRMo3wrEk96kVXJeJecg-zhwWXVahY"/>
+<button class="w-full py-4 border border-primary font-label-caps hover:bg-primary hover:text-white transition-all uppercase">Shop Kit — $125</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 11. Trust Badges -->
+<section class="py-16 border-y border-outline-variant/30 bg-surface">
+<div class="px-margin-desktop flex flex-wrap justify-center md:justify-between gap-12 reveal">
+<div class="flex flex-col items-center text-center max-w-[200px]">
+<span class="material-symbols-outlined text-4xl text-primary mb-4">verified</span>
+<p class="font-label-caps text-primary">HUMAN-GRADE INGREDIENTS</p>
+</div>
+<div class="flex flex-col items-center text-center max-w-[200px]">
+<span class="material-symbols-outlined text-4xl text-primary mb-4">biotech</span>
+<p class="font-label-caps text-primary">VET-FORMULATED SCIENCE</p>
+</div>
+<div class="flex flex-col items-center text-center max-w-[200px]">
+<span class="material-symbols-outlined text-4xl text-primary mb-4">eco</span>
+<p class="font-label-caps text-primary">REGENERATIVE SOURCING</p>
+</div>
+<div class="flex flex-col items-center text-center max-w-[200px]">
+<span class="material-symbols-outlined text-4xl text-primary mb-4">fluid_med</span>
+<p class="font-label-caps text-primary">ZERO SYNTHETIC FILLERS</p>
+</div>
+</div>
+</section>
+<!-- 12. The Pack (Masonry) -->
+<section class="px-margin-desktop py-stack-lg">
+<div class="text-center mb-16 reveal">
+<h2 class="font-headline-lg text-headline-lg text-primary">The Community Pack</h2>
+<p class="font-body-lg text-on-surface-variant">Sharing the journey of biological wellness.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-20">
+<div class="editorial-img-hover reveal"><img class="w-full aspect-square object-cover mb-gutter" data-alt="Black and white editorial photo of a majestic Vizsla running through high grass, transitioning to full color on hover. High shutter speed capturing every muscle." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6N0ilLgFZ2pfWx5oB1ZzkMo-iWwAQv_pvxL0Ho6Qd4YUq4dB6NIo9AmntMUB9OSXuDXbPNyct2iAja1gMXb_h-PGVUGZECuAII5ypzCJQVMQa1-E-QLfgf4Kbm4YH0ks0s_6kDGlTMoG158cGcR42CYflkPkmmV1BOuY9N1FZ2Kc5LaHtRoAQsmJ7peujRNHJpEvVKXchcKZlGoqOiNnp6sg1NLD_rSbfzOUCzdQ_QqXJ9aSJ9Fg53Gs99a8r0Q2GLYTpIuhZpxW_"/></div>
+<div class="editorial-img-hover reveal pt-12" style="transition-delay: 100ms;"><img class="w-full aspect-[3/4] object-cover mb-gutter" data-alt="Grayscale shot of a sleeping Bull Terrier in a sunlit corner, becoming warm and golden on hover. High-contrast minimalist photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOFQi7i7OKf2n03685JClNUwEOfJDAA2EtYsHH4ZkGTMM0DWm9Z9mlLlScl3DKvK9mJhzSUU2hCnbIVyePhGiU83VPln-03GpRjbNcvHe6hZhFiLHgcGsk_6r2L_240jfuPXlHfKp8wWmLEMwL-EbWnTflYz8FfbTzrlwKtdwTGU0p6kJXTGJRi7hSJCy8XXDBhKAFE2KDqqc6-mOUL9x3pTcrTFG8agt7zez0BG9o57YIU1qznIcwdh2nRYZ6kQG83otrB1RN8HZR"/></div>
+<div class="editorial-img-hover reveal" style="transition-delay: 200ms;"><img class="w-full aspect-[4/5] object-cover mb-gutter" data-alt="Minimalist portrait of a Husky's eye in grayscale, showing intense detail, turning vivid blue and white on hover. Macro photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJaEuWpIkZ_zxluR44EP7n7QCe1h2nRGwiby6kpsneUrQcunmLZWqGUPEkRyR9nz6Hvs6MUV4wOaY0VMpXn22aqdoeZTMD2cizeHUjZG6P3xVk_lm7RXvDfChVHcKio9gWJScQ_SVzbOwrJmT6wm4QCZE0avG6IHPCNBqE7FFRF3chOz2-ROSIJ4CXH7l6MxEEIU03Z9eGXTYhfB5PncD4B_DsddzxEySNMkFJUvGNEZUgQfwsnAjbMVi98snLBRg1Z3L4vg6z1q5Z"/></div>
+<div class="editorial-img-hover reveal pt-24" style="transition-delay: 300ms;"><img class="w-full aspect-square object-cover" data-alt="Silhouetted dog and owner on a beach at dawn in black and white, turning into a soft pastel sunrise on hover. Peaceful, serene mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0YHPA_9H7hPEaLMsFgaZHgkk0BlCTRRpNMMn1GTJlZlVyLgW950Rqj9Wzw0ttbwpZf1XvM6jEWdaaD29muHnDe8YXVMqPOXeKkMAAS2c7O92Rw_JqByNNphL7aFPFF4b6OWWAvXrgwaPLGxPl3-_sz1dqhQO-UTAK5JJAtk6mv5cOzGIgOojtaJvWLM012b3cWCfQUSXw5_mLff9E_lFXhl_S8YPTHyXvrJP0XU1OIsPShPplo1-Qo__YLR8_n-k0z4wjB3pfVTWG"/></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-surface-container p-12 reveal">
+<p class="font-body-lg text-primary italic mb-6">"Since switching to the Biological Starter Kit, my Shepherd's energy levels have stabilized and her coat has never been shinier. It's more than food; it's a transformation."</p>
+<p class="font-label-caps text-secondary">— MARCO S., NEW YORK</p>
+</div>
+<div class="bg-surface-container p-12 reveal" style="transition-delay: 100ms;">
+<p class="font-body-lg text-primary italic mb-6">"The technical apparel actually fits! Most brands don't design for the active dog's movement, but 19 DOGS clearly does. The Technical Parka is a masterpiece."</p>
+<p class="font-label-caps text-secondary">— ELENA L., OSLO</p>
+</div>
+</div>
+</section>
+<!-- 13. Newsletter -->
+<section class="bg-primary-container py-stack-lg px-margin-desktop">
+<div class="max-w-4xl mx-auto text-center reveal">
+<p class="font-label-caps text-on-primary-container mb-6 tracking-[0.2em]">STAY INFORMED</p>
+<h2 class="font-display-lg text-[64px] text-white leading-none mb-10">The Dispatch</h2>
+<p class="text-primary-fixed text-headline-md mb-12 italic">Deep dives into canine biology and exclusive pack access.</p>
+<form class="flex flex-col md:flex-row gap-6 items-end max-w-2xl mx-auto">
+<div class="flex-1 w-full text-left">
+<label class="font-label-caps text-primary-fixed block mb-2">EMAIL ADDRESS</label>
+<input class="w-full bg-transparent border-b-only border-primary-fixed text-white py-4 placeholder:text-primary-fixed/30 focus:border-white" placeholder="JOIN@THEPACK.COM" type="email"/>
+</div>
+<button class="bg-white text-primary px-12 py-4 font-label-caps tracking-widest hover:bg-secondary transition-all w-full md:w-auto">SUBSCRIBE</button>
+</form>
+<p class="font-label-caps text-primary-fixed/50 mt-10">WELCOME TO THE PACK</p>
+</div>
+</section>
+<!-- 14. Footer -->
+<footer class="bg-surface-container-low pt-stack-lg pb-stack-sm border-t border-outline-variant">
+<div class="grid grid-cols-12 gap-gutter px-margin-desktop w-full mx-auto mb-stack-lg">
+<div class="col-span-12 md:col-span-4">
+<div class="font-headline-lg text-headline-lg font-bold text-primary mb-8">19 DOGS</div>
+<p class="font-body-md text-on-surface-variant max-w-xs">Precision in every bowl. High-performance biological wellness for the modern canine.</p>
+</div>
+<div class="col-span-6 md:col-span-2">
+<h5 class="font-label-caps text-primary mb-6">SHOP</h5>
+<ul class="space-y-4 text-on-surface-variant">
+<li><a class="hover:text-secondary transition-colors" href="#">Nutrition</a></li>
+<li><a class="hover:text-secondary transition-colors" href="#">Apparel</a></li>
+<li><a class="hover:text-secondary transition-colors" href="#">Gift Sets</a></li>
+<li><a class="hover:text-secondary transition-colors" href="#">The Pantry</a></li>
+</ul>
+</div>
+<div class="col-span-6 md:col-span-2">
+<h5 class="font-label-caps text-primary mb-6">STUDY</h5>
+<ul class="space-y-4 text-on-surface-variant">
+<li><a class="hover:text-secondary transition-colors" href="#">The Science</a></li>
+<li><a class="hover:text-secondary transition-colors" href="#">Whitepapers</a></li>
+<li><a class="hover:text-secondary transition-colors" href="#">Longevity Journal</a></li>
+<li><a class="hover:text-secondary transition-colors" href="#">Our Story</a></li>
+</ul>
+</div>
+<div class="col-span-12 md:col-span-4">
+<h5 class="font-label-caps text-primary mb-6">VISIT</h5>
+<div class="text-on-surface-variant mb-6">
+<p>1100 Flagship Atelier</p>
+<p>SoHo, New York, 10012</p>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined cursor-pointer hover:text-secondary">language</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-secondary">photo_camera</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-secondary">play_circle</span>
+</div>
+</div>
+</div>
+<div class="px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-6 border-t border-outline-variant/30 pt-8">
+<p class="font-body-md text-on-surface-variant">© 2024 19 DOGS. All rights reserved. Precision in every bowl.</p>
+<div class="flex gap-8">
+<a class="text-on-surface-variant hover:text-primary underline" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-primary underline" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-primary underline" href="#">Accessibility</a>
+<a class="text-on-surface-variant hover:text-primary underline" href="#">Cookie Settings</a>
+</div>
+</div>
+</footer>
+<script>
+        // Scroll Reveal Logic
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Micro-interactions for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95', 'opacity-80');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95', 'opacity-80');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95', 'opacity-80');
+            });
+        });
+    </script>
+</body></html>

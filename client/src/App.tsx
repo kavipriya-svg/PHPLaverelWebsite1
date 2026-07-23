@@ -104,6 +104,14 @@ function StoreLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function HomeLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      {children}
+    </Suspense>
+  );
+}
+
 function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -116,9 +124,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/">
-        <StoreLayout>
+        <HomeLayout>
           <Home />
-        </StoreLayout>
+        </HomeLayout>
       </Route>
       
       <Route path="/product/:slug">

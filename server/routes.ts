@@ -1560,6 +1560,39 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Newsletter subscription (public)
+  app.post("/api/newsletter/subscribe", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ error: "Valid email required" });
+      }
+      const existing = await storage.getSetting("newsletter_subscribers");
+      let subscribers: string[] = [];
+      if (existing?.value) {
+        try { subscribers = JSON.parse(existing.value); } catch {}
+      }
+      if (!subscribers.includes(email)) {
+        subscribers.push(email);
+        await storage.upsertSettings({ newsletter_subscribers: JSON.stringify(subscribers) });
+      }
+      res.json({ success: true, message: "Subscribed to the dispatch" });
+    } catch (error) {
+      res.status(500).json({ error: "Subscription failed" });
+    }
+  });
+
+  // Public approved reviews for testimonials
+  app.get("/api/reviews/approved", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+      const result = await storage.getAllReviews({ isApproved: true, limit, offset: 0 });
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
   // Public settings endpoint for frontend (currency, store name, etc.)
   app.get("/api/settings", async (req, res) => {
     try {

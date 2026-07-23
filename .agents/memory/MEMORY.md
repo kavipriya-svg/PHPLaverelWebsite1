@@ -1,0 +1,1 @@
+- [Editorial Homepage Architecture](editorial-homepage.md) — Home page uses HomeLayout (no existing header/footer) to render its own editorial header/footer matching 19 DOGS design.

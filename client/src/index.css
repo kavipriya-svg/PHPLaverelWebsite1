@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Editorial Homepage Utilities ────────────────────────────────── */
+.hard-shadow {
+  box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+.editorial-img-hover img {
+  filter: grayscale(100%);
+  transition: filter 0.5s ease;
+}
+.editorial-img-hover:hover img {
+  filter: grayscale(0%);
+}
+.border-b-only {
+  border-top-width: 0;
+  border-left-width: 0;
+  border-right-width: 0;
+  border-bottom-width: 1px;
+  border-color: #DBDAD5;
+  border-radius: 0;
+}
+.border-b-only:focus {
+  outline: none;
+  border-color: #012d1d;
+  box-shadow: none;
+}
+/* ─── End Editorial Utilities ─────────────────────────────────────── */
+
 /* LIGHT MODE */
 :root {
   --button-outline: rgba(0,0,0, .10);
