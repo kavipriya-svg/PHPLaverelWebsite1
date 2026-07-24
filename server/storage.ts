@@ -429,6 +429,7 @@ export interface IStorage {
 export interface ProductFilters {
   search?: string;
   categoryId?: string;
+  categoryIds?: string[];
   brandId?: string;
   brandIds?: string[];
   minPrice?: number;
@@ -906,7 +907,11 @@ export class DatabaseStorage implements IStorage {
         )
       );
     }
-    if (filters.categoryId) conditions.push(eq(products.categoryId, filters.categoryId));
+    if (filters.categoryIds && filters.categoryIds.length > 0) {
+      conditions.push(inArray(products.categoryId, filters.categoryIds));
+    } else if (filters.categoryId) {
+      conditions.push(eq(products.categoryId, filters.categoryId));
+    }
     if (filters.brandIds && filters.brandIds.length > 0) {
       conditions.push(inArray(products.brandId, filters.brandIds));
     } else if (filters.brandId) {

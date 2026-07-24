@@ -1431,16 +1431,34 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         brandIds = [req.query.brandId as string];
       }
 
-      // Resolve categorySlug → categoryId
+      // Resolve categorySlug → categoryId + all descendant category IDs
       let resolvedCategoryId = req.query.categoryId as string | undefined;
+      let resolvedCategoryIds: string[] | undefined;
       if (req.query.categorySlug && !resolvedCategoryId) {
         const cat = await storage.getCategoryBySlug(req.query.categorySlug as string);
-        if (cat) resolvedCategoryId = cat.id;
+        if (cat) {
+          resolvedCategoryId = cat.id;
+          // Fetch all categories to find descendants
+          const allCats = await storage.getCategories();
+          const getDescendants = (parentId: string): string[] => {
+            const children = allCats.filter((c: any) => c.parentId === parentId);
+            return [parentId, ...children.flatMap((c: any) => getDescendants(c.id))];
+          };
+          resolvedCategoryIds = getDescendants(cat.id);
+        }
+      } else if (resolvedCategoryId) {
+        const allCats = await storage.getCategories();
+        const getDescendants = (parentId: string): string[] => {
+          const children = allCats.filter((c: any) => c.parentId === parentId);
+          return [parentId, ...children.flatMap((c: any) => getDescendants(c.id))];
+        };
+        resolvedCategoryIds = getDescendants(resolvedCategoryId);
       }
 
       const filters = {
         search: req.query.search as string,
-        categoryId: resolvedCategoryId,
+        categoryIds: resolvedCategoryIds,
+        categoryId: resolvedCategoryIds ? undefined : resolvedCategoryId,
         brandIds,
         minPrice: req.query.minPrice ? parseFloat(req.query.minPrice as string) : undefined,
         maxPrice: req.query.maxPrice ? parseFloat(req.query.maxPrice as string) : undefined,
