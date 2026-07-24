@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Save, Loader2, Upload, Plus, Trash2 } from "lucide-react";
+import { Save, Loader2, Upload, Plus, Trash2, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -169,6 +169,117 @@ function ImageUploadField({
           }}
         />
       )}
+    </div>
+  );
+}
+
+// ─── Drag-to-Reorder Navigation Links Editor ───────────────────────
+function NavLinksEditor({
+  links,
+  onChange,
+}: {
+  links: Array<{ label: string; href: string }>;
+  onChange: (links: Array<{ label: string; href: string }>) => void;
+}) {
+  const dragIndexRef = useRef<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+
+  const updateLink = (i: number, field: "label" | "href", value: string) => {
+    const next = [...links];
+    next[i] = { ...next[i], [field]: value };
+    onChange(next);
+  };
+
+  const removeLink = (i: number) => {
+    onChange(links.filter((_, j) => j !== i));
+  };
+
+  const handleDragStart = (i: number) => {
+    dragIndexRef.current = i;
+  };
+
+  const handleDragOver = (e: React.DragEvent, i: number) => {
+    e.preventDefault();
+    setDragOver(i);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = dragIndexRef.current;
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragOver(null);
+      return;
+    }
+    const next = [...links];
+    const [moved] = next.splice(dragIndex, 1);
+    next.splice(dropIndex, 0, moved);
+    dragIndexRef.current = null;
+    setDragOver(null);
+    onChange(next);
+  };
+
+  const handleDragEnd = () => {
+    dragIndexRef.current = null;
+    setDragOver(null);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-medium">Navigation Links</Label>
+        <span className="text-xs text-muted-foreground">Drag to reorder</span>
+      </div>
+
+      <div className="space-y-2">
+        {links.map((link, i) => (
+          <div
+            key={i}
+            draggable
+            onDragStart={() => handleDragStart(i)}
+            onDragOver={(e) => handleDragOver(e, i)}
+            onDrop={(e) => handleDrop(e, i)}
+            onDragEnd={handleDragEnd}
+            className={`flex gap-2 items-center rounded-md transition-all duration-150 ${
+              dragOver === i ? "ring-2 ring-primary ring-offset-1 bg-accent/40" : ""
+            }`}
+          >
+            <div
+              className="cursor-grab active:cursor-grabbing flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+              title="Drag to reorder"
+            >
+              <GripVertical className="h-4 w-4" />
+            </div>
+            <Input
+              value={link.label}
+              onChange={(e) => updateLink(i, "label", e.target.value)}
+              placeholder="Label"
+              className="w-40"
+            />
+            <Input
+              value={link.href}
+              onChange={(e) => updateLink(i, "href", e.target.value)}
+              placeholder="/path"
+              className="flex-1"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => removeLink(i)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onChange([...links, { label: "", href: "/" }])}
+      >
+        <Plus className="h-3.5 w-3.5 mr-1" />
+        Add Link
+      </Button>
     </div>
   );
 }
@@ -375,55 +486,10 @@ export default function HomepageSettingsPage() {
           {/* ── NAVIGATION TAB ── */}
           <TabsContent value="navigation" className="space-y-4">
             <SectionCard title="Header Navigation" description="Top navigation links and call-to-action button.">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Navigation Links</Label>
-                {settings.nav.links.map((link, i) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <Input
-                      value={link.label}
-                      onChange={(e) => {
-                        const links = [...settings.nav.links];
-                        links[i] = { ...links[i], label: e.target.value };
-                        update("nav", { links });
-                      }}
-                      placeholder="Label"
-                      className="w-40"
-                    />
-                    <Input
-                      value={link.href}
-                      onChange={(e) => {
-                        const links = [...settings.nav.links];
-                        links[i] = { ...links[i], href: e.target.value };
-                        update("nav", { links });
-                      }}
-                      placeholder="/path"
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        const links = settings.nav.links.filter((_, j) => j !== i);
-                        update("nav", { links });
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    update("nav", {
-                      links: [...settings.nav.links, { label: "", href: "/" }],
-                    })
-                  }
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  Add Link
-                </Button>
-              </div>
+              <NavLinksEditor
+                links={settings.nav.links}
+                onChange={(links) => update("nav", { links })}
+              />
               <Separator />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FieldRow label="CTA Button Text">
