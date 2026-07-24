@@ -5,8 +5,9 @@ import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   ShoppingBag, Plus, ShieldCheck, FlaskConical, Leaf, Droplets,
-  PawPrint, Globe, Camera, PlayCircle, Quote, Menu, X,
+  PawPrint, Globe, Camera, PlayCircle, Quote, Menu, X, Search,
 } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   DEFAULT_HOMEPAGE_SETTINGS,
   mergeHomepageSettings,
@@ -80,6 +81,31 @@ function getCategoryImage(category: any): string {
 // ─── 1. Editorial Header ───────────────────────────────────────────
 function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [, navigate] = useLocation();
+
+  const handleSearchOpen = () => {
+    setSearchOpen(true);
+    setTimeout(() => searchInputRef.current?.focus(), 50);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSearchOpen(false);
+    setSearchQuery("");
+    navigate(`/shop?search=${encodeURIComponent(q)}`);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
 
   return (
     <header
@@ -95,18 +121,52 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
         </span>
       </Link>
 
-      <nav className="hidden md:flex items-center gap-8">
-        {nav.links.map((link) => (
-          <Link key={link.href + link.label} href={link.href}>
-            <span
-              className="font-inter text-body-sm cursor-pointer transition-opacity hover:opacity-60"
-              style={{ color: C.onSurface }}
-            >
-              {link.label}
-            </span>
-          </Link>
-        ))}
-      </nav>
+      {/* Desktop nav — hidden when search is expanded */}
+      {!searchOpen && (
+        <nav className="hidden md:flex items-center gap-8">
+          {nav.links.map((link) => (
+            <Link key={link.href + link.label} href={link.href}>
+              <span
+                className="font-inter text-body-sm cursor-pointer transition-opacity hover:opacity-60"
+                style={{ color: C.onSurface }}
+              >
+                {link.label}
+              </span>
+            </Link>
+          ))}
+        </nav>
+      )}
+
+      {/* Expanding search bar (desktop) */}
+      {searchOpen && (
+        <form
+          onSubmit={handleSearchSubmit}
+          className="hidden md:flex flex-1 items-center mx-8 border-b"
+          style={{ borderColor: C.primary }}
+        >
+          <Search className="w-4 h-4 mr-3 flex-shrink-0" style={{ color: C.outline }} />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="Search products…"
+            className="flex-1 bg-transparent font-inter text-body-md outline-none py-1"
+            style={{ color: C.onSurface }}
+            data-testid="input-search-header"
+          />
+          <button
+            type="button"
+            onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+            className="ml-3 flex-shrink-0 transition-opacity hover:opacity-60"
+            style={{ color: C.outline }}
+            aria-label="Close search"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </form>
+      )}
 
       <div className="flex items-center gap-4">
         <Link href={nav.ctaHref}>
@@ -120,6 +180,20 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
             {nav.ctaText}
           </button>
         </Link>
+
+        {/* Search icon (desktop) */}
+        {!searchOpen && (
+          <button
+            className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+            onClick={handleSearchOpen}
+            aria-label="Search"
+            data-testid="button-search-open"
+            style={{ color: C.onSurface }}
+          >
+            <Search className="w-5 h-5" />
+          </button>
+        )}
+
         <Link href="/cart">
           <ShoppingBag
             className="w-6 h-6 cursor-pointer transition-opacity hover:opacity-60"
@@ -143,6 +217,20 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
           className="absolute top-full left-0 right-0 flex flex-col py-6 px-margin-desktop gap-6"
           style={{ backgroundColor: C.surface, borderTop: `1px solid ${C.outlineVariant}` }}
         >
+          {/* Mobile search */}
+          <form onSubmit={handleSearchSubmit} className="flex items-center border-b pb-4" style={{ borderColor: C.outlineVariant }}>
+            <Search className="w-4 h-4 mr-3 flex-shrink-0" style={{ color: C.outline }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search products…"
+              className="flex-1 bg-transparent font-inter text-body-md outline-none"
+              style={{ color: C.onSurface }}
+              data-testid="input-search-mobile"
+            />
+          </form>
+
           {nav.links.map((link) => (
             <Link key={link.href + link.label} href={link.href}>
               <span
