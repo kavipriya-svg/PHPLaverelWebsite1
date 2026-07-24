@@ -1908,24 +1908,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Combo Offers Methods
-  async getComboOffers(activeOnly: boolean = false): Promise<ComboOfferWithProducts[]> {
+  async getComboOffers(activeOnly: boolean = false, featuredOnly: boolean = false): Promise<ComboOfferWithProducts[]> {
     let query = db.select().from(comboOffers);
     
+    const conditions: any[] = [];
     if (activeOnly) {
       const now = new Date();
-      query = query.where(
-        and(
-          eq(comboOffers.isActive, true),
-          or(
-            isNull(comboOffers.startDate),
-            lte(comboOffers.startDate, now)
-          ),
-          or(
-            isNull(comboOffers.endDate),
-            gte(comboOffers.endDate, now)
-          )
-        )
-      ) as any;
+      conditions.push(
+        eq(comboOffers.isActive, true),
+        or(isNull(comboOffers.startDate), lte(comboOffers.startDate, now)),
+        or(isNull(comboOffers.endDate), gte(comboOffers.endDate, now))
+      );
+    }
+    if (featuredOnly) {
+      conditions.push(eq(comboOffers.isFeatured, true));
+    }
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
     }
     
     const offers = await query.orderBy(asc(comboOffers.position));

@@ -1517,7 +1517,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/combo-offers", async (req, res) => {
     try {
       const activeOnly = req.query.active === 'true';
-      const offers = await storage.getComboOffers(activeOnly);
+      const featuredOnly = req.query.featured === 'true';
+      const offers = await storage.getComboOffers(activeOnly, featuredOnly);
       res.json({ offers });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch combo offers" });
@@ -3915,7 +3916,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/combo-offers", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const { name, description, imageUrl, mediaUrls, productIds, originalPrice, comboPrice, startDate, endDate, isActive, position } = req.body;
+      const { name, description, imageUrl, mediaUrls, productIds, originalPrice, comboPrice, startDate, endDate, isActive, isFeatured, position } = req.body;
       
       // Generate slug from name
       const slug = name.toLowerCase()
@@ -3940,6 +3941,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         isActive: isActive ?? true,
+        isFeatured: isFeatured ?? false,
         position: position ?? 0,
       });
       
@@ -3952,7 +3954,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.patch("/api/admin/combo-offers/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const { name, description, imageUrl, mediaUrls, productIds, originalPrice, comboPrice, startDate, endDate, isActive, position } = req.body;
+      const { name, description, imageUrl, mediaUrls, productIds, originalPrice, comboPrice, startDate, endDate, isActive, isFeatured, position } = req.body;
       
       const updateData: any = {};
       
@@ -3971,6 +3973,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
       if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
       if (isActive !== undefined) updateData.isActive = isActive;
+      if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
       if (position !== undefined) updateData.position = position;
       
       // Recalculate discount if prices changed

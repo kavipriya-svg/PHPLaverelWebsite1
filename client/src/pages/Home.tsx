@@ -748,6 +748,24 @@ function GiftSetsSection({
 }: {
   giftSets: HomepageSettings["giftSets"];
 }) {
+  const { data: comboData } = useQuery<{ offers: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    imageUrl: string | null;
+    comboPrice: string;
+    originalPrice: string;
+    discountPercentage: string | null;
+    isFeatured: boolean | null;
+  }> }>({
+    queryKey: ["/api/combo-offers", { featured: true }],
+    queryFn: () => fetch("/api/combo-offers?featured=true&active=true").then(r => r.json()),
+  });
+
+  const featuredCombos = comboData?.offers ?? [];
+  const hasCombos = featuredCombos.length > 0;
+
   return (
     <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surfaceContainerLow }}>
       <Reveal>
@@ -755,38 +773,80 @@ function GiftSetsSection({
           {giftSets.sectionTitle}
         </h2>
       </Reveal>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-        {giftSets.items.map((g, i) => (
-          <Reveal key={g.title || i} delay={i * 100}>
-            <div
-              className="border flex flex-col justify-between p-8 h-full"
-              style={{ backgroundColor: C.white, borderColor: C.outlineVariant }}
-            >
-              <div>
-                <h3 className="font-playfair text-headline-md mb-4" style={{ color: C.onSurface }}>{g.title}</h3>
-                <p className="font-inter text-body-md mb-8" style={{ color: C.onSurfaceVariant }}>{g.desc}</p>
-              </div>
-              <div className="mt-auto">
-                <img
-                  className="w-full object-cover mb-6"
-                  style={{ aspectRatio: "16/9" }}
-                  src={g.imageUrl}
-                  alt={g.title}
-                  loading="lazy"
-                />
-                <button
-                  className="w-full py-4 border font-inter text-label-caps uppercase transition-all duration-200"
-                  style={{ borderColor: C.primary, color: C.primary, backgroundColor: "transparent" }}
-                  onMouseOver={e => { e.currentTarget.style.backgroundColor = C.primary; e.currentTarget.style.color = C.white; }}
-                  onMouseOut={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = C.primary; }}
+
+      {hasCombos ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+          {featuredCombos.map((combo, i) => (
+            <Reveal key={combo.id} delay={i * 100}>
+              <Link href={`/combo-offers/${combo.slug}`}>
+                <div
+                  className="border flex flex-col justify-between p-8 h-full cursor-pointer transition-shadow duration-200 hover:shadow-md"
+                  style={{ backgroundColor: C.white, borderColor: C.outlineVariant }}
                 >
-                  Shop Kit — {g.price}
-                </button>
+                  <div>
+                    <h3 className="font-playfair text-headline-md mb-4" style={{ color: C.onSurface }}>{combo.name}</h3>
+                    {combo.description && (
+                      <p className="font-inter text-body-md mb-8" style={{ color: C.onSurfaceVariant }}>{combo.description}</p>
+                    )}
+                  </div>
+                  <div className="mt-auto">
+                    {combo.imageUrl && (
+                      <img
+                        className="w-full object-cover mb-6"
+                        style={{ aspectRatio: "16/9" }}
+                        src={combo.imageUrl}
+                        alt={combo.name}
+                        loading="lazy"
+                      />
+                    )}
+                    <button
+                      className="w-full py-4 border font-inter text-label-caps uppercase transition-all duration-200"
+                      style={{ borderColor: C.primary, color: C.primary, backgroundColor: "transparent" }}
+                      onMouseOver={e => { e.currentTarget.style.backgroundColor = C.primary; e.currentTarget.style.color = C.white; }}
+                      onMouseOut={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = C.primary; }}
+                    >
+                      Shop Kit — ₹{parseFloat(combo.comboPrice).toLocaleString()}
+                    </button>
+                  </div>
+                </div>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+          {giftSets.items.map((g, i) => (
+            <Reveal key={g.title || i} delay={i * 100}>
+              <div
+                className="border flex flex-col justify-between p-8 h-full"
+                style={{ backgroundColor: C.white, borderColor: C.outlineVariant }}
+              >
+                <div>
+                  <h3 className="font-playfair text-headline-md mb-4" style={{ color: C.onSurface }}>{g.title}</h3>
+                  <p className="font-inter text-body-md mb-8" style={{ color: C.onSurfaceVariant }}>{g.desc}</p>
+                </div>
+                <div className="mt-auto">
+                  <img
+                    className="w-full object-cover mb-6"
+                    style={{ aspectRatio: "16/9" }}
+                    src={g.imageUrl}
+                    alt={g.title}
+                    loading="lazy"
+                  />
+                  <button
+                    className="w-full py-4 border font-inter text-label-caps uppercase transition-all duration-200"
+                    style={{ borderColor: C.primary, color: C.primary, backgroundColor: "transparent" }}
+                    onMouseOver={e => { e.currentTarget.style.backgroundColor = C.primary; e.currentTarget.style.color = C.white; }}
+                    onMouseOut={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = C.primary; }}
+                  >
+                    Shop Kit — {g.price}
+                  </button>
+                </div>
               </div>
-            </div>
-          </Reveal>
-        ))}
-      </div>
+            </Reveal>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

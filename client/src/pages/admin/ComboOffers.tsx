@@ -74,6 +74,7 @@ interface ComboOffer {
   startDate: string | null;
   endDate: string | null;
   isActive: boolean | null;
+  isFeatured: boolean | null;
   position: number | null;
   createdAt: string | null;
   updatedAt: string | null;
@@ -241,9 +242,16 @@ export default function AdminComboOffers() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={isOfferActive(offer) ? "default" : "outline"}>
-                        {isOfferActive(offer) ? "Active" : "Inactive"}
-                      </Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant={isOfferActive(offer) ? "default" : "outline"}>
+                          {isOfferActive(offer) ? "Active" : "Inactive"}
+                        </Badge>
+                        {offer.isFeatured && (
+                          <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                            Featured
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -328,6 +336,7 @@ function ComboOfferDialog({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [isFeatured, setIsFeatured] = useState(false);
   const [position, setPosition] = useState("0");
   const [productSearch, setProductSearch] = useState("");
   const { toast } = useToast();
@@ -434,6 +443,7 @@ function ComboOfferDialog({
       setStartDate(offer.startDate ? new Date(offer.startDate).toISOString().split("T")[0] : "");
       setEndDate(offer.endDate ? new Date(offer.endDate).toISOString().split("T")[0] : "");
       setIsActive(offer.isActive !== false);
+      setIsFeatured(offer.isFeatured === true);
       setPosition((offer.position || 0).toString());
     } else {
       setName("");
@@ -445,6 +455,7 @@ function ComboOfferDialog({
       setStartDate("");
       setEndDate("");
       setIsActive(true);
+      setIsFeatured(false);
       setPosition("0");
     }
     setProductSearch("");
@@ -486,6 +497,7 @@ function ComboOfferDialog({
         startDate: startDate || null,
         endDate: endDate || null,
         isActive,
+        isFeatured,
         position: parseInt(position) || 0,
       };
       if (offer) {
@@ -768,6 +780,18 @@ function ComboOfferDialog({
                   data-testid="switch-active"
                 />
               </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-amber-50 dark:bg-amber-950/20">
+              <div>
+                <Label className="text-base">Featured on Homepage</Label>
+                <p className="text-sm text-muted-foreground">Display in the "Editorial Gift Series" section on the homepage</p>
+              </div>
+              <Switch
+                checked={isFeatured}
+                onCheckedChange={setIsFeatured}
+                data-testid="switch-featured"
+              />
             </div>
           </div>
         </div>

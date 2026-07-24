@@ -1055,6 +1055,7 @@ export const comboOffers = pgTable("combo_offers", {
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   isActive: boolean("is_active").default(true),
+  isFeatured: boolean("is_featured").default(false),
   position: integer("position").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
