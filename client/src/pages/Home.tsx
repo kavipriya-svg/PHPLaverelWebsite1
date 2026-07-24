@@ -12,6 +12,7 @@ import {
   mergeHomepageSettings,
   HomepageSettings,
 } from "@/lib/homepageDefaults";
+import type { HomeBlock } from "@shared/schema";
 
 // ─── Editorial Color Palette ───────────────────────────────────────
 const C = {
@@ -1064,6 +1065,125 @@ function EditorialFooter({ footer }: { footer: HomepageSettings["footer"] }) {
   );
 }
 
+// ─── Dynamic Home Block (editorial styled) ─────────────────────────
+function EditorialDynamicBlock({ block }: { block: HomeBlock }) {
+  const { addToCart } = useStore();
+  const { toast } = useToast();
+
+  const payload = (block.payload || {}) as {
+    categoryId?: string;
+    categorySlug?: string;
+    featuredOnly?: boolean;
+    limit?: number;
+    html?: string;
+  };
+
+  const limit = payload.limit || 4;
+  const featuredOnly = payload.featuredOnly ?? false;
+
+  const productQuery =
+    block.type === "featured_products"
+      ? `/api/products?featured=true&limit=${limit}`
+      : payload.categorySlug
+      ? `/api/products?categorySlug=${payload.categorySlug}&limit=${limit}${featuredOnly ? "&featured=true" : ""}`
+      : payload.categoryId
+      ? `/api/products?categoryId=${payload.categoryId}&limit=${limit}${featuredOnly ? "&featured=true" : ""}`
+      : null;
+
+  const { data: productsData } = useQuery<{ products: any[] }>({
+    queryKey: [productQuery],
+    enabled:
+      !!productQuery &&
+      (block.type === "featured_products" || block.type === "category_products"),
+  });
+
+  const products = productsData?.products || [];
+  const sectionTitle = block.title || "Products";
+
+  if (block.type === "featured_products" || block.type === "category_products") {
+    if (!products.length) return null;
+    return (
+      <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.white }}>
+        <div className="flex justify-between items-baseline mb-stack-md flex-wrap gap-4">
+          <Reveal>
+            <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>
+              {sectionTitle}
+            </h2>
+          </Reveal>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+          {products.slice(0, limit).map((p: any, i: number) => (
+            <Reveal key={p.id || i} delay={i * 80}>
+              <div className="group cursor-pointer">
+                <div
+                  className="relative overflow-hidden mb-4"
+                  style={{ aspectRatio: "1/1", backgroundColor: C.surfaceContainerLow }}
+                >
+                  <img
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    src={getProductImage(p)}
+                    alt={p.title || p.name}
+                    loading="lazy"
+                  />
+                  {p.id && (
+                    <button
+                      className="absolute bottom-3 right-3 w-10 h-10 flex items-center justify-center transition-colors duration-200"
+                      style={{ backgroundColor: C.primary, color: C.white }}
+                      onMouseOver={(e) => (e.currentTarget.style.backgroundColor = C.secondary)}
+                      onMouseOut={(e) => (e.currentTarget.style.backgroundColor = C.primary)}
+                      onClick={() => {
+                        addToCart(p.id);
+                        toast({ title: "Added to cart", description: p.title || p.name });
+                      }}
+                      aria-label={`Add ${p.title || p.name} to cart`}
+                      data-testid={`button-add-to-cart-block-${p.id}`}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <p className="font-inter text-label-caps mb-1" style={{ color: C.outline }}>
+                  {p.category?.name || "FEATURED"}
+                </p>
+                <h4
+                  className="font-playfair mb-1"
+                  style={{ fontSize: 20, color: C.primary, lineHeight: 1.2 }}
+                >
+                  {p.title || p.name}
+                </h4>
+                <p className="font-inter font-bold text-sm" style={{ color: C.secondary }}>
+                  {p.price ? `₹${parseFloat(p.salePrice || p.price).toFixed(2)}` : ""}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (block.type === "promo_html" && payload.html) {
+    return (
+      <section
+        className="px-margin-desktop py-stack-lg"
+        style={{ backgroundColor: C.primaryContainer }}
+      >
+        <div
+          className="prose max-w-none"
+          style={{ color: C.onPrimaryContainer }}
+          dangerouslySetInnerHTML={{ __html: payload.html }}
+        />
+      </section>
+    );
+  }
+
+  if (block.type === "custom_code" && payload.html) {
+    return <div dangerouslySetInnerHTML={{ __html: payload.html }} />;
+  }
+
+  return null;
+}
+
 // ─── Main Home Page ────────────────────────────────────────────────
 export default function Home() {
   const { data: settingsData } = useQuery<{ settings: Partial<HomepageSettings> }>({
@@ -1097,7 +1217,14 @@ export default function Home() {
     queryKey: ["/api/reviews/approved?limit=2"],
   });
 
+  const { data: homeBlocksData } = useQuery<{ blocks: HomeBlock[] }>({
+    queryKey: ["/api/home-blocks"],
+  });
+
   const topCategories = (categoriesData?.categories || []).filter((c: any) => !c.parentId).slice(0, 4);
+  const activeHomeBlocks = (homeBlocksData?.blocks || [])
+    .filter((b) => b.isActive)
+    .sort((a, b) => (a.position || 0) - (b.position || 0));
 
   return (
     <div
@@ -1115,6 +1242,9 @@ export default function Home() {
       {s.treats.visible !== false && (
         <TreatsSection products={treatsProductData?.products || []} treats={s.treats} />
       )}
+      {activeHomeBlocks.map((block) => (
+        <EditorialDynamicBlock key={block.id} block={block} />
+      ))}
       {s.philosophy.visible !== false && (
         <AncestralPhilosophySection philosophy={s.philosophy} />
       )}

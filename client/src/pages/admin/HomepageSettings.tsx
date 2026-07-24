@@ -249,10 +249,10 @@ export default function HomepageSettingsPage() {
         <Tabs defaultValue="visibility">
           <TabsList className="flex-wrap h-auto gap-1 mb-2">
             <TabsTrigger value="visibility">Visibility</TabsTrigger>
-            <TabsTrigger value="hero">Hero</TabsTrigger>
+            <TabsTrigger value="hero">Hero Banner</TabsTrigger>
             <TabsTrigger value="navigation">Navigation</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="story">Story</TabsTrigger>
+            <TabsTrigger value="products">Product Sections</TabsTrigger>
+            <TabsTrigger value="story">Brand Story</TabsTrigger>
             <TabsTrigger value="community">Community</TabsTrigger>
             <TabsTrigger value="misc">Gift Sets & Footer</TabsTrigger>
           </TabsList>
@@ -270,18 +270,18 @@ export default function HomepageSettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {(
                     [
-                      ["hero", "Hero Banner"],
-                      ["categoryHub", "Category Hub"],
-                      ["bestSellers", "Best Sellers (Top Tier Fuel)"],
-                      ["treats", "Treats"],
-                      ["philosophy", "Ancestral Philosophy"],
-                      ["apparel", "Trending Apparel"],
-                      ["wolfPrinciple", "Wolf Principle"],
-                      ["founder", "Founder Mission"],
-                      ["giftSets", "Gift Sets"],
-                      ["trustBadges", "Trust Badges"],
-                      ["communityPack", "Community Pack"],
-                      ["newsletter", "Newsletter"],
+                      ["hero", "1. Hero Banner"],
+                      ["categoryHub", "2. Category Hub"],
+                      ["bestSellers", "3. Top Tier Fuel (Food Grid)"],
+                      ["treats", "4. Treats Grid"],
+                      ["philosophy", "5. Ancestral Philosophy"],
+                      ["apparel", "6. Apparel for the Modern Pack"],
+                      ["wolfPrinciple", "7. Wolf Principle (Dark Banner)"],
+                      ["founder", "8. Founder's Mission"],
+                      ["giftSets", "9. Gift Sets"],
+                      ["trustBadges", "10. Trust Badges"],
+                      ["communityPack", "11. Community Pack"],
+                      ["newsletter", "12. Newsletter"],
                     ] as [keyof HomepageSettings, string][]
                   ).map(([key, label]) => (
                     <div
@@ -447,8 +447,8 @@ export default function HomepageSettingsPage() {
           {/* ── PRODUCTS TAB ── */}
           <TabsContent value="products" className="space-y-4">
             <SectionCard
-              title="Best Sellers Section"
-              description="Headline product grid pulled from a category."
+              title="Top Tier Fuel — Food Section"
+              description="Headline product grid pulled from a category (appears 4th on homepage)."
               visible={settings.bestSellers.visible}
               onToggle={(v) => update("bestSellers", { visible: v })}
             >
@@ -580,8 +580,8 @@ export default function HomepageSettingsPage() {
             </SectionCard>
 
             <SectionCard
-              title="Apparel Section"
-              description="Three-column clothing product grid."
+              title="Apparel for the Modern Pack"
+              description="Three-column clothing product grid (appears 7th on homepage)."
               visible={settings.apparel.visible}
               onToggle={(v) => update("apparel", { visible: v })}
             >
