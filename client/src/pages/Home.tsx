@@ -327,7 +327,6 @@ const CATEGORY_FALLBACK_IMAGES = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAhnR0MUApTUHKiliF37T8XkidY5NqkyVv8QrNwTv9lwlk3lAmWK7bgPAnQ9SOqWOoBQaf26WN412-Mpq1aqLJ-dCjc_q-ulgR8SDt3-Jwq5jBTeQSg6hvPOiR8iiYq2QepSDXbqzhjzt19tRpj4hpqjln3rwm3sJWZUpBwAr7CvmSa7_eo37nuTZFjDuS867jyf-05-l9OQ89mdoLB94KA4eB3t_FYa5jGhcZ3TokkhBBldkHtlRqt2Wo_SWvvPBPAv69qYCpYQjk0",
 ];
 
-const CATEGORY_CTAS = ["EXPLORE DIETS", "VIEW CLOTHING", "SHOP TREATS", "VIEW ALL"];
 
 function CategoryHub({
   categories,
@@ -363,10 +362,12 @@ function CategoryHub({
             />
             <div className="absolute bottom-10 left-10 p-8 max-w-sm" style={{ backgroundColor: C.primary, color: C.white }}>
               <h3 className="font-playfair text-headline-md mb-2">{cats[0]?.name || "Biological Food"}</h3>
-              <p className="font-inter text-body-md mb-4">Precision nutrition designed for the canine predator.</p>
+              {categoryHub.cards[0]?.description && (
+                <p className="font-inter text-body-md mb-4">{categoryHub.cards[0].description}</p>
+              )}
               <Link href={cats[0]?.slug ? `/category/${cats[0].slug}` : "/shop"}>
                 <span className="font-inter text-label-caps border-b border-white pb-1 cursor-pointer">
-                  {CATEGORY_CTAS[0]}
+                  {categoryHub.cards[0]?.ctaText || "EXPLORE"}
                 </span>
               </Link>
             </div>
@@ -386,7 +387,9 @@ function CategoryHub({
             <div className="absolute inset-0 flex flex-col justify-end p-8" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)" }}>
               <h3 className="font-playfair text-headline-md" style={{ color: C.white }}>{cats[1]?.name || "Modern Apparel"}</h3>
               <Link href={cats[1]?.slug ? `/category/${cats[1].slug}` : "/category/clothing"}>
-                <span className="font-inter text-label-caps mt-2 cursor-pointer" style={{ color: C.white }}>{CATEGORY_CTAS[1]}</span>
+                <span className="font-inter text-label-caps mt-2 cursor-pointer" style={{ color: C.white }}>
+                  {categoryHub.cards[1]?.ctaText || "VIEW"}
+                </span>
               </Link>
             </div>
           </div>
@@ -409,7 +412,7 @@ function CategoryHub({
               <h3 className="font-playfair text-headline-md" style={{ color: C.white }}>{cats[2]?.name || "High Protein Treats"}</h3>
               <Link href={cats[2]?.slug ? `/category/${cats[2].slug}` : "/shop"}>
                 <button className="mt-4 font-inter text-label-caps px-6 py-2 cursor-pointer" style={{ backgroundColor: C.white, color: C.primary }}>
-                  {CATEGORY_CTAS[2]}
+                  {categoryHub.cards[2]?.ctaText || "SHOP"}
                 </button>
               </Link>
             </div>
@@ -427,7 +430,9 @@ function CategoryHub({
               onError={(e) => { e.currentTarget.src = CATEGORY_FALLBACK_IMAGES[3]; }}
             />
             <div className="absolute top-8 right-8 p-4" style={{ backgroundColor: "rgba(255,255,255,0.9)", backdropFilter: "blur(4px)" }}>
-              <p className="font-inter text-label-caps" style={{ color: C.primary }}>NEW ARRIVAL</p>
+              {categoryHub.cards[3]?.badge && (
+                <p className="font-inter text-label-caps" style={{ color: C.primary }}>{categoryHub.cards[3].badge}</p>
+              )}
               <h3 className="font-playfair text-headline-md" style={{ color: C.primary }}>{cats[3]?.name || "Twinning"}</h3>
             </div>
           </div>
@@ -970,12 +975,6 @@ function TrustBadgesSection({
 }
 
 // ─── 11. Community Pack ────────────────────────────────────────────
-const COMMUNITY_IMGS = [
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuC6N0ilLgFZ2pfWx5oB1ZzkMo-iWwAQv_pvxL0Ho6Qd4YUq4dB6NIo9AmntMUB9OSXuDXbPNyct2iAja1gMXb_h-PGVUGZECuAII5ypzCJQVMQa1-E-QLfgf4Kbm4YH0ks0s_6kDGlTMoG158cGcR42CYflkPkmmV1BOuY9N1FZ2Kc5LaHtRoAQsmJ7peujRNHJpEvVKXchcKZlGoqOiNnp6sg1NLD_rSbfzOUCzdQ_QqXJ9aSJ9Fg53Gs99a8r0Q2GLYTpIuhZpxW_",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDOFQi7i7OKf2n03685JClNUwEOfJDAA2EtYsHH4ZkGTMM0DWm9Z9mlLlScl3DKvK9mJhzSUU2hCnbIVyePhGiU83VPln-03GpRjbNcvHe6hZhFiLHgcGsk_6r2L_240jfuPXlHfKp8wWmLEMwL-EbWnTflYz8FfbTzrlwKtdwTGU0p6kJXTGJRi7hSJCy8XXDBhKAFE2KDqqc6-mOUL9x3pTcrTFG8agt7zez0BG9o57YIU1qznIcwdh2nRYZ6kQG83otrB1RN8HZR",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAJaEuWpIkZ_zxluR44EP7n7QCe1h2nRGwiby6kpsneUrQcunmLZWqGUPEkRyR9nz6Hvs6MUV4wOaY0VMpXn22aqdoeZTMD2cizeHUjZG6P3xVk_ChVHcKio9gWJScQ_SVzbOwrJmT6wm4QCZE0avG6IHPCNBqE7FFRF3chOz2-ROSIJ4CXH7l6MxEEIU03Z9eGXTYhfB5PncD4B_DsddzxEySNMkFJUvGNEZUgQfwsnAjbMVi98snLBRg1Z3L4vg6z1q5Z",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuD0YHPA_9H7hPEaLMsFgaZHgkk0BlCTRRpNMMn1GTJlZlVyLgW950Rqj9Wzw0ttbwpZf1XL1NNnl_sz1dqhQO-UTAK5JJAtk6mv5cOzGIgOojtaJvWLM012b3cWCfQUSXw5_mLff9E_lFXhl_S8YPTHyXvrJP0XU1OIsPShPplo1-Qo__YLR8_n-k0z4wjB3pfVTWF",
-];
 
 function CommunityPackSection({
   reviews,
@@ -999,12 +998,12 @@ function CommunityPackSection({
       </Reveal>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-20">
-        {COMMUNITY_IMGS.map((src, i) => {
+        {(communityPack.photos ?? []).map((photo, i) => {
           const delays = [0, 100, 200, 300];
           const aspects = ["aspect-square", "aspect-[3/4] pt-12", "aspect-[4/5]", "aspect-square pt-24"];
           return (
             <Reveal key={i} delay={delays[i]} className={`editorial-img-hover ${aspects[i]}`}>
-              <img className="w-full h-full object-cover" src={src} alt={`Community dog ${i + 1}`} loading="lazy" />
+              <img className="w-full h-full object-cover" src={photo.url} alt={`Community dog ${i + 1}`} loading="lazy" />
             </Reveal>
           );
         })}

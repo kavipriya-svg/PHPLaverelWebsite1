@@ -19,6 +19,7 @@ export interface HomepageSettings {
     visible: boolean;
     label: string;
     title: string;
+    cards: Array<{ ctaText: string; description: string; badge: string }>;
   };
   bestSellers: {
     visible: boolean;
@@ -85,6 +86,7 @@ export interface HomepageSettings {
     visible: boolean;
     title: string;
     subtitle: string;
+    photos: Array<{ url: string }>;
     testimonials: Array<{ quote: string; author: string }>;
   };
   newsletter: {
@@ -129,6 +131,12 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
     visible: true,
     label: "CURATED SELECTIONS",
     title: "The Core Biological Systems",
+    cards: [
+      { ctaText: "EXPLORE DIETS", description: "Precision nutrition designed for the canine predator.", badge: "" },
+      { ctaText: "VIEW CLOTHING", description: "", badge: "" },
+      { ctaText: "SHOP TREATS", description: "", badge: "" },
+      { ctaText: "VIEW ALL", description: "", badge: "NEW ARRIVAL" },
+    ],
   },
   bestSellers: {
     visible: true,
@@ -242,6 +250,12 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
     visible: true,
     title: "The Community Pack",
     subtitle: "Sharing the journey of biological wellness.",
+    photos: [
+      { url: "https://lh3.googleusercontent.com/aida-public/AB6AXuC6N0ilLgFZ2pfWx5oB1ZzkMo-iWwAQv_pvxL0Ho6Qd4YUq4dB6NIo9AmntMUB9OSXuDXbPNyct2iAja1gMXb_h-PGVUGZECuAII5ypzCJQVMQa1-E-QLfgf4Kbm4YH0ks0s_6kDGlTMoG158cGcR42CYflkPkmmV1BOuY9N1FZ2Kc5LaHtRoAQsmJ7peujRNHJpEvVKXchcKZlGoqOiNnp6sg1NLD_rSbfzOUCzdQ_QqXJ9aSJ9Fg53Gs99a8r0Q2GLYTpIuhZpxW_" },
+      { url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDOFQi7i7OKf2n03685JClNUwEOfJDAA2EtYsHH4ZkGTMM0DWm9Z9mlLlScl3DKvK9mJhzSUU2hCnbIVyePhGiU83VPln-03GpRjbNcvHe6hZhFiLHgcGsk_6r2L_240jfuPXlHfKp8wWmLEMwL-EbWnTflYz8FfbTzrlwKtdwTGU0p6kJXTGJRi7hSJCy8XXDBhKAFE2KDqqc6-mOUL9x3pTcrTFG8agt7zez0BG9o57YIU1qznIcwdh2nRYZ6kQG83otrB1RN8HZR" },
+      { url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAJaEuWpIkZ_zxluR44EP7n7QCe1h2nRGwiby6kpsneUrQcunmLZWqGUPEkRyR9nz6Hvs6MUV4wOaY0VMpXn22aqdoeZTMD2cizeHUjZG6P3xVk_ChVHcKio9gWJScQ_SVzbOwrJmT6wm4QCZE0avG6IHPCNBqE7FFRF3chOz2-ROSIJ4CXH7l6MxEEIU03Z9eGXTYhfB5PncD4B_DsddzxEySNMkFJUvGNEZUgQfwsnAjbMVi98snLBRg1Z3L4vg6z1q5Z" },
+      { url: "https://lh3.googleusercontent.com/aida-public/AB6AXuD0YHPA_9H7hPEaLMsFgaZHgkk0BlCTRRpNMMn1GTJlZlVyLgW950Rqj9Wzw0ttbwpZf1XL1NNnl_sz1dqhQO-UTAK5JJAtk6mv5cOzGIgOojtaJvWLM012b3cWCfQUSXw5_mLff9E_lFXhl_S8YPTHyXvrJP0XU1OIsPShPplo1-Qo__YLR8_n-k0z4wjB3pfVTWF" },
+    ],
     testimonials: [
       {
         quote:
@@ -278,7 +292,11 @@ export function mergeHomepageSettings(
   return {
     nav: { ...d.nav, ...saved.nav },
     hero: { ...d.hero, ...saved.hero },
-    categoryHub: { ...d.categoryHub, ...saved.categoryHub },
+    categoryHub: {
+      ...d.categoryHub,
+      ...saved.categoryHub,
+      cards: saved.categoryHub?.cards ?? d.categoryHub.cards,
+    },
     bestSellers: { ...d.bestSellers, ...saved.bestSellers },
     treats: { ...d.treats, ...saved.treats },
     philosophy: {
@@ -302,6 +320,7 @@ export function mergeHomepageSettings(
     communityPack: {
       ...d.communityPack,
       ...saved.communityPack,
+      photos: saved.communityPack?.photos ?? d.communityPack.photos,
       testimonials:
         saved.communityPack?.testimonials ?? d.communityPack.testimonials,
     },

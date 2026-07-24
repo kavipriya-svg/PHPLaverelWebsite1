@@ -722,9 +722,55 @@ export default function HomepageSettingsPage() {
                   />
                 </FieldRow>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Category cards are populated from your top-level categories in the admin. Manage them under <strong>Categories</strong>.
+              <Separator />
+              <Label className="text-sm font-medium">Category Card Labels</Label>
+              <p className="text-xs text-muted-foreground -mt-1">
+                Card images and names come from your top-level categories. Customize the CTA button text, description, and badge for each card below.
               </p>
+              {["Card 1 (Large — top-left)", "Card 2 (Small — top-right)", "Card 3 (Bottom-left)", "Card 4 (Bottom-right)"].map((label, i) => (
+                <div key={i} className="p-4 border rounded-md space-y-3">
+                  <p className="text-sm font-semibold text-muted-foreground">{label}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <FieldRow label="CTA Button Text">
+                      <Input
+                        value={settings.categoryHub.cards[i]?.ctaText ?? ""}
+                        onChange={(e) => {
+                          const cards = [...settings.categoryHub.cards];
+                          cards[i] = { ...cards[i], ctaText: e.target.value };
+                          update("categoryHub", { cards });
+                        }}
+                        placeholder="EXPLORE"
+                      />
+                    </FieldRow>
+                    {i === 0 && (
+                      <FieldRow label="Description (Card 1 only)">
+                        <Input
+                          value={settings.categoryHub.cards[0]?.description ?? ""}
+                          onChange={(e) => {
+                            const cards = [...settings.categoryHub.cards];
+                            cards[0] = { ...cards[0], description: e.target.value };
+                            update("categoryHub", { cards });
+                          }}
+                          placeholder="Precision nutrition for the canine predator."
+                        />
+                      </FieldRow>
+                    )}
+                    {i === 3 && (
+                      <FieldRow label="Badge Text (Card 4 only)">
+                        <Input
+                          value={settings.categoryHub.cards[3]?.badge ?? ""}
+                          onChange={(e) => {
+                            const cards = [...settings.categoryHub.cards];
+                            cards[3] = { ...cards[3], badge: e.target.value };
+                            update("categoryHub", { cards });
+                          }}
+                          placeholder="NEW ARRIVAL"
+                        />
+                      </FieldRow>
+                    )}
+                  </div>
+                </div>
+              ))}
             </SectionCard>
           </TabsContent>
 
@@ -929,6 +975,23 @@ export default function HomepageSettingsPage() {
                     placeholder="Sharing the journey of biological wellness."
                   />
                 </FieldRow>
+              </div>
+              <Separator />
+              <Label className="text-sm font-medium">Community Photo Grid</Label>
+              <p className="text-xs text-muted-foreground -mt-1">Four photos displayed in the editorial mosaic above testimonials.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(settings.communityPack.photos ?? []).map((photo, i) => (
+                  <ImageUploadField
+                    key={i}
+                    label={`Photo ${i + 1}`}
+                    value={photo.url}
+                    onChange={(url) => {
+                      const photos = [...(settings.communityPack.photos ?? [])];
+                      photos[i] = { url };
+                      update("communityPack", { photos });
+                    }}
+                  />
+                ))}
               </div>
               <Separator />
               <Label className="text-sm font-medium">
