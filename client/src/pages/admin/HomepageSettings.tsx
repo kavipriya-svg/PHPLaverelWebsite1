@@ -273,6 +273,7 @@ export default function HomepageSettingsPage() {
                       ["hero", "Hero Banner"],
                       ["categoryHub", "Category Hub"],
                       ["bestSellers", "Best Sellers (Top Tier Fuel)"],
+                      ["treats", "Treats"],
                       ["philosophy", "Ancestral Philosophy"],
                       ["apparel", "Trending Apparel"],
                       ["wolfPrinciple", "Wolf Principle"],
@@ -490,6 +491,62 @@ export default function HomepageSettingsPage() {
                   <Input
                     value={settings.bestSellers.browseHref}
                     onChange={(e) => update("bestSellers", { browseHref: e.target.value })}
+                    placeholder="/shop"
+                  />
+                </FieldRow>
+              </div>
+            </SectionCard>
+
+            <SectionCard
+              title="Treats Section"
+              description="Product grid shown below Top Tier Fuel."
+              visible={settings.treats.visible}
+              onToggle={(v) => update("treats", { visible: v })}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FieldRow label="Eyebrow Label">
+                  <Input
+                    value={settings.treats.label}
+                    onChange={(e) => update("treats", { label: e.target.value })}
+                    placeholder="REWARD & TRAIN"
+                  />
+                </FieldRow>
+                <FieldRow label="Section Title">
+                  <Input
+                    value={settings.treats.title}
+                    onChange={(e) => update("treats", { title: e.target.value })}
+                    placeholder="Treats"
+                  />
+                </FieldRow>
+                <FieldRow label="Category Slug" hint="Pull products from this category.">
+                  <Input
+                    value={settings.treats.categorySlug}
+                    onChange={(e) => update("treats", { categorySlug: e.target.value })}
+                    placeholder="treats"
+                  />
+                </FieldRow>
+                <FieldRow label="Number of Products">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={8}
+                    value={settings.treats.limit}
+                    onChange={(e) =>
+                      update("treats", { limit: parseInt(e.target.value) || 4 })
+                    }
+                  />
+                </FieldRow>
+                <FieldRow label="Browse Link Text">
+                  <Input
+                    value={settings.treats.browseText}
+                    onChange={(e) => update("treats", { browseText: e.target.value })}
+                    placeholder="BROWSE ALL TREATS"
+                  />
+                </FieldRow>
+                <FieldRow label="Browse Link URL">
+                  <Input
+                    value={settings.treats.browseHref}
+                    onChange={(e) => update("treats", { browseHref: e.target.value })}
                     placeholder="/shop"
                   />
                 </FieldRow>

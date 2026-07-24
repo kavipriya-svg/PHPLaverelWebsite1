@@ -438,7 +438,112 @@ function BestSellersSection({
   );
 }
 
-// ─── 5. Ancestral Philosophy ───────────────────────────────────────
+// ─── 5. Treats Section ────────────────────────────────────────────
+function TreatsSection({
+  products,
+  treats,
+}: {
+  products: any[];
+  treats: HomepageSettings["treats"];
+}) {
+  const { addToCart } = useStore();
+  const { toast } = useToast();
+
+  const fallbacks = [
+    { title: "Wild Salmon Bites", label: "SINGLE PROTEIN", price: "18.00", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDm0XP20ShWtMUi4wczdFCRqzjg0uL0svm_F69UAye4Ds9jP-g_56o4_OmnMntVjkH91MwrDL6BE4FxUeZYFIkMznQv_PRqxhAAeRED0pF8A5uizgIbSkckr3yp8OAuYt-WuAZc0BJRvJqEnI2F9a9Y5uhhwAUEkxbKR72OGhEmENO_RnctjHYInr6yUfFa1o_Wv4q_HIhHED22iSZBDmjr9uaJqz1sFw-zJImQsOwv2s7RlE5VXdSRikBN0mqAN0jGJlVCbxjlP39n" },
+    { title: "Freeze-Dried Liver Cubes", label: "TRAINING FUEL", price: "22.00", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCQND1L00AfgJDdPBsX9N92IzkSmyii1ccMikeNgTv_jqUZWiZIbK83IRGpr87P9KqLCCOwkp69A5JXXnKgmpkfSoqGastzLhvKE0j5MHN6WQdhzHsT9wLVd0l4jFi1iE8cZcTUzv6-zAB6HW9gclBijAhKzg7kCpGwywGlNHqvH0gjR6UcJjH0Z7FMUveeQ0cJSFakWzxWcfU1-L2dvl4Q_4U3PHEYtKCgWnaxjzO3CMWZKe9mkXhNxY49Uphqwkl4l9MxSFE5adjd" },
+    { title: "Air-Dried Bison Strips", label: "THE HUNT SERIES", price: "26.00", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBPcYcHlncUNn6qI9gIWdccIu-HWBHYSopDGUki5XiRWhdx0ijxQdFsGnkwfjYUQ5bkXlmu524LIeCzE8u4jOmmjFSAg8qImjz-ykysFBK2py4c6Szog0vBV941Wv-BH7-WPEsjLwKACVEc7Rg_jNiwxmhJdxX8iY4Xm-16cnznQPs8-3frzVTRYGCmPAxzOzyst3xbd7nChvkh36hiVPzynrdktOHdtBbLc-ewjkvDGpjmfpBYZYhFb2MO8OuXTphQXcCRTOkCCNQa" },
+    { title: "Kelp & Coconut Chews", label: "SUPERFOOD BLEND", price: "19.00", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAOTM01jJkzk10_4FxikakQi0AhXe2qc_xCreZN4IahYMGr3rHF1jpV2I0IVz3uNmJati-t5vg0lXATDFAhaJ-AbFe7kcb79iuTHUsIBpAuyt-JTs9kAxnxLvaIpEYWe8vZ_FnpziMbrbNaHWUTklouLeY8cqQTrNYqS2BrT5q66dl6QXWGGszX8vfoJBBCfscGpewrMPHL7gXrDDChxE4q6e8QjtOhMocCa-Lt5nvpvkPXwwqPvGZnbQmjqwSdWbicnPkTbLJW6PqW" },
+  ];
+
+  const items = products.length > 0 ? products : fallbacks;
+
+  return (
+    <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.white }}>
+      <div className="flex justify-between items-baseline mb-stack-md flex-wrap gap-4">
+        <Reveal>
+          <p className="font-inter text-label-caps mb-2" style={{ color: C.secondary }}>
+            {treats.label}
+          </p>
+          <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>
+            {treats.title}
+          </h2>
+        </Reveal>
+        <Link href={treats.browseHref}>
+          <span
+            className="font-inter text-label-caps cursor-pointer hover:underline"
+            style={{ color: C.secondary }}
+          >
+            {treats.browseText}
+          </span>
+        </Link>
+      </div>
+
+      {/* Horizontal strip layout — wide cards with landscape images */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+        {items.slice(0, treats.limit).map((p: any, i: number) => (
+          <Reveal key={p.id || i} delay={i * 80}>
+            <div className="group cursor-pointer">
+              <div
+                className="relative overflow-hidden mb-4"
+                style={{ aspectRatio: "1/1", backgroundColor: C.surfaceContainerLow }}
+              >
+                <img
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  src={getProductImage(p) || p.img || fallbacks[i % fallbacks.length].img}
+                  alt={p.title}
+                  loading="lazy"
+                  onError={(e) => {
+                    const fb = fallbacks[i % fallbacks.length];
+                    if (fb?.img) e.currentTarget.src = fb.img;
+                  }}
+                />
+                {/* Treat badge */}
+                <div
+                  className="absolute top-3 left-3 px-3 py-1"
+                  style={{ backgroundColor: C.secondary }}
+                >
+                  <p className="font-inter text-label-caps" style={{ color: C.white, fontSize: 9 }}>
+                    {p.label || p.category?.name || fallbacks[i % fallbacks.length].label}
+                  </p>
+                </div>
+                {p.id && (
+                  <button
+                    className="absolute bottom-3 right-3 w-10 h-10 flex items-center justify-center transition-colors duration-200"
+                    style={{ backgroundColor: C.primary, color: C.white }}
+                    onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
+                    onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
+                    onClick={() => {
+                      addToCart(p.id);
+                      toast({ title: "Added to cart", description: p.title });
+                    }}
+                    aria-label={`Add ${p.title} to cart`}
+                    data-testid={`button-add-to-cart-treats-${p.id}`}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <h4
+                className="font-playfair mb-1"
+                style={{ fontSize: 18, color: C.primary, lineHeight: 1.2 }}
+              >
+                {p.title}
+              </h4>
+              <p className="font-inter font-bold text-sm" style={{ color: C.secondary }}>
+                {p.price
+                  ? `₹${parseFloat(p.salePrice || p.price).toFixed(2)}`
+                  : `$${fallbacks[i % fallbacks.length].price}`}
+              </p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── 6. Ancestral Philosophy ───────────────────────────────────────
 function AncestralPhilosophySection({
   philosophy,
 }: {
@@ -977,6 +1082,10 @@ export default function Home() {
     queryKey: [`/api/products?categorySlug=${s.apparel.categorySlug}&limit=${s.apparel.limit}`],
   });
 
+  const { data: treatsProductData } = useQuery<{ products: any[] }>({
+    queryKey: [`/api/products?categorySlug=${s.treats.categorySlug}&limit=${s.treats.limit}`],
+  });
+
   const { data: categoriesData } = useQuery<{ categories: any[] }>({
     queryKey: ["/api/categories"],
   });
@@ -999,6 +1108,9 @@ export default function Home() {
       )}
       {s.bestSellers.visible !== false && (
         <BestSellersSection products={treatsData?.products || []} bestSellers={s.bestSellers} />
+      )}
+      {s.treats.visible !== false && (
+        <TreatsSection products={treatsProductData?.products || []} treats={s.treats} />
       )}
       {s.philosophy.visible !== false && (
         <AncestralPhilosophySection philosophy={s.philosophy} />

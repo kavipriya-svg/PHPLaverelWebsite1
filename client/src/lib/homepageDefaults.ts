@@ -28,6 +28,15 @@ export interface HomepageSettings {
     categorySlug: string;
     limit: number;
   };
+  treats: {
+    visible: boolean;
+    label: string;
+    title: string;
+    browseText: string;
+    browseHref: string;
+    categorySlug: string;
+    limit: number;
+  };
   philosophy: {
     visible: boolean;
     label: string;
@@ -124,6 +133,15 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
     browseText: "BROWSE ALL NUTRITION",
     browseHref: "/shop",
     categorySlug: "wild-treats",
+    limit: 4,
+  },
+  treats: {
+    visible: true,
+    label: "REWARD & TRAIN",
+    title: "Treats",
+    browseText: "BROWSE ALL TREATS",
+    browseHref: "/shop",
+    categorySlug: "treats",
     limit: 4,
   },
   philosophy: {
@@ -256,6 +274,7 @@ export function mergeHomepageSettings(
     hero: { ...d.hero, ...saved.hero },
     categoryHub: { ...d.categoryHub, ...saved.categoryHub },
     bestSellers: { ...d.bestSellers, ...saved.bestSellers },
+    treats: { ...d.treats, ...saved.treats },
     philosophy: {
       ...d.philosophy,
       ...saved.philosophy,
