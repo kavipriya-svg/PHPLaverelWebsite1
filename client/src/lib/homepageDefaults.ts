@@ -26,6 +26,7 @@ export interface HomepageSettings {
     browseText: string;
     browseHref: string;
     categorySlug: string;
+    featuredOnly: boolean;
     limit: number;
   };
   treats: {
@@ -35,6 +36,7 @@ export interface HomepageSettings {
     browseText: string;
     browseHref: string;
     categorySlug: string;
+    featuredOnly: boolean;
     limit: number;
   };
   philosophy: {
@@ -51,6 +53,7 @@ export interface HomepageSettings {
     label: string;
     title: string;
     categorySlug: string;
+    featuredOnly: boolean;
     limit: number;
   };
   wolfPrinciple: {
@@ -132,7 +135,8 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
     title: "Top Tier Fuel",
     browseText: "BROWSE ALL NUTRITION",
     browseHref: "/shop",
-    categorySlug: "wild-treats",
+    categorySlug: "full-meals",
+    featuredOnly: true,
     limit: 4,
   },
   treats: {
@@ -141,7 +145,8 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
     title: "Treats",
     browseText: "BROWSE ALL TREATS",
     browseHref: "/shop",
-    categorySlug: "treats",
+    categorySlug: "wild-treats",
+    featuredOnly: true,
     limit: 4,
   },
   philosophy: {
@@ -176,6 +181,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
     label: "THE WARDROBE",
     title: "Apparel for the Modern Pack",
     categorySlug: "clothing",
+    featuredOnly: true,
     limit: 3,
   },
   wolfPrinciple: {

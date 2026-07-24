@@ -1074,16 +1074,19 @@ export default function Home() {
     ? mergeHomepageSettings(settingsData.settings || {})
     : DEFAULT_HOMEPAGE_SETTINGS;
 
+  const bestSellersQuery = `/api/products?categorySlug=${s.bestSellers.categorySlug}&limit=${s.bestSellers.limit}${s.bestSellers.featuredOnly ? "&featured=true" : ""}`;
   const { data: treatsData } = useQuery<{ products: any[] }>({
-    queryKey: [`/api/products?categorySlug=${s.bestSellers.categorySlug}&limit=${s.bestSellers.limit}`],
+    queryKey: [bestSellersQuery],
   });
 
+  const apparelQuery = `/api/products?categorySlug=${s.apparel.categorySlug}&limit=${s.apparel.limit}${s.apparel.featuredOnly ? "&featured=true" : ""}`;
   const { data: clothingData } = useQuery<{ products: any[] }>({
-    queryKey: [`/api/products?categorySlug=${s.apparel.categorySlug}&limit=${s.apparel.limit}`],
+    queryKey: [apparelQuery],
   });
 
+  const treatsQuery = `/api/products?categorySlug=${s.treats.categorySlug}&limit=${s.treats.limit}${s.treats.featuredOnly ? "&featured=true" : ""}`;
   const { data: treatsProductData } = useQuery<{ products: any[] }>({
-    queryKey: [`/api/products?categorySlug=${s.treats.categorySlug}&limit=${s.treats.limit}`],
+    queryKey: [treatsQuery],
   });
 
   const { data: categoriesData } = useQuery<{ categories: any[] }>({

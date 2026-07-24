@@ -495,6 +495,19 @@ export default function HomepageSettingsPage() {
                   />
                 </FieldRow>
               </div>
+              <div className="flex items-center justify-between p-3 rounded-md border">
+                <div>
+                  <Label className="text-sm font-medium">Featured products only</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Only show products with the "Featured" flag enabled in their product settings.
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.bestSellers.featuredOnly ?? true}
+                  onCheckedChange={(v) => update("bestSellers", { featuredOnly: v })}
+                  data-testid="toggle-bestSellers-featuredOnly"
+                />
+              </div>
             </SectionCard>
 
             <SectionCard
@@ -551,6 +564,19 @@ export default function HomepageSettingsPage() {
                   />
                 </FieldRow>
               </div>
+              <div className="flex items-center justify-between p-3 rounded-md border">
+                <div>
+                  <Label className="text-sm font-medium">Featured products only</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Only show products with the "Featured" flag enabled in their product settings.
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.treats.featuredOnly ?? true}
+                  onCheckedChange={(v) => update("treats", { featuredOnly: v })}
+                  data-testid="toggle-treats-featuredOnly"
+                />
+              </div>
             </SectionCard>
 
             <SectionCard
@@ -592,6 +618,19 @@ export default function HomepageSettingsPage() {
                     }
                   />
                 </FieldRow>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-md border">
+                <div>
+                  <Label className="text-sm font-medium">Featured products only</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Only show products with the "Featured" flag enabled in their product settings.
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.apparel.featuredOnly ?? true}
+                  onCheckedChange={(v) => update("apparel", { featuredOnly: v })}
+                  data-testid="toggle-apparel-featuredOnly"
+                />
               </div>
             </SectionCard>
 
