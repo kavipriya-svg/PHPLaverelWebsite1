@@ -1654,3 +1654,50 @@ export const insertFullMealAdBannerSchema = createInsertSchema(fullMealAdBanners
 });
 export type InsertFullMealAdBanner = z.infer<typeof insertFullMealAdBannerSchema>;
 export type FullMealAdBanner = typeof fullMealAdBanners.$inferSelect;
+
+// ─── Dog Treats Customer Feedback ────────────────────────────────────────────
+export const dogTreatsFeedback = pgTable("dog_treats_feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 120 }).notNull(),
+  role: varchar("role", { length: 120 }).notNull().default("Verified Buyer"),
+  avatarBg: varchar("avatar_bg", { length: 20 }).notNull().default("#a5d0b8"),
+  avatarFg: varchar("avatar_fg", { length: 20 }).notNull().default("#264e3c"),
+  rating: integer("rating").notNull().default(5),
+  reviewText: text("review_text").notNull(),
+  hasMedia: boolean("has_media").notNull().default(false),
+  mediaType: varchar("media_type", { length: 10 }).notNull().default("photo"),
+  mediaUrl: varchar("media_url", { length: 1024 }),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDogTreatsFeedbackSchema = createInsertSchema(dogTreatsFeedback).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDogTreatsFeedback = z.infer<typeof insertDogTreatsFeedbackSchema>;
+export type DogTreatsFeedback = typeof dogTreatsFeedback.$inferSelect;
+
+// ─── Dog Treats Ad Banners ────────────────────────────────────────────────────
+export const dogTreatsAdBanners = pgTable("dog_treats_ad_banners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 255 }),
+  subtitle: varchar("subtitle", { length: 500 }),
+  ctaText: varchar("cta_text", { length: 100 }),
+  ctaUrl: varchar("cta_url", { length: 1024 }),
+  mediaType: varchar("media_type", { length: 10 }).notNull().default("image"),
+  mediaUrl: varchar("media_url", { length: 1024 }).notNull(),
+  placement: varchar("placement", { length: 20 }).notNull().default("both"),
+  position: varchar("position", { length: 20 }).notNull().default("bottom"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDogTreatsAdBannerSchema = createInsertSchema(dogTreatsAdBanners).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDogTreatsAdBanner = z.infer<typeof insertDogTreatsAdBannerSchema>;
+export type DogTreatsAdBanner = typeof dogTreatsAdBanners.$inferSelect;

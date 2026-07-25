@@ -7003,5 +7003,120 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  // ── Dog Treats Page Settings ──────────────────────────────────────
+  app.get("/api/settings/dog-treats-page", async (req, res) => {
+    try {
+      const row = await storage.getSetting("dog_treats_page_settings");
+      const settings = row?.value ? JSON.parse(row.value) : {};
+      res.json({ settings });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch dog treats page settings" });
+    }
+  });
+
+  app.put("/api/settings/dog-treats-page", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ dog_treats_page_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update dog treats page settings" });
+    }
+  });
+
+  // ── Dog Treats Customer Feedback ──────────────────────────────────
+  app.get("/api/dog-treats-feedback", async (req, res) => {
+    try {
+      const items = await storage.getDogTreatsFeedback(true);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.get("/api/admin/dog-treats-feedback", isAdmin, async (req, res) => {
+    try {
+      const items = await storage.getDogTreatsFeedback(false);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.post("/api/admin/dog-treats-feedback", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createDogTreatsFeedback(req.body);
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create feedback" });
+    }
+  });
+
+  app.put("/api/admin/dog-treats-feedback/:id", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateDogTreatsFeedback(req.params.id, req.body);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update feedback" });
+    }
+  });
+
+  app.delete("/api/admin/dog-treats-feedback/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteDogTreatsFeedback(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete feedback" });
+    }
+  });
+
+  // ── Dog Treats Ad Banners ─────────────────────────────────────────
+  app.get("/api/dog-treats-ad-banners", async (req, res) => {
+    try {
+      const placement = req.query.placement as string | undefined;
+      const items = await storage.getDogTreatsAdBanners(true, placement);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch ad banners" });
+    }
+  });
+
+  app.get("/api/admin/dog-treats-ad-banners", isAdmin, async (req, res) => {
+    try {
+      const items = await storage.getDogTreatsAdBanners(false);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch ad banners" });
+    }
+  });
+
+  app.post("/api/admin/dog-treats-ad-banners", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createDogTreatsAdBanner(req.body);
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create ad banner" });
+    }
+  });
+
+  app.put("/api/admin/dog-treats-ad-banners/:id", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateDogTreatsAdBanner(req.params.id, req.body);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update ad banner" });
+    }
+  });
+
+  app.delete("/api/admin/dog-treats-ad-banners/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteDogTreatsAdBanner(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete ad banner" });
+    }
+  });
+
   return httpServer;
 }

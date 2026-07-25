@@ -48,6 +48,12 @@ import {
   fullMealAdBanners,
   type FullMealAdBanner,
   type InsertFullMealAdBanner,
+  dogTreatsFeedback,
+  type DogTreatsFeedback,
+  type InsertDogTreatsFeedback,
+  dogTreatsAdBanners,
+  type DogTreatsAdBanner,
+  type InsertDogTreatsAdBanner,
   type User,
   type UpsertUser,
   type Category,
@@ -440,6 +446,15 @@ export interface IStorage {
   createFullMealAdBanner(data: InsertFullMealAdBanner): Promise<FullMealAdBanner>;
   updateFullMealAdBanner(id: string, data: Partial<InsertFullMealAdBanner>): Promise<FullMealAdBanner | undefined>;
   deleteFullMealAdBanner(id: string): Promise<void>;
+  // Dog Treats
+  getDogTreatsFeedback(activeOnly?: boolean): Promise<DogTreatsFeedback[]>;
+  createDogTreatsFeedback(data: InsertDogTreatsFeedback): Promise<DogTreatsFeedback>;
+  updateDogTreatsFeedback(id: string, data: Partial<InsertDogTreatsFeedback>): Promise<DogTreatsFeedback | undefined>;
+  deleteDogTreatsFeedback(id: string): Promise<void>;
+  getDogTreatsAdBanners(activeOnly?: boolean, placement?: string): Promise<DogTreatsAdBanner[]>;
+  createDogTreatsAdBanner(data: InsertDogTreatsAdBanner): Promise<DogTreatsAdBanner>;
+  updateDogTreatsAdBanner(id: string, data: Partial<InsertDogTreatsAdBanner>): Promise<DogTreatsAdBanner | undefined>;
+  deleteDogTreatsAdBanner(id: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -3194,6 +3209,65 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFullMealAdBanner(id: string): Promise<void> {
     await db.delete(fullMealAdBanners).where(eq(fullMealAdBanners.id, id));
+  }
+
+  // ── Dog Treats Customer Feedback ─────────────────────────────────────────
+  async getDogTreatsFeedback(activeOnly = false): Promise<DogTreatsFeedback[]> {
+    const conditions = activeOnly ? [eq(dogTreatsFeedback.isActive, true)] : [];
+    return db
+      .select()
+      .from(dogTreatsFeedback)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(asc(dogTreatsFeedback.sortOrder), asc(dogTreatsFeedback.createdAt));
+  }
+
+  async createDogTreatsFeedback(data: InsertDogTreatsFeedback): Promise<DogTreatsFeedback> {
+    const [created] = await db.insert(dogTreatsFeedback).values(data).returning();
+    return created;
+  }
+
+  async updateDogTreatsFeedback(id: string, data: Partial<InsertDogTreatsFeedback>): Promise<DogTreatsFeedback | undefined> {
+    const [updated] = await db
+      .update(dogTreatsFeedback)
+      .set(data)
+      .where(eq(dogTreatsFeedback.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteDogTreatsFeedback(id: string): Promise<void> {
+    await db.delete(dogTreatsFeedback).where(eq(dogTreatsFeedback.id, id));
+  }
+
+  async getDogTreatsAdBanners(activeOnly = false, placement?: string): Promise<DogTreatsAdBanner[]> {
+    const conditions: any[] = [];
+    if (activeOnly) conditions.push(eq(dogTreatsAdBanners.isActive, true));
+    if (placement) conditions.push(
+      or(eq(dogTreatsAdBanners.placement, placement), eq(dogTreatsAdBanners.placement, "both"))
+    );
+    return db
+      .select()
+      .from(dogTreatsAdBanners)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(dogTreatsAdBanners.sortOrder), asc(dogTreatsAdBanners.createdAt));
+  }
+
+  async createDogTreatsAdBanner(data: InsertDogTreatsAdBanner): Promise<DogTreatsAdBanner> {
+    const [created] = await db.insert(dogTreatsAdBanners).values(data).returning();
+    return created;
+  }
+
+  async updateDogTreatsAdBanner(id: string, data: Partial<InsertDogTreatsAdBanner>): Promise<DogTreatsAdBanner | undefined> {
+    const [updated] = await db
+      .update(dogTreatsAdBanners)
+      .set(data)
+      .where(eq(dogTreatsAdBanners.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteDogTreatsAdBanner(id: string): Promise<void> {
+    await db.delete(dogTreatsAdBanners).where(eq(dogTreatsAdBanners.id, id));
   }
 
   async updateSwimGroomProviderRating(providerId: string): Promise<void> {

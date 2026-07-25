@@ -79,6 +79,10 @@ const AdminHomepageSettings = lazy(() => import("@/pages/admin/HomepageSettings"
 const AdminFullMealPageSettings = lazy(() => import("@/pages/admin/FullMealPageSettings"));
 const AdminFullMealFeedback = lazy(() => import("@/pages/admin/FullMealFeedback"));
 const AdminFullMealAdBanners = lazy(() => import("@/pages/admin/FullMealAdBanners"));
+const AdminDogTreatsPageSettings = lazy(() => import("@/pages/admin/DogTreatsPageSettings"));
+const AdminDogTreatsFeedback = lazy(() => import("@/pages/admin/DogTreatsFeedback"));
+const AdminDogTreatsAdBanners = lazy(() => import("@/pages/admin/DogTreatsAdBanners"));
+const DogTreatProductDetail = lazy(() => import("@/pages/DogTreatProductDetail"));
 const SwimGroom = lazy(() => import("@/pages/SwimGroom"));
 const SwimGroomProvider = lazy(() => import("@/pages/SwimGroomProvider"));
 const DogFullMeal = lazy(() => import("@/pages/DogFullMeal"));
@@ -211,6 +215,12 @@ function Router() {
       <Route path="/full-meals">
         <HomeLayout>
           <DogFullMeal />
+        </HomeLayout>
+      </Route>
+
+      <Route path="/dogtreat/product/:slug">
+        <HomeLayout>
+          <DogTreatProductDetail />
         </HomeLayout>
       </Route>
 
@@ -482,6 +492,21 @@ function Router() {
       <Route path="/admin/full-meal-ad-banners">
         <AdminLayout>
           <AdminFullMealAdBanners />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/dog-treats-page">
+        <AdminLayout>
+          <AdminDogTreatsPageSettings />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/dog-treats-feedback">
+        <AdminLayout>
+          <AdminDogTreatsFeedback />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/dog-treats-ad-banners">
+        <AdminLayout>
+          <AdminDogTreatsAdBanners />
         </AdminLayout>
       </Route>
       <Route path="/admin/special-offers">
