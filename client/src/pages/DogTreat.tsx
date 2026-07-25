@@ -38,12 +38,12 @@ const HARD_SHADOW = "40px 40px 0px 0px rgba(1,45,29,0.15)";
 const SPECIMENS = [
   { id: 1, name: "CHICKEN",  img: "https://images.unsplash.com/photo-1587593810167-a84920ea084d?auto=format&fit=crop&q=80&w=400", alt: "Chicken Specimen" },
   { id: 2, name: "DUCK",     img: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80&w=400", alt: "Duck Specimen" },
-  { id: 3, name: "TURKEY",   img: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?auto=format&fit=crop&q=80&w=400", alt: "Turkey Specimen" },
+  { id: 3, name: "TURKEY",   img: "https://images.unsplash.com/photo-1574672280600-4accfa5b6f98?auto=format&fit=crop&q=80&w=400", alt: "Turkey Specimen" },
   { id: 4, name: "RABBIT",   img: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&q=80&w=400", alt: "Rabbit Specimen" },
-  { id: 5, name: "MUTTON",   img: "https://images.unsplash.com/photo-1602491951780-030597db7a27?auto=format&fit=crop&q=80&w=400", alt: "Mutton Specimen" },
+  { id: 5, name: "MUTTON",   img: "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&q=80&w=400", alt: "Mutton Specimen" },
   { id: 6, name: "FISH",     img: "https://images.unsplash.com/photo-1534604973900-c41ab4c5e636?auto=format&fit=crop&q=80&w=400", alt: "Fish Specimen" },
   { id: 7, name: "SQUID",    img: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&q=80&w=400", alt: "Squid Specimen" },
-  { id: 8, name: "QUAIL",    img: "https://images.unsplash.com/photo-1612170153139-6f881ff067e0?auto=format&fit=crop&q=80&w=400", alt: "Quail Specimen" },
+  { id: 8, name: "QUAIL",    img: "https://images.unsplash.com/photo-1559715541-5daf8a0296d0?auto=format&fit=crop&q=80&w=400", alt: "Quail Specimen" },
 ];
 
 // ─── Differentiation features ────────────────────────────────────────
@@ -58,29 +58,29 @@ const FEATURES = [
 const FALLBACK_PRODUCTS = [
   {
     id: -1, name: "Dehydrated Chicken", tag: "Low fat, high protein", taxClass: "Aves",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDWKA-c9gG1nPikBxyUUzziMVSDmxwcfNB1L8kP9mXoe4d00fUsLzWGwcuCWmDpcQ8J4nvFk9egVQ-S5-P9_JJ1-1d70MHmzSboTog1L97YeVHayCTzRKBEpULSArwXcmhzK_mH8mJOHTvd1wkySJeTvxsHFkZHPBor4cx4M2Pc3q46dVwzpOTlyFVAybMKQod3jKVF-a-FtVspsNLJDa02CO_Z4lGBQ7sJeElI0A_ts-8-LhmgescBUOvWiyQlozXb0rhrrn2Qgq7w",
+    img: "https://images.unsplash.com/photo-1604908177453-7462950a6a3b?auto=format&fit=crop&q=80&w=700",
     price: 2400, nutrients: [{ k: "IRON", v: "0.8mg/100g" }, { k: "COPPER", v: "0.1mg/100g" }, { k: "OMEGA-3", v: "0.2g/100g" }],
   },
   {
     id: -2, name: "Dehydrated Duck", tag: "Anti-inflammatory fuel", taxClass: "Anseriformes",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDp78tpMZTw7bHudNJUve6NRqyu3XmoqQPq2Z7WSf3hYszUfOXISRUFc7fPWH8Z0PAwxJZ8nA2NRmCD648YQzcrA-HVpmeHKsrBAUTNyqaGcFC4y-IZ--TX4LcWhI64SQvETDMposMZAlGUz6su9vVj-Bl20n_ssfA1BlBBs-Sdl16kZFZwaDsNDcCW3PBbyQgelz0lye3PVf3E_N0I6PKTgG7_bWCiSOOyCTrx4NIcPW_oa-CeOV8HZAvbTR4xg3zHRTObfbh68Ruj",
+    img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=700",
     price: 2800, nutrients: [{ k: "IRON", v: "2.4mg/100g" }, { k: "COPPER", v: "0.4mg/100g" }, { k: "OMEGA-3", v: "0.6g/100g" }],
   },
   {
     id: -3, name: "Dehydrated Rabbit", tag: "Hypoallergenic Lean", taxClass: "Mammalia",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAEHcwHcqmwOWww-Wgyzyusk46msqKLhYunFbtUHbyYDS_CoOc-n4dwqODNQFG32iMTbrKeq8dDOi9YkDaNsWIZEoTxq2XhJiRbR_iIEwGhQ40SZqPsuOIsLcQRmROHH-57V3Lngsuqzp6Ku_h77qUdkKFKs6x8Ow1cLdYiTz8OJzwmF6JffZQVrQtXKrfjnME4HTKOLCiMRO2sJUhN7DXUn4C73_S0GZZ9p2mz0-FpogwKJiRshwuTVGkcAGP-uqVSj2S8Ds3Oyn6Z",
+    img: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?auto=format&fit=crop&q=80&w=700",
     price: 3400, nutrients: [{ k: "IRON", v: "3.2mg/100g" }, { k: "ZINC", v: "1.8mg/100g" }, { k: "OMEGA-3", v: "0.4g/100g" }],
   },
   {
     id: -4, name: "Dehydrated Squid", tag: "Amino Acid Powerhouse", taxClass: "Cephalopoda",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBQGHBO4XptAxG7GyzYAIRe-gN5M5_zom2ammwipQ3CzUTtaPNAzdKQ9ymS7zjMK9pwsqBunPzL7Tbmc8bgR-z_rrLbzCT4z2nbgtGeqiF5M-qkQJwNuGFhojC7Txgfrb-iZHKEYO39YKLh1dnxgWG_pW4gSnCkJv5UHVFaYluRlru9il0j3MVw1a9GIHjvUfsZetfEOTB4spqHYUe4MARRaadWApLwzGTG2z3VngmG1YhbhqgJAqTKi9n4AR23sNpJFfkLEvqbucsEqc",
+    img: "https://images.unsplash.com/photo-1559737558-2f5a35f4523b?auto=format&fit=crop&q=80&w=700",
     price: 3200, nutrients: [{ k: "TAURINE", v: "High Potency" }, { k: "VIT B12", v: "4.2μg/100g" }, { k: "OMEGA-3", v: "1.1g/100g" }],
   },
 ];
 
 // ─── Wolf Principle image ─────────────────────────────────────────────
-const WOLF_PRINCIPLE_IMG = "https://lh3.googleusercontent.com/aida-public/AB6AXuBgBY6X9hMEmx-6cY9l1HHMcjYd1ySVobZbXvhSq0SS059zVSRB_1Ih2QD0vypAGRyFyPRiF6bdLe4NkKTPWrCSkg17FhS6vBIqp9Mvb3jez5qCj2FkL6k_CO-LvKEttNoryCnHXAhoKuTnZ_XWpg_V0dFNsTbyDVDEYx007D5TiN37LXMRfzGZpVCMvcPpLLIN09uUKXTyp-GU4ACT-ntk3luDBcZG6TqHUkLpw0h77LqGuyImWMfZ27SEKrcAsKh-gM2Xi7jmn9qU";
-const HERO_BG = "https://lh3.googleusercontent.com/aida-public/AB6AXuAUn_hVD3r5envYKatWZHyrXqmRGMXgWos-rZ9CIEUd7by6LWTyz6m_eVlwa-OAqECopq1jr5cL6OUvY_08xnsTLYqm22Xt3yMB0QOk25LtvmNUIzaDiYeAbBVWDCnSxhA-CofyJU5AGOoTD52eE_2oCAwqdZOEngqew2WIbXsPTCUCDwOj8bZxNT7g08YiEUF5hArQ_Sx8UrH3LffDWJoy3WmJbeh4ErpoOv3ndVA3CYbPxqTfNDzQo5LMFlwOYdrXEUYvhNlUiAfZ";
+const WOLF_PRINCIPLE_IMG = "https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&q=80&w=900";
+const HERO_BG = "https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?auto=format&fit=crop&q=80&w=1920";
 
 // ─── Format currency ─────────────────────────────────────────────────
 function fmt(paise: number) {
