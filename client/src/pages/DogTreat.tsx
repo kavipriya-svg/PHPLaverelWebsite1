@@ -237,14 +237,14 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
             </button>
           )}
           <button
-            onClick={() => navigate(product.slug ? `/dogtreat/product/${product.slug}` : "/shop")}
+            onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
             className="w-full py-4 transition-all"
-            style={{ border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
+            style={{ border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS, opacity: product.slug ? 1 : 0.5 }}
+            onMouseEnter={e => { if (product.slug) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; } }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
             data-testid={`btn-view-specimen-${product.id}`}
           >
-            {product.slug ? "View Specimen" : "Browse All Treats"}
+            View Specimen
           </button>
         </div>
       </div>
@@ -276,10 +276,23 @@ export default function DogTreat() {
 
   // ── Fetch products from admin-controlled category slug ─────────────
   const categorySlug = dt.productSection.categorySlug || "wild-treats";
-  const { data: apiProducts = [] } = useQuery<any[]>({
+  const { data: categoryProducts = [] } = useQuery<any[]>({
     queryKey: ["/api/products", { categorySlug, limit: 8 }],
-    queryFn: () => fetch(`/api/products?categorySlug=${encodeURIComponent(categorySlug)}&limit=8`).then(r => r.json()),
+    queryFn: () => fetch(`/api/products?categorySlug=${encodeURIComponent(categorySlug)}&limit=8`)
+      .then(r => r.json())
+      .then(d => Array.isArray(d) ? d : (d.products ?? [])),
   });
+
+  // If no products found in that category, fall back to general products (always have slugs)
+  const { data: fallbackApiProducts = [] } = useQuery<any[]>({
+    queryKey: ["/api/products", { limit: 8 }],
+    queryFn: () => fetch(`/api/products?limit=8`)
+      .then(r => r.json())
+      .then(d => Array.isArray(d) ? d : (d.products ?? [])),
+    enabled: categoryProducts.length === 0,
+  });
+
+  const apiProducts: any[] = categoryProducts.length > 0 ? categoryProducts : fallbackApiProducts;
 
   // ── Parallax hero on scroll ────────────────────────────────────────
   useEffect(() => {
@@ -296,8 +309,8 @@ export default function DogTreat() {
     const img  = imgs.find((i: any) => i.isPrimary)?.imageUrl ?? imgs[0]?.imageUrl ?? FALLBACK_PRODUCTS[idx % 4].img;
     return {
       id:        p.id,
-      name:      p.name,
-      tag:       p.shortDescription ?? p.category?.name ?? "Single-source protein",
+      name:      p.title ?? p.name,
+      tag:       p.shortDesc ?? p.category?.name ?? "Single-source protein",
       taxClass:  p.category?.name ?? "Specimen",
       img,
       price:     Number(p.salePrice || p.price) * 100,
@@ -310,9 +323,7 @@ export default function DogTreat() {
     };
   };
 
-  const displayProducts: EditorialProduct[] = apiProducts.length > 0
-    ? apiProducts.slice(0, 8).map(mapProduct)
-    : FALLBACK_PRODUCTS;
+  const displayProducts: EditorialProduct[] = apiProducts.slice(0, 8).map(mapProduct);
 
   // ── Add to cart ───────────────────────────────────────────────────
   const handleAddToCart = (productId: number) => {
