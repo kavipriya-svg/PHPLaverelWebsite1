@@ -454,7 +454,9 @@ function Router() {
         </AdminLayout>
       </Route>
       <Route path="/admin/full-meal-page">
-        <AdminFullMealPageSettings />
+        <AdminLayout>
+          <AdminFullMealPageSettings />
+        </AdminLayout>
       </Route>
       <Route path="/admin/special-offers">
         <AdminLayout>
