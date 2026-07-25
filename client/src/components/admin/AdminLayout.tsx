@@ -280,22 +280,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel>Full Meal</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location === "/admin/full-meal-page"}>
-                      <Link href="/admin/full-meal-page" data-testid="link-admin-full-meal-page">
-                        <Dog className="h-4 w-4" />
-                        <span>Full Meal Page</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            <SidebarGroup>
               <SidebarGroupLabel>Content</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -314,6 +298,19 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
+                  <SidebarMenuItem>
+                    <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Full Meal
+                    </p>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/full-meal-page"}>
+                      <Link href="/admin/full-meal-page" data-testid="link-admin-full-meal-page">
+                        <Dog className="h-4 w-4" />
+                        <span>Full Meal Page</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                   {otherContentItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild isActive={location === item.href}>
