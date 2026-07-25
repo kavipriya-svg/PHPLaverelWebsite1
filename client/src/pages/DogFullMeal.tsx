@@ -302,6 +302,13 @@ export default function DogFullMeal() {
   const { data: biryaniData } = useQuery<{ products: any[] }>({
     queryKey: ["/api/products?categorySlug=biryani&limit=50"],
   });
+
+  // Load ad banners for listing page
+  const { data: adBanners = [] } = useQuery<any[]>({
+    queryKey: ["/api/full-meal-ad-banners?placement=listing"],
+  });
+  const topBanners = adBanners.filter((b: any) => b.position === "top");
+  const bottomBanners = adBanners.filter((b: any) => b.position === "bottom");
   const biryaniProducts = (() => {
     const raw = biryaniData?.products ?? [];
     const order: string[] = s.biryaniProductOrder || [];
@@ -350,6 +357,63 @@ export default function DogFullMeal() {
     }
   };
 
+  function getYtId(url: string): string | null {
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function AdBannerStrip({ banners }: { banners: any[] }) {
+    if (!banners.length) return null;
+    return (
+      <div className="space-y-0">
+        {banners.map((b: any) => {
+          const ytId = b.mediaType === "youtube" ? getYtId(b.mediaUrl) : null;
+          return (
+            <div key={b.id} className="relative w-full overflow-hidden" style={{ backgroundColor: C.primary }}>
+              {ytId ? (
+                <div className="relative w-full" style={{ aspectRatio: "16/6" }}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${ytId}?autoplay=0&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1`}
+                    className="w-full h-full border-0 absolute inset-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title={b.title || "Ad Banner"}
+                  />
+                  {(b.title || b.ctaText) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 pointer-events-none" style={{ background: "rgba(1,45,29,0.45)" }}>
+                      {b.title && <h3 className="font-playfair text-white mb-2" style={{ fontSize: "clamp(28px,4vw,56px)", fontWeight: 700 }}>{b.title}</h3>}
+                      {b.subtitle && <p className="font-inter text-white/80 mb-6 max-w-xl" style={{ fontSize: "clamp(14px,1.5vw,18px)" }}>{b.subtitle}</p>}
+                      {b.ctaText && b.ctaUrl && (
+                        <a href={b.ctaUrl} className="pointer-events-auto font-inter uppercase px-10 py-4 transition-all" style={{ fontSize: "11px", letterSpacing: "0.15em", fontWeight: 700, backgroundColor: "#fff", color: C.primary }}>
+                          {b.ctaText}
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="relative w-full" style={{ minHeight: 200 }}>
+                  <img src={b.mediaUrl} alt={b.title || "Banner"} className="w-full object-cover" style={{ maxHeight: 480 }} />
+                  {(b.title || b.ctaText) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8" style={{ background: "rgba(1,45,29,0.4)" }}>
+                      {b.title && <h3 className="font-playfair text-white mb-2" style={{ fontSize: "clamp(28px,4vw,56px)", fontWeight: 700 }}>{b.title}</h3>}
+                      {b.subtitle && <p className="font-inter text-white/80 mb-6 max-w-xl" style={{ fontSize: "clamp(14px,1.5vw,18px)" }}>{b.subtitle}</p>}
+                      {b.ctaText && b.ctaUrl && (
+                        <a href={b.ctaUrl} className="font-inter uppercase px-10 py-4 transition-all" style={{ fontSize: "11px", letterSpacing: "0.15em", fontWeight: 700, backgroundColor: "#fff", color: C.primary }}>
+                          {b.ctaText}
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div style={{ backgroundColor: C.surface, color: C.onSurface, fontFamily: "Inter, sans-serif" }}>
       <EditorialHeader nav={nav} />
@@ -396,6 +460,9 @@ export default function DogFullMeal() {
           </button>
         </div>
       </section>
+
+      {/* ── Ad Banners — Top ──────────────────────────────── */}
+      <AdBannerStrip banners={topBanners} />
 
       {/* ── 2. Why the Wolf ───────────────────────────────── */}
       {s.whyTheWolf.visible && (
@@ -692,6 +759,9 @@ export default function DogFullMeal() {
       {s.video2.visible && (
         <VideoSection imgSrc={s.video2.imageUrl} label={s.video2.label} title={s.video2.title} />
       )}
+
+      {/* ── Ad Banners — Bottom ───────────────────────────── */}
+      <AdBannerStrip banners={bottomBanners} />
 
       {/* ── 5. Final CTA ──────────────────────────────────── */}
       <section className="py-[80px] flex flex-col items-center text-center px-6 border-b" style={{ backgroundColor: "#f9faf6", borderColor: C.outlineVariant }}>

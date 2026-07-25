@@ -6955,5 +6955,53 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  // ── Full Meal Ad Banners ──────────────────────────────────────
+  app.get("/api/full-meal-ad-banners", async (req, res) => {
+    try {
+      const placement = req.query.placement as string | undefined;
+      const items = await storage.getFullMealAdBanners(true, placement);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch ad banners" });
+    }
+  });
+
+  app.get("/api/admin/full-meal-ad-banners", isAdmin, async (req, res) => {
+    try {
+      const items = await storage.getFullMealAdBanners(false);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch ad banners" });
+    }
+  });
+
+  app.post("/api/admin/full-meal-ad-banners", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createFullMealAdBanner(req.body);
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create ad banner" });
+    }
+  });
+
+  app.put("/api/admin/full-meal-ad-banners/:id", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateFullMealAdBanner(req.params.id, req.body);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update ad banner" });
+    }
+  });
+
+  app.delete("/api/admin/full-meal-ad-banners/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteFullMealAdBanner(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete ad banner" });
+    }
+  });
+
   return httpServer;
 }

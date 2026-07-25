@@ -101,6 +101,11 @@ export default function FullMealProductDetail() {
   const { data: adminFeedback = [] } = useQuery<any[]>({
     queryKey: ["/api/full-meal-feedback"],
   });
+  const { data: adBanners = [] } = useQuery<any[]>({
+    queryKey: ["/api/full-meal-ad-banners?placement=product"],
+  });
+  const topAdBanners = adBanners.filter((b: any) => b.position === "top");
+  const bottomAdBanners = adBanners.filter((b: any) => b.position === "bottom");
   const { data: canReviewData } = useQuery<{ canReview: boolean }>({
     queryKey: ["/api/products", product?.id, "can-review"],
     enabled: !!product?.id && isAuthenticated,
@@ -247,7 +252,60 @@ export default function FullMealProductDetail() {
     <>
       <EditorialHeader nav={nav} />
 
-      <main style={{ marginTop: 96, backgroundColor: "#f9faf6", color: "#1a1c1a", fontFamily: "Inter, sans-serif", overflowX: "hidden" }}>
+      {/* ── Ad Banners — Top ─────────────────────────────── */}
+      {topAdBanners.length > 0 && (
+        <div style={{ marginTop: 96 }}>
+          {topAdBanners.map((b: any) => {
+            const ytId = (() => {
+              const m = b.mediaUrl?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+              return m ? m[1] : null;
+            })();
+            return (
+              <div key={b.id} className="relative w-full overflow-hidden" style={{ backgroundColor: "#012d1d" }}>
+                {ytId ? (
+                  <div className="relative w-full" style={{ aspectRatio: "16/5" }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${ytId}?autoplay=0&mute=1&controls=0&modestbranding=1`}
+                      className="w-full h-full border-0 absolute inset-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={b.title || "Ad Banner"}
+                    />
+                    {(b.title || b.ctaText) && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 pointer-events-none" style={{ background: "rgba(1,45,29,0.45)" }}>
+                        {b.title && <h3 className="font-playfair text-white mb-2" style={{ fontSize: "clamp(24px,3vw,48px)", fontWeight: 700 }}>{b.title}</h3>}
+                        {b.subtitle && <p className="text-white/80 mb-5 max-w-xl" style={{ fontSize: "clamp(13px,1.5vw,17px)" }}>{b.subtitle}</p>}
+                        {b.ctaText && b.ctaUrl && (
+                          <a href={b.ctaUrl} className="pointer-events-auto uppercase px-10 py-4 transition-all" style={{ fontSize: "11px", letterSpacing: "0.15em", fontWeight: 700, backgroundColor: "#fff", color: "#012d1d", fontFamily: "Inter, sans-serif" }}>
+                            {b.ctaText}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative w-full">
+                    <img src={b.mediaUrl} alt={b.title || "Banner"} className="w-full object-cover" style={{ maxHeight: 360 }} />
+                    {(b.title || b.ctaText) && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8" style={{ background: "rgba(1,45,29,0.4)" }}>
+                        {b.title && <h3 className="font-playfair text-white mb-2" style={{ fontSize: "clamp(24px,3vw,48px)", fontWeight: 700 }}>{b.title}</h3>}
+                        {b.subtitle && <p className="text-white/80 mb-5 max-w-xl" style={{ fontSize: "clamp(13px,1.5vw,17px)" }}>{b.subtitle}</p>}
+                        {b.ctaText && b.ctaUrl && (
+                          <a href={b.ctaUrl} className="uppercase px-10 py-4 transition-all" style={{ fontSize: "11px", letterSpacing: "0.15em", fontWeight: 700, backgroundColor: "#fff", color: "#012d1d", fontFamily: "Inter, sans-serif" }}>
+                            {b.ctaText}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <main style={{ marginTop: topAdBanners.length ? 0 : 96, backgroundColor: "#f9faf6", color: "#1a1c1a", fontFamily: "Inter, sans-serif", overflowX: "hidden" }}>
 
         {/* ════ HERO SECTION ════ */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-6 py-20 min-h-screen px-5 md:px-16">
@@ -1085,6 +1143,59 @@ export default function FullMealProductDetail() {
         )}
 
       </main>
+
+      {/* ── Ad Banners — Bottom ─────────────────────────────── */}
+      {bottomAdBanners.length > 0 && (
+        <div>
+          {bottomAdBanners.map((b: any) => {
+            const ytId = (() => {
+              const m = b.mediaUrl?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+              return m ? m[1] : null;
+            })();
+            return (
+              <div key={b.id} className="relative w-full overflow-hidden" style={{ backgroundColor: "#012d1d" }}>
+                {ytId ? (
+                  <div className="relative w-full" style={{ aspectRatio: "16/6" }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${ytId}?autoplay=0&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1`}
+                      className="w-full h-full border-0 absolute inset-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={b.title || "Ad Banner"}
+                    />
+                    {(b.title || b.ctaText) && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 pointer-events-none" style={{ background: "rgba(1,45,29,0.45)" }}>
+                        {b.title && <h3 className="font-playfair text-white mb-2" style={{ fontSize: "clamp(28px,4vw,56px)", fontWeight: 700 }}>{b.title}</h3>}
+                        {b.subtitle && <p className="text-white/80 mb-6 max-w-xl" style={{ fontSize: "clamp(14px,1.5vw,18px)" }}>{b.subtitle}</p>}
+                        {b.ctaText && b.ctaUrl && (
+                          <a href={b.ctaUrl} className="pointer-events-auto uppercase px-10 py-4 transition-all" style={{ fontSize: "11px", letterSpacing: "0.15em", fontWeight: 700, backgroundColor: "#fff", color: "#012d1d", fontFamily: "Inter, sans-serif" }}>
+                            {b.ctaText}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative w-full" style={{ minHeight: 200 }}>
+                    <img src={b.mediaUrl} alt={b.title || "Banner"} className="w-full object-cover" style={{ maxHeight: 480 }} />
+                    {(b.title || b.ctaText) && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8" style={{ background: "rgba(1,45,29,0.4)" }}>
+                        {b.title && <h3 className="font-playfair text-white mb-2" style={{ fontSize: "clamp(28px,4vw,56px)", fontWeight: 700 }}>{b.title}</h3>}
+                        {b.subtitle && <p className="text-white/80 mb-6 max-w-xl" style={{ fontSize: "clamp(14px,1.5vw,18px)" }}>{b.subtitle}</p>}
+                        {b.ctaText && b.ctaUrl && (
+                          <a href={b.ctaUrl} className="uppercase px-10 py-4 transition-all" style={{ fontSize: "11px", letterSpacing: "0.15em", fontWeight: 700, backgroundColor: "#fff", color: "#012d1d", fontFamily: "Inter, sans-serif" }}>
+                            {b.ctaText}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <EditorialFooter footer={footer} />
     </>

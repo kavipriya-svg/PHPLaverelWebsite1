@@ -27,6 +27,7 @@ import {
   Grid3X3,
   BookOpen,
   Gift,
+  Layers,
   Percent,
   MessageSquare,
   Shield,
@@ -316,6 +317,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       <Link href="/admin/full-meal-feedback" data-testid="link-admin-full-meal-feedback">
                         <Star className="h-4 w-4" />
                         <span>Customer Feedback</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/full-meal-ad-banners"}>
+                      <Link href="/admin/full-meal-ad-banners" data-testid="link-admin-full-meal-ad-banners">
+                        <Layers className="h-4 w-4" />
+                        <span>Ad Banners</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

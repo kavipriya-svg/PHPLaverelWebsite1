@@ -1632,3 +1632,25 @@ export const insertFullMealFeedbackSchema = createInsertSchema(fullMealFeedback)
 });
 export type InsertFullMealFeedback = z.infer<typeof insertFullMealFeedbackSchema>;
 export type FullMealFeedback = typeof fullMealFeedback.$inferSelect;
+
+export const fullMealAdBanners = pgTable("full_meal_ad_banners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 255 }),
+  subtitle: varchar("subtitle", { length: 500 }),
+  ctaText: varchar("cta_text", { length: 100 }),
+  ctaUrl: varchar("cta_url", { length: 1024 }),
+  mediaType: varchar("media_type", { length: 10 }).notNull().default("image"),
+  mediaUrl: varchar("media_url", { length: 1024 }).notNull(),
+  placement: varchar("placement", { length: 20 }).notNull().default("both"),
+  position: varchar("position", { length: 20 }).notNull().default("bottom"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFullMealAdBannerSchema = createInsertSchema(fullMealAdBanners).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertFullMealAdBanner = z.infer<typeof insertFullMealAdBannerSchema>;
+export type FullMealAdBanner = typeof fullMealAdBanners.$inferSelect;

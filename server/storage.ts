@@ -45,6 +45,9 @@ import {
   fullMealFeedback,
   type FullMealFeedback,
   type InsertFullMealFeedback,
+  fullMealAdBanners,
+  type FullMealAdBanner,
+  type InsertFullMealAdBanner,
   type User,
   type UpsertUser,
   type Category,
@@ -433,6 +436,10 @@ export interface IStorage {
   createFullMealFeedback(data: InsertFullMealFeedback): Promise<FullMealFeedback>;
   updateFullMealFeedback(id: string, data: Partial<InsertFullMealFeedback>): Promise<FullMealFeedback | undefined>;
   deleteFullMealFeedback(id: string): Promise<void>;
+  getFullMealAdBanners(activeOnly?: boolean, placement?: string): Promise<FullMealAdBanner[]>;
+  createFullMealAdBanner(data: InsertFullMealAdBanner): Promise<FullMealAdBanner>;
+  updateFullMealAdBanner(id: string, data: Partial<InsertFullMealAdBanner>): Promise<FullMealAdBanner | undefined>;
+  deleteFullMealAdBanner(id: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -3156,6 +3163,37 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFullMealFeedback(id: string): Promise<void> {
     await db.delete(fullMealFeedback).where(eq(fullMealFeedback.id, id));
+  }
+
+  async getFullMealAdBanners(activeOnly = false, placement?: string): Promise<FullMealAdBanner[]> {
+    const conditions: any[] = [];
+    if (activeOnly) conditions.push(eq(fullMealAdBanners.isActive, true));
+    if (placement) conditions.push(
+      or(eq(fullMealAdBanners.placement, placement), eq(fullMealAdBanners.placement, "both"))
+    );
+    return db
+      .select()
+      .from(fullMealAdBanners)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(fullMealAdBanners.sortOrder), asc(fullMealAdBanners.createdAt));
+  }
+
+  async createFullMealAdBanner(data: InsertFullMealAdBanner): Promise<FullMealAdBanner> {
+    const [created] = await db.insert(fullMealAdBanners).values(data).returning();
+    return created;
+  }
+
+  async updateFullMealAdBanner(id: string, data: Partial<InsertFullMealAdBanner>): Promise<FullMealAdBanner | undefined> {
+    const [updated] = await db
+      .update(fullMealAdBanners)
+      .set(data)
+      .where(eq(fullMealAdBanners.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFullMealAdBanner(id: string): Promise<void> {
+    await db.delete(fullMealAdBanners).where(eq(fullMealAdBanners.id, id));
   }
 
   async updateSwimGroomProviderRating(providerId: string): Promise<void> {
