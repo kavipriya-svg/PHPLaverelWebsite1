@@ -107,7 +107,7 @@ export interface HomepageSettings {
 export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
   nav: {
     links: [
-      { label: "Shop Food", href: "/shop" },
+      { label: "Dog Full Meal", href: "/full-meals" },
       { label: "Dog Clothing", href: "/category/clothing" },
       { label: "Twinning", href: "/category/twinning" },
       { label: "Our Story", href: "/about" },

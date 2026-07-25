@@ -1,0 +1,476 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Biological Wellness Archive | 19 DOGS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Inter:wght@300;400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#f3f4f0",
+                    "secondary-container": "#fe9e71",
+                    "surface-tint": "#3e6653",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-variant": "#e2e3e0",
+                    "on-secondary": "#ffffff",
+                    "surface-container": "#eeeeeb",
+                    "outline": "#717973",
+                    "primary-fixed": "#c0edd4",
+                    "on-primary-fixed-variant": "#264e3c",
+                    "tertiary-fixed-dim": "#ffb694",
+                    "surface-bright": "#f9faf6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface-variant": "#414844",
+                    "on-error-container": "#93000a",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#ffb695",
+                    "surface-container-highest": "#e2e3e0",
+                    "on-secondary-fixed": "#351000",
+                    "primary-container": "#012d1d",
+                    "tertiary-fixed": "#ffdbcc",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "#a5d0b8",
+                    "error": "#ba1a1a",
+                    "tertiary-container": "#471800",
+                    "on-primary-fixed": "#002114",
+                    "inverse-surface": "#2f312f",
+                    "on-tertiary-container": "#ce774c",
+                    "on-secondary-fixed-variant": "#76330e",
+                    "surface": "#f9faf6",
+                    "outline-variant": "#c1c8c2",
+                    "primary": "#012d1d",
+                    "on-primary-container": "#6d9681",
+                    "secondary": "#944923",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#ffdbcc",
+                    "background": "#f9faf6",
+                    "on-background": "#1a1c1a",
+                    "tertiary": "#260900",
+                    "primary-fixed-dim": "#a5d0b8",
+                    "on-surface": "#1a1c1a",
+                    "on-secondary-container": "#77330e",
+                    "surface-container-high": "#e8e8e5",
+                    "surface-dim": "#dadad7",
+                    "inverse-on-surface": "#f0f1ee",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#76330d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "margin-desktop": "64px",
+                    "stack-sm": "12px",
+                    "stack-md": "32px",
+                    "stack-lg": "80px",
+                    "margin-mobile": "20px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Playfair Display"],
+                    "label-caps": ["Inter"],
+                    "headline-md": ["Playfair Display"],
+                    "headline-lg": ["Playfair Display"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["84px", {"lineHeight": "92px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                    "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                    "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "300"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .ticker-wrap {
+            overflow: hidden;
+            background-color: #012d1d;
+            white-space: nowrap;
+        }
+        .ticker {
+            display: inline-block;
+            animation: ticker 40s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .editorial-shadow-lg {
+            box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.9);
+        }
+        .concentric-circle {
+            border: 1px solid #717973;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .play-button {
+            background: rgba(1, 45, 29, 0.8);
+            backdrop-filter: blur(4px);
+            transition: all 0.4s ease;
+        }
+        .play-button:hover {
+            transform: scale(1.1);
+            background: rgba(148, 73, 35, 0.9);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- TopNavBar -->
+<nav class="flex justify-between items-center px-margin-desktop py-6 w-full sticky top-0 z-50 bg-surface/90 backdrop-blur-sm border-b border-outline-variant dark:border-outline">
+<div class="font-display-lg text-headline-md font-bold tracking-tighter text-primary">19 DOGS</div>
+<div class="hidden md:flex items-center space-x-8">
+<a class="font-body-md text-primary border-b-2 border-primary pb-1" href="#">Our Meals</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Why The Wolf</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Biryani Collection</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Our Story</a>
+</div>
+<div class="flex items-center space-x-6">
+<button class="font-label-caps text-label-caps border border-primary px-6 py-2 hover:bg-primary hover:text-on-primary transition-all duration-300">Join the Pack</button>
+<div class="flex items-center space-x-4">
+<span class="material-symbols-outlined cursor-pointer hover:opacity-80 transition-opacity">shopping_bag</span>
+<span class="material-symbols-outlined cursor-pointer hover:opacity-80 transition-opacity">person</span>
+</div>
+</div>
+</nav>
+<!-- 1. Hero Banner -->
+<section class="relative h-[90vh] w-full overflow-hidden">
+<img alt="Hero background" class="w-full h-full object-cover scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFlghEMvULN5PqfyPTpkSOBINq1VXFIjwF8X6WEnfuJvmxmFCHIrIo2WMSkUgGh9vY_yUgzrbmFSkLrytAZcUqYk4M9tVUQmYv9bRv2yg9qdJosc3MC9DTyHzJYWJm2KmDEuDqOCAbMB_whlwjRiP-8MtzB6HwRlTmzeeo_HHBELbgFHFgh42aIMojv4maBbqmmPBqNba6Do5SuwSyX4fKSJhBJNj1eHVa8n_ZzZWL_MAQBhtGK6PtaS-4ohFDsw4mQx2XOvCkBgpk">
+<div class="absolute inset-0 bg-primary/30 flex flex-col items-center justify-center text-center px-6">
+<h1 class="font-display-lg text-6xl md:text-[120px] text-white tracking-tight leading-none mb-6 max-w-6xl">
+            Every dog is a <i class="font-serif italic">wolf</i> at heart.
+        </h1>
+<p class="font-body-lg text-white text-xl md:text-3xl tracking-wide max-w-4xl mb-4 font-light">
+            We cook for the wolf your dog still is — not the pet it's become.
+        </p>
+<p class="font-label-caps text-label-caps text-white/90 tracking-[0.6em] mb-12 uppercase text-sm">
+            Real meat. Real organs. Real meals.
+        </p>
+<button class="font-label-caps text-label-caps bg-white text-primary px-14 py-5 hover:bg-primary hover:text-white transition-all duration-500 border border-transparent hover:border-white text-base">
+            Explore the Archive →
+        </button>
+</div>
+</section>
+<!-- 2. "Why the Wolf" Section -->
+<section class="border-y border-outline-variant py-stack-lg flex flex-col md:flex-row items-center justify-between gap-12 bg-surface-container-low px-margin-desktop">
+<div class="flex-1">
+<span class="font-label-caps text-label-caps text-secondary tracking-[0.3em]">BIOLOGICAL ANALYSIS</span>
+<h2 class="font-display-lg text-6xl text-primary mt-4 mb-6">Why the Wolf</h2>
+<p class="font-body-lg text-on-surface-variant max-w-xl mb-8 text-xl">
+            99% wolf DNA. Same teeth. Same short, acidic gut built for meat, not fillers. We just never stopped feeding it that way.
+        </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+<div class="flex items-start space-x-3">
+<span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
+<div>
+<p class="font-label-caps text-[12px] text-primary uppercase font-bold">Whole meat + organ</p>
+<p class="text-xs text-on-surface-variant mt-1">Foundational biological nutrition in every recipe</p>
+</div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
+<div>
+<p class="font-label-caps text-[12px] text-primary uppercase font-bold">No synthetic fillers</p>
+<p class="text-xs text-on-surface-variant mt-1">Zero corn, wheat, or soy interference</p>
+</div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
+<div>
+<p class="font-label-caps text-[12px] text-primary uppercase font-bold">Absolute Purity</p>
+<p class="text-xs text-on-surface-variant mt-1">No artificial anything. Pure evolutionary fuel.</p>
+</div>
+</div>
+<div class="flex items-start space-x-3">
+<span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
+<div>
+<p class="font-label-caps text-[12px] text-primary uppercase font-bold">Precision Cooking</p>
+<p class="text-xs text-on-surface-variant mt-1">Gently cooked to preserve molecular integrity</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative w-96 h-96 flex-shrink-0 flex items-center justify-center">
+<div class="concentric-circle w-96 h-96 border-primary/10">
+<div class="concentric-circle w-72 h-72 border-primary/30">
+<div class="concentric-circle w-48 h-48 border-primary/60 bg-primary/5">
+<span class="material-symbols-outlined text-primary text-6xl">pets</span>
+</div>
+</div>
+</div>
+<div class="absolute -top-4 -right-4 font-mono text-[12px] text-primary rotate-90 origin-left tracking-widest">CANIS_LUPUS_REF_99</div>
+</div>
+</section>
+<!-- Video Integration 1 -->
+<section class="relative h-[70vh] w-full bg-primary overflow-hidden">
+<img alt="The Wolf Philosophy" class="w-full h-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-1000" src="https://lh3.googleusercontent.com/aida/AP1WRLvuz6wDqgllbWA8p2EssqY0zKgRvqveFpY7LpxnyUHP1_Dt00EhP_FEhvVaWckxcpAW40u8gA4jmYG0S_xU9rnoIJRK-aKucgmTABg-hPaa6AHQM9LmWFf_LqH7v9Lvb2Gy3BnohXYa6__3E9Q-DlM1geDw3gGOQiH7GCryB99H5pCA9jOGSwj5YIsGbnzBr_PtELQ0yOhXcM3Gohw7lGXGMM3lq1207s7yvRtukGXfUIe1hQhZZJbbA9hy">
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<button class="play-button w-24 h-24 rounded-full flex items-center justify-center text-white mb-8 group">
+<span class="material-symbols-outlined text-5xl fill-1 group-hover:scale-110 transition-transform">play_arrow</span>
+</button>
+<span class="font-label-caps text-white/70 tracking-[0.4em] mb-2">CINEMATIC DOCUMENTARY</span>
+<h2 class="font-display-lg text-4xl text-white">The Wolf Inside: A Biological Study</h2>
+</div>
+</section>
+<!-- 3. Wet Food Meals Collection (Cinematic Gallery) -->
+<main class="py-stack-lg bg-surface overflow-hidden">
+<div class="px-margin-desktop mb-stack-lg">
+<h2 class="font-display-lg text-7xl text-primary mb-4">Wet Food Meals</h2>
+<p class="font-body-lg text-on-surface-variant max-w-3xl text-2xl">Whole-animal meals. One protein. Nothing hiding in it.</p>
+</div>
+<div class="space-y-40">
+<!-- Chicken Liver -->
+<div class="flex flex-col md:flex-row items-center px-margin-desktop gap-20">
+<div class="w-full md:w-3/5 relative">
+<div class="absolute top-8 left-8 z-10 font-label-caps text-xs bg-primary text-white px-4 py-2">ARCHIVE_SPECIMEN.01</div>
+<div class="editorial-shadow-lg">
+<img alt="Chicken Liver Wet Meal" class="w-full aspect-[4/5] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuSXNg5gvRs9dZPHpSss6HNpcziyEP3I4J0RKLwMqFtXo9k9KZBhlsJPFhciIxBj2YIj0CLcwbKZ02wmydQySE3Z6NrtNMmaW-bPLWZno5aGhTYVuL1x8c6QOSPgnmk2BfdOq15qg_iEMi1KUguDcIHyXbnqSssYOTzwZ-u59lirB_sQorVD-B_VBnbCNtV24c5RiTTtGiIgy18PjH8KUVrCZzsEYjLAjrowiUkSFTNUZxUZ2ZBAds1FN1I79GiG2QculMT_E7JTUw">
+</div>
+</div>
+<div class="w-full md:w-2/5 space-y-8 flex flex-col md:flex-row gap-4">
+<div class="border-l-4 border-secondary pl-8">
+<h3 class="font-display-lg text-5xl text-primary mb-4">Chicken Liver</h3>
+<p class="font-body-lg text-on-surface-variant text-xl italic leading-relaxed">"Nature's multivitamin. The first thing a wolf eats at every kill. Concentrated vitality for the modern predator."</p>
+</div>
+<div class="bg-surface-container-low p-8 border border-outline-variant">
+<p class="font-label-caps text-[10px] text-primary/50 tracking-widest mb-4">BIOMETRIC DATA</p>
+<div class="flex justify-between border-b border-outline-variant py-2">
+<span class="font-label-caps text-xs">PROTEIN DENSITY</span>
+<span class="font-mono text-xs">HIGH_REF_88%</span>
+</div>
+<div class="flex justify-between py-2">
+<span class="font-label-caps text-xs">VITAMIN PROFILE</span>
+<span class="font-mono text-xs">A_B12_FOLATE</span>
+</div>
+</div>
+<button class="bg-primary text-white px-12 py-4 font-label-caps text-xs hover:bg-secondary transition-colors w-full md:w-auto">ADD TO ARCHIVE</button><button class="border border-primary text-primary px-12 py-4 font-label-caps text-xs hover:bg-primary hover:text-white transition-colors w-full md:w-auto flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">shopping_cart</span>ADD TO CART</button>
+</div>
+</div>
+<!-- Chicken -->
+<div class="flex flex-col md:flex-row-reverse items-center px-margin-desktop gap-20">
+<div class="w-full md:w-3/5 relative">
+<div class="absolute top-8 right-8 z-10 font-label-caps text-xs bg-primary text-white px-4 py-2">ARCHIVE_SPECIMEN.02</div>
+<div class="editorial-shadow-lg">
+<img alt="Chicken Wet Meal" class="w-full aspect-[4/5] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDASp98o3P0FgYgy5Hilex9YhhCLmUjcFfgvFoSCdWtcbC9pi9D1EeNbEmagN8-c70V8VIJh7bGd7pKyOZ9bP81o947HNbQdD79_efbu-TATrHUjDap9Lrr44uu-6qln-DZ-WMmTTu1YsVOtR4Yti6Du_DFxAcK6aVulOTfjtjmC2RvyLTGsIUIaTBc3tkinU3NBmyvWLsjlUQRJ8oNsiLpdV7ErPDRYXPfjG9KwVGVd8MbxgEbEzeiz0f3e1b7hioMVDLJ5KUaNgob">
+</div>
+</div>
+<div class="w-full md:w-2/5 space-y-8">
+<div class="border-r-4 border-primary pr-8 md:text-right">
+<h3 class="font-display-lg text-5xl text-primary mb-4">Pure Chicken</h3>
+<p class="font-body-lg text-on-surface-variant text-xl italic leading-relaxed">"Lean, everyday protein. The pack's daily staple. Clean energy for sustained biological performance."</p>
+</div>
+<div class="bg-surface-container-low p-8 border border-outline-variant">
+<p class="font-label-caps text-[10px] text-primary/50 tracking-widest mb-4">NUTRIENT ASSAY</p>
+<div class="flex justify-between border-b border-outline-variant py-2">
+<span class="font-label-caps text-xs">AMINO ARCHIVE</span>
+<span class="font-mono text-xs">COMPLETE_L_SYNTH</span>
+</div>
+<div class="flex justify-between py-2">
+<span class="font-label-caps text-xs">DIGESTION RATING</span>
+<span class="font-mono text-xs">OPTIMAL_0.98</span>
+</div>
+</div>
+<div class="flex md:justify-end gap-4">
+<button class="bg-primary text-white px-12 py-4 font-label-caps text-xs hover:bg-secondary transition-colors w-full md:w-auto">ADD TO ARCHIVE</button><button class="border border-primary text-primary px-12 py-4 font-label-caps text-xs hover:bg-primary hover:text-white transition-colors w-full md:w-auto flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">shopping_cart</span>ADD TO CART</button>
+</div>
+</div>
+</div>
+<!-- Fish -->
+<div class="flex flex-col md:flex-row items-center px-margin-desktop gap-20">
+<div class="w-full md:w-3/5 relative">
+<div class="absolute top-8 left-8 z-10 font-label-caps text-xs bg-primary text-white px-4 py-2">ARCHIVE_SPECIMEN.03</div>
+<div class="editorial-shadow-lg">
+<img alt="Fish Meal" class="w-full aspect-[4/5] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAeMN5mdW7jRDF8rEtwJgRIxt9V4q2uyRXFYfp7Sabgr3gkUdiTtTvK6Jymo2zPGYRLw74UtpKMPqTkcU4jvQSZB2N-I4Tn-8Mq5ico5ONGP1AZouqgByGMUGHucM-NVbIgkJD3SK2cOa7EvTx3mkKYHV9utTy-Du1hDv6-bJHt3sPVgk-nX-8HMaI40RIU2pXY5NdbJgCaWZI6nYSeyT41YDTxXO3CJKmjTHR7YsOJ0aAwVkUdyRMfGn19VzaiZGxlE0AGxIQ9QmS">
+</div>
+</div>
+<div class="w-full md:w-2/5 space-y-8 flex flex-col md:flex-row gap-4">
+<div class="border-l-4 border-secondary pl-8">
+<h3 class="font-display-lg text-5xl text-primary mb-4">Omega Fish</h3>
+<p class="font-body-lg text-on-surface-variant text-xl italic leading-relaxed">"Omega-rich. For coat, joints, and brain. The crystalline energy of the deep, harvested for canine cognitive health."</p>
+</div>
+<div class="bg-surface-container-low p-8 border border-outline-variant">
+<p class="font-label-caps text-[10px] text-primary/50 tracking-widest mb-4">MOLECULAR PROFILE</p>
+<div class="flex justify-between border-b border-outline-variant py-2">
+<span class="font-label-caps text-xs">EPA / DHA</span>
+<span class="font-mono text-xs">3.2_RATIO_MAX</span>
+</div>
+<div class="flex justify-between py-2">
+<span class="font-label-caps text-xs">INFLAMMATION CTL</span>
+<span class="font-mono text-xs">ACTIVE_SUPP</span>
+</div>
+</div>
+<button class="bg-primary text-white px-12 py-4 font-label-caps text-xs hover:bg-secondary transition-colors w-full md:w-auto">ADD TO ARCHIVE</button><button class="border border-primary text-primary px-12 py-4 font-label-caps text-xs hover:bg-primary hover:text-white transition-colors w-full md:w-auto flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">shopping_cart</span>ADD TO CART</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Interstitial Banner 1 -->
+<section class="relative w-full h-[80vh] flex items-center justify-center overflow-hidden">
+<img alt="The Ancestral Diet" class="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLuyl5EViKkGxOfraqcvJ1eWgvnPxiEm3nSPhnlSxEKqEV5f-Lp55MknwoBjO4CfGnFKvqrpIqfM2uXUdv5wxRz-A4NSQVGFnuDIqoEREa18FveczKF7kxE-cTJNnr__4qWn5_kmFAv0UFbS2ksV27z9hvvy167eRI948LUjIvmHwsTSCIDV6M8M2UgZYlo-7KLwZIT2SSOA6XDdO3QSQZk-XShiLJm_gXXNwnUOyf2Y_XBJOGXFdSM0cBuh">
+<div class="absolute inset-0 bg-white/10"></div>
+<div class="relative z-10 w-full px-margin-desktop text-left">
+<span class="font-label-caps text-primary tracking-[0.8em] text-lg block mb-4">SPECIMEN ANALYSIS</span>
+<h2 class="font-display-lg text-8xl text-primary leading-tight">The Ancestral <br><i class="font-serif italic">Plate</i></h2>
+<div class="mt-12 flex space-x-12">
+<div class="w-px h-24 bg-primary/30"></div>
+<p class="font-body-lg text-primary max-w-md text-xl">Precisely balanced components. Every ingredient serves a biological imperative. No filler. No compromise.</p>
+</div>
+</div>
+</section>
+<!-- 4. The Biryani Collection (Cinematic Gallery) -->
+<section class="bg-primary py-stack-lg overflow-hidden relative">
+<div class="px-margin-desktop mb-stack-lg z-10 relative">
+<h2 class="font-display-lg text-7xl text-white mb-6">The Biryani Collection</h2>
+<p class="font-body-lg text-white/80 max-w-4xl text-2xl mb-12">
+            Layered with the herbs and fats a wolf's diet was always missing. Every biryani is a synthesis of ancient spice and biological precision.
+        </p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+<div class="bg-white/5 border border-white/10 p-10 editorial-shadow">
+<h4 class="font-label-caps text-secondary text-lg tracking-widest mb-4 uppercase">Turmeric</h4>
+<p class="font-body-lg text-white/70">Anti-inflammatory synthesis for joint preservation and recovery.</p>
+</div>
+<div class="bg-white/5 border border-white/10 p-10 editorial-shadow">
+<h4 class="font-label-caps text-secondary text-lg tracking-widest mb-4 uppercase">Ashwagandha</h4>
+<p class="font-body-lg text-white/70">Biological adaptogen for neural balance and stress mediation.</p>
+</div>
+<div class="bg-white/5 border border-white/10 p-10 editorial-shadow">
+<h4 class="font-label-caps text-secondary text-lg tracking-widest mb-4 uppercase">Coconut oil</h4>
+<p class="font-body-lg text-white/70">Molecular fat carrier for maximum botanical bioavailability.</p>
+</div>
+</div>
+</div>
+<div class="space-y-48 px-margin-desktop relative z-10">
+<!-- Mutton Biryani -->
+<div class="flex flex-col md:flex-row-reverse items-center gap-24">
+<div class="w-full md:w-3/5">
+<div class="editorial-shadow-lg bg-white p-4">
+<img alt="Mutton Biryani" class="w-full aspect-[4/5] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAeMN5mdW7jRDF8rEtwJgRIxt9V4q2uyRXFYfp7Sabgr3gkUdiTtTvK6Jymo2zPGYRLw74UtpKMPqTkcU4jvQSZB2N-I4Tn-8Mq5ico5ONGP1AZouqgByGMUGHucM-NVbIgkJD3SK2cOa7EvTx3mkKYHV9utTy-Du1hDv6-bJHt3sPVgk-nX-8HMaI40RIU2pXY5NdbJgCaWZI6nYSeyT41YDTxXO3CJKmjTHR7YsOJ0aAwVkUdyRMfGn19VzaiZGxlE0AGxIQ9QmS">
+</div>
+</div>
+<div class="w-full md:w-2/5 space-y-10">
+<div class="md:text-right">
+<span class="font-label-caps text-secondary tracking-[0.5em] mb-4 block">PREMIUM SELECTION</span>
+<h3 class="font-display-lg text-6xl text-white mb-6 uppercase">Mutton Biryani</h3>
+<p class="font-body-lg text-white/70 text-2xl leading-relaxed">"Rich, iron-dense, the closest thing to a wild feast. A celebration of big-game proteins and traditional synthesis."</p>
+</div>
+<div class="flex md:justify-end gap-6 pt-10">
+<button class="bg-secondary text-white px-16 py-5 font-label-caps text-sm hover:bg-white hover:text-primary transition-all">ACQUIRE SPECIMEN</button><button class="border border-white text-white px-16 py-5 font-label-caps text-sm hover:bg-white hover:text-primary transition-all flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">shopping_cart</span>ADD TO CART</button>
+</div>
+</div>
+</div>
+<!-- Chicken Biryani -->
+<div class="flex flex-col md:flex-row items-center gap-24">
+<div class="w-full md:w-3/5">
+<div class="editorial-shadow-lg bg-white p-4">
+<img alt="Chicken Biryani" class="w-full aspect-[4/5] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuSXNg5gvRs9dZPHpSss6HNpcziyEP3I4J0RKLwMqFtXo9k9KZBhlsJPFhciIxBj2YIj0CLcwbKZ02wmydQySE3Z6NrtNMmaW-bPLWZno5aGhTYVuL1x8c6QOSPgnmk2BfdOq15qg_iEMi1KUguDcIHyXbnqSssYOTzwZ-u59lirB_sQorVD-B_VBnbCNtV24c5RiTTtGiIgy18PjH8KUVrCZzsEYjLAjrowiUkSFTNUZxUZ2ZBAds1FN1I79GiG2QculMT_E7JTUw">
+</div>
+</div>
+<div class="w-full md:w-2/5 space-y-10">
+<div>
+<span class="font-label-caps text-secondary tracking-[0.5em] mb-4 block">DAILY FOUNDATION</span>
+<h3 class="font-display-lg text-6xl text-white mb-6 uppercase">Chicken Biryani</h3>
+<p class="font-body-lg text-white/70 text-2xl leading-relaxed">"Daily protein, feast-day flavor. Balanced nutrition meeting evolutionary cravings for complex texture."</p>
+</div>
+<div class="flex gap-6 pt-10">
+<button class="bg-white text-primary px-16 py-5 font-label-caps text-sm hover:bg-secondary hover:text-white transition-all">ACQUIRE SPECIMEN</button><button class="border border-white text-white px-16 py-5 font-label-caps text-sm hover:bg-white hover:text-primary transition-all flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">shopping_cart</span>ADD TO CART</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Video Integration 2 -->
+<section class="relative h-[80vh] w-full bg-black overflow-hidden">
+<div class="absolute inset-0 bg-primary/40 z-10"></div>
+<img alt="Nutritional Synthesis" class="w-full h-full object-cover scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnhcrOXDz9EYkl-E0ilJajSa-UkjCqCcZau4jufEeLe-_gqFN1vmeXvp9woooDLDjFWWBYqhXzoghABWWGQJxCq4EOazoanZ-Jhvrrh9oyx41es-1qNIo4rHwW3L_ysOyByfW9iC3G_EmYtQnemO5ufGpIJ28qN5Q_NEfD_K-rO3qp0xAydnfXOMOyPMXC087Bi_zXmCYL1hCMQeotQNOv0Xr7hzM6l1iVzm8eaUyZ5GezCZWwYreW8vsDde4jxCSWQP3hVyJt00K9">
+<div class="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-margin-desktop">
+<span class="font-label-caps text-secondary tracking-[0.6em] mb-6">LABORATORY INSIGHTS</span>
+<h2 class="font-display-lg text-5xl md:text-7xl text-white mb-12">The Science of Synthesis</h2>
+<button class="play-button w-32 h-32 rounded-full flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-6xl fill-1">play_circle</span>
+</button>
+</div>
+</section>
+<!-- 5. Final Call to Action -->
+<section class="py-stack-lg flex flex-col items-center text-center bg-surface-bright px-6 border-b border-outline-variant">
+<h2 class="font-display-lg text-7xl md:text-[100px] text-primary mb-16 leading-tight">Feed the Wolf <br><i class="font-serif italic">Inside Your Dog</i></h2>
+<div class="flex flex-col sm:flex-row gap-10">
+<button class="font-label-caps text-label-caps bg-primary text-white px-16 py-6 hover:bg-secondary transition-all text-sm tracking-widest">WET MEALS ARCHIVE →</button>
+<button class="font-label-caps text-label-caps border border-primary text-primary px-16 py-6 hover:bg-primary hover:text-white transition-all text-sm tracking-widest">BIRYANI COLLECTION →</button>
+</div>
+</section>
+<!-- Ticker Band -->
+<div class="ticker-wrap py-5 border-y border-primary-container">
+<div class="ticker flex items-center space-x-12 uppercase font-label-caps text-[12px] tracking-[0.3em] text-on-primary-container font-bold">
+<span class="">Biological Precision: 100% Traceable</span>
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="">99% Wolf DNA Alignment</span>
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="">Batch ID: #WOLF-2024-DELTA</span>
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="">No Fillers. No Grains.</span>
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="">Gently Cooked Synthesis</span>
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="">Biological Precision: 100% Traceable</span>
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="">99% Wolf DNA Alignment</span>
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="">Batch ID: #WOLF-2024-DELTA</span>
+</div>
+</div>
+<!-- Footer -->
+<footer class="grid grid-cols-12 gap-gutter px-margin-desktop py-stack-lg w-full bg-surface-container-highest border-t border-outline-variant">
+<div class="col-span-12 md:col-span-4 mb-stack-md md:mb-0">
+<div class="font-display-lg text-headline-lg font-bold text-primary mb-6">19 DOGS</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant max-w-xs leading-relaxed">
+            ADVANCED CANINE NUTRITION ARCHIVE. ESTABLISHED FOR THE PRESERVATION OF BIOLOGICAL VITALITY.
+        </p>
+</div>
+<div class="col-span-12 md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<div class="flex flex-col space-y-4">
+<span class="font-label-caps text-label-caps font-bold text-primary mb-2">CATALOGUE</span>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors" href="#">Wet Meals</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors" href="#">Biryani Collection</a>
+</div>
+<div class="flex flex-col space-y-4">
+<span class="font-label-caps text-label-caps font-bold text-primary mb-2">RESOURCES</span>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors" href="#">Why the Wolf</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors" href="#">Our Story</a>
+</div>
+<div class="flex flex-col space-y-4">
+<span class="font-label-caps text-label-caps font-bold text-primary mb-2">LEGAL</span>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors" href="#">Privacy</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors" href="#">Terms</a>
+</div>
+<div class="flex flex-col space-y-4">
+<span class="font-label-caps text-label-caps font-bold text-primary mb-2">FOLLOW</span>
+<div class="flex space-x-4">
+<span class="material-symbols-outlined text-primary cursor-pointer">public</span>
+<span class="material-symbols-outlined text-primary cursor-pointer">alternate_email</span>
+</div>
+</div>
+</div>
+<div class="col-span-12 mt-stack-lg pt-stack-md border-t border-outline-variant">
+<p class="font-label-caps text-[10px] text-on-surface-variant tracking-[0.2em]">
+            © 2024 19 DOGS. BIOLOGICAL PRECISION. CANINE PRESTIGE.
+        </p>
+</div>
+</footer>
+
+
+</body></html>
