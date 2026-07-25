@@ -87,16 +87,16 @@ const salesItems = [
 
 const homePageItems = [
   { href: "/admin/homepage", icon: LayoutGrid, label: "Homepage" },
-  { href: "/admin/banners", icon: Image, label: "Banners" },
   { href: "/admin/home-blocks", icon: Grid3X3, label: "Home Blocks" },
-  { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },
-  { href: "/admin/special-offers", icon: Percent, label: "Special Offers Page" },
-  { href: "/admin/combo-offers-settings", icon: Gift, label: "Combo Offers Page" },
 ];
 
 const otherContentItems = [
   { href: "/admin/blog", icon: BookOpen, label: "Blog" },
   { href: "/admin/quick-pages", icon: FileText, label: "Quick Pages" },
+  { href: "/admin/banners", icon: Image, label: "Banners" },
+  { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },
+  { href: "/admin/special-offers", icon: Percent, label: "Special Offers Page" },
+  { href: "/admin/combo-offers-settings", icon: Gift, label: "Combo Offers Page" },
 ];
 
 const userSubMenuItems = [
