@@ -307,8 +307,8 @@ export default function DogFullMeal() {
   const { data: adBanners = [] } = useQuery<any[]>({
     queryKey: ["/api/full-meal-ad-banners?placement=listing"],
   });
-  const topBanners = adBanners.filter((b: any) => b.position === "top");
-  const bottomBanners = adBanners.filter((b: any) => b.position === "bottom");
+  const bs = (section: string, pos: string) =>
+    adBanners.filter((b: any) => b.placement === section && b.position === pos);
   const biryaniProducts = (() => {
     const raw = biryaniData?.products ?? [];
     const order: string[] = s.biryaniProductOrder || [];
@@ -418,6 +418,9 @@ export default function DogFullMeal() {
     <div style={{ backgroundColor: C.surface, color: C.onSurface, fontFamily: "Inter, sans-serif" }}>
       <EditorialHeader nav={nav} />
 
+      {/* ── Ads: listing-hero top (Before Hero) ───────────── */}
+      <AdBannerStrip banners={bs("listing-hero", "top")} />
+
       {/* ── 1. Hero Banner ────────────────────────────────── */}
       <section className="relative w-full overflow-hidden" style={{ height: "90vh" }}>
         <img
@@ -461,8 +464,8 @@ export default function DogFullMeal() {
         </div>
       </section>
 
-      {/* ── Ad Banners — Top ──────────────────────────────── */}
-      <AdBannerStrip banners={topBanners} />
+      {/* ── Ads: listing-hero bottom (After Hero) ─────────── */}
+      <AdBannerStrip banners={bs("listing-hero", "bottom")} />
 
       {/* ── 2. Why the Wolf ───────────────────────────────── */}
       {s.whyTheWolf.visible && (
@@ -512,6 +515,9 @@ export default function DogFullMeal() {
       {s.video1.visible && (
         <VideoSection imgSrc={s.video1.imageUrl} label={s.video1.label} title={s.video1.title} dark />
       )}
+
+      {/* ── Ads: listing-products top (Before Products Gallery) ── */}
+      <AdBannerStrip banners={bs("listing-products", "top")} />
 
       {/* ── 3. Products Gallery ───────────────────────────── */}
       <main id="dfm-meals" className="py-[80px] overflow-hidden" style={{ backgroundColor: C.surface }}>
@@ -633,6 +639,9 @@ export default function DogFullMeal() {
         )}
       </main>
 
+      {/* ── Ads: listing-products bottom (After Products Gallery) ── */}
+      <AdBannerStrip banners={bs("listing-products", "bottom")} />
+
       {/* ── Interstitial Banner ───────────────────────────── */}
       {s.interstitialBanner.visible && (
         <section className="relative w-full flex items-center justify-start overflow-hidden" style={{ height: "80vh" }}>
@@ -655,6 +664,9 @@ export default function DogFullMeal() {
           </div>
         </section>
       )}
+
+      {/* ── Ads: listing-biryani top (Before Biryani Section) ── */}
+      <AdBannerStrip banners={bs("listing-biryani", "top")} />
 
       {/* ── 4. Biryani Collection ─────────────────────────── */}
       {s.biryaniSection.visible && (
@@ -755,13 +767,16 @@ export default function DogFullMeal() {
         </section>
       )}
 
+      {/* ── Ads: listing-biryani bottom (After Biryani Section) ── */}
+      <AdBannerStrip banners={bs("listing-biryani", "bottom")} />
+
       {/* ── Video Section 2 ───────────────────────────────── */}
       {s.video2.visible && (
         <VideoSection imgSrc={s.video2.imageUrl} label={s.video2.label} title={s.video2.title} />
       )}
 
-      {/* ── Ad Banners — Bottom ───────────────────────────── */}
-      <AdBannerStrip banners={bottomBanners} />
+      {/* ── Ads: listing-cta top (Before Final CTA) ───────── */}
+      <AdBannerStrip banners={bs("listing-cta", "top")} />
 
       {/* ── 5. Final CTA ──────────────────────────────────── */}
       <section className="py-[80px] flex flex-col items-center text-center px-6 border-b" style={{ backgroundColor: "#f9faf6", borderColor: C.outlineVariant }}>

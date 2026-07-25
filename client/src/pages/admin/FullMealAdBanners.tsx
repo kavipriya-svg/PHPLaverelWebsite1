@@ -60,15 +60,33 @@ function getYouTubeId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+const SECTION_OPTIONS = [
+  { group: "Listing Page  (/full-meals)", options: [
+    { value: "listing-hero",     label: "Hero Banner" },
+    { value: "listing-products", label: "Products Gallery" },
+    { value: "listing-biryani",  label: "Biryani Section" },
+    { value: "listing-cta",      label: "Final CTA" },
+  ]},
+  { group: "Product Page  (/full-meals/product/…)", options: [
+    { value: "product-hero",     label: "Product Details" },
+    { value: "product-feedback", label: "Customer Feedback" },
+  ]},
+];
+
+const ALL_SECTION_OPTIONS = SECTION_OPTIONS.flatMap(g => g.options);
+
 const PLACEMENT_LABELS: Record<string, string> = {
-  listing: "Listing Page Only",
-  product: "Product Page Only",
-  both: "Both Pages",
+  "listing-hero":     "Listing · Hero Banner",
+  "listing-products": "Listing · Products Gallery",
+  "listing-biryani":  "Listing · Biryani Section",
+  "listing-cta":      "Listing · Final CTA",
+  "product-hero":     "Product · Product Details",
+  "product-feedback": "Product · Customer Feedback",
 };
 
 const POSITION_LABELS: Record<string, string> = {
-  top: "Top of Page",
-  bottom: "Bottom of Page",
+  top:    "Top (Before Section)",
+  bottom: "Bottom (After Section)",
 };
 
 export default function FullMealAdBanners() {
@@ -355,15 +373,24 @@ export default function FullMealAdBanners() {
             {/* Placement */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Show on</Label>
+                <Label>Show on — Section</Label>
                 <Select value={form.placement} onValueChange={v => setForm(f => ({ ...f, placement: v }))}>
                   <SelectTrigger data-testid="select-placement">
-                    <SelectValue />
+                    <SelectValue placeholder="Pick a section…" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="both">Both Pages</SelectItem>
-                    <SelectItem value="listing">Listing Page Only</SelectItem>
-                    <SelectItem value="product">Product Page Only</SelectItem>
+                    {SECTION_OPTIONS.map(group => (
+                      <div key={group.group}>
+                        <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                          {group.group}
+                        </div>
+                        {group.options.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -374,8 +401,8 @@ export default function FullMealAdBanners() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="top">Top of Page</SelectItem>
-                    <SelectItem value="bottom">Bottom of Page</SelectItem>
+                    <SelectItem value="top">Top (Before Section)</SelectItem>
+                    <SelectItem value="bottom">Bottom (After Section)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
