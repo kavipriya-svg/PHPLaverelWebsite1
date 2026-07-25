@@ -219,7 +219,7 @@ function EditorialProductCard({ product, index, onAddToCart }: { product: any; i
         </div>
         {/* Buttons */}
         <div className={`flex flex-wrap gap-4 ${isReversed ? "md:justify-end" : ""}`}>
-          <Link href={`/product/${product.slug || "shop"}`}>
+          <Link href={`/full-meals/product/${product.slug || product.id}`}>
             <button
               className="font-inter text-xs uppercase tracking-widest px-12 py-4 transition-all duration-300 cursor-pointer"
               style={{ backgroundColor: C.primary, color: C.white }}
