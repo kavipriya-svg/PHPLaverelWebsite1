@@ -85,7 +85,7 @@ const salesItems = [
   { href: "/admin/combo-offers", icon: Gift, label: "Combo Offers" },
 ];
 
-const contentItems = [
+const homePageItems = [
   { href: "/admin/homepage", icon: LayoutGrid, label: "Homepage" },
   { href: "/admin/full-meal-page", icon: Dog, label: "Full Meal Page" },
   { href: "/admin/banners", icon: Image, label: "Banners" },
@@ -93,6 +93,9 @@ const contentItems = [
   { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },
   { href: "/admin/special-offers", icon: Percent, label: "Special Offers Page" },
   { href: "/admin/combo-offers-settings", icon: Gift, label: "Combo Offers Page" },
+];
+
+const otherContentItems = [
   { href: "/admin/blog", icon: BookOpen, label: "Blog" },
   { href: "/admin/quick-pages", icon: FileText, label: "Quick Pages" },
 ];
@@ -281,7 +284,22 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               <SidebarGroupLabel>Content</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {contentItems.map((item) => (
+                  <SidebarMenuItem>
+                    <p className="px-2 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Home Page
+                    </p>
+                  </SidebarMenuItem>
+                  {homePageItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={location === item.href}>
+                        <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                  {otherContentItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild isActive={location === item.href}>
                         <Link href={item.href} data-testid={`link-admin-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
