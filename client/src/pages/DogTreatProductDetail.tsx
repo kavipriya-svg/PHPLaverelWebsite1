@@ -638,12 +638,12 @@ export default function DogTreatProductDetail() {
         {/* Ads: product-feedback top */}
         <AdBannerStrip banners={bs("product-feedback", "top")} />
 
-        {/* ════ CUSTOMER FEEDBACK ════ */}
+        {/* ════ CUSTOMER REPORTS ════ */}
         {(() => {
           const BUILTIN_PLACEHOLDERS = [
-            { name: "Priya S.", role: "Labrador Owner", avatarBg: "#a5d0b8", avatarFg: "#264e3c", rating: 5, reviewText: "My dog goes absolutely crazy for these wild treats. The coat has improved visibly and energy levels are through the roof.", hasMedia: false, mediaType: "photo" },
-            { name: "Rohan M.", role: "Golden Retriever Dad", avatarBg: "#ffb695", avatarFg: "#76330d", rating: 5, reviewText: "Finally a treat that doesn't have fillers. The dehydrated duck is a hit — he finishes it in seconds.", hasMedia: false, mediaType: "photo" },
-            { name: "Ananya K.", role: "Verified Buyer", avatarBg: "#c0edd4", avatarFg: "#012d1d", rating: 5, reviewText: "Switched to 19 Dogs wild treats and haven't looked back. My vet is impressed with the ingredient list.", hasMedia: false, mediaType: "photo" },
+            { name: "Priya S.", role: "Labrador Owner", avatarBg: "#a5d0b8", avatarFg: "#264e3c", rating: 5, reviewText: "My dog goes absolutely crazy for these wild treats. The coat has improved visibly and energy levels are through the roof.", hasMedia: false, mediaType: "photo", mediaUrl: null },
+            { name: "Rohan M.", role: "Golden Retriever Dad", avatarBg: "#ffb695", avatarFg: "#76330d", rating: 5, reviewText: "Finally a treat that doesn't have fillers. The dehydrated duck is a hit — he finishes it in seconds.", hasMedia: false, mediaType: "photo", mediaUrl: null },
+            { name: "Ananya K.", role: "Verified Buyer", avatarBg: "#c0edd4", avatarFg: "#012d1d", rating: 5, reviewText: "Switched to 19 Dogs wild treats and haven't looked back. My vet is impressed with the ingredient list.", hasMedia: false, mediaType: "photo", mediaUrl: null },
           ];
 
           type FeedbackItem = { id: string | number; name: string; role: string; initials: string; color: string; bg: string; rating: number; text: string; hasMedia: boolean; mediaType: "photo" | "video"; mediaUrl: string | null };
@@ -657,7 +657,7 @@ export default function DogTreatProductDetail() {
               id: item.id ?? i, name: nm, role: item.role || "Verified Buyer", initials,
               color: item.avatarFg || "#264e3c", bg: item.avatarBg || "#a5d0b8",
               rating: item.rating ?? 5, text: item.reviewText || "",
-              hasMedia: item.hasMedia ?? false,
+              hasMedia: !!(item.hasMedia && item.mediaUrl),
               mediaType: (item.mediaType === "video" ? "video" : "photo") as "photo" | "video",
               mediaUrl: item.mediaUrl ?? null,
             };
@@ -687,18 +687,19 @@ export default function DogTreatProductDetail() {
 
           return (
             <section style={{ backgroundColor: "#f9faf6", padding: "80px 0" }}>
-              <div className="px-5 md:px-16 max-w-7xl mx-auto">
+              {/* Full-width section — no max-w container */}
+              <div className="px-5 md:px-16">
                 {/* Aggregate header */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16">
-                  <div className="md:col-span-4 flex flex-col justify-center" style={{ backgroundColor: C.primary, padding: "40px 32px" }}>
-                    <span style={{ ...MONO, fontSize: 11, color: "#a5d0b8", marginBottom: 12 }}>FIELD REPORTS</span>
+                  <div className="md:col-span-3 flex flex-col justify-center" style={{ backgroundColor: C.primary, padding: "40px 32px" }}>
+                    <span style={{ ...MONO, fontSize: 11, color: "#a5d0b8", marginBottom: 12 }}>CUSTOMER REPORTS</span>
                     <p style={{ ...PLAYFAIR, fontSize: 72, lineHeight: "80px", fontWeight: 700, color: "#fff" }}>{displayRating.toFixed(1)}</p>
                     <StarRow rating={Math.round(displayRating)} light />
                     <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>Based on {totalReviews} verified reports</p>
                   </div>
-                  <div className="md:col-span-8">
+                  <div className="md:col-span-9 flex flex-col justify-center">
                     <h2 style={{ ...PLAYFAIR, fontSize: "clamp(28px,4vw,48px)", fontWeight: 600, color: C.primary, marginBottom: 16 }}>
-                      Field Reports
+                      Customer Reports
                     </h2>
                     <p style={{ fontSize: 16, color: C.onSurfaceVariant, lineHeight: 1.6 }}>
                       Verified observations from owners in the field. Unedited feedback from real dogs, real results.
@@ -706,19 +707,44 @@ export default function DogTreatProductDetail() {
                   </div>
                 </div>
 
-                {/* Feedback grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Feedback grid — full width, 3 cols on large screens */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {feedbackItems.map((item) => (
-                    <div key={item.id} className="flex flex-col gap-4 p-6" style={{ border: `1px solid ${C.outlineVariant}4D`, backgroundColor: "#fff" }}>
-                      <div className="flex items-start gap-4">
-                        <AvatarCircle item={item} />
-                        <div>
-                          <p style={{ fontWeight: 700, color: C.onSurface }}>{item.name}</p>
-                          <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.onSurfaceVariant }}>{item.role}</p>
-                          <StarRow rating={item.rating} />
+                    <div key={item.id} className="flex flex-col gap-0" style={{ border: `1px solid ${C.outlineVariant}4D`, backgroundColor: "#fff" }}>
+                      {/* Media (image or video) from admin — shown when hasMedia is true and mediaUrl exists */}
+                      {item.hasMedia && item.mediaUrl && (
+                        <div className="w-full overflow-hidden" style={{ aspectRatio: "16/9" }}>
+                          {item.mediaType === "video" ? (
+                            <video
+                              src={item.mediaUrl}
+                              controls
+                              playsInline
+                              className="w-full h-full object-cover"
+                              data-testid={`feedback-video-${item.id}`}
+                            />
+                          ) : (
+                            <img
+                              src={item.mediaUrl}
+                              alt={`${item.name}'s photo`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              data-testid={`feedback-image-${item.id}`}
+                            />
+                          )}
                         </div>
+                      )}
+                      {/* Card body */}
+                      <div className="flex flex-col gap-4 p-6">
+                        <div className="flex items-start gap-4">
+                          <AvatarCircle item={item} />
+                          <div>
+                            <p style={{ fontWeight: 700, color: C.onSurface }}>{item.name}</p>
+                            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.onSurfaceVariant }}>{item.role}</p>
+                            <StarRow rating={item.rating} />
+                          </div>
+                        </div>
+                        <p style={{ fontSize: 14, color: C.onSurfaceVariant, lineHeight: 1.6 }}>{item.text}</p>
                       </div>
-                      <p style={{ fontSize: 14, color: C.onSurfaceVariant, lineHeight: 1.6 }}>{item.text}</p>
                     </div>
                   ))}
                 </div>
@@ -729,11 +755,11 @@ export default function DogTreatProductDetail() {
                     {!showReviewForm ? (
                       <button onClick={() => setShowReviewForm(true)} data-testid="btn-write-review"
                         className="px-8 py-4" style={{ border: `1px solid ${C.primary}`, color: C.primary, ...LABEL_CAPS }}>
-                        Submit a Field Report
+                        Submit a Customer Report
                       </button>
                     ) : (
                       <div className="max-w-xl space-y-6" style={{ border: `1px solid ${C.outlineVariant}4D`, padding: 32, backgroundColor: "#fff" }}>
-                        <h3 style={{ ...PLAYFAIR, fontSize: 24, color: C.primary }}>Submit Field Report</h3>
+                        <h3 style={{ ...PLAYFAIR, fontSize: 24, color: C.primary }}>Submit Customer Report</h3>
                         <div className="flex gap-2">
                           {[1,2,3,4,5].map(s => (
                             <button key={s} onClick={() => setReviewRating(s)} data-testid={`review-star-${s}`}>
@@ -745,7 +771,7 @@ export default function DogTreatProductDetail() {
                           className="w-full bg-transparent focus:outline-none py-3 border-b"
                           style={{ borderColor: C.outlineVariant, ...MONO, fontSize: 13 }}
                           data-testid="input-review-title" />
-                        <textarea value={reviewContent} onChange={e => setReviewContent(e.target.value)} placeholder="Your field observations…"
+                        <textarea value={reviewContent} onChange={e => setReviewContent(e.target.value)} placeholder="Your observations…"
                           rows={4} className="w-full bg-transparent focus:outline-none py-3 border-b resize-none"
                           style={{ borderColor: C.outlineVariant, fontSize: 14, color: C.onSurface }}
                           data-testid="textarea-review-content" />
