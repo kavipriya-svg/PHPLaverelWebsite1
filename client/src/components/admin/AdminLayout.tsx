@@ -312,6 +312,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/full-meal-feedback"}>
+                      <Link href="/admin/full-meal-feedback" data-testid="link-admin-full-meal-feedback">
+                        <Star className="h-4 w-4" />
+                        <span>Customer Feedback</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
                     <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                       Others
                     </p>

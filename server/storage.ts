@@ -42,6 +42,9 @@ import {
   swimGroomProviderSlots,
   swimGroomBookings,
   swimGroomProviderReviews,
+  fullMealFeedback,
+  type FullMealFeedback,
+  type InsertFullMealFeedback,
   type User,
   type UpsertUser,
   type Category,
@@ -424,6 +427,12 @@ export interface IStorage {
   updateSwimGroomProviderReview(id: string, review: Partial<InsertSwimGroomProviderReview>): Promise<SwimGroomProviderReview | undefined>;
   deleteSwimGroomProviderReview(id: string): Promise<void>;
   updateSwimGroomProviderRating(providerId: string): Promise<void>;
+
+  // Full Meal Customer Feedback
+  getFullMealFeedback(activeOnly?: boolean): Promise<FullMealFeedback[]>;
+  createFullMealFeedback(data: InsertFullMealFeedback): Promise<FullMealFeedback>;
+  updateFullMealFeedback(id: string, data: Partial<InsertFullMealFeedback>): Promise<FullMealFeedback | undefined>;
+  deleteFullMealFeedback(id: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -3119,6 +3128,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSwimGroomProviderReview(id: string): Promise<void> {
     await db.delete(swimGroomProviderReviews).where(eq(swimGroomProviderReviews.id, id));
+  }
+
+  // ── Full Meal Customer Feedback ──────────────────────────────────────────
+  async getFullMealFeedback(activeOnly = false): Promise<FullMealFeedback[]> {
+    const conditions = activeOnly ? [eq(fullMealFeedback.isActive, true)] : [];
+    return db
+      .select()
+      .from(fullMealFeedback)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(asc(fullMealFeedback.sortOrder), asc(fullMealFeedback.createdAt));
+  }
+
+  async createFullMealFeedback(data: InsertFullMealFeedback): Promise<FullMealFeedback> {
+    const [created] = await db.insert(fullMealFeedback).values(data).returning();
+    return created;
+  }
+
+  async updateFullMealFeedback(id: string, data: Partial<InsertFullMealFeedback>): Promise<FullMealFeedback | undefined> {
+    const [updated] = await db
+      .update(fullMealFeedback)
+      .set(data)
+      .where(eq(fullMealFeedback.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFullMealFeedback(id: string): Promise<void> {
+    await db.delete(fullMealFeedback).where(eq(fullMealFeedback.id, id));
   }
 
   async updateSwimGroomProviderRating(providerId: string): Promise<void> {

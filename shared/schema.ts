@@ -1608,3 +1608,26 @@ export const insertSwimGroomProviderReviewSchema = createInsertSchema(swimGroomP
 });
 export type InsertSwimGroomProviderReview = z.infer<typeof insertSwimGroomProviderReviewSchema>;
 export type SwimGroomProviderReview = typeof swimGroomProviderReviews.$inferSelect;
+
+// ─── Full Meal Customer Feedback ───────────────────────────────────────────
+export const fullMealFeedback = pgTable("full_meal_feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 120 }).notNull(),
+  role: varchar("role", { length: 120 }).notNull().default("Verified Buyer"),
+  avatarBg: varchar("avatar_bg", { length: 20 }).notNull().default("#a5d0b8"),
+  avatarFg: varchar("avatar_fg", { length: 20 }).notNull().default("#264e3c"),
+  rating: integer("rating").notNull().default(5),
+  reviewText: text("review_text").notNull(),
+  hasMedia: boolean("has_media").notNull().default(false),
+  mediaType: varchar("media_type", { length: 10 }).notNull().default("photo"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFullMealFeedbackSchema = createInsertSchema(fullMealFeedback).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertFullMealFeedback = z.infer<typeof insertFullMealFeedbackSchema>;
+export type FullMealFeedback = typeof fullMealFeedback.$inferSelect;

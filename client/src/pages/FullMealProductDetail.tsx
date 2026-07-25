@@ -98,6 +98,9 @@ export default function FullMealProductDetail() {
     queryKey: ["/api/products", product?.id, "reviews"],
     enabled: !!product?.id,
   });
+  const { data: adminFeedback = [] } = useQuery<any[]>({
+    queryKey: ["/api/full-meal-feedback"],
+  });
   const { data: canReviewData } = useQuery<{ canReview: boolean }>({
     queryKey: ["/api/products", product?.id, "can-review"],
     enabled: !!product?.id && isAuthenticated,
@@ -664,13 +667,13 @@ export default function FullMealProductDetail() {
         {/* ════ CUSTOMER FEEDBACK ════ */}
         {(() => {
           // Merge real reviews with editorial placeholders for a full section
-          const PLACEHOLDERS = [
-            { name: "Priya S.", role: "Labrador Owner", initials: "PS", color: "#264e3c", bg: "#a5d0b8", rating: 5, text: "My lab absolutely loves this meal. The coat quality has visibly improved within 3 weeks. Will never go back to kibble.", hasMedia: true, mediaType: "photo" as const },
-            { name: "Rohan M.", role: "Golden Retriever Dad", initials: "RM", color: "#76330d", bg: "#ffb695", rating: 5, text: "Ordered twice now. The packaging is premium and the food smells genuinely fresh. My dog finishes the bowl in under 2 minutes.", hasMedia: true, mediaType: "video" as const },
-            { name: "Ananya K.", role: "Verified Buyer", initials: "AK", color: "#012d1d", bg: "#c0edd4", rating: 5, text: "Switched from another brand and the difference in energy levels is remarkable. 19 Dogs is worth every rupee.", hasMedia: false, mediaType: "photo" as const },
-            { name: "Vikram T.", role: "Dog Trainer", initials: "VT", color: "#471800", bg: "#ffdbcc", rating: 4, text: "Use this as training reward and as daily meals. High acceptance rate across all breeds I work with. Strongly recommended.", hasMedia: true, mediaType: "photo" as const },
-            { name: "Meera R.", role: "Poodle Owner", initials: "MR", color: "#264e3c", bg: "#a5d0b8", rating: 5, text: "The ingredients list is clean and transparent. I can trust what I'm feeding. My vet approves!", hasMedia: false, mediaType: "video" as const },
-            { name: "Arjun D.", role: "Husky Parent", initials: "AD", color: "#76330d", bg: "#ffb695", rating: 5, text: "Best decision for my husky. He used to be a picky eater — now he gets excited at meal time. The texture and smell are excellent.", hasMedia: true, mediaType: "video" as const },
+          const BUILTIN_PLACEHOLDERS = [
+            { name: "Priya S.", role: "Labrador Owner", avatarBg: "#a5d0b8", avatarFg: "#264e3c", rating: 5, reviewText: "My lab absolutely loves this meal. The coat quality has visibly improved within 3 weeks. Will never go back to kibble.", hasMedia: true, mediaType: "photo" },
+            { name: "Rohan M.", role: "Golden Retriever Dad", avatarBg: "#ffb695", avatarFg: "#76330d", rating: 5, reviewText: "Ordered twice now. The packaging is premium and the food smells genuinely fresh. My dog finishes the bowl in under 2 minutes.", hasMedia: true, mediaType: "video" },
+            { name: "Ananya K.", role: "Verified Buyer", avatarBg: "#c0edd4", avatarFg: "#012d1d", rating: 5, reviewText: "Switched from another brand and the difference in energy levels is remarkable. 19 Dogs is worth every rupee.", hasMedia: false, mediaType: "photo" },
+            { name: "Vikram T.", role: "Dog Trainer", avatarBg: "#ffdbcc", avatarFg: "#471800", rating: 4, reviewText: "Use this as training reward and as daily meals. High acceptance rate across all breeds I work with. Strongly recommended.", hasMedia: true, mediaType: "photo" },
+            { name: "Meera R.", role: "Poodle Owner", avatarBg: "#a5d0b8", avatarFg: "#264e3c", rating: 5, reviewText: "The ingredients list is clean and transparent. I can trust what I'm feeding. My vet approves!", hasMedia: false, mediaType: "video" },
+            { name: "Arjun D.", role: "Husky Parent", avatarBg: "#ffb695", avatarFg: "#76330d", rating: 5, reviewText: "Best decision for my husky. He used to be a picky eater — now he gets excited at meal time. The texture and smell are excellent.", hasMedia: true, mediaType: "video" },
           ];
 
           type FeedbackItem = {
@@ -686,27 +689,26 @@ export default function FullMealProductDetail() {
             mediaType: "photo" | "video";
           };
 
-          const feedbackItems: FeedbackItem[] = reviews.length > 0
-            ? reviews.slice(0, 6).map((r, i) => {
-                const pl = PLACEHOLDERS[i % PLACEHOLDERS.length];
-                const firstName = r.user?.firstName || "";
-                const lastName = r.user?.lastName || "";
-                const fullName = firstName ? `${firstName} ${lastName}`.trim() : "Verified Buyer";
-                const initials = firstName ? `${firstName[0]}${lastName ? lastName[0] : ""}`.toUpperCase() : "VB";
-                return {
-                  id: r.id,
-                  name: fullName,
-                  role: r.title || "Verified Buyer",
-                  initials,
-                  color: pl.color,
-                  bg: pl.bg,
-                  rating: r.rating,
-                  text: r.content,
-                  hasMedia: pl.hasMedia,
-                  mediaType: pl.mediaType,
-                };
-              })
-            : PLACEHOLDERS.map((p, i) => ({ ...p, id: i }));
+          // Use admin-entered feedback if available, otherwise fall back to built-ins
+          const rawSource: any[] = adminFeedback.length > 0 ? adminFeedback : BUILTIN_PLACEHOLDERS;
+
+          const feedbackItems: FeedbackItem[] = rawSource.slice(0, 6).map((item: any, i: number) => {
+            const nm: string = item.name || "Verified Buyer";
+            const parts = nm.trim().split(" ");
+            const initials = parts.map((p: string) => p[0]).join("").slice(0, 2).toUpperCase();
+            return {
+              id: item.id ?? i,
+              name: nm,
+              role: item.role || "Verified Buyer",
+              initials,
+              color: item.avatarFg || "#264e3c",
+              bg: item.avatarBg || "#a5d0b8",
+              rating: item.rating ?? 5,
+              text: item.reviewText || "",
+              hasMedia: item.hasMedia ?? false,
+              mediaType: (item.mediaType === "video" ? "video" : "photo") as "photo" | "video",
+            };
+          });
 
           const totalReviews = product.reviewCount ?? (reviews.length > 0 ? reviews.length : 142);
           const displayRating = avgRating > 0 ? avgRating : 4.9;

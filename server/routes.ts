@@ -6908,5 +6908,52 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  // ── Full Meal Customer Feedback ──────────────────────────────────────────
+  app.get("/api/full-meal-feedback", async (req, res) => {
+    try {
+      const items = await storage.getFullMealFeedback(true);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.get("/api/admin/full-meal-feedback", isAdmin, async (req, res) => {
+    try {
+      const items = await storage.getFullMealFeedback(false);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.post("/api/admin/full-meal-feedback", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createFullMealFeedback(req.body);
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create feedback" });
+    }
+  });
+
+  app.put("/api/admin/full-meal-feedback/:id", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateFullMealFeedback(req.params.id, req.body);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update feedback" });
+    }
+  });
+
+  app.delete("/api/admin/full-meal-feedback/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteFullMealFeedback(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete feedback" });
+    }
+  });
+
   return httpServer;
 }
