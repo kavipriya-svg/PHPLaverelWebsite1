@@ -687,69 +687,67 @@ export default function FullMealProductDetail() {
               </p>
             )}
 
-            {/* Shipping / Return / Secure */}
-            <div className="space-y-0" style={{ borderTop: `1px solid ${C.outlineVariant}20` }}>
-              {(freeShipping || shippingText) && (
-                <div className="flex items-start gap-3 py-3"
-                  style={{ borderBottom: `1px solid ${C.outlineVariant}20` }}>
-                  <Truck className="w-4 h-4 mt-0.5 shrink-0" style={{ color: C.primary }} />
-                  <div>
-                    <span className="font-mono text-xs uppercase tracking-widest block"
-                      style={{ color: C.primary }}>
-                      {freeShipping ? "Free Shipping" : "Shipping"}
-                    </span>
-                    {shippingText && (
-                      <span className="text-xs mt-0.5 block" style={{ color: C.onSurfaceVariant }}>{shippingText}</span>
-                    )}
-                  </div>
+            {/* Trust Badges — always shown, values from admin when set */}
+            <div className="grid grid-cols-3 gap-px mt-2"
+              style={{ border: `1px solid ${C.outlineVariant}30`, backgroundColor: `${C.outlineVariant}30` }}>
+              {/* Free Shipping */}
+              <div className="flex flex-col items-center text-center gap-2 py-5 px-3"
+                style={{ backgroundColor: C.surface }}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${C.primary}0E` }}>
+                  <Truck className="w-4 h-4" style={{ color: C.primary }} />
                 </div>
-              )}
-              {(returnDays || returnText) && (
-                <div className="flex items-start gap-3 py-3"
-                  style={{ borderBottom: `1px solid ${C.outlineVariant}20` }}>
-                  <RotateCcw className="w-4 h-4 mt-0.5 shrink-0" style={{ color: C.primary }} />
-                  <div>
-                    <span className="font-mono text-xs uppercase tracking-widest block" style={{ color: C.primary }}>
-                      {returnDays ? `${returnDays}-Day Returns` : "Returns"}
-                    </span>
-                    {returnText && (
-                      <span className="text-xs mt-0.5 block" style={{ color: C.onSurfaceVariant }}>{returnText}</span>
-                    )}
-                  </div>
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-widest font-bold leading-tight"
+                    style={{ color: C.primary }}>
+                    {freeShipping ? "Free Shipping" : "Shipping"}
+                  </p>
+                  <p className="text-[11px] mt-1 leading-tight"
+                    style={{ color: C.onSurfaceVariant }}>
+                    {shippingText || "Free Shipping"}
+                  </p>
                 </div>
-              )}
-              {secureCheckout && (
-                <div className="flex items-start gap-3 py-3">
-                  <Shield className="w-4 h-4 mt-0.5 shrink-0" style={{ color: C.primary }} />
-                  <div>
-                    <span className="font-mono text-xs uppercase tracking-widest block" style={{ color: C.primary }}>
-                      Secure Checkout
-                    </span>
-                    {secureCheckoutText && (
-                      <span className="text-xs mt-0.5 block" style={{ color: C.onSurfaceVariant }}>{secureCheckoutText}</span>
-                    )}
-                  </div>
+              </div>
+
+              {/* Returns */}
+              <div className="flex flex-col items-center text-center gap-2 py-5 px-3"
+                style={{ backgroundColor: C.surface }}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${C.primary}0E` }}>
+                  <RotateCcw className="w-4 h-4" style={{ color: C.primary }} />
                 </div>
-              )}
-              {/* Always show these fallback links */}
-              {!freeShipping && !shippingText && !returnDays && !returnText && !secureCheckout && (
-                <>
-                  {[["Ancestral Sourcing", "100% traceable, ethically harvested"],
-                    ["Veterinary Approval", "Formulated with nutritional scientists"],
-                    ["Secure Checkout", "256-bit encrypted transactions"]].map(([label, desc]) => (
-                    <div key={label} className="flex items-start gap-3 py-3 group"
-                      style={{ borderBottom: `1px solid ${C.outlineVariant}20` }}>
-                      <ArrowRight className="w-4 h-4 mt-0.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
-                        style={{ color: C.primary }} />
-                      <div>
-                        <span className="font-mono text-xs uppercase tracking-widest block" style={{ color: C.primary }}>{label}</span>
-                        <span className="text-xs mt-0.5 block" style={{ color: C.onSurfaceVariant }}>{desc}</span>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-widest font-bold leading-tight"
+                    style={{ color: C.primary }}>
+                    {returnDays ? `${returnDays}-Day Returns` : "30-Day Returns"}
+                  </p>
+                  <p className="text-[11px] mt-1 leading-tight"
+                    style={{ color: C.onSurfaceVariant }}>
+                    {returnText || "Easy Returns"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Secure Checkout */}
+              <div className="flex flex-col items-center text-center gap-2 py-5 px-3"
+                style={{ backgroundColor: C.surface }}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${C.primary}0E` }}>
+                  <Shield className="w-4 h-4" style={{ color: C.primary }} />
+                </div>
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-widest font-bold leading-tight"
+                    style={{ color: C.primary }}>
+                    Secure Checkout
+                  </p>
+                  <p className="text-[11px] mt-1 leading-tight"
+                    style={{ color: C.onSurfaceVariant }}>
+                    {secureCheckoutText || "Secure Checkout"}
+                  </p>
+                </div>
+              </div>
             </div>
+
           </div>
         </section>
 
