@@ -352,8 +352,8 @@ export default function FullMealProductDetail() {
 
             <div className="space-y-8">
 
-              {/* Variant selector */}
-              {variants.length > 0 && (
+              {/* Variant selector — or single weight fallback */}
+              {variants.length > 0 ? (
                 <div className="space-y-4">
                   <label style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, display: "block" }}>
                     Select Weight (SKU)
@@ -378,6 +378,23 @@ export default function FullMealProductDetail() {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <label style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, display: "block" }}>
+                    Weight (SKU)
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 flex justify-between items-center"
+                      style={{ border: `2px solid ${C.primary}` }}>
+                      <span style={{ fontWeight: 700, color: C.primary }}>
+                        {weight ? `${weight}g` : "Standard"}
+                      </span>
+                      <span style={{ ...MONO, fontSize: 12, color: C.primaryContainer }}>
+                        {formatCurrency(currentPrice!)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
