@@ -380,17 +380,20 @@ export default function DogTreatProductDetail() {
               {/* Variant selector */}
               {variants.length > 0 ? (
                 <div className="space-y-4">
-                  <label style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, display: "block" }}>Select Weight (SKU)</label>
+                  <label style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, display: "block" }}>
+                    Select {variants[0]?.optionName || "Weight"} (SKU)
+                  </label>
                   <div className="grid grid-cols-2 gap-4">
                     {variants.map((v: any) => {
                       const isSelected = String(v.id) === selectedVariantId;
                       const vPrice = v.salePrice || v.price;
+                      const label = v.optionValue || v.name || v.option_value || "Standard";
                       return (
                         <button key={v.id} data-testid={`variant-${v.id}`}
                           onClick={() => setSelectedVariantId(String(v.id))}
                           className="p-4 text-left flex justify-between items-center transition-colors duration-200"
                           style={{ border: isSelected ? `2px solid ${C.primary}` : `1px solid ${C.outlineVariant}` }}>
-                          <span style={{ fontWeight: 700, color: isSelected ? C.primary : C.onSurfaceVariant }}>{v.name}</span>
+                          <span style={{ fontWeight: 700, color: isSelected ? C.primary : C.onSurfaceVariant }}>{label}</span>
                           <span style={{ ...MONO, fontSize: 12, color: isSelected ? C.primaryContainer : C.onSurfaceVariant }}>{formatCurrency(vPrice)}</span>
                         </button>
                       );
