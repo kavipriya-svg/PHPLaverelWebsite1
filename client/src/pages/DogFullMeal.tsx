@@ -274,6 +274,8 @@ export default function DogFullMeal() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [s, setS] = useState<FullMealSettings>(DEFAULTS);
+  const [sortBy, setSortBy] = useState("featured");
+  const [priceFilter, setPriceFilter] = useState("all");
 
   // Load page settings
   const { data: settingsData } = useQuery<{ settings: Partial<FullMealSettings> }>({
@@ -304,6 +306,25 @@ export default function DogFullMeal() {
     const sorted = s.productOrder.map((id) => map.get(String(id))).filter(Boolean) as any[];
     const rest = raw.filter((p) => !s.productOrder.includes(String(p.id)));
     return [...sorted, ...rest];
+  })();
+
+  const filteredProducts = (() => {
+    let list = [...products];
+    // Price filter
+    if (priceFilter !== "all") {
+      list = list.filter((p) => {
+        const price = parseFloat(p.salePrice || p.price || "0");
+        if (priceFilter === "under500") return price < 500;
+        if (priceFilter === "500to800") return price >= 500 && price <= 800;
+        if (priceFilter === "above800") return price > 800;
+        return true;
+      });
+    }
+    // Sort
+    if (sortBy === "price_asc") list.sort((a, b) => parseFloat(a.salePrice || a.price || "0") - parseFloat(b.salePrice || b.price || "0"));
+    if (sortBy === "price_desc") list.sort((a, b) => parseFloat(b.salePrice || b.price || "0") - parseFloat(a.salePrice || a.price || "0"));
+    if (sortBy === "name_az") list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    return list;
   })();
 
   const handleAddToCart = async (product: any) => {
@@ -413,7 +434,7 @@ export default function DogFullMeal() {
 
       {/* ── 3. Products Gallery ───────────────────────────── */}
       <main id="dfm-meals" className="py-[80px] overflow-hidden" style={{ backgroundColor: C.surface }}>
-        <div className="px-[64px] mb-[80px]">
+        <div className="px-[64px] mb-[56px]">
           <h2 className="font-playfair mb-4" style={{ fontSize: "clamp(48px,7vw,84px)", fontWeight: 700, color: C.primary }}>
             {s.wetFood.title}
           </h2>
@@ -422,15 +443,100 @@ export default function DogFullMeal() {
           </p>
         </div>
 
+        {/* ── Filter Bar ─────────────────────────────────── */}
+        <div
+          className="px-[64px] mb-[64px] border-y py-6 flex flex-wrap items-center gap-8"
+          style={{ borderColor: C.outlineVariant }}
+        >
+          {/* Sort */}
+          <div className="flex items-center gap-4">
+            <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: `${C.primary}80` }}>
+              Sort
+            </span>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { label: "Featured", value: "featured" },
+                { label: "Price ↑", value: "price_asc" },
+                { label: "Price ↓", value: "price_desc" },
+                { label: "A → Z", value: "name_az" },
+              ].map(({ label, value }) => (
+                <button
+                  key={value}
+                  onClick={() => setSortBy(value)}
+                  className="font-inter text-[10px] uppercase tracking-widest px-4 py-2 transition-all duration-200 cursor-pointer"
+                  style={{
+                    backgroundColor: sortBy === value ? C.primary : "transparent",
+                    color: sortBy === value ? C.white : C.onSurfaceVariant,
+                    border: `1px solid ${sortBy === value ? C.primary : C.outlineVariant}`,
+                    letterSpacing: "0.12em",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="hidden md:block w-px h-8" style={{ backgroundColor: C.outlineVariant }} />
+
+          {/* Price */}
+          <div className="flex items-center gap-4">
+            <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: `${C.primary}80` }}>
+              Price
+            </span>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { label: "All", value: "all" },
+                { label: "Under ₹500", value: "under500" },
+                { label: "₹500 – ₹800", value: "500to800" },
+                { label: "₹800+", value: "above800" },
+              ].map(({ label, value }) => (
+                <button
+                  key={value}
+                  onClick={() => setPriceFilter(value)}
+                  className="font-inter text-[10px] uppercase tracking-widest px-4 py-2 transition-all duration-200 cursor-pointer"
+                  style={{
+                    backgroundColor: priceFilter === value ? C.secondary : "transparent",
+                    color: priceFilter === value ? C.white : C.onSurfaceVariant,
+                    border: `1px solid ${priceFilter === value ? C.secondary : C.outlineVariant}`,
+                    letterSpacing: "0.12em",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Results count */}
+          <div className="ml-auto font-mono text-[11px]" style={{ color: C.outline }}>
+            {isLoading ? "—" : `${filteredProducts.length} specimen${filteredProducts.length !== 1 ? "s" : ""}`}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="px-[64px] space-y-8">
             {[1, 2, 3].map((i) => <div key={i} className="h-96 animate-pulse rounded" style={{ backgroundColor: C.surfaceContainerLow }} />)}
           </div>
-        ) : products.length > 0 ? (
+        ) : filteredProducts.length > 0 ? (
           <div className="space-y-40">
-            {products.map((product, i) => (
+            {filteredProducts.map((product, i) => (
               <EditorialProductCard key={product.id} product={product} index={i} onAddToCart={handleAddToCart} />
             ))}
+          </div>
+        ) : products.length > 0 ? (
+          <div className="px-[64px] py-24 text-center">
+            <p className="font-inter text-sm uppercase tracking-widest mb-4" style={{ color: C.outline, letterSpacing: "0.25em" }}>
+              No specimens match
+            </p>
+            <button
+              onClick={() => { setSortBy("featured"); setPriceFilter("all"); }}
+              className="font-inter text-xs uppercase tracking-widest px-8 py-3 border transition-all duration-200 cursor-pointer"
+              style={{ borderColor: C.primary, color: C.primary }}
+            >
+              Clear Filters
+            </button>
           </div>
         ) : (
           /* Fallback specimen cards when no API products */
