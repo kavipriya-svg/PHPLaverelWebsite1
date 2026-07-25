@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 // ─── Types ────────────────────────────────────────────────────────
 interface Check { title: string; desc: string }
@@ -267,6 +268,7 @@ export default function FullMealPageSettings() {
   }
 
   return (
+    <AdminLayout>
     <div className="p-6 space-y-6 max-w-4xl">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -807,5 +809,6 @@ export default function FullMealPageSettings() {
           </TabsContent>
         </Tabs>
       </div>
+    </AdminLayout>
   );
 }
