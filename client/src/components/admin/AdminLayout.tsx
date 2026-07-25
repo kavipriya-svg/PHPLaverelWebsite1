@@ -87,6 +87,7 @@ const salesItems = [
 
 const contentItems = [
   { href: "/admin/homepage", icon: LayoutGrid, label: "Homepage" },
+  { href: "/admin/full-meal-page", icon: Dog, label: "Full Meal Page" },
   { href: "/admin/banners", icon: Image, label: "Banners" },
   { href: "/admin/home-blocks", icon: Grid3X3, label: "Home Blocks" },
   { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },

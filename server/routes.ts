@@ -1910,6 +1910,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ── Full Meal Page Settings ──────────────────────────────────────
+  app.get("/api/settings/full-meal-page", async (req, res) => {
+    try {
+      const row = await storage.getSetting("full_meal_page_settings");
+      const settings = row?.value ? JSON.parse(row.value) : {};
+      res.json({ settings });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch full meal page settings" });
+    }
+  });
+
+  app.put("/api/settings/full-meal-page", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ full_meal_page_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update full meal page settings" });
+    }
+  });
+
   // Helper to generate unique IDs for category section items
   const generateCategoryItemId = () => `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
