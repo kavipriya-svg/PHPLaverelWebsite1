@@ -83,6 +83,7 @@ const SwimGroom = lazy(() => import("@/pages/SwimGroom"));
 const SwimGroomProvider = lazy(() => import("@/pages/SwimGroomProvider"));
 const DogFullMeal = lazy(() => import("@/pages/DogFullMeal"));
 const FullMealProductDetail = lazy(() => import("@/pages/FullMealProductDetail"));
+const DogTreat = lazy(() => import("@/pages/DogTreat"));
 const ProviderDashboard = lazy(() => import("@/pages/provider/ProviderDashboard"));
 const ProviderBookings = lazy(() => import("@/pages/provider/ProviderBookings"));
 const ProviderSlots = lazy(() => import("@/pages/provider/ProviderSlots"));
@@ -210,6 +211,12 @@ function Router() {
       <Route path="/full-meals">
         <HomeLayout>
           <DogFullMeal />
+        </HomeLayout>
+      </Route>
+
+      <Route path="/dogtreat">
+        <HomeLayout>
+          <DogTreat />
         </HomeLayout>
       </Route>
 
