@@ -298,6 +298,12 @@ export default function DogFullMeal() {
     queryKey: ["/api/products?categorySlug=full-meals&limit=50"],
   });
 
+  // Load Biryani products (child category)
+  const { data: biryaniData } = useQuery<{ products: any[] }>({
+    queryKey: ["/api/products?categorySlug=biryani&limit=50"],
+  });
+  const biryaniProducts = biryaniData?.products ?? [];
+
   // Sort products by productOrder from settings
   const products = (() => {
     const raw = productsData?.products ?? [];
@@ -599,54 +605,78 @@ export default function DogFullMeal() {
             </div>
           </div>
 
-          {/* Biryani product cards */}
-          <div className="space-y-48 px-[64px] relative z-10">
-            {s.biryaniSection.products.map((item, i) => {
-              const reversed = i % 2 === 0;
-              return (
-                <div key={i} className={`flex flex-col ${reversed ? "md:flex-row-reverse" : "md:flex-row"} items-center gap-24`}>
-                  <div className="w-full md:w-3/5">
-                    <div className="p-4" style={{ backgroundColor: C.white, boxShadow: `40px 40px 0px 0px ${C.secondary}99` }}>
-                      <img src={item.imageUrl} alt={item.title} className="w-full object-cover" style={{ aspectRatio: "4/5" }} loading="lazy" />
+          {/* Biryani product cards — live API products when available, static fallback otherwise */}
+          {(() => {
+            const liveItems = biryaniProducts.map((p: any) => ({
+              _isLive: true,
+              _product: p,
+              imageUrl: getProductImage(p),
+              title: p.title,
+              label: "Biryani Collection",
+              desc: p.description
+                ? p.description.replace(/<[^>]+>/g, "").slice(0, 140)
+                : "A masterclass in spice and tradition — crafted for the wolf within.",
+              ctaHref: `/product/${p.slug || "shop"}`,
+              price: p.salePrice || p.price,
+            }));
+            const displayItems = liveItems.length > 0 ? liveItems : s.biryaniSection.products.map((x: any) => ({ ...x, _isLive: false }));
+            return (
+              <div className="space-y-48 px-[64px] relative z-10">
+                {displayItems.map((item: any, i: number) => {
+                  const reversed = i % 2 === 0;
+                  return (
+                    <div key={i} className={`flex flex-col ${reversed ? "md:flex-row-reverse" : "md:flex-row"} items-center gap-24`}>
+                      <div className="w-full md:w-3/5">
+                        <div className="p-4" style={{ backgroundColor: C.white, boxShadow: `40px 40px 0px 0px ${C.secondary}99` }}>
+                          <img src={item.imageUrl} alt={item.title} className="w-full object-cover" style={{ aspectRatio: "4/5" }} loading="lazy" />
+                        </div>
+                      </div>
+                      <div className={`w-full md:w-2/5 space-y-10 ${reversed ? "md:text-right" : ""}`}>
+                        <div>
+                          <span className="font-inter block mb-4" style={{ fontSize: "11px", letterSpacing: "0.5em", color: C.secondaryContainer, fontWeight: 700, textTransform: "uppercase" }}>
+                            {item.label}
+                          </span>
+                          <h3 className="font-playfair mb-6 uppercase" style={{ fontSize: "clamp(40px,5vw,64px)", color: C.white, fontWeight: 700 }}>
+                            {item.title}
+                          </h3>
+                          {item._isLive && item.price && (
+                            <p className="font-inter mb-4" style={{ fontSize: "20px", color: C.secondaryContainer, fontWeight: 600 }}>
+                              ₹{parseFloat(item.price).toFixed(2)}
+                            </p>
+                          )}
+                          <p className="font-playfair italic" style={{ fontSize: "clamp(18px,2vw,24px)", color: `${C.white}B3`, lineHeight: 1.6 }}>
+                            "{item.desc}"
+                          </p>
+                        </div>
+                        <div className={`flex flex-wrap gap-6 pt-10 ${reversed ? "md:justify-end" : ""}`}>
+                          <button
+                            className="font-inter uppercase px-16 py-5 transition-all cursor-pointer"
+                            style={{ fontSize: "13px", letterSpacing: "0.1em", fontWeight: 700, backgroundColor: C.secondary, color: C.white }}
+                            onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.white; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+                            onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.secondary; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
+                            onClick={() => navigate(item.ctaHref || "/shop")}
+                          >
+                            ACQUIRE SPECIMEN
+                          </button>
+                          {item._isLive && (
+                            <button
+                              className="font-inter uppercase px-16 py-5 border transition-all cursor-pointer flex items-center justify-center gap-2"
+                              style={{ fontSize: "13px", letterSpacing: "0.1em", fontWeight: 700, borderColor: C.white, color: C.white, backgroundColor: "transparent" }}
+                              onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.white; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+                              onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
+                              onClick={() => handleAddToCart(item._product)}
+                            >
+                              <ShoppingCart className="w-4 h-4" /> ADD TO CART
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className={`w-full md:w-2/5 space-y-10 ${reversed ? "md:text-right" : ""}`}>
-                    <div>
-                      <span className="font-inter block mb-4" style={{ fontSize: "11px", letterSpacing: "0.5em", color: C.secondaryContainer, fontWeight: 700, textTransform: "uppercase" }}>
-                        {item.label}
-                      </span>
-                      <h3 className="font-playfair mb-6 uppercase" style={{ fontSize: "clamp(40px,5vw,64px)", color: C.white, fontWeight: 700 }}>
-                        {item.title}
-                      </h3>
-                      <p className="font-playfair italic" style={{ fontSize: "clamp(18px,2vw,24px)", color: `${C.white}B3`, lineHeight: 1.6 }}>
-                        "{item.desc}"
-                      </p>
-                    </div>
-                    <div className={`flex flex-wrap gap-6 pt-10 ${reversed ? "md:justify-end" : ""}`}>
-                      <button
-                        className="font-inter uppercase px-16 py-5 transition-all cursor-pointer"
-                        style={{ fontSize: "13px", letterSpacing: "0.1em", fontWeight: 700, backgroundColor: C.secondary, color: C.white }}
-                        onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.white; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
-                        onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.secondary; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
-                        onClick={() => navigate(item.ctaHref || "/shop")}
-                      >
-                        ACQUIRE SPECIMEN
-                      </button>
-                      <button
-                        className="font-inter uppercase px-16 py-5 border transition-all cursor-pointer flex items-center justify-center gap-2"
-                        style={{ fontSize: "13px", letterSpacing: "0.1em", fontWeight: 700, borderColor: C.white, color: C.white, backgroundColor: "transparent" }}
-                        onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.white; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
-                        onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
-                        onClick={() => navigate(item.ctaHref || "/shop")}
-                      >
-                        <ShoppingCart className="w-4 h-4" /> ADD TO CART
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </section>
       )}
 
