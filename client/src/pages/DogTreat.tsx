@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ShoppingCart, FlaskConical, Award, Ban, Leaf } from "lucide-react";
 import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
-import { EditorialHeader, EditorialFooter } from "@/components/store/EditorialLayout";
+import { HomeEditorialHeader as EditorialHeader, HomeEditorialFooter as EditorialFooter } from "@/components/store/HomeEditorialLayout";
 import { DEFAULT_HOMEPAGE_SETTINGS, mergeHomepageSettings } from "@/lib/homepageDefaults";
 
 // ─── Color tokens ────────────────────────────────────────────────────
