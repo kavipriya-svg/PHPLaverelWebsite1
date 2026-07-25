@@ -4,6 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Play, ShoppingCart, CheckCircle2, PawPrint } from "lucide-react";
 import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
+import { EditorialHeader, EditorialFooter } from "@/components/store/EditorialLayout";
+import { DEFAULT_HOMEPAGE_SETTINGS, mergeHomepageSettings } from "@/lib/homepageDefaults";
+import type { HomepageSettings } from "@/lib/homepageDefaults";
 
 // ─── Brand color tokens ────────────────────────────────────────────
 const C = {
@@ -277,6 +280,13 @@ export default function DogFullMeal() {
     queryKey: ["/api/settings/full-meal-page"],
   });
 
+  // Load homepage settings for shared header/footer
+  const { data: homepageData } = useQuery<{ settings: Partial<HomepageSettings> }>({
+    queryKey: ["/api/settings/homepage"],
+  });
+  const nav = homepageData ? mergeHomepageSettings(homepageData.settings || {}).nav : DEFAULT_HOMEPAGE_SETTINGS.nav;
+  const footer = homepageData ? mergeHomepageSettings(homepageData.settings || {}).footer : DEFAULT_HOMEPAGE_SETTINGS.footer;
+
   useEffect(() => {
     if (settingsData?.settings) setS(deepMerge(DEFAULTS, settingsData.settings));
   }, [settingsData]);
@@ -307,6 +317,7 @@ export default function DogFullMeal() {
 
   return (
     <div style={{ backgroundColor: C.surface, color: C.onSurface, fontFamily: "Inter, sans-serif" }}>
+      <EditorialHeader nav={nav} />
 
       {/* ── 1. Hero Banner ────────────────────────────────── */}
       <section className="relative w-full overflow-hidden" style={{ height: "90vh" }}>
@@ -569,6 +580,7 @@ export default function DogFullMeal() {
       {/* ── Ticker Band ───────────────────────────────────── */}
       <TickerBand items={s.ticker.items} />
 
+      <EditorialFooter footer={footer} />
     </div>
   );
 }
