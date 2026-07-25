@@ -687,7 +687,13 @@ export default function FullMealProductDetail() {
             text: string;
             hasMedia: boolean;
             mediaType: "photo" | "video";
+            mediaUrl: string | null;
           };
+
+          function getYouTubeId(url: string): string | null {
+            const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            return m ? m[1] : null;
+          }
 
           // Use admin-entered feedback if available, otherwise fall back to built-ins
           const rawSource: any[] = adminFeedback.length > 0 ? adminFeedback : BUILTIN_PLACEHOLDERS;
@@ -707,6 +713,7 @@ export default function FullMealProductDetail() {
               text: item.reviewText || "",
               hasMedia: item.hasMedia ?? false,
               mediaType: (item.mediaType === "video" ? "video" : "photo") as "photo" | "video",
+              mediaUrl: item.mediaUrl ?? null,
             };
           });
 
@@ -732,35 +739,65 @@ export default function FullMealProductDetail() {
             </div>
           );
 
-          const MediaPlaceholder = ({ type, light = false }: { type: "photo" | "video"; light?: boolean }) => (
-            <div className="w-full rounded-sm overflow-hidden flex items-center justify-center"
-              style={{ aspectRatio: "4/3", backgroundColor: light ? "rgba(255,255,255,0.08)" : `${C.outlineVariant}22` }}>
-              {type === "video" ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: light ? "rgba(255,255,255,0.15)" : `${C.primary}15` }}>
-                    <svg width={20} height={20} viewBox="0 0 24 24" fill={light ? "rgba(255,255,255,0.7)" : C.onSurfaceVariant}>
-                      <polygon points="5,3 19,12 5,21" />
-                    </svg>
+          const MediaBlock = ({ item }: { item: FeedbackItem }) => {
+            if (!item.hasMedia) return null;
+
+            if (item.mediaType === "video" && item.mediaUrl) {
+              const ytId = getYouTubeId(item.mediaUrl);
+              if (ytId) {
+                return (
+                  <div className="w-full rounded-sm overflow-hidden" style={{ aspectRatio: "16/9" }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${ytId}`}
+                      title="Customer video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full border-0"
+                    />
                   </div>
-                  <span style={{ ...MONO, fontSize: 9, color: light ? "rgba(255,255,255,0.4)" : C.onSurfaceVariant }}>
-                    Customer Video
-                  </span>
+                );
+              }
+            }
+
+            if (item.mediaType === "photo" && item.mediaUrl) {
+              return (
+                <div className="w-full rounded-sm overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                  <img src={item.mediaUrl} alt={`${item.name}'s photo`}
+                    className="w-full h-full object-cover" />
                 </div>
-              ) : (
+              );
+            }
+
+            // Placeholder when hasMedia=true but no URL yet
+            return (
+              <div className="w-full rounded-sm overflow-hidden flex items-center justify-center"
+                style={{ aspectRatio: "4/3", backgroundColor: "rgba(255,255,255,0.08)" }}>
                 <div className="flex flex-col items-center gap-2">
-                  <svg width={24} height={24} viewBox="0 0 24 24" fill="none"
-                    stroke={light ? "rgba(255,255,255,0.4)" : C.outlineVariant} strokeWidth={1.5}>
-                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21,15 16,10 5,21"/>
-                  </svg>
-                  <span style={{ ...MONO, fontSize: 9, color: light ? "rgba(255,255,255,0.4)" : C.onSurfaceVariant }}>
-                    Customer Photo
-                  </span>
+                  {item.mediaType === "video" ? (
+                    <>
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                        <svg width={20} height={20} viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)">
+                          <polygon points="5,3 19,12 5,21" />
+                        </svg>
+                      </div>
+                      <span style={{ ...MONO, fontSize: 9, color: "rgba(255,255,255,0.4)" }}>Customer Video</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width={24} height={24} viewBox="0 0 24 24" fill="none"
+                        stroke="rgba(255,255,255,0.4)" strokeWidth={1.5}>
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21,15 16,10 5,21"/>
+                      </svg>
+                      <span style={{ ...MONO, fontSize: 9, color: "rgba(255,255,255,0.4)" }}>Customer Photo</span>
+                    </>
+                  )}
                 </div>
-              )}
-            </div>
-          );
+              </div>
+            );
+          };
 
           return (
             <section style={{ backgroundColor: C.primary, color: "#fff" }}>
@@ -819,7 +856,7 @@ export default function FullMealProductDetail() {
                         </div>
                       </div>
                       {feedbackItems[0].hasMedia && (
-                        <MediaPlaceholder type={feedbackItems[0].mediaType} light />
+                        <MediaBlock item={feedbackItems[0]} />
                       )}
                       <p style={{ ...PLAYFAIR, fontSize: 18, fontStyle: "italic", lineHeight: 1.75, color: "rgba(255,255,255,0.85)" }}>
                         "{feedbackItems[0].text}"
@@ -848,7 +885,7 @@ export default function FullMealProductDetail() {
                           "{feedbackItems[1].text}"
                         </p>
                         {feedbackItems[1].hasMedia && (
-                          <MediaPlaceholder type={feedbackItems[1].mediaType} light />
+                          <MediaBlock item={feedbackItems[1]} />
                         )}
                       </div>
                     )}
@@ -890,7 +927,7 @@ export default function FullMealProductDetail() {
                           </div>
                         </div>
                         {feedbackItems[3].hasMedia && (
-                          <MediaPlaceholder type={feedbackItems[3].mediaType} light />
+                          <MediaBlock item={feedbackItems[3]} />
                         )}
                         <p style={{ ...PLAYFAIR, fontSize: 14, fontStyle: "italic", lineHeight: 1.65, color: "rgba(255,255,255,0.75)" }}>
                           "{feedbackItems[3].text}"

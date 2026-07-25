@@ -1620,6 +1620,7 @@ export const fullMealFeedback = pgTable("full_meal_feedback", {
   reviewText: text("review_text").notNull(),
   hasMedia: boolean("has_media").notNull().default(false),
   mediaType: varchar("media_type", { length: 10 }).notNull().default("photo"),
+  mediaUrl: varchar("media_url", { length: 1024 }),
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
