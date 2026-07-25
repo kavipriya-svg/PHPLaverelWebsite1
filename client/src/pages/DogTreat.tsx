@@ -237,14 +237,14 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
             </button>
           )}
           <button
-            onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
-            disabled={!product.slug}
+            onClick={() => navigate(product.slug ? `/dogtreat/product/${product.slug}` : "/shop")}
             className="w-full py-4 transition-all"
             style={{ border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+            data-testid={`btn-view-specimen-${product.id}`}
           >
-            View Specimen
+            {product.slug ? "View Specimen" : "Browse All Treats"}
           </button>
         </div>
       </div>
@@ -310,8 +310,8 @@ export default function DogTreat() {
     };
   };
 
-  const displayProducts: EditorialProduct[] = apiProducts.length >= 4
-    ? apiProducts.slice(0, 4).map(mapProduct)
+  const displayProducts: EditorialProduct[] = apiProducts.length > 0
+    ? apiProducts.slice(0, 8).map(mapProduct)
     : FALLBACK_PRODUCTS;
 
   // ── Add to cart ───────────────────────────────────────────────────
