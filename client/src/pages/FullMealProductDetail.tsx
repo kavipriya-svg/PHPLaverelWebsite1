@@ -633,11 +633,10 @@ export default function FullMealProductDetail() {
                 </div>
 
                 {/* Admin product metadata */}
-                {(weight || gstRate || product.sku) && (
+                {(weight || dimensions) && (
                   <div className="pt-4 space-y-2 border-t" style={{ borderColor: `${C.outlineVariant}4D` }}>
                     {weight && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>WEIGHT</span><span>{weight}g</span></div>}
                     {dimensions && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>DIMENSIONS</span><span>{dimensions}</span></div>}
-                    {gstRate && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>GST RATE</span><span>{gstRate}%</span></div>}
                   </div>
                 )}
               </div>
