@@ -32,6 +32,7 @@ interface FullMealSettings {
   cta: { headline: string; headlineItalic: string; cta1Text: string; cta1Href: string; cta2Text: string; cta2Href: string };
   ticker: { items: string[] };
   productOrder: string[];
+  biryaniProductOrder: string[];
 }
 
 const DEFAULTS: FullMealSettings = {
@@ -88,6 +89,7 @@ const DEFAULTS: FullMealSettings = {
     items: ["Biological Precision: 100% Traceable", "99% Wolf DNA Alignment", "Batch ID: #WOLF-2024-DELTA", "No Fillers. No Grains.", "Gently Cooked Synthesis", "Human-Grade Ingredients", "Vet-Formulated Recipes"],
   },
   productOrder: [],
+  biryaniProductOrder: [],
 };
 
 function deepMerge(defaults: FullMealSettings, saved: Partial<FullMealSettings>): FullMealSettings {
@@ -109,6 +111,7 @@ function deepMerge(defaults: FullMealSettings, saved: Partial<FullMealSettings>)
     cta: { ...defaults.cta, ...(saved.cta || {}) },
     ticker: { items: saved.ticker?.items?.length ? saved.ticker.items : defaults.ticker.items },
     productOrder: saved.productOrder || [],
+    biryaniProductOrder: saved.biryaniProductOrder || [],
   };
 }
 
@@ -197,13 +200,18 @@ export default function FullMealPageSettings() {
     queryKey: ["/api/products?categorySlug=full-meals&limit=50"],
   });
 
+  const { data: biryaniData, isLoading: biryaniLoading } = useQuery<{ products: any[] }>({
+    queryKey: ["/api/products?categorySlug=biryani&limit=50"],
+  });
+
   const fullMealsProducts = productsData?.products ?? [];
+  const biryaniRawProducts = biryaniData?.products ?? [];
 
   useEffect(() => {
     if (data?.settings) setS(deepMerge(DEFAULTS, data.settings));
   }, [data]);
 
-  // Sorted products for display — productOrder first, then the rest
+  // Sorted full-meals products — productOrder first, then the rest
   const orderedProducts = (() => {
     if (!fullMealsProducts.length) return [];
     const order = s.productOrder;
@@ -211,6 +219,17 @@ export default function FullMealPageSettings() {
     const map = new Map(fullMealsProducts.map((p) => [p.id, p]));
     const sorted = order.map((id) => map.get(id)).filter(Boolean) as any[];
     const rest = fullMealsProducts.filter((p) => !order.includes(p.id));
+    return [...sorted, ...rest];
+  })();
+
+  // Sorted biryani products — biryaniProductOrder first, then the rest
+  const biryaniOrderedProducts = (() => {
+    if (!biryaniRawProducts.length) return [];
+    const order = s.biryaniProductOrder;
+    if (!order.length) return biryaniRawProducts;
+    const map = new Map(biryaniRawProducts.map((p) => [p.id, p]));
+    const sorted = order.map((id) => map.get(id)).filter(Boolean) as any[];
+    const rest = biryaniRawProducts.filter((p) => !order.includes(p.id));
     return [...sorted, ...rest];
   })();
 
@@ -233,6 +252,10 @@ export default function FullMealPageSettings() {
 
   function handleProductReorder(products: any[]) {
     setS((prev) => ({ ...prev, productOrder: products.map((p) => p.id) }));
+  }
+
+  function handleBiryaniProductReorder(products: any[]) {
+    setS((prev) => ({ ...prev, biryaniProductOrder: products.map((p) => p.id) }));
   }
 
   if (isLoading) {
@@ -514,6 +537,69 @@ export default function FullMealPageSettings() {
 
           {/* ── Biryani Tab ───────────────────────────────────── */}
           <TabsContent value="biryani" className="space-y-4">
+
+            {/* Biryani Product Position Tracker */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <List className="h-4 w-4" /> Biryani Product Position Tracker
+                </CardTitle>
+                <CardDescription>
+                  Drag products to change their display order in the Biryani Collections section. Products assigned to the
+                  <strong> "Biryani"</strong> child category appear here automatically.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {biryaniLoading ? (
+                  <div className="flex items-center gap-2 py-4 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading products…
+                  </div>
+                ) : biryaniOrderedProducts.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-4 text-center border rounded-md bg-muted/30">
+                    No products found in the "Biryani" category.<br />
+                    Add products and assign them to the <strong>Full Meals → Biryani</strong> child category.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      {biryaniOrderedProducts.length} product{biryaniOrderedProducts.length !== 1 ? "s" : ""} · Drag to reorder
+                    </p>
+                    <DraggableList
+                      items={biryaniOrderedProducts}
+                      keyFn={(p) => p.id}
+                      onReorder={handleBiryaniProductReorder}
+                      renderItem={(product) => {
+                        const imgs = product.images || product.productImages || [];
+                        const primary = imgs.find((i: any) => i.isPrimary) || imgs[0];
+                        const imgUrl = primary?.url || "";
+                        return (
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 rounded border bg-muted flex-shrink-0 overflow-hidden">
+                              {imgUrl ? (
+                                <img src={imgUrl} alt={product.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-muted-foreground/20 flex items-center justify-center text-[10px] text-muted-foreground">IMG</div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{product.title}</p>
+                              <p className="text-xs text-muted-foreground">SKU: {product.sku} · ₹{product.salePrice || product.price}</p>
+                            </div>
+                            <Badge variant={product.isActive ? "default" : "secondary"} className="flex-shrink-0 text-xs">
+                              {product.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </div>
+                        );
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground mt-4">
+                      Save to apply the new order to the live page.
+                    </p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader><CardTitle className="text-base">Biryani Collection Heading</CardTitle></CardHeader>
               <CardContent className="space-y-4">

@@ -302,7 +302,15 @@ export default function DogFullMeal() {
   const { data: biryaniData } = useQuery<{ products: any[] }>({
     queryKey: ["/api/products?categorySlug=biryani&limit=50"],
   });
-  const biryaniProducts = biryaniData?.products ?? [];
+  const biryaniProducts = (() => {
+    const raw = biryaniData?.products ?? [];
+    const order: string[] = s.biryaniProductOrder || [];
+    if (!order.length) return raw;
+    const map = new Map(raw.map((p: any) => [String(p.id), p]));
+    const sorted = order.map((id) => map.get(String(id))).filter(Boolean) as any[];
+    const rest = raw.filter((p: any) => !order.includes(String(p.id)));
+    return [...sorted, ...rest];
+  })();
 
   // Sort products by productOrder from settings
   const products = (() => {
