@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingCart, FlaskConical, Award, Ban, Leaf } from "lucide-react";
@@ -86,7 +86,7 @@ const FALLBACK_PRODUCTS = [
 interface DataRow { label: string; value: string }
 interface DogTreatsSettings {
   hero: { headline: string; subtitle: string; bgImageUrl: string; ctaText: string; ctaHref: string; locationTitle: string; locationSubtitle: string };
-  proteinLibrary: { visible: boolean; title: string; subtitle: string };
+  proteinLibrary: { visible: boolean; title: string; subtitle: string; parentCategorySlug: string };
   wolfPrinciple: { visible: boolean; label: string; title: string; body: string; imageUrl: string; quoteSpecimenNo: string; quoteText: string; dataRows: DataRow[] };
   features: { visible: boolean; title: string; subtitle: string };
   productSection: { visible: boolean; title: string; subtitle: string; categorySlug: string };
@@ -104,7 +104,7 @@ const DEFAULT_DT: DogTreatsSettings = {
     locationTitle: "Current Expedition",
     locationSubtitle: "Boreal Forest, Canada",
   },
-  proteinLibrary: { visible: true, title: "The Protein Library", subtitle: "A comprehensive index of biological fuel sources, categorized by species and nutrient density." },
+  proteinLibrary: { visible: true, title: "The Protein Library", subtitle: "A comprehensive index of biological fuel sources, categorized by species and nutrient density.", parentCategorySlug: "wild-treats" },
   wolfPrinciple: {
     visible: true,
     label: "Foundational Biology",
@@ -147,23 +147,34 @@ function fmt(paise: number) {
   return `₹${(paise / 100).toFixed(0)}`;
 }
 
-// ─── Specimen circle ─────────────────────────────────────────────────
-function SpecimenCircle({ specimen, index }: { specimen: typeof SPECIMENS[0]; index: number }) {
+// ─── Specimen circle (dynamic — driven by child categories) ──────────
+interface SpecimenCat { id: string; name: string; slug: string; imageUrl: string | null }
+function SpecimenCircle({ cat, index, isSelected, onClick }: { cat: SpecimenCat; index: number; isSelected: boolean; onClick: () => void }) {
+  const fallbackImg = SPECIMENS[index % SPECIMENS.length]?.img ?? "";
+  const src = cat.imageUrl || fallbackImg;
   return (
-    <div className="flex flex-col items-center group cursor-pointer">
+    <div
+      className="flex flex-col items-center group cursor-pointer"
+      onClick={onClick}
+      data-testid={`specimen-circle-${cat.slug}`}
+    >
       <div
         className="w-full aspect-square rounded-full overflow-hidden mb-4"
-        style={{ border: `1px solid ${C.outlineVariant}`, transition: "border-color 0.5s, transform 0.5s" }}
+        style={{
+          border: isSelected ? `2px solid ${C.primary}` : `1px solid ${C.outlineVariant}`,
+          transition: "border-color 0.4s, transform 0.4s",
+          boxShadow: isSelected ? `0 0 0 4px ${C.primaryFixed}` : "none",
+        }}
         onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = C.primary; (e.currentTarget as HTMLDivElement).style.transform = "scale(1.05)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = C.outlineVariant; (e.currentTarget as HTMLDivElement).style.transform = "scale(1)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = isSelected ? C.primary : C.outlineVariant; (e.currentTarget as HTMLDivElement).style.transform = "scale(1)"; }}
       >
-        <img src={specimen.img} alt={specimen.alt} loading="lazy" className="w-full h-full object-cover"
-          style={{ filter: "grayscale(100%)", transition: "filter 0.7s cubic-bezier(0.16,1,0.3,1)" }}
+        <img src={src} alt={cat.name} loading="lazy" className="w-full h-full object-cover"
+          style={{ filter: isSelected ? "grayscale(0%)" : "grayscale(100%)", transition: "filter 0.7s cubic-bezier(0.16,1,0.3,1)" }}
           onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.filter = "grayscale(0%)"}
-          onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.filter = "grayscale(100%)"} />
+          onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.filter = isSelected ? "grayscale(0%)" : "grayscale(100%)"} />
       </div>
       <span style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, display: "block", marginBottom: 4 }}>SPECIMEN {String(index + 1).padStart(2, "0")}</span>
-      <span style={{ ...LABEL_CAPS, color: C.primary, letterSpacing: "0.15em" }}>{specimen.name}</span>
+      <span style={{ ...LABEL_CAPS, color: isSelected ? C.secondary : C.primary, letterSpacing: "0.15em" }}>{cat.name.toUpperCase()}</span>
     </div>
   );
 }
@@ -258,6 +269,7 @@ export default function DogTreat() {
   const { addToCart } = useStore();
   const [, navigate] = useLocation();
   const [email, setEmail] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const heroBgRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch nav/footer settings ──────────────────────────────────────
@@ -274,22 +286,56 @@ export default function DogTreat() {
     ? deepMerge(DEFAULT_DT, dtRaw.settings) as DogTreatsSettings
     : DEFAULT_DT;
 
-  // ── Fetch products from admin-controlled category slug ─────────────
+  // ── Fetch all categories to build the Protein Library dynamically ──
+  const { data: allCatsData } = useQuery<{ categories: any[] }>({
+    queryKey: ["/api/categories"],
+  });
+
+  // The API returns a nested tree — flatten it so we can filter by parentId
+  function flattenCatTree(nodes: any[]): any[] {
+    const result: any[] = [];
+    for (const node of nodes) {
+      result.push(node);
+      if (node.children?.length) result.push(...flattenCatTree(node.children));
+    }
+    return result;
+  }
+  const allCats: any[] = flattenCatTree(allCatsData?.categories ?? []);
+
+  // Find the parent category whose children become specimen circles
+  const parentSlug = dt.proteinLibrary.parentCategorySlug || "wild-treats";
+  const parentCat = allCats.find((c: any) => c.slug === parentSlug);
+  const specimenCats: SpecimenCat[] = parentCat
+    ? allCats.filter((c: any) => c.parentId === parentCat.id && c.isActive !== false)
+      .map((c: any) => ({ id: c.id, name: c.name, slug: c.slug, imageUrl: c.imageUrl ?? null }))
+    : [];
+
+  // Toggle selection: click same to deselect, click different to select
+  const handleSpecimenClick = useCallback((catId: string) => {
+    setSelectedCategoryId(prev => prev === catId ? null : catId);
+  }, []);
+
+  // ── Fetch products (filtered by selected category if any) ──────────
   const categorySlug = dt.productSection.categorySlug || "wild-treats";
   const { data: categoryProducts = [] } = useQuery<any[]>({
-    queryKey: ["/api/products", { categorySlug, limit: 8 }],
-    queryFn: () => fetch(`/api/products?categorySlug=${encodeURIComponent(categorySlug)}&limit=8`)
-      .then(r => r.json())
-      .then(d => Array.isArray(d) ? d : (d.products ?? [])),
+    queryKey: ["/api/products", { categoryId: selectedCategoryId, categorySlug, limit: 20 }],
+    queryFn: () => {
+      if (selectedCategoryId) {
+        return fetch(`/api/products?categoryId=${encodeURIComponent(selectedCategoryId)}&limit=20`)
+          .then(r => r.json()).then(d => Array.isArray(d) ? d : (d.products ?? []));
+      }
+      return fetch(`/api/products?categorySlug=${encodeURIComponent(categorySlug)}&limit=20`)
+        .then(r => r.json()).then(d => Array.isArray(d) ? d : (d.products ?? []));
+    },
   });
 
   // If no products found in that category, fall back to general products (always have slugs)
   const { data: fallbackApiProducts = [] } = useQuery<any[]>({
-    queryKey: ["/api/products", { limit: 8 }],
-    queryFn: () => fetch(`/api/products?limit=8`)
+    queryKey: ["/api/products", { limit: 20 }],
+    queryFn: () => fetch(`/api/products?limit=20`)
       .then(r => r.json())
       .then(d => Array.isArray(d) ? d : (d.products ?? [])),
-    enabled: categoryProducts.length === 0,
+    enabled: categoryProducts.length === 0 && !selectedCategoryId,
   });
 
   const apiProducts: any[] = categoryProducts.length > 0 ? categoryProducts : fallbackApiProducts;
@@ -382,9 +428,49 @@ export default function DogTreat() {
               {dt.proteinLibrary.subtitle}
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8">
-            {SPECIMENS.map((specimen, i) => <SpecimenCircle key={specimen.id} specimen={specimen} index={i} />)}
-          </div>
+          {specimenCats.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8">
+              {specimenCats.map((cat, i) => (
+                <SpecimenCircle
+                  key={cat.id}
+                  cat={cat}
+                  index={i}
+                  isSelected={selectedCategoryId === cat.id}
+                  onClick={() => handleSpecimenClick(cat.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8">
+              {SPECIMENS.map((specimen, i) => {
+                const staticCat: SpecimenCat = { id: String(specimen.id), name: specimen.name, slug: specimen.name.toLowerCase(), imageUrl: specimen.img };
+                return (
+                  <SpecimenCircle
+                    key={specimen.id}
+                    cat={staticCat}
+                    index={i}
+                    isSelected={false}
+                    onClick={() => {}}
+                  />
+                );
+              })}
+            </div>
+          )}
+          {selectedCategoryId && (
+            <div className="mt-8 flex items-center gap-3">
+              <span style={{ ...LABEL_CAPS, color: C.outline }}>Filtering by:</span>
+              <span style={{ ...LABEL_CAPS, color: C.secondary }}>
+                {specimenCats.find(c => c.id === selectedCategoryId)?.name.toUpperCase()}
+              </span>
+              <button
+                onClick={() => setSelectedCategoryId(null)}
+                style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                data-testid="btn-clear-filter"
+              >
+                CLEAR
+              </button>
+            </div>
+          )}
         </section>
       )}
 

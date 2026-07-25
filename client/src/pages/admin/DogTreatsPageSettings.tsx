@@ -29,6 +29,7 @@ interface DogTreatsSettings {
     visible: boolean;
     title: string;
     subtitle: string;
+    parentCategorySlug: string;
   };
   wolfPrinciple: {
     visible: boolean;
@@ -79,6 +80,7 @@ const DEFAULTS: DogTreatsSettings = {
     visible: true,
     title: "The Protein Library",
     subtitle: "A comprehensive index of biological fuel sources, categorized by species and nutrient density.",
+    parentCategorySlug: "wild-treats",
   },
   wolfPrinciple: {
     visible: true,
@@ -144,6 +146,22 @@ export default function DogTreatsPageSettings() {
   const { data, isLoading } = useQuery<{ settings: Partial<DogTreatsSettings> }>({
     queryKey: ["/api/settings/dog-treats-page"],
   });
+
+  // Fetch all categories so we can show child categories live in Protein Library tab
+  const { data: allCatsData } = useQuery<{ categories: any[] }>({
+    queryKey: ["/api/categories"],
+  });
+
+  // The API returns a nested tree — flatten it for easy filtering
+  function flattenCatTree(nodes: any[]): any[] {
+    const result: any[] = [];
+    for (const node of nodes) {
+      result.push(node);
+      if (node.children?.length) result.push(...flattenCatTree(node.children));
+    }
+    return result;
+  }
+  const allCats: any[] = flattenCatTree(allCatsData?.categories ?? []);
 
   useEffect(() => {
     if (data?.settings) {
@@ -317,6 +335,70 @@ export default function DogTreatsPageSettings() {
                   <Label>Section Subtitle</Label>
                   <Textarea value={settings.proteinLibrary.subtitle} onChange={e => set("proteinLibrary", "subtitle", e.target.value)} rows={2} data-testid="input-protein-subtitle" />
                 </div>
+
+                <Separator />
+
+                <div className="space-y-1.5">
+                  <Label>Parent Category Slug</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Child categories of this category will appear as clickable specimen circles. Create sub-categories under this parent in the Categories section.
+                  </p>
+                  <Input
+                    value={settings.proteinLibrary.parentCategorySlug}
+                    onChange={e => set("proteinLibrary", "parentCategorySlug", e.target.value)}
+                    placeholder="wild-treats"
+                    data-testid="input-protein-parent-slug"
+                  />
+                </div>
+
+                {/* Live preview of detected child categories */}
+                {(() => {
+                  const parentSlug = settings.proteinLibrary.parentCategorySlug || "wild-treats";
+                  const parentCat = allCats.find((c: any) => c.slug === parentSlug);
+                  const children = parentCat
+                    ? allCats.filter((c: any) => c.parentId === parentCat.id && c.isActive !== false)
+                    : [];
+                  return (
+                    <div className="rounded-md border p-4 space-y-3 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">
+                          Detected Specimen Categories
+                          {parentCat ? (
+                            <span className="ml-2 text-xs text-muted-foreground font-normal">under "{parentCat.name}"</span>
+                          ) : (
+                            <span className="ml-2 text-xs text-destructive font-normal">— category "{parentSlug}" not found</span>
+                          )}
+                        </p>
+                        <span className="text-xs text-muted-foreground">{children.length} found</span>
+                      </div>
+                      {children.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          {children.map((c: any) => (
+                            <div key={c.id} className="flex items-center gap-3 p-2 rounded-md bg-background border">
+                              <div className="w-10 h-10 rounded-full overflow-hidden border flex-shrink-0 bg-muted">
+                                {c.imageUrl ? (
+                                  <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Image className="h-4 w-4 text-muted-foreground" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{c.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{c.slug}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          No child categories found. Go to <strong>Products → Categories</strong> and add categories with the parent set to "{parentSlug}". Each child will appear as a specimen circle with its category image.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
