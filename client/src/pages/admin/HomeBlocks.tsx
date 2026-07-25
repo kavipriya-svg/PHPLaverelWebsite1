@@ -89,19 +89,19 @@ const blockTypes = [
 ];
 
 const HOMEPAGE_LAYOUT = [
-  { num: "1", name: "Hero Banner", admin: "Homepage → Hero Banner tab" },
-  { num: "2", name: "Category Hub", admin: "Homepage → Product Sections tab" },
-  { num: "3", name: "Top Tier Fuel (Food Grid)", admin: "Homepage → Product Sections tab" },
-  { num: "4", name: "Treats Grid", admin: "Homepage → Product Sections tab" },
-  { num: "★", name: "Home Blocks (this page)", admin: "Position 0 = first, higher = lower on page", highlight: true },
-  { num: "5", name: "Ancestral Philosophy", admin: "Homepage → Brand Story tab" },
-  { num: "6", name: "Apparel for the Modern Pack", admin: "Homepage → Product Sections tab" },
-  { num: "7", name: "Wolf Principle", admin: "Homepage → Brand Story tab" },
-  { num: "8", name: "Founder's Mission", admin: "Homepage → Brand Story tab" },
-  { num: "9", name: "Gift Sets", admin: "Homepage → Gift Sets & Footer tab" },
+  { num: "1",  name: "Hero Banner — "The Modern Wolf Manual."", admin: "Homepage → Hero Banner tab" },
+  { num: "2",  name: "Category Hub — "The Core Biological Systems"", admin: "Homepage → Product Sections tab" },
+  { num: "3",  name: "Top Tier Fuel", admin: "Homepage → Product Sections tab" },
+  { num: "4",  name: "Treats", admin: "Homepage → Product Sections tab" },
+  { num: "★",  name: "Home Blocks (this page)", admin: "Position 0 = first, higher = lower on page", highlight: true },
+  { num: "5",  name: "Ancestral Precision", admin: "Homepage → Brand Story tab" },
+  { num: "6",  name: "Apparel for the Modern Pack", admin: "Homepage → Product Sections tab" },
+  { num: "7",  name: "Wolf Principle — "99% DNA Match to Wolves."", admin: "Homepage → Brand Story tab" },
+  { num: "8",  name: "Founder's Mission — "Engineering a Longer Life."", admin: "Homepage → Brand Story tab" },
+  { num: "9",  name: "Gift Sets", admin: "Homepage → Gift Sets & Footer tab" },
   { num: "10", name: "Trust Badges", admin: "Homepage → Community tab" },
-  { num: "11", name: "Community Pack", admin: "Homepage → Community tab" },
-  { num: "12", name: "Newsletter", admin: "Homepage → Community tab" },
+  { num: "11", name: "The Community Pack", admin: "Homepage → Community tab" },
+  { num: "12", name: "Newsletter — "The Dispatch"", admin: "Homepage → Community tab" },
 ];
 
 export default function AdminHomeBlocks() {
@@ -148,7 +148,7 @@ export default function AdminHomeBlocks() {
           <div>
             <h1 className="text-3xl font-bold">Home Blocks</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Dynamic sections inserted between the Treats Grid and Ancestral Philosophy on the homepage. Drag to reorder.
+              Dynamic sections inserted between "Treats" and "Ancestral Precision" on the homepage. Drag to reorder.
             </p>
           </div>
           <div className="flex gap-2">
