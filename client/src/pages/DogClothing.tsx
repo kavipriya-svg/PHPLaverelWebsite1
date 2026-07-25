@@ -1,0 +1,670 @@
+import { useState, useRef, useEffect } from "react";
+import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useStore } from "@/contexts/StoreContext";
+import { useToast } from "@/hooks/use-toast";
+import { HomeEditorialHeader as EditorialHeader, HomeEditorialFooter as EditorialFooter } from "@/components/store/HomeEditorialLayout";
+import { DEFAULT_HOMEPAGE_SETTINGS, mergeHomepageSettings } from "@/lib/homepageDefaults";
+
+// ─── Color tokens ─────────────────────────────────────────────────────────────
+const C = {
+  primary:            "#012d1d",
+  secondary:          "#944923",
+  white:              "#ffffff",
+  surface:            "#f9faf6",
+  surfaceContainer:   "#eeeeeb",
+  surfaceContainerLow:"#f3f4f0",
+  outlineVariant:     "#c1c8c2",
+  outline:            "#717973",
+  onSurface:          "#1a1c1a",
+  onSurfaceVariant:   "#414844",
+  mint:               "#a5d0b8",
+  primaryFixed:       "#c0edd4",
+  secondaryContainer: "#fe9e71",
+};
+
+const PLAYFAIR: React.CSSProperties = { fontFamily: "Playfair Display, serif" };
+const INTER: React.CSSProperties    = { fontFamily: "Inter, sans-serif" };
+const MONO: React.CSSProperties     = { fontFamily: "'Courier New', Courier, monospace" };
+const LABEL_CAPS: React.CSSProperties = {
+  ...INTER, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, textTransform: "uppercase",
+};
+
+// ─── Editorial fallback images (Google-hosted from design file) ───────────────
+const FALLBACK_IMGS = [
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuAjTqqlFE6XXYe93rUfuNPSUFmxsLRUMoNC-w75YXl31rFLrWUnc2GwjNbvbuwv7su89OEvkj5z7_YCxxKJNa4qe9qnXOtERMo00cPV-fkdRyhb_e-vhCxlsEagGsit87CJWacm6VYfwfsCkVO_SH5IjAlpPuUrMpfEHmVG10fFrFAhb_nzcTXi6SY2FJon_CFM2gVjyPYSNcYX444pPw1Q1VpCD1E82Vokvphz97ByfUCmkF9er8lyr8cUJ__s8i3xTLInsU5wBomg",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuCRjJj_zey7VwoyMm9YHeGKOJ-GU06jliagpd-Es4qTJgFbrSeEjQqeK2Xe6YDJo-p6ZWaQM3K1fnFrMiIFkqd21BtnIUT6eXFtuNuqwT6dUkaAu22-YtzPgy7gvDejzxhumISLFku-bKk4oeUAFGFi0GAZMBvJa4jpAF6ZDC8_VfwtjPNbvYlOv-WzPYO_iRCj7A33V-JoRRmX8d40RGbS-JEwKwTBdoJhlggDo0rjHnaXc2guERvyN-zHfeI3YLJt_S4-1kt2HHt4",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDsnwVlecUS2AS25pcFSrMJAeBE4GQQ-vQ7I9oNl7RRIl-QO8qsHM__qk1JT_tk8LVAvRXQGF4JtLdB6sypALn0FqLD4NTuY-B95xAP7UgY__OvqlyZZpGp_zYXcNyYFMJGn-PxPRVHevDmW_T9a-L61FLmTjUdMHREvugWnqHHLLvdigRMKUqVJ0KPBl-Jkwfj93pIHPxJb1HQf9V3oXBxxPHlJrUKbl5W04IUCwsIT5li6-r10p27Ja",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDicc9eXPgk9sKE-EHebcr6on2P2KN0sICV3PRGdIhT2LNnzDqjKQ2SXjtuXZ_TGFW-sKaEUvtGCpv6Uw0BRoLVc0iHQKDa_xBkk-QE76r9FFqSg6zUGJCkOracdZlTie32mMx1AjCxmatOyTKZRNGDb48ZKEhAEI1iL-VsJaPaQtKz_gOxRzTj9NtGhZRZfKI05pUH0L60nyQ2FPyEzwaH2Tbva76tTJeOut00Re6lE0qtUH452Y6kjvC4TrTacin-bDSH8iYD8Zve",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuBYERvfz63EpyQx0nXzUAXb_ZnPM4g9MQgMA6rfpt3oIaHVXNp20LXS3RSfsQt8It6czGJBPlnKXMCA9M4DPMItU41h8LpJHkcB1gi7E4MQsfUerOEfZ4Y36rgqDnDMTS4QKSTvLjZ6HQsBHWC52AjzxIrHLUfLVAv4HW7XDJyPocqqa4vSmi37vwK588WDnFlEWN6bXUIzzCLBIYWnaXSHw9CUyf4IZ7z9RzruDjjyKFBoipVGijIynh4rKUuNCqtEOUOjvlrX_TI-",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuBN7uCAOsNiB0pY-iOj-IM-DCAoGL6W_cWItjC0c0Y1VYhaLlxUY2aVybtcpRYePT6j-8qzCzILnXIqHJZ1fjqxRx-_PyuovJGnEID-Azp9W7E4dlpXYz_RzrfywYK4UkE_SodLdxnSVoybK4g7DiY1ChdjBNtl_i6rXwWnBQQvcNkAWQAkz5-l32YF-r5Eaid2yDgl00wfS2BQNNTCuD_y9UR33DCsC6MTQK9ScUybyKAUs_61ucCAGem83VIsV9TkunSXXfBfT_gI",
+];
+
+const HERO_IMG = "https://lh3.googleusercontent.com/aida-public/AB6AXuAVK1uXW2CxSKwmil4f_r_viweyqyByCV6tHPfJM5PdzCnZUYGWkqlS3j10VzcQreKbB9M4RoEHqENmZyEU9FjggvpJYMQ1x89bq5TdSTXpkubarXbQtHRpXRut_dyZyOrZsOpShXbkJ4wvzLkjG4hidGFP_23X6PgxJSK59fecSzHDhksuD5D_rQF5u_kY7Tv25SGW-j_Gm9ZMrCZDfjg7_WBso6tRiZ-KRExwPSwy3Ypb4s1YmUMS5I7tb9qZt7QwIEJvnEiEbnYu";
+
+// ─── Technical spec rotation (editorial data) ─────────────────────────────────
+const TECH = [
+  { thermal: "LEVEL 4", shield: "WP/3000",     durability: "ELITE",    biometric: "SYNC"    },
+  { thermal: "LEVEL 2", shield: "BR/5000",     durability: "MODULAR",  biometric: "PASSIVE" },
+  { thermal: "LEVEL 5", shield: "STORM-PROOF", durability: "MIL-SPEC", biometric: "ACTIVE"  },
+  { thermal: "LEVEL 1", shield: "HYBRID",      durability: "CARBON",   biometric: "SYNC"    },
+  { thermal: "LEVEL 3", shield: "WIND",        durability: "MODULAR",  biometric: "PASSIVE" },
+  { thermal: "LEVEL 5", shield: "POLAR",       durability: "RIPSTOP",  biometric: "SYNC"    },
+];
+
+const SPECIMEN_LETTERS = ["A", "B", "C", "S", "K", "P", "G", "N", "X"];
+
+function specimenCode(idx: number) {
+  return `SPECIMEN ${100 + idx * 103 + 4}-${SPECIMEN_LETTERS[idx % SPECIMEN_LETTERS.length]}`;
+}
+
+function fmt(paise: number) {
+  const sym = "₹";
+  return `${sym}${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
+
+// ─── Map API product → editorial card data ────────────────────────────────────
+interface EditorialProduct {
+  id: string | number;
+  slug?: string;
+  name: string;
+  price: number;
+  img: string;
+  specimen: string;
+  specs: typeof TECH[0];
+}
+
+function mapProduct(p: any, idx: number): EditorialProduct {
+  const imgs = p.images ?? [];
+  const img = imgs.find((i: any) => i.isPrimary)?.imageUrl ?? imgs[0]?.imageUrl ?? FALLBACK_IMGS[idx % FALLBACK_IMGS.length];
+  return {
+    id:       p.id,
+    slug:     p.slug,
+    name:     p.title ?? p.name ?? "Archive Collection Piece",
+    price:    Number(p.salePrice || p.price) * 100,
+    img,
+    specimen: specimenCode(idx),
+    specs:    TECH[idx % TECH.length],
+  };
+}
+
+// ─── Product card ─────────────────────────────────────────────────────────────
+function ProductCard({ product, onAddToCart }: { product: EditorialProduct; onAddToCart: () => void }) {
+  const [, navigate] = useLocation();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = () => {
+    if (cardRef.current) {
+      cardRef.current.style.boxShadow = "10px 10px 0px 0px rgba(1, 45, 29, 0.4)";
+      cardRef.current.style.transform = "translate(10px, 10px)";
+    }
+  };
+  const handleMouseLeave = () => {
+    if (cardRef.current) {
+      cardRef.current.style.boxShadow = "40px 40px 0px 0px rgba(1, 45, 29, 0.15)";
+      cardRef.current.style.transform = "translate(0px, 0px)";
+    }
+  };
+
+  const handleClick = () => {
+    if (product.slug) navigate(`/product/${product.slug}`);
+  };
+
+  return (
+    <div className="relative group" data-testid={`product-card-${product.id}`}>
+      <div
+        ref={cardRef}
+        className="aspect-[4/5] overflow-hidden mb-6 cursor-pointer"
+        style={{
+          backgroundColor: C.surfaceContainer,
+          boxShadow: "40px 40px 0px 0px rgba(1, 45, 29, 0.15)",
+          transform: "translate(0px, 0px)",
+          transition: "box-shadow 0.3s ease, transform 0.3s ease",
+        }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
+      >
+        <img
+          src={product.img}
+          alt={product.name}
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-700"
+          style={{ transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1)" }}
+          onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.05)")}
+          onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+        />
+      </div>
+
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <p style={{ ...MONO, ...LABEL_CAPS, color: C.secondary, fontSize: 10, marginBottom: 4 }}>
+            {product.specimen}
+          </p>
+          <h3
+            style={{ ...PLAYFAIR, fontSize: 28, lineHeight: "36px", fontWeight: 400, color: C.onSurface, cursor: product.slug ? "pointer" : "default" }}
+            onClick={handleClick}
+          >
+            {product.name}
+          </h3>
+        </div>
+        <p style={{ ...INTER, fontSize: 16, fontWeight: 700, color: C.primary, whiteSpace: "nowrap", paddingTop: 4 }}>
+          {fmt(product.price)}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-6" style={{ borderTop: `1px solid ${C.outlineVariant}`, paddingTop: 16 }}>
+        <div style={{ ...MONO, fontSize: 10, color: C.onSurfaceVariant }}>
+          <p>THERMAL: {product.specs.thermal}</p>
+          <p>SHIELD: {product.specs.shield}</p>
+        </div>
+        <div style={{ ...MONO, fontSize: 10, color: C.onSurfaceVariant, textAlign: "right" }}>
+          <p>DURABILITY: {product.specs.durability}</p>
+          <p>BIOMETRIC: {product.specs.biometric}</p>
+        </div>
+      </div>
+
+      <button
+        className="w-full py-4 transition-colors duration-300"
+        style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, letterSpacing: "0.2em" }}
+        onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#012d1d")}
+        onMouseLeave={e => (e.currentTarget.style.backgroundColor = C.primary)}
+        onClick={onAddToCart}
+        data-testid={`btn-add-to-cart-${product.id}`}
+      >
+        Initialize Procurement
+      </button>
+    </div>
+  );
+}
+
+// ─── Testimonials data ────────────────────────────────────────────────────────
+const TESTIMONIALS = [
+  {
+    id: "ALPHA-09",
+    rating: "5/5",
+    quote: "Not just apparel — it's a second skin for the urban environment. The thermal regulation is unparalleled in sub-zero sectors.",
+    location: "SECTOR 7",
+    env: "TEMP: -12°C",
+    span: 7,
+    large: true,
+  },
+  {
+    id: "DELTA-04",
+    rating: "5/5",
+    quote: "The knit provides a level of biometric comfort I haven't found in traditional luxury canine wear. Clinical precision meets high-fashion.",
+    location: "NORTH HUB",
+    env: "HUMIDITY: 88%",
+    span: 5,
+    large: false,
+  },
+  {
+    id: "OMEGA-12",
+    rating: "OPTIMAL",
+    quote: "The Atmospheric Puffer is the definitive solution for high-altitude exposure. A masterpiece of veterinary-grade textile science.",
+    location: "ENVIRONMENTAL LOG: PEAK-01",
+    env: "ALTITUDE: 2400M",
+    span: 6,
+    large: true,
+  },
+];
+
+// ─── Filter option ────────────────────────────────────────────────────────────
+type FilterOption = { label: string; value: string };
+const FILTER_TYPES: FilterOption[] = [
+  { label: "ALL ARCHIVES", value: "" },
+  { label: "PARKAS", value: "parka" },
+  { label: "VESTS", value: "vest" },
+  { label: "KNITS", value: "knit" },
+  { label: "ACCESSORIES", value: "accessory" },
+];
+const FILTER_SHIELDS: FilterOption[] = [
+  { label: "ALL CONDITIONS", value: "" },
+  { label: "WATERPROOF & THERMAL", value: "waterproof" },
+  { label: "WIND RESISTANT", value: "wind" },
+  { label: "POLAR GRADE", value: "polar" },
+];
+const FILTER_PATTERNS: FilterOption[] = [
+  { label: "ALL PATTERNS", value: "" },
+  { label: "MONOCHROME", value: "mono" },
+  { label: "TECHNICAL CAMO", value: "camo" },
+  { label: "GEOMETRIC", value: "geo" },
+];
+
+function FilterDropdown({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: FilterOption[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const current = options.find(o => o.value === value) ?? options[0];
+
+  return (
+    <div className="relative group cursor-pointer" onClick={() => setOpen(o => !o)}>
+      <span style={{ ...LABEL_CAPS, color: C.outline, display: "block", marginBottom: 4 }}>{label}</span>
+      <div className="flex items-center gap-2">
+        <span style={{ ...INTER, fontSize: 16, fontWeight: 600, color: C.onSurface }}>{current.label}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          style={{ color: C.onSurface, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </div>
+      {open && (
+        <div
+          className="absolute top-full left-0 z-50 min-w-[180px] mt-2"
+          style={{ backgroundColor: C.surface, border: `1px solid ${C.outlineVariant}`, boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}
+          onClick={e => e.stopPropagation()}
+        >
+          {options.map(opt => (
+            <div
+              key={opt.value}
+              className="px-4 py-3 cursor-pointer transition-colors"
+              style={{
+                ...LABEL_CAPS, fontSize: 10, color: value === opt.value ? C.primary : C.onSurfaceVariant,
+                backgroundColor: value === opt.value ? C.primaryFixed : "transparent",
+              }}
+              onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLDivElement).style.backgroundColor = C.surfaceContainer; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = value === opt.value ? C.primaryFixed : "transparent"; }}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+export default function DogClothing() {
+  const { toast } = useToast();
+  const { addToCart } = useStore();
+  const [email, setEmail] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterShield, setFilterShield] = useState("");
+  const [filterPattern, setFilterPattern] = useState("");
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  // ── Nav/footer settings ──────────────────────────────────────────────────
+  const { data: rawSettings } = useQuery<{ settings: any }>({ queryKey: ["/api/settings/homepage"] });
+  const settings = rawSettings ? mergeHomepageSettings(rawSettings.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
+
+  // ── Fetch clothing products ──────────────────────────────────────────────
+  const { data: productsData } = useQuery<any>({
+    queryKey: ["/api/products", { categorySlug: "clothing", limit: 20 }],
+    queryFn: () =>
+      fetch("/api/products?categorySlug=clothing&limit=20")
+        .then(r => r.json())
+        .then(d => Array.isArray(d) ? d : (d.products ?? [])),
+  });
+
+  const apiProducts: any[] = Array.isArray(productsData) ? productsData : [];
+
+  // ── Build editorial products (API first, fallback to placeholder) ────────
+  const allEditorial: EditorialProduct[] = apiProducts.length > 0
+    ? apiProducts.map(mapProduct)
+    : FALLBACK_IMGS.map((img, idx) => ({
+        id:       idx + 1,
+        slug:     undefined,
+        name:     ["Graphene Urban Shell", "Archive Editorial Knit", "Tactical Field Parka",
+                   "Homeostatic Vest", "Modular Neck Shield", "Atmospheric Puffer"][idx],
+        price:    [48500, 32000, 61000, 39000, 18500, 55000][idx],
+        img,
+        specimen: specimenCode(idx),
+        specs:    TECH[idx],
+      }));
+
+  const grid1 = allEditorial.slice(0, 3);
+  const grid2 = allEditorial.slice(3, 6);
+
+  // ── Parallax hero ────────────────────────────────────────────────────────
+  useEffect(() => {
+    const onScroll = () => {
+      if (heroRef.current) {
+        heroRef.current.style.transform = `translateY(${window.scrollY * 0.35}px)`;
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ── Add to cart ──────────────────────────────────────────────────────────
+  const handleAddToCart = async (product: EditorialProduct) => {
+    if (!product.slug) {
+      toast({ title: "Coming soon", description: "This piece will be available shortly." });
+      return;
+    }
+    try {
+      await addToCart({ productId: String(product.id), quantity: 1 });
+      toast({ title: "Added to dossier", description: `${product.name} has been added to your cart.` });
+    } catch {
+      toast({ title: "Error", description: "Could not add to cart.", variant: "destructive" });
+    }
+  };
+
+  const totalCount = allEditorial.length;
+
+  return (
+    <div style={{ minHeight: "100vh", backgroundColor: C.surface }}>
+      <EditorialHeader nav={settings.nav} />
+
+      {/* ════════════════════════════════════════════════════════════════
+          1. HERO BANNER
+          ════════════════════════════════════════════════════════════════ */}
+      <header
+        className="relative w-full flex items-center overflow-hidden"
+        style={{ height: "85vh", backgroundColor: C.primary }}
+      >
+        {/* Background image with parallax */}
+        <div
+          ref={heroRef}
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url('${HERO_IMG}')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.75,
+            willChange: "transform",
+          }}
+        />
+        {/* Dark gradient overlay */}
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(135deg, rgba(1,45,29,0.7) 0%, rgba(1,45,29,0.2) 60%, transparent 100%)" }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 w-full px-16 grid grid-cols-12 gap-6">
+          <div className="col-span-12 md:col-span-8 lg:col-span-6">
+            <p style={{ ...LABEL_CAPS, color: C.secondaryContainer, marginBottom: 16 }}>
+              THE TWINNING COLLECTION // SERIES 02
+            </p>
+            <h1
+              style={{
+                ...PLAYFAIR,
+                fontSize: "clamp(56px,8vw,84px)",
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
+                fontWeight: 700,
+                color: C.white,
+                marginBottom: 32,
+              }}
+            >
+              CLINICAL SYNC:<br />SERIES 02
+            </h1>
+            <p
+              style={{
+                ...INTER, fontSize: 18, fontWeight: 300, color: C.mint, maxWidth: 480, marginBottom: 40, lineHeight: 1.6,
+              }}
+            >
+              Biological precision engineered for the modern urban environment. An intersection of high-fashion and veterinary-grade textile science.
+            </p>
+            <div className="flex gap-6 flex-wrap">
+              <Link href="#collection">
+                <button
+                  className="transition-opacity duration-200"
+                  style={{ backgroundColor: C.primaryFixed, color: C.primary, ...LABEL_CAPS, letterSpacing: "0.2em", padding: "16px 40px" }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                  data-testid="btn-explore-dossier"
+                >
+                  Explore Dossier
+                </button>
+              </Link>
+              <button
+                className="transition-all duration-200"
+                style={{ border: `1px solid ${C.primaryFixed}`, color: C.primaryFixed, ...LABEL_CAPS, letterSpacing: "0.2em", padding: "16px 40px", backgroundColor: "transparent" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primaryFixed; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primaryFixed; }}
+                data-testid="btn-technical-specs"
+              >
+                Technical Specs
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress indicator */}
+        <div className="absolute bottom-0 left-0 w-full" style={{ height: 4, backgroundColor: "rgba(1,45,29,0.2)" }}>
+          <div style={{ height: "100%", width: "33%", backgroundColor: C.secondaryContainer, transition: "width 1s ease-in-out" }} />
+        </div>
+      </header>
+
+      {/* ════════════════════════════════════════════════════════════════
+          2. STICKY FILTER BAR
+          ════════════════════════════════════════════════════════════════ */}
+      <section
+        className="sticky z-40 border-b"
+        style={{ top: 72, backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "24px 64px" }}
+      >
+        <div className="flex flex-wrap justify-between items-center gap-6">
+          <div className="flex gap-12 flex-wrap">
+            <FilterDropdown
+              label="SPECIMEN TYPE"
+              options={FILTER_TYPES}
+              value={filterType}
+              onChange={setFilterType}
+            />
+            <FilterDropdown
+              label="ENVIRONMENTAL SHIELD"
+              options={FILTER_SHIELDS}
+              value={filterShield}
+              onChange={setFilterShield}
+            />
+            <FilterDropdown
+              label="PATTERN ARCHIVE"
+              options={FILTER_PATTERNS}
+              value={filterPattern}
+              onChange={setFilterPattern}
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <span style={{ ...LABEL_CAPS, color: C.outline }}>RESULTS: {totalCount} ITEMS</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+              style={{ color: C.onSurface }}>
+              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          3. PRODUCT DOSSIER GRID — SECTION 1
+          ════════════════════════════════════════════════════════════════ */}
+      <main id="collection" style={{ padding: "80px 64px" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-20">
+          {grid1.map((product, i) => (
+            <div key={product.id} style={{ marginTop: i === 1 ? "0" : "0" }}
+              className={i === 1 ? "lg:mt-24" : ""}>
+              <ProductCard product={product} onAddToCart={() => handleAddToCart(product)} />
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {/* ════════════════════════════════════════════════════════════════
+          4. BIOLOGICAL ADVANTAGE BREAK
+          ════════════════════════════════════════════════════════════════ */}
+      <section
+        className="relative overflow-hidden"
+        style={{ backgroundColor: C.primary, color: C.white, padding: "80px 64px" }}
+      >
+        {/* Decorative diagonal overlay */}
+        <div
+          className="absolute right-0 top-0 w-1/2 h-full pointer-events-none"
+          style={{ background: "linear-gradient(135deg, transparent 30%, rgba(165,208,184,0.05) 100%)" }}
+        />
+
+        <div className="grid grid-cols-12 gap-6 items-center relative z-10">
+          {/* Left: copy */}
+          <div className="col-span-12 md:col-span-6 lg:col-span-5">
+            <p style={{ ...LABEL_CAPS, color: C.primaryFixed, marginBottom: 24 }}>
+              BIOLOGICAL ADVANTAGE // DATA LOG 04
+            </p>
+            <h2
+              style={{ ...PLAYFAIR, fontSize: "clamp(28px,4vw,48px)", fontWeight: 600, color: C.white, marginBottom: 32, lineHeight: 1.15 }}
+            >
+              GRAPHENE-INFUSED HEAT DISTRIBUTION
+            </h2>
+            <p style={{ ...INTER, fontSize: 18, fontWeight: 300, color: C.outlineVariant, marginBottom: 40, lineHeight: 1.7 }}>
+              Traditional canine textiles fail at regulating micro-climates. Our patented Graphene-Sync technology utilises hexagonal carbon lattices to redistribute excess heat from the core to the extremities, maintaining a clinical 38.5°C homeostasis even in sub-zero urban environments.
+            </p>
+            <div className="flex items-center gap-12 flex-wrap">
+              <div>
+                <span style={{ ...PLAYFAIR, fontSize: 32, fontWeight: 600, display: "block", color: C.secondaryContainer }}>22%</span>
+                <span style={{ ...MONO, ...LABEL_CAPS, fontSize: 10, color: C.outlineVariant }}>CORE STABILITY INCREASE</span>
+              </div>
+              <div>
+                <span style={{ ...PLAYFAIR, fontSize: 32, fontWeight: 600, display: "block", color: C.secondaryContainer }}>0.4mm</span>
+                <span style={{ ...MONO, ...LABEL_CAPS, fontSize: 10, color: C.outlineVariant }}>MATERIAL THICKNESS</span>
+              </div>
+              <div>
+                <span style={{ ...PLAYFAIR, fontSize: 32, fontWeight: 600, display: "block", color: C.secondaryContainer }}>38.5°C</span>
+                <span style={{ ...MONO, ...LABEL_CAPS, fontSize: 10, color: C.outlineVariant }}>TARGET HOMEOSTASIS</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: lab notes card */}
+          <div className="col-span-12 md:col-start-8 md:col-span-5 hidden md:block">
+            <div
+              style={{
+                border: `1px solid rgba(192,237,212,0.3)`,
+                padding: 32,
+                backdropFilter: "blur(8px)",
+                backgroundColor: "rgba(255,255,255,0.04)",
+              }}
+            >
+              <p style={{ ...MONO, fontSize: 10, color: C.primaryFixed, marginBottom: 16 }}>
+                TRANSCRIPTION // LAB NOTES
+              </p>
+              <div className="space-y-4">
+                <div style={{ height: 1, backgroundColor: "rgba(192,237,212,0.2)", width: "100%" }} />
+                <p style={{ ...MONO, fontSize: 12, lineHeight: 1.7, color: C.outlineVariant, fontStyle: "italic" }}>
+                  "The specimen showed no signs of thermal stress during the 60-minute exposure to wind chill factor -12. Textile integrity remains 100% after modular attachment cycles."
+                </p>
+                <div style={{ height: 1, backgroundColor: "rgba(192,237,212,0.2)", width: "100%" }} />
+                <p style={{ ...MONO, fontSize: 10, textAlign: "right", color: C.primaryFixed }}>
+                  REF: VET-TECH-S2
+                </p>
+              </div>
+            </div>
+
+            {/* Secondary stat block */}
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              {[
+                { label: "WIND RESISTANCE", value: "120 KMH" },
+                { label: "WASH CYCLES", value: "500+" },
+                { label: "SIZE RANGE", value: "XS — 3XL" },
+                { label: "WARRANTY", value: "LIFETIME" },
+              ].map(s => (
+                <div key={s.label} style={{ borderTop: `1px solid rgba(192,237,212,0.2)`, paddingTop: 16 }}>
+                  <span style={{ ...MONO, fontSize: 10, color: C.outlineVariant, display: "block" }}>{s.label}</span>
+                  <span style={{ ...INTER, fontSize: 18, fontWeight: 600, color: C.primaryFixed }}>{s.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          5. PRODUCT DOSSIER GRID — SECTION 2
+          ════════════════════════════════════════════════════════════════ */}
+      <main style={{ backgroundColor: C.surfaceContainerLow, padding: "80px 64px" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-20">
+          {grid2.map((product, i) => (
+            <div key={product.id} className={i === 1 ? "lg:-mt-12" : ""}>
+              <ProductCard product={product} onAddToCart={() => handleAddToCart(product)} />
+            </div>
+          ))}
+        </div>
+
+        {/* Load more / View all */}
+        {allEditorial.length > 6 && (
+          <div className="flex justify-center mt-20">
+            <Link href="/shop">
+              <button
+                style={{ ...LABEL_CAPS, letterSpacing: "0.2em", padding: "16px 48px", border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+                className="transition-all duration-200"
+                data-testid="btn-view-all"
+              >
+                VIEW COMPLETE ARCHIVE
+              </button>
+            </Link>
+          </div>
+        )}
+      </main>
+
+      {/* ════════════════════════════════════════════════════════════════
+          6. TESTIMONIAL ARCHIVE
+          ════════════════════════════════════════════════════════════════ */}
+      <section style={{ backgroundColor: C.surface, padding: "80px 64px", borderTop: `1px solid ${C.outlineVariant}` }}>
+        <p style={{ ...MONO, ...LABEL_CAPS, color: C.secondary, marginBottom: 48 }}>
+          TESTIMONIAL ARCHIVE // SUBJECT FEEDBACK
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Primary testimonial */}
+          <div className="md:col-span-7" style={{ borderLeft: `1px solid ${C.outlineVariant}`, paddingLeft: 32, paddingTop: 16, paddingBottom: 16 }}>
+            <div className="flex justify-between items-start mb-6 flex-wrap gap-2">
+              <span style={{ ...MONO, fontSize: 10, color: C.outline }}>SUBJECT: ALPHA-09</span>
+              <span style={{ ...MONO, fontSize: 10, color: C.primary, fontWeight: 700 }}>BIOLOGICAL SATISFACTION: 5/5</span>
+            </div>
+            <blockquote style={{ ...PLAYFAIR, fontSize: 28, lineHeight: "36px", color: C.onSurface, marginBottom: 32 }}>
+              "The Graphene Urban Shell is not just apparel; it's a second skin for the urban environment. The thermal regulation is unparalleled in sub-zero sectors."
+            </blockquote>
+            <div className="flex gap-6 flex-wrap">
+              <span style={{ ...MONO, fontSize: 10, color: C.outlineVariant }}>LOCATION: SECTOR 7</span>
+              <span style={{ ...MONO, fontSize: 10, color: C.outlineVariant }}>TEMP: -12°C</span>
+            </div>
+          </div>
+
+          {/* Secondary testimonial */}
+          <div className="md:col-span-5 md:mt-24" style={{ borderLeft: `1px solid ${C.outlineVariant}`, paddingLeft: 32, paddingTop: 16, paddingBottom: 16 }}>
+            <div className="flex justify-between items-start mb-6 flex-wrap gap-2">
+              <span style={{ ...MONO, fontSize: 10, color: C.outline }}>SUBJECT: DELTA-04</span>
+              <span style={{ ...MONO, fontSize: 10, color: C.primary, fontWeight: 700 }}>LEVEL: 5/5</span>
+            </div>
+            <blockquote style={{ ...INTER, fontSize: 18, fontWeight: 300, fontStyle: "italic", color: C.onSurface, marginBottom: 24, lineHeight: 1.6 }}>
+              "The Archive Editorial Knit provides biometric comfort I haven't found in traditional luxury canine wear. Clinical precision meets high-fashion."
+            </blockquote>
+            <div className="flex gap-6 flex-wrap">
+              <span style={{ ...MONO, fontSize: 10, color: C.outlineVariant }}>LOCATION: NORTH HUB</span>
+              <span style={{ ...MONO, fontSize: 10, color: C.outlineVariant }}>HUMIDITY: 88%</span>
+            </div>
+          </div>
+
+          {/* Bottom-wide testimonial */}
+          <div className="md:col-span-6 md:col-start-4 mt-12" style={{ borderTop: `1px solid ${C.outlineVariant}`, paddingTop: 32 }}>
+            <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
+              <span style={{ ...MONO, fontSize: 10, color: C.outline }}>SUBJECT: OMEGA-12</span>
+              <span style={{ ...MONO, fontSize: 10, color: C.primary, fontWeight: 700 }}>SATISFACTION: OPTIMAL</span>
+            </div>
+            <blockquote style={{ ...PLAYFAIR, fontSize: 28, lineHeight: "36px", color: C.onSurface, marginBottom: 24 }}>
+              "The Atmospheric Puffer is the definitive solution for high-altitude exposure. A masterpiece of veterinary-grade textile science."
+            </blockquote>
+            <div className="flex gap-6 flex-wrap">
+              <span style={{ ...MONO, fontSize: 10, color: C.outlineVariant }}>ENVIRONMENTAL LOG: PEAK-01</span>
+              <span style={{ ...MONO, fontSize: 10, color: C.outlineVariant }}>ALTITUDE: 2400M</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          7. EDITORIAL FOOTER
+          ════════════════════════════════════════════════════════════════ */}
+      <EditorialFooter footer={settings.footer} email={email} onEmailChange={setEmail} />
+    </div>
+  );
+}

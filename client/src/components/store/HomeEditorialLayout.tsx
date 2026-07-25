@@ -207,7 +207,7 @@ export function HomeEditorialFooter({ footer }: { footer: HomepageSettings["foot
           <ul className="space-y-4">
             {[
               { l: "Nutrition",  h: "/shop" },
-              { l: "Apparel",    h: "/category/clothing" },
+              { l: "Dog Clothing", h: "/category/clothing" },
               { l: "Gift Sets",  h: "/shop" },
               { l: "The Pantry", h: "/shop" },
             ].map(({ l, h }) => (
