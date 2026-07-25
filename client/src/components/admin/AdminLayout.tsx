@@ -87,7 +87,6 @@ const salesItems = [
 
 const homePageItems = [
   { href: "/admin/homepage", icon: LayoutGrid, label: "Homepage" },
-  { href: "/admin/full-meal-page", icon: Dog, label: "Full Meal Page" },
   { href: "/admin/banners", icon: Image, label: "Banners" },
   { href: "/admin/home-blocks", icon: Grid3X3, label: "Home Blocks" },
   { href: "/admin/category-section", icon: Grid3X3, label: "Category Section" },
@@ -276,6 +275,22 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Full Meal</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/full-meal-page"}>
+                      <Link href="/admin/full-meal-page" data-testid="link-admin-full-meal-page">
+                        <Dog className="h-4 w-4" />
+                        <span>Full Meal Page</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
