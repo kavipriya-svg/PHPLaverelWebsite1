@@ -257,12 +257,14 @@ export default function DogTreat() {
   const heroBgRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch settings (nav + footer) ──────────────────────────────
-  const { data: rawSettings } = useQuery<any>({
+  const { data: rawSettings } = useQuery<{ settings: Partial<any> }>({
     queryKey: ["/api/settings/homepage"],
   });
-  const settings = mergeHomepageSettings(rawSettings ?? {});
-  const nav    = (settings as any).nav    ?? DEFAULT_HOMEPAGE_SETTINGS.nav;
-  const footer = (settings as any).footer ?? DEFAULT_HOMEPAGE_SETTINGS.footer;
+  const settings = rawSettings
+    ? mergeHomepageSettings(rawSettings.settings || {})
+    : DEFAULT_HOMEPAGE_SETTINGS;
+  const nav    = settings.nav;
+  const footer = settings.footer;
 
   // ── Fetch treat products from API ──────────────────────────────
   const { data: apiProducts = [] } = useQuery<any[]>({
