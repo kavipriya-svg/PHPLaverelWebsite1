@@ -764,7 +764,7 @@ export default function FullMealProductDetail() {
             <section style={{ backgroundColor: C.primary, color: "#fff" }}>
               {/* ── Section header ── */}
               <div className="px-5 md:px-16 pt-20 pb-12">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                   <div>
                     <p style={{ ...LABEL_CAPS, color: "#a5d0b8", marginBottom: 8 }}>Verified Purchasers</p>
                     <h2 style={{ ...PLAYFAIR, fontSize: "clamp(36px,5vw,56px)", fontWeight: 600, lineHeight: 1.1, color: "#fff" }}>
@@ -799,7 +799,7 @@ export default function FullMealProductDetail() {
               </div>
 
               {/* ── Bento grid ── */}
-              <div className="px-5 md:px-16 pb-20 max-w-7xl mx-auto">
+              <div className="px-5 md:px-16 pb-20">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
 
                   {/* Featured large card — col-span-5 */}
