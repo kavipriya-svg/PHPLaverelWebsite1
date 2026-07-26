@@ -349,20 +349,20 @@ export default function DogParentClothingProductDetail() {
         <AdBannerStrip banners={bs("hero", "top")} />
 
         {/* ════ HERO: IMAGE + PURCHASE PANEL ════ */}
-        <section className="px-5 md:px-16 py-16 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+        <section className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-12 items-start">
 
-            {/* ── Image gallery ── */}
-            <div className="md:col-span-7 space-y-4">
-              {/* Main image */}
+            {/* ── Image gallery — full-bleed left column ── */}
+            <div className="md:col-span-7 flex flex-col">
+              {/* Main image — no padding, fills column edge to edge */}
               <div
-                className="relative overflow-hidden"
-                style={{ aspectRatio: "4/5", backgroundColor: "#eeeeeb", ...HARD_SHADOW }}
+                style={{ paddingBottom: "125%", position: "relative", overflow: "hidden", backgroundColor: "#eeeeeb" }}
               >
                 <img
                   src={allImgs[activeImg]}
                   alt={product.title}
-                  className="w-full h-full object-cover"
+                  style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  onError={e => { const t = e.currentTarget; if (!t.dataset.fallback) { t.dataset.fallback = "1"; t.src = fallbackImg(activeImg); } }}
                 />
                 {/* Specimen ID tag */}
                 <div
@@ -381,30 +381,30 @@ export default function DogParentClothingProductDetail() {
                 )}
               </div>
               {/* Thumbnails */}
-              {allImgs.length > 1 && (
-                <div className="flex gap-3">
-                  {allImgs.slice(0, 4).map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveImg(i)}
-                      data-testid={`thumb-${i}`}
-                      className="overflow-hidden flex-1 transition-opacity"
-                      style={{
-                        aspectRatio: "1/1",
-                        opacity: activeImg === i ? 1 : 0.5,
-                        outline: activeImg === i ? `2px solid ${C.primary}` : "none",
-                        outlineOffset: 2,
-                      }}
-                    >
-                      <img src={img} alt={`view ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div className="flex gap-2 px-4 py-4" style={{ backgroundColor: "#eeeeeb" }}>
+                {allImgs.slice(0, 4).map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImg(i)}
+                    data-testid={`thumb-${i}`}
+                    className="flex-1 transition-opacity"
+                    style={{
+                      aspectRatio: "1/1",
+                      opacity: activeImg === i ? 1 : 0.45,
+                      outline: activeImg === i ? `2px solid ${C.primary}` : "none",
+                      outlineOffset: 2,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <img src={img} alt={`view ${i + 1}`} className="w-full h-full object-cover" loading="lazy"
+                      onError={e => { const t = e.currentTarget; if (!t.dataset.fallback) { t.dataset.fallback = "1"; t.src = fallbackImg(i); } }} />
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* ── Purchase panel ── */}
-            <div className="md:col-span-5 space-y-6 md:sticky md:top-28">
+            <div className="md:col-span-5 space-y-6 md:sticky md:top-28 px-8 py-16">
 
               {/* Category tag */}
               <p style={{ ...MONO, fontSize: 10, color: C.secondary, marginBottom: 4 }}>
@@ -580,9 +580,9 @@ export default function DogParentClothingProductDetail() {
 
         {/* ════ PRODUCT NARRATIVE ════ */}
         {longDescText && (
-          <section className="py-20 border-t px-5 md:px-16" style={{ borderColor: `${C.outlineVariant}33` }}>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-              <div className="md:col-span-5">
+          <section className="py-20 border-t" style={{ borderColor: `${C.outlineVariant}33` }}>
+            <div className="grid grid-cols-1 md:grid-cols-12 items-center">
+              <div className="md:col-span-5 px-8 md:px-16 py-8">
                 <h2 style={{ ...PLAYFAIR, fontSize: 48, lineHeight: "56px", fontWeight: 600, fontStyle: "italic", color: C.primary, marginBottom: 32 }}>
                   Technical Specimen Profile
                 </h2>
@@ -596,11 +596,11 @@ export default function DogParentClothingProductDetail() {
                   </p>
                 )}
               </div>
-              <div className="md:col-start-7 md:col-span-6 relative h-[500px]">
+              <div className="md:col-span-7 relative" style={{ minHeight: 500 }}>
                 <img
                   src={allImgs.length > 1 ? allImgs[1] : allImgs[0]}
                   alt={product.title}
-                  className="w-full h-full object-cover shadow-2xl"
+                  className="absolute inset-0 w-full h-full object-cover"
                   style={{ filter: "grayscale(100%)", transition: "filter 0.5s ease" }}
                   onMouseOver={e => (e.currentTarget.style.filter = "grayscale(0%)")}
                   onMouseOut={e => (e.currentTarget.style.filter = "grayscale(100%)")}
@@ -613,7 +613,7 @@ export default function DogParentClothingProductDetail() {
 
         {/* ════ TEXTILE SPECIFICATION ════ */}
         <section className="py-20" style={{ backgroundColor: "#ffffff" }}>
-          <div className="px-5 md:px-16 max-w-7xl mx-auto">
+          <div className="px-8 md:px-16">
             <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
               <div>
                 <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>TECHNICAL LOG {specimenNo(product.id)}-T</span>
@@ -782,7 +782,7 @@ export default function DogParentClothingProductDetail() {
 
         {/* ════ RELATED PRODUCTS ════ */}
         {related.length > 0 && (
-          <section className="py-20 px-5 md:px-16 border-t" style={{ borderColor: `${C.outlineVariant}33` }}>
+          <section className="py-20 px-8 md:px-16 border-t" style={{ borderColor: `${C.outlineVariant}33` }}>
             <div className="flex items-end justify-between mb-10 gap-4 flex-wrap">
               <h2 style={{ ...PLAYFAIR, fontSize: 32, color: C.primary }}>More from the Twinning Collection</h2>
               <Link href="/category/twinning">
