@@ -89,6 +89,7 @@ const AdminDogClothingAdBanners = lazy(() => import("@/pages/admin/DogClothingAd
 const AdminDogParentClothingPageSettings = lazy(() => import("@/pages/admin/DogParentClothingPageSettings"));
 const AdminDogParentClothingTestimonials = lazy(() => import("@/pages/admin/DogParentClothingTestimonials"));
 const AdminDogParentClothingAdBanners = lazy(() => import("@/pages/admin/DogParentClothingAdBanners"));
+const DogParentClothingProductDetail = lazy(() => import("@/pages/DogParentClothingProductDetail"));
 const DogTreatProductDetail = lazy(() => import("@/pages/DogTreatProductDetail"));
 const DogClothingProductDetail = lazy(() => import("@/pages/DogClothingProductDetail"));
 const SwimGroom = lazy(() => import("@/pages/SwimGroom"));
@@ -164,6 +165,12 @@ function Router() {
         <HomeLayout>
           <DogClothing />
         </HomeLayout>
+      </Route>
+
+      <Route path="/twinning/product/:slug">
+        <Suspense fallback={<PageLoader />}>
+          <DogParentClothingProductDetail />
+        </Suspense>
       </Route>
 
       <Route path="/category/twinning">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -7,7 +8,7 @@ import {
   HomeEditorialFooter as EditorialFooter,
 } from "@/components/store/HomeEditorialLayout";
 import { DEFAULT_HOMEPAGE_SETTINGS, mergeHomepageSettings } from "@/lib/homepageDefaults";
-import { ArrowRight, SlidersHorizontal, Play } from "lucide-react";
+import { ArrowRight, SlidersHorizontal, Play, ShoppingCart } from "lucide-react";
 
 // ─── Color tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -176,16 +177,16 @@ function AdBannerStrip({ banners, position }: { banners: any[]; position: "top" 
 
 // ─── Editorial product card ───────────────────────────────────────────────────
 function ProductCard({
-  id, img, name, price, tag, biometric, thermal, onAdd,
+  id, slug, img, name, price, tag, biometric, thermal, onAdd,
 }: {
-  id: string; img: string; name: string; price: string; tag: string;
+  id: string; slug?: string; img: string; name: string; price: string; tag: string;
   biometric: number; thermal: number; onAdd?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div className="flex flex-col group">
       <div
-        className="relative overflow-visible mb-8 transition-transform duration-500"
+        className="relative overflow-visible mb-8"
         style={{
           aspectRatio: "4/5",
           backgroundColor: C.surfaceContainerLow,
@@ -214,17 +215,36 @@ function ProductCard({
           <MetricBar label="BIOMETRIC SYNC" value={biometric} />
           <MetricBar label="THERMAL LEVEL" value={thermal} />
         </div>
-        <button
-          onClick={onAdd}
-          data-testid={`btn-procure-${id}`}
-          className="w-full flex justify-between items-center px-6 py-4 transition-all duration-200"
-          style={{ border: `1px solid ${C.primary}`, ...LABEL_CAPS, color: C.primary, backgroundColor: "transparent" }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
-        >
-          <span>PROCURE SET</span>
-          <ArrowRight size={14} />
-        </button>
+        {/* Action buttons */}
+        <div className="flex gap-3">
+          {/* Add to Cart */}
+          <button
+            onClick={onAdd}
+            data-testid={`btn-add-to-cart-${id}`}
+            className="flex-1 flex justify-center items-center gap-2 px-4 py-4 transition-all duration-200"
+            style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, border: `1px solid ${C.primary}` }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#264e3c"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; }}
+          >
+            <ShoppingCart size={13} />
+            <span>Add to Cart</span>
+          </button>
+          {/* View Specimen */}
+          {slug ? (
+            <Link href={`/twinning/product/${slug}`}>
+              <button
+                data-testid={`btn-view-specimen-${id}`}
+                className="flex items-center justify-center gap-2 px-4 py-4 transition-all duration-200"
+                style={{ border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+              >
+                <span>View Specimen</span>
+                <ArrowRight size={13} />
+              </button>
+            </Link>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -277,12 +297,14 @@ export default function DogParentClothing() {
     if (products.length > 0) {
       return products.map((p: any) => ({
         id: p.sku || String(p.id),
+        slug: p.slug,
         img: p.images?.[0]?.url || FALLBACK_PRODUCTS[0].img,
         name: p.title,
         price: `₹${parseFloat(p.price).toFixed(2)}`,
         tag: p.shortDesc || "CANINE + HUMAN DUAL SYSTEM",
         biometric: 80,
         thermal: 80,
+        productId: p.id,
       }));
     }
     return FALLBACK_PRODUCTS.slice(fallbackStart, fallbackStart + perGrid);
@@ -294,8 +316,11 @@ export default function DogParentClothing() {
 
   const totalCount = allApiProducts.length > 0 ? allApiProducts.length : FALLBACK_PRODUCTS.length;
 
-  function handleAddToCart(name: string) {
-    toast({ title: `${name} added to cart` });
+  function handleAddToCart(product: any) {
+    if (product.productId) {
+      addToCart?.({ productId: product.productId, quantity: 1 });
+    }
+    toast({ title: `${product.name} added to cart` });
   }
 
   const selectStyle: React.CSSProperties = {
@@ -413,7 +438,7 @@ export default function DogParentClothing() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {grid1.map((p, i) => (
-                <ProductCard key={p.id || i} id={p.id} img={p.img} name={p.name} price={p.price} tag={p.tag} biometric={p.biometric} thermal={p.thermal} onAdd={() => handleAddToCart(p.name)} />
+                <ProductCard key={p.id || i} id={p.id} slug={p.slug} img={p.img} name={p.name} price={p.price} tag={p.tag} biometric={p.biometric} thermal={p.thermal} onAdd={() => handleAddToCart(p)} />
               ))}
             </div>
           </section>
@@ -600,7 +625,7 @@ export default function DogParentClothing() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {grid2.map((p, i) => (
-                <ProductCard key={p.id || i} id={p.id} img={p.img} name={p.name} price={p.price} tag={p.tag} biometric={p.biometric} thermal={p.thermal} onAdd={() => handleAddToCart(p.name)} />
+                <ProductCard key={p.id || i} id={p.id} slug={p.slug} img={p.img} name={p.name} price={p.price} tag={p.tag} biometric={p.biometric} thermal={p.thermal} onAdd={() => handleAddToCart(p)} />
               ))}
             </div>
           </section>
