@@ -50,23 +50,31 @@ const EMPTY_FORM: FormState = {
 };
 
 const SECTION_OPTIONS = [
-  { group: "Dog Clothing Page (/category/clothing)", options: [
-    { value: "hero",        label: "Hero Banner" },
-    { value: "products-1",  label: "First Products Grid" },
-    { value: "bio",         label: "Biological Advantage" },
-    { value: "products-2",  label: "Second Products Grid" },
-    { value: "testimonials",label: "Testimonials" },
+  { group: "Category Page (/category/clothing)", options: [
+    { value: "hero",          label: "① Hero — Clinical Sync Series (top of page)" },
+    { value: "products-1",    label: "③ Product Dossier Grid — Block 1 (first grid)" },
+    { value: "bio",           label: "④ Biological Advantage (dark break section)" },
+    { value: "products-2",    label: "⑤ Product Dossier Grid — Block 2 (second grid)" },
+    { value: "testimonials",  label: "⑥ Testimonial Archive (subject feedback)" },
+  ]},
+  { group: "Product Detail Page (/clothing/product/:slug)", options: [
+    { value: "detail-hero",         label: "① Product Hero (top of detail page)" },
+    { value: "detail-spec",         label: "② After Textile Spec Section" },
+    { value: "detail-testimonials", label: "③ After Testimonial Archive" },
   ]},
 ];
 
 const ALL_SECTION_OPTIONS = SECTION_OPTIONS.flatMap(g => g.options);
 
 const PLACEMENT_LABELS: Record<string, string> = {
-  "hero":         "Hero Banner",
-  "products-1":   "First Products Grid",
-  "bio":          "Biological Advantage",
-  "products-2":   "Second Products Grid",
-  "testimonials": "Testimonials",
+  "hero":                 "Hero — Clinical Sync Series",
+  "products-1":           "Product Dossier Grid — Block 1",
+  "bio":                  "Biological Advantage",
+  "products-2":           "Product Dossier Grid — Block 2",
+  "testimonials":         "Testimonial Archive",
+  "detail-hero":          "Detail — Product Hero",
+  "detail-spec":          "Detail — After Textile Spec",
+  "detail-testimonials":  "Detail — After Testimonials",
 };
 
 function getYouTubeId(url: string): string | null {

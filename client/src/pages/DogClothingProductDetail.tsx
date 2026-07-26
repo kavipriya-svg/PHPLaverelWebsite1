@@ -159,7 +159,7 @@ export default function DogClothingProductDetail() {
     queryKey: ["/api/dog-clothing-ad-banners"],
   });
   const bs = (section: string, pos: string) =>
-    adBanners.filter((b: any) => b.isActive && (b.placement === section || b.placement === "both") && b.position === pos);
+    adBanners.filter((b: any) => b.isActive && (b.placement === `detail-${section}` || b.placement === "both") && b.position === pos);
 
   const { data: canReviewData } = useQuery<{ canReview: boolean }>({
     queryKey: ["/api/products", product?.id, "can-review"],
