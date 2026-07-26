@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { ShoppingBag, Menu, X, Search, Globe, Camera, PlayCircle } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, Globe, Camera, PlayCircle, PackageSearch } from "lucide-react";
 import type { HomepageSettings } from "@/lib/homepageDefaults";
 
 const C = {
@@ -113,6 +113,20 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
         </Link>
 
         {!searchOpen && (
+          <Link href="/track-order">
+            <button
+              className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+              aria-label="Track Order"
+              title="Track Order"
+              data-testid="link-track-order-header"
+              style={{ color: C.onSurface }}
+            >
+              <PackageSearch className="w-5 h-5" />
+            </button>
+          </Link>
+        )}
+
+        {!searchOpen && (
           <button
             className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
             onClick={handleSearchOpen}
@@ -172,6 +186,16 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
               </span>
             </Link>
           ))}
+          <Link href="/track-order">
+            <span
+              className="font-playfair text-headline-md cursor-pointer"
+              style={{ color: C.primary }}
+              onClick={() => setMenuOpen(false)}
+              data-testid="link-track-order-mobile"
+            >
+              Track Order
+            </span>
+          </Link>
 
           <Link href={nav.ctaHref}>
             <button

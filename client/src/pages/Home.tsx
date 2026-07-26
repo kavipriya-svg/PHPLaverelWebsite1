@@ -5,7 +5,7 @@ import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   ShoppingBag, Plus, ShieldCheck, FlaskConical, Leaf, Droplets,
-  PawPrint, Globe, Camera, PlayCircle, Quote, Menu, X, Search,
+  PawPrint, Globe, Camera, PlayCircle, Quote, Menu, X, Search, PackageSearch,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import {
@@ -181,6 +181,21 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
           </button>
         </Link>
 
+        {/* Track Order icon (desktop) */}
+        {!searchOpen && (
+          <Link href="/track-order">
+            <button
+              className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+              aria-label="Track Order"
+              title="Track Order"
+              data-testid="link-track-order-header"
+              style={{ color: C.onSurface }}
+            >
+              <PackageSearch className="w-5 h-5" />
+            </button>
+          </Link>
+        )}
+
         {/* Search icon (desktop) */}
         {!searchOpen && (
           <button
@@ -242,6 +257,16 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
               </span>
             </Link>
           ))}
+          <Link href="/track-order">
+            <span
+              className="font-playfair text-headline-md cursor-pointer"
+              style={{ color: C.primary }}
+              onClick={() => setMenuOpen(false)}
+              data-testid="link-track-order-mobile"
+            >
+              Track Order
+            </span>
+          </Link>
           <Link href={nav.ctaHref}>
             <button
               className="font-inter text-label-caps uppercase tracking-widest px-6 py-3 w-fit cursor-pointer"
