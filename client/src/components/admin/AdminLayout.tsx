@@ -421,6 +421,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     </p>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/gift-services-page-settings"}>
+                      <Link href="/admin/gift-services-page-settings" data-testid="link-admin-gift-services-page-settings">
+                        <Settings className="h-4 w-4" />
+                        <span>Page Settings</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={location === "/admin/dog-gift-series-testimonials"}>
                       <Link href="/admin/dog-gift-series-testimonials" data-testid="link-admin-dog-gift-series-testimonials">
                         <Star className="h-4 w-4" />

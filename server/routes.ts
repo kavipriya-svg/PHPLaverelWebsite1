@@ -7236,6 +7236,25 @@ Sitemap: ${baseUrl}/sitemap.xml`;
   });
 
   // ── Dog Parent Clothing Page Settings ────────────────────────────────────
+  // ── Gift Services Page Settings ───────────────────────────────────────────
+  app.get("/api/settings/gift-services-page", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("gift-services-page");
+      res.json(setting ? JSON.parse(setting.value) : {});
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  app.put("/api/settings/gift-services-page", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSetting({ key: "gift-services-page", value: JSON.stringify(req.body) });
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update settings" });
+    }
+  });
+
   app.get("/api/settings/dog-parent-clothing-page", async (req, res) => {
     try {
       const setting = await storage.getSetting("dog-parent-clothing-page");
