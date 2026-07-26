@@ -166,9 +166,36 @@ export default function DogParentClothingProductDetail() {
   });
 
   // Dog Parent Clothing testimonials (admin-managed)
-  const { data: testimonials = [] } = useQuery<any[]>({
+  const { data: rawTestimonials = [] } = useQuery<any[]>({
     queryKey: ["/api/dog-parent-clothing-testimonials"],
   });
+
+  // Static fallback testimonials shown when no admin testimonials exist
+  const STATIC_TESTIMONIALS = [
+    {
+      id: "st-1", subjectCode: "LAB-001", satisfactionLabel: "EXCEEDED",
+      mediaUrl: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&auto=format&fit=crop",
+      mediaType: "image",
+      quote: "The BioSync technology is real. My Labrador and I have never moved with such synchronized energy. The thermal comfort is unmatched on our morning runs.",
+      location: "Mumbai", envData: "TEMP: 28°C / HUMID: 75%",
+    },
+    {
+      id: "st-2", subjectCode: "HUS-042", satisfactionLabel: "OUTSTANDING",
+      mediaUrl: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&auto=format&fit=crop",
+      mediaType: "image",
+      quote: "The graphene-infused material genuinely adapts to my Husky's body temperature. On our Himalayan trek it was a complete game-changer. Worth every rupee.",
+      location: "Bengaluru", envData: "ALTITUDE: 3200m / WIND: 40kmph",
+    },
+    {
+      id: "st-3", subjectCode: "DOB-017", satisfactionLabel: "EXCEEDED",
+      mediaUrl: "https://images.unsplash.com/photo-1534361960057-19f073a9dee3?w=600&auto=format&fit=crop",
+      mediaType: "image",
+      quote: "Matching outfits that actually look editorial. My Doberman gets stopped on every walk. The build quality holds after 6 months of daily use — zero compromise.",
+      location: "Delhi", envData: "URBAN / DAILY ACTIVE",
+    },
+  ];
+
+  const testimonials = rawTestimonials.length > 0 ? rawTestimonials : STATIC_TESTIMONIALS;
 
   // Dog Parent Clothing ad banners
   const { data: adBanners = [] } = useQuery<any[]>({
