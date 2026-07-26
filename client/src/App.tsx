@@ -152,7 +152,9 @@ function Router() {
       </Route>
       
       <Route path="/clothing/product/:slug">
-        <DogClothingProductDetail />
+        <Suspense fallback={<PageLoader />}>
+          <DogClothingProductDetail />
+        </Suspense>
       </Route>
       <Route path="/category/clothing">
         <HomeLayout>
