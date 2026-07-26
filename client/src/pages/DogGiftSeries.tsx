@@ -101,7 +101,7 @@ const STATIC_TESTIMONIALS = [
 ];
 
 // ─── Category ID for Gift Series products ─────────────────────────────────────
-const GIFT_SERIES_CATEGORY_ID = "90bfbd9f-a163-4612-88d5-79dc1e782591";
+const GIFT_SERIES_CATEGORY_ID = "02edbc27-d6ff-4691-a1b8-00358b7d94b4";
 
 // ─── Scroll-reveal hook ────────────────────────────────────────────────────────
 function useReveal<T extends HTMLElement>(): [React.RefObject<T>, boolean] {
@@ -465,10 +465,10 @@ function RelatedProductsSection({ products, banners }: { products: any[]; banner
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <span style={{ ...LABEL_CAPS, color: C.secondary, display: "block", marginBottom: 16 }}>
-              Dog Parent Clothing
+              Gift Services
             </span>
             <h2 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", color: C.primary, fontWeight: 600 }}>
-              Synchronize Your Style
+              More From the Vault
             </h2>
             <div style={{ height: 1, width: 64, backgroundColor: C.secondary, margin: "24px auto 0" }} />
           </div>
@@ -500,7 +500,7 @@ function RelatedProductsSection({ products, banners }: { products: any[]; banner
                     </div>
                     <div style={{ padding: "20px 16px" }}>
                       <p style={{ ...MONO, fontSize: 10, color: C.outline, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-                        Dog Parent Clothing
+                        Gift Services
                       </p>
                       <h3 style={{ ...PLAYFAIR, fontSize: 18, color: C.primary, fontWeight: 600, marginBottom: 10 }}>
                         {p.title}
@@ -541,7 +541,7 @@ function RelatedProductsSection({ products, banners }: { products: any[]; banner
                 onMouseOver={e => { e.currentTarget.style.opacity = "0.8"; }}
                 onMouseOut={e => { e.currentTarget.style.opacity = "1"; }}
               >
-                Explore All Dog Parent Clothing <ArrowRight size={14} />
+                Explore All Gift Services <ArrowRight size={14} />
               </button>
             </Link>
           </div>
@@ -576,7 +576,7 @@ export default function DogGiftSeries() {
   });
   const settings = rawSettings ? mergeHomepageSettings(rawSettings.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
 
-  // Fetch products from Dog Parent Clothing category
+  // Fetch products from Gift Services category
   const { data: productsData, isLoading: productsLoading } = useQuery<{ products: any[] }>({
     queryKey: ["/api/products", `categoryId=${GIFT_SERIES_CATEGORY_ID}&limit=20`],
     queryFn: async () => {
@@ -698,7 +698,7 @@ export default function DogGiftSeries() {
             <div style={{ maxWidth: 480, margin: "0 auto" }}>
               <span style={{ ...LABEL_CAPS, color: C.secondary, display: "block", marginBottom: 16 }}>No Dossiers Found</span>
               <p style={{ ...INTER, color: C.onSurfaceVariant, fontSize: 16 }}>
-                Upload products in the admin panel with the Dog Parent Clothing category to populate this section.
+                Upload products in the admin panel with the "Gift Services" category to populate this section.
               </p>
             </div>
           </section>

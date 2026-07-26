@@ -146,7 +146,7 @@ export default function DogGiftSeriesAdBanners() {
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
-            <h1 className="text-2xl font-bold">Dog Gift Series — Ad Banners</h1>
+            <h1 className="text-2xl font-bold">Gift Services — Ad Banners</h1>
             <p className="text-muted-foreground text-sm mt-1">Promotional banners placed in specific sections of the <code>/giftseries</code> page</p>
           </div>
           <Button onClick={openNew} data-testid="button-add-banner">

@@ -417,7 +417,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Dog Gift Series
+                      Gift Services
                     </p>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
