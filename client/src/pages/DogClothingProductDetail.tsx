@@ -30,11 +30,28 @@ const PLAYFAIR: React.CSSProperties = { fontFamily: "'Playfair Display', serif" 
 const LABEL_CAPS: React.CSSProperties = { fontFamily: "'Inter', sans-serif", fontSize: 11, lineHeight: "16px", letterSpacing: "0.15em", fontWeight: 700, textTransform: "uppercase" };
 const HARD_SHADOW: React.CSSProperties = { boxShadow: "40px 40px 0px 0px rgba(1,45,29,0.15)" };
 
+// ─── Curated fallback images (dog clothing lifestyle shots) ──────────────────
+const CLOTHING_IMGS = [
+  "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=900&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=900&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1583511655826-05700d52f4d9?w=900&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=900&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=900&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1558788353-f76d92427f16?w=900&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=900&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=900&auto=format&fit=crop",
+];
+function fallbackImg(idx: number) { return CLOTHING_IMGS[idx % CLOTHING_IMGS.length]; }
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getImg(product: any, idx = 0): string {
   const imgs = product?.images || product?.productImages || [];
   const img = imgs[idx];
   return img?.url || img?.imageUrl || (idx === 0 ? product?.imageUrl || "" : "");
+}
+function getProductImg(product: any, idx = 0): string {
+  const raw = getImg(product, idx);
+  return raw || fallbackImg(idx);
 }
 function stripHtml(html = "") { return html.replace(/<[^>]+>/g, "").trim(); }
 function specimenNo(id: string | number) {
@@ -223,7 +240,19 @@ export default function DogClothingProductDetail() {
 
   // ── Derived values ────────────────────────────────────────────────────────
   const images = product.images || [];
-  const allImgs: string[] = images.length > 0 ? images.map((i: any) => i.url || i.imageUrl || "") : [getImg(product)];
+  // Build image list, always guarantee at least 4 images by padding with curated fallbacks
+  const rawImgs: string[] = images.length > 0
+    ? images.map((i: any) => i.url || i.imageUrl || "").filter(Boolean)
+    : [];
+  const baseImg = rawImgs[0] || fallbackImg(0);
+  const allImgs: string[] = rawImgs.length >= 4
+    ? rawImgs
+    : [
+        baseImg,
+        rawImgs[1] || fallbackImg(1),
+        rawImgs[2] || fallbackImg(2),
+        rawImgs[3] || fallbackImg(3),
+      ];
 
   const variants = product.variants || [];
   const selectedVariant = variants.find((v: any) => String(v.id) === selectedVariantId);
@@ -588,38 +617,58 @@ export default function DogClothingProductDetail() {
         {/* ════ TECHNICAL SPEC ════ */}
         <section className="py-20" style={{ backgroundColor: "#ffffff" }}>
           <div className="px-5 md:px-16 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
               <div>
                 <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>TECHNICAL LOG {specimenNo(product.id)}-A</span>
                 <h2 style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>Textile Specification</h2>
               </div>
               <p style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, borderBottom: `1px solid ${C.primary}`, paddingBottom: 4 }}>Laboratory Verified Content</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Performance Profile (%)</h3>
-                <div className="space-y-8">
-                  {[["THERMAL RETENTION", 92], ["WIND RESISTANCE", 88], ["MOISTURE BARRIER", 95], ["DURABILITY INDEX", 97]].map(([label, val]) => (
-                    <div key={String(label)}>
-                      <div className="flex justify-between mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>
-                        <span>{label}</span><span>{val}%</span>
-                      </div>
-                      <div className="w-full h-0.5" style={{ backgroundColor: `${C.outlineVariant}4D` }}>
-                        <div className="h-full transition-all duration-1000" style={{ width: `${val}%`, backgroundColor: "#fe9e71" }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              {/* Lifestyle image */}
+              <div className="md:col-span-1 overflow-hidden" style={{ aspectRatio: "3/4" }}>
+                <img
+                  src={allImgs[2]}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
-              <div className="space-y-6">
-                <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Material Data</h3>
-                <div className="grid grid-cols-2 gap-y-8 gap-x-12">
-                  {[["GRAPHENE", "Active"], ["WASH CYCLES", "500+"], ["SIZE RANGE", "XS–3XL"], ["WARRANTY", "Lifetime"]].map(([label, value]) => (
-                    <div key={label} className="pl-4" style={{ borderLeft: `2px solid ${C.primaryContainer}` }}>
-                      <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.onSurfaceVariant }}>{label}</p>
-                      <p style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>{value}</p>
-                    </div>
-                  ))}
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-12 content-start">
+                <div className="space-y-6">
+                  <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Performance Profile (%)</h3>
+                  <div className="space-y-8">
+                    {[["THERMAL RETENTION", 92], ["WIND RESISTANCE", 88], ["MOISTURE BARRIER", 95], ["DURABILITY INDEX", 97]].map(([label, val]) => (
+                      <div key={String(label)}>
+                        <div className="flex justify-between mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>
+                          <span>{label}</span><span>{val}%</span>
+                        </div>
+                        <div className="w-full h-0.5" style={{ backgroundColor: `${C.outlineVariant}4D` }}>
+                          <div className="h-full transition-all duration-1000" style={{ width: `${val}%`, backgroundColor: "#fe9e71" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Material Data</h3>
+                  <div className="grid grid-cols-2 gap-y-8 gap-x-12">
+                    {[["GRAPHENE", "Active"], ["WASH CYCLES", "500+"], ["SIZE RANGE", "XS–3XL"], ["WARRANTY", "Lifetime"]].map(([label, value]) => (
+                      <div key={label} className="pl-4" style={{ borderLeft: `2px solid ${C.primaryContainer}` }}>
+                        <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.onSurfaceVariant }}>{label}</p>
+                        <p style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Secondary lifestyle image below material data */}
+                  <div className="overflow-hidden mt-4" style={{ aspectRatio: "16/9" }}>
+                    <img
+                      src={allImgs[3]}
+                      alt={`${product.title} detail`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -652,8 +701,17 @@ export default function DogClothingProductDetail() {
 
               {/* Editorial testimonial cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {testimonials.slice(0, 6).map((t: any) => (
+                {testimonials.slice(0, 6).map((t: any, ti: number) => (
                   <div key={t.id} className="flex flex-col" style={{ border: `1px solid ${C.outlineVariant}4D`, backgroundColor: "#fff" }}>
+                    {/* Subject photo */}
+                    <div className="w-full overflow-hidden" style={{ aspectRatio: "3/2" }}>
+                      <img
+                        src={t.imageUrl || fallbackImg(ti + 2)}
+                        alt={`Subject ${t.subjectCode}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
                     <div className="flex flex-col gap-4 p-6">
                       <div className="flex justify-between items-start flex-wrap gap-2">
                         <span style={{ ...MONO, fontSize: 10, color: "#717973" }}>SUBJECT: {t.subjectCode}</span>
@@ -729,9 +787,9 @@ export default function DogClothingProductDetail() {
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {related.map((p: any) => {
+              {related.map((p: any, ri: number) => {
                 const imgs = p.images || [];
-                const imgUrl = imgs.find((i: any) => i.isPrimary)?.imageUrl || imgs[0]?.imageUrl || "";
+                const imgUrl = imgs.find((i: any) => i.isPrimary)?.url || imgs[0]?.url || imgs[0]?.imageUrl || fallbackImg(ri + 4);
                 const price = p.salePrice || p.price;
                 return (
                   <Link key={p.id} href={`/clothing/product/${p.slug}`}>
