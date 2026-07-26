@@ -36,6 +36,7 @@ const Login = lazy(() => import("@/pages/Login"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const DogGiftSeries = lazy(() => import("@/pages/DogGiftSeries"));
+const DogGiftSeriesProductDetail = lazy(() => import("@/pages/DogGiftSeriesProductDetail"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
@@ -378,6 +379,12 @@ function Router() {
         <StoreLayout>
           <BlogPost />
         </StoreLayout>
+      </Route>
+
+      <Route path="/giftseries/product/:slug">
+        <Suspense fallback={<PageLoader />}>
+          <DogGiftSeriesProductDetail />
+        </Suspense>
       </Route>
 
       <Route path="/giftseries">
