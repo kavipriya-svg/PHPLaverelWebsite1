@@ -7351,5 +7351,102 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  // ── Dog Gift Series Testimonials (public) ─────────────────────────────────
+  app.get("/api/dog-gift-series-testimonials", async (req, res) => {
+    try {
+      const items = await storage.getDogGiftSeriesTestimonials(true);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch testimonials" });
+    }
+  });
+
+  // ── Dog Gift Series Testimonials (admin) ──────────────────────────────────
+  app.get("/api/admin/dog-gift-series-testimonials", isAdmin, async (req, res) => {
+    try {
+      const items = await storage.getDogGiftSeriesTestimonials(false);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch testimonials" });
+    }
+  });
+
+  app.post("/api/admin/dog-gift-series-testimonials", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createDogGiftSeriesTestimonial(req.body);
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create testimonial" });
+    }
+  });
+
+  app.put("/api/admin/dog-gift-series-testimonials/:id", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateDogGiftSeriesTestimonial(req.params.id, req.body);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update testimonial" });
+    }
+  });
+
+  app.delete("/api/admin/dog-gift-series-testimonials/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteDogGiftSeriesTestimonial(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete testimonial" });
+    }
+  });
+
+  // ── Dog Gift Series Ad Banners (public) ───────────────────────────────────
+  app.get("/api/dog-gift-series-ad-banners", async (req, res) => {
+    try {
+      const placement = req.query.placement as string | undefined;
+      const items = await storage.getDogGiftSeriesAdBanners(true, placement);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch ad banners" });
+    }
+  });
+
+  // ── Dog Gift Series Ad Banners (admin) ────────────────────────────────────
+  app.get("/api/admin/dog-gift-series-ad-banners", isAdmin, async (req, res) => {
+    try {
+      const items = await storage.getDogGiftSeriesAdBanners(false);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch ad banners" });
+    }
+  });
+
+  app.post("/api/admin/dog-gift-series-ad-banners", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createDogGiftSeriesAdBanner(req.body);
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create ad banner" });
+    }
+  });
+
+  app.put("/api/admin/dog-gift-series-ad-banners/:id", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateDogGiftSeriesAdBanner(req.params.id, req.body);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update ad banner" });
+    }
+  });
+
+  app.delete("/api/admin/dog-gift-series-ad-banners/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteDogGiftSeriesAdBanner(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete ad banner" });
+    }
+  });
+
   return httpServer;
 }

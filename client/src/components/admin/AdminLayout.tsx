@@ -417,6 +417,27 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Dog Gift Series
+                    </p>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/dog-gift-series-testimonials"}>
+                      <Link href="/admin/dog-gift-series-testimonials" data-testid="link-admin-dog-gift-series-testimonials">
+                        <Star className="h-4 w-4" />
+                        <span>Testimonials</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/dog-gift-series-ad-banners"}>
+                      <Link href="/admin/dog-gift-series-ad-banners" data-testid="link-admin-dog-gift-series-ad-banners">
+                        <Layers className="h-4 w-4" />
+                        <span>Ad Banners</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                       Others
                     </p>
                   </SidebarMenuItem>

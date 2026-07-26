@@ -1785,3 +1785,44 @@ export const insertDogParentClothingAdBannerSchema = createInsertSchema(dogParen
 });
 export type InsertDogParentClothingAdBanner = z.infer<typeof insertDogParentClothingAdBannerSchema>;
 export type DogParentClothingAdBanner = typeof dogParentClothingAdBanners.$inferSelect;
+
+// ─── Dog Gift Series Testimonials ─────────────────────────────────────────────
+export const dogGiftSeriesTestimonials = pgTable("dog_gift_series_testimonials", {
+  id:                varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  subjectCode:       varchar("subject_code",       { length: 50  }).notNull().default("GS-000"),
+  satisfactionLabel: varchar("satisfaction_label", { length: 50  }).notNull().default("5/5"),
+  quote:             text("quote").notNull(),
+  location:          varchar("location",           { length: 100 }),
+  envData:           varchar("env_data",           { length: 100 }),
+  mediaType:         varchar("media_type",         { length: 20  }).default("none"),
+  mediaUrl:          text("media_url"),
+  isActive:          boolean("is_active").notNull().default(true),
+  sortOrder:         integer("sort_order").notNull().default(0),
+  createdAt:         timestamp("created_at").defaultNow(),
+});
+export const insertDogGiftSeriesTestimonialSchema = createInsertSchema(dogGiftSeriesTestimonials).omit({
+  id: true, createdAt: true,
+});
+export type InsertDogGiftSeriesTestimonial = z.infer<typeof insertDogGiftSeriesTestimonialSchema>;
+export type DogGiftSeriesTestimonial = typeof dogGiftSeriesTestimonials.$inferSelect;
+
+// ─── Dog Gift Series Ad Banners ───────────────────────────────────────────────
+export const dogGiftSeriesAdBanners = pgTable("dog_gift_series_ad_banners", {
+  id:        varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title:     varchar("title",    { length: 255  }),
+  subtitle:  varchar("subtitle", { length: 500  }),
+  ctaText:   varchar("cta_text", { length: 100  }),
+  ctaUrl:    varchar("cta_url",  { length: 1024 }),
+  mediaType: varchar("media_type", { length: 10   }).notNull().default("image"),
+  mediaUrl:  varchar("media_url",  { length: 1024 }).notNull(),
+  placement: varchar("placement",  { length: 30   }).notNull().default("hero"),
+  position:  varchar("position",   { length: 20   }).notNull().default("bottom"),
+  isActive:  boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export const insertDogGiftSeriesAdBannerSchema = createInsertSchema(dogGiftSeriesAdBanners).omit({
+  id: true, createdAt: true,
+});
+export type InsertDogGiftSeriesAdBanner = z.infer<typeof insertDogGiftSeriesAdBannerSchema>;
+export type DogGiftSeriesAdBanner = typeof dogGiftSeriesAdBanners.$inferSelect;
