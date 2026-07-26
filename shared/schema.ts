@@ -1710,6 +1710,8 @@ export const dogClothingTestimonials = pgTable("dog_clothing_testimonials", {
   quote:              text("quote").notNull(),
   location:           varchar("location",            { length: 100 }),
   envData:            varchar("env_data",            { length: 100 }),
+  mediaType:          varchar("media_type",          { length: 20  }).default("image"),
+  mediaUrl:           text("media_url"),
   isActive:           boolean("is_active").notNull().default(true),
   sortOrder:          integer("sort_order").notNull().default(0),
   createdAt:          timestamp("created_at").defaultNow(),

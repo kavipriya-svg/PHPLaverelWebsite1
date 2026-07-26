@@ -703,14 +703,22 @@ export default function DogClothingProductDetail() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {testimonials.slice(0, 6).map((t: any, ti: number) => (
                   <div key={t.id} className="flex flex-col" style={{ border: `1px solid ${C.outlineVariant}4D`, backgroundColor: "#fff" }}>
-                    {/* Subject photo */}
+                    {/* Subject photo / video */}
                     <div className="w-full overflow-hidden" style={{ aspectRatio: "3/2" }}>
-                      <img
-                        src={t.imageUrl || fallbackImg(ti + 2)}
-                        alt={`Subject ${t.subjectCode}`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                      {t.mediaType === "video" && t.mediaUrl
+                        ? <iframe
+                            src={t.mediaUrl}
+                            className="w-full h-full"
+                            allow="autoplay; encrypted-media"
+                            allowFullScreen
+                            title={`Subject ${t.subjectCode}`}
+                          />
+                        : <img
+                            src={t.mediaUrl || fallbackImg(ti + 2)}
+                            alt={`Subject ${t.subjectCode}`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />}
                     </div>
                     <div className="flex flex-col gap-4 p-6">
                       <div className="flex justify-between items-start flex-wrap gap-2">

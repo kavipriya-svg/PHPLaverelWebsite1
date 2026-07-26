@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Loader2, Quote } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Quote, Upload, X, Image as ImageIcon, Youtube } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -26,6 +26,8 @@ interface Testimonial {
   quote: string;
   location: string | null;
   envData: string | null;
+  mediaType: string | null;
+  mediaUrl: string | null;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -39,9 +41,16 @@ const EMPTY: FormState = {
   quote: "",
   location: "",
   envData: "",
+  mediaType: "image",
+  mediaUrl: "",
   isActive: true,
   sortOrder: 0,
 };
+
+function getYouTubeId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
 
 export default function DogClothingTestimonials() {
   const { toast } = useToast();
@@ -49,6 +58,9 @@ export default function DogClothingTestimonials() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Testimonial | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [uploading, setUploading] = useState(false);
+  const [ytInput, setYtInput] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: items = [], isLoading } = useQuery<Testimonial[]>({
     queryKey: ["/api/admin/dog-clothing-testimonials"],
@@ -76,7 +88,7 @@ export default function DogClothingTestimonials() {
     setForm(f => ({ ...f, [k]: v }));
   }
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setOpen(true); }
+  function openCreate() { setEditing(null); setForm(EMPTY); setYtInput(""); setOpen(true); }
 
   function openEdit(item: Testimonial) {
     setEditing(item);
@@ -86,19 +98,55 @@ export default function DogClothingTestimonials() {
       quote: item.quote,
       location: item.location ?? "",
       envData: item.envData ?? "",
+      mediaType: item.mediaType ?? "image",
+      mediaUrl: item.mediaUrl ?? "",
       isActive: item.isActive,
       sortOrder: item.sortOrder,
     });
+    setYtInput(item.mediaType === "video" ? (item.mediaUrl ?? "") : "");
     setOpen(true);
   }
 
-  function closeDialog() { setOpen(false); setEditing(null); }
+  function closeDialog() { setOpen(false); setEditing(null); setYtInput(""); }
+
+  async function handleFileUpload(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      const url = data.url || data.imageUrl || data.path;
+      setForm(f => ({ ...f, mediaType: "image", mediaUrl: url }));
+      toast({ title: "Image uploaded" });
+    } catch {
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function applyYouTube() {
+    const id = getYouTubeId(ytInput);
+    if (!id) { toast({ title: "Invalid YouTube URL", variant: "destructive" }); return; }
+    setForm(f => ({ ...f, mediaType: "video", mediaUrl: `https://www.youtube.com/embed/${id}` }));
+    toast({ title: "YouTube video linked" });
+  }
+
+  function clearMedia() {
+    setForm(f => ({ ...f, mediaType: "image", mediaUrl: "" }));
+    setYtInput("");
+  }
 
   function handleSubmit() {
     if (!form.quote.trim()) { toast({ title: "Quote text is required", variant: "destructive" }); return; }
     if (editing) updateMut.mutate({ id: editing.id, data: form });
     else createMut.mutate(form);
   }
+
+  const isVideo = form.mediaType === "video" && form.mediaUrl;
+  const isImage = form.mediaType === "image" && form.mediaUrl;
 
   return (
     <AdminLayout>
@@ -131,10 +179,23 @@ export default function DogClothingTestimonials() {
             {items.map(item => (
               <Card key={item.id} data-testid={`card-testimonial-${item.id}`}>
                 <CardContent className="flex items-start gap-4 py-4">
+                  {/* Media thumbnail */}
+                  {item.mediaUrl && (
+                    <div className="shrink-0 w-20 h-14 overflow-hidden rounded border bg-muted">
+                      {item.mediaType === "video"
+                        ? <div className="w-full h-full flex items-center justify-center bg-black/80"><Youtube className="h-6 w-6 text-white" /></div>
+                        : <img src={item.mediaUrl} alt="" className="w-full h-full object-cover" />}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-mono text-xs font-semibold bg-muted px-2 py-0.5 rounded">SUBJECT: {item.subjectCode}</span>
                       <Badge variant="outline" className="text-xs font-mono">SATISFACTION: {item.satisfactionLabel}</Badge>
+                      {item.mediaUrl && (
+                        <Badge variant="outline" className="text-xs">
+                          {item.mediaType === "video" ? "YouTube" : "Image"}
+                        </Badge>
+                      )}
                       {item.location && <Badge variant="outline" className="text-xs font-mono">{item.location}</Badge>}
                       {!item.isActive && <Badge variant="secondary" className="text-xs">Inactive</Badge>}
                     </div>
@@ -162,7 +223,7 @@ export default function DogClothingTestimonials() {
 
         {/* Create / Edit Dialog */}
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-xl">
+          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editing ? "Edit Testimonial" : "Add Testimonial"}</DialogTitle>
             </DialogHeader>
@@ -188,6 +249,88 @@ export default function DogClothingTestimonials() {
                   rows={3}
                   data-testid="input-quote"
                 />
+              </div>
+
+              {/* ── Media section ── */}
+              <div className="space-y-3 rounded-md border p-4">
+                <Label className="text-sm font-semibold">Media (optional)</Label>
+
+                {/* Current media preview */}
+                {(isImage || isVideo) && (
+                  <div className="relative w-full overflow-hidden rounded border bg-muted" style={{ aspectRatio: "16/9" }}>
+                    {isVideo
+                      ? <iframe src={form.mediaUrl!} className="w-full h-full" allow="autoplay; encrypted-media" allowFullScreen />
+                      : <img src={form.mediaUrl!} alt="Preview" className="w-full h-full object-cover" />}
+                    <button
+                      onClick={clearMedia}
+                      className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                      data-testid="btn-clear-media"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Image upload */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Upload Image (JPG / PNG / WEBP)</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
+                      data-testid="btn-choose-image"
+                    >
+                      {uploading
+                        ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Uploading…</>
+                        : <><Upload className="h-3.5 w-3.5 mr-1.5" /> Choose Image</>}
+                    </Button>
+                    {form.mediaUrl && form.mediaType === "image" && (
+                      <span className="text-xs text-muted-foreground self-center truncate max-w-[200px]">
+                        <ImageIcon className="h-3 w-3 inline mr-1" />
+                        {form.mediaUrl.split("/").pop()}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    data-testid="input-file"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex-1 h-px bg-border" />
+                  <span>or</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+
+                {/* YouTube link */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Paste a YouTube URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={ytInput}
+                      onChange={e => setYtInput(e.target.value)}
+                      placeholder="https://youtube.com/watch?v=..."
+                      data-testid="input-youtube-url"
+                      className="flex-1"
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={applyYouTube} data-testid="btn-apply-youtube">
+                      Apply
+                    </Button>
+                  </div>
+                  {form.mediaType === "video" && form.mediaUrl && (
+                    <p className="text-xs text-green-600 flex items-center gap-1">
+                      <Youtube className="h-3 w-3" /> YouTube video linked
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
