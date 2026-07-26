@@ -184,7 +184,9 @@ function ProductCard({ product, onAddToCart }: { product: EditorialProduct; onAd
   const [, navigate] = useLocation();
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleClick = () => { if (product.slug) navigate(`/product/${product.slug}`); };
+  const handleViewSpecimen = () => {
+    if (product.slug) navigate(`/clothing/product/${product.slug}`);
+  };
 
   return (
     <div className="relative group" data-testid={`product-card-${product.id}`}>
@@ -199,7 +201,7 @@ function ProductCard({ product, onAddToCart }: { product: EditorialProduct; onAd
         }}
         onMouseEnter={() => { if (cardRef.current) { cardRef.current.style.boxShadow = "10px 10px 0px 0px rgba(1, 45, 29, 0.4)"; cardRef.current.style.transform = "translate(10px, 10px)"; } }}
         onMouseLeave={() => { if (cardRef.current) { cardRef.current.style.boxShadow = "40px 40px 0px 0px rgba(1, 45, 29, 0.15)"; cardRef.current.style.transform = "translate(0px, 0px)"; } }}
-        onClick={handleClick}
+        onClick={handleViewSpecimen}
       >
         <img
           src={product.img}
@@ -216,7 +218,7 @@ function ProductCard({ product, onAddToCart }: { product: EditorialProduct; onAd
           <p style={{ ...MONO, ...LABEL_CAPS, color: C.secondary, fontSize: 10, marginBottom: 4 }}>{product.specimen}</p>
           <h3
             style={{ ...PLAYFAIR, fontSize: 28, lineHeight: "36px", fontWeight: 400, color: C.onSurface, cursor: product.slug ? "pointer" : "default" }}
-            onClick={handleClick}
+            onClick={handleViewSpecimen}
           >
             {product.name}
           </h3>
@@ -235,16 +237,29 @@ function ProductCard({ product, onAddToCart }: { product: EditorialProduct; onAd
           <p>BIOMETRIC: {product.specs.biometric}</p>
         </div>
       </div>
-      <button
-        className="w-full py-4 transition-colors duration-300"
-        style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, letterSpacing: "0.2em" }}
-        onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#014026")}
-        onMouseLeave={e => (e.currentTarget.style.backgroundColor = C.primary)}
-        onClick={onAddToCart}
-        data-testid={`btn-add-to-cart-${product.id}`}
-      >
-        Initialize Procurement
-      </button>
+      {/* Two action buttons */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          className="py-4 transition-colors duration-300"
+          style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, letterSpacing: "0.15em" }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#014026")}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = C.primary)}
+          onClick={onAddToCart}
+          data-testid={`btn-add-to-cart-${product.id}`}
+        >
+          Add to Cart
+        </button>
+        <button
+          className="py-4 transition-all duration-300"
+          style={{ border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS, letterSpacing: "0.15em" }}
+          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.backgroundColor = C.primary; b.style.color = C.white; }}
+          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.backgroundColor = "transparent"; b.style.color = C.primary; }}
+          onClick={handleViewSpecimen}
+          data-testid={`btn-view-specimen-${product.id}`}
+        >
+          View Specimen
+        </button>
+      </div>
     </div>
   );
 }

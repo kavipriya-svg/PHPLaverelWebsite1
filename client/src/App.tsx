@@ -86,6 +86,7 @@ const AdminDogClothingPageSettings = lazy(() => import("@/pages/admin/DogClothin
 const AdminDogClothingTestimonials = lazy(() => import("@/pages/admin/DogClothingTestimonials"));
 const AdminDogClothingAdBanners = lazy(() => import("@/pages/admin/DogClothingAdBanners"));
 const DogTreatProductDetail = lazy(() => import("@/pages/DogTreatProductDetail"));
+const DogClothingProductDetail = lazy(() => import("@/pages/DogClothingProductDetail"));
 const SwimGroom = lazy(() => import("@/pages/SwimGroom"));
 const SwimGroomProvider = lazy(() => import("@/pages/SwimGroomProvider"));
 const DogFullMeal = lazy(() => import("@/pages/DogFullMeal"));
@@ -150,6 +151,9 @@ function Router() {
         </StoreLayout>
       </Route>
       
+      <Route path="/clothing/product/:slug">
+        <DogClothingProductDetail />
+      </Route>
       <Route path="/category/clothing">
         <HomeLayout>
           <DogClothing />
