@@ -7118,5 +7118,122 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
+  // ── Dog Clothing Page Settings ────────────────────────────────────────────
+  app.get("/api/settings/dog-clothing-page", async (req, res) => {
+    try {
+      const row = await storage.getSetting("dog_clothing_page_settings");
+      const settings = row ? JSON.parse(row) : null;
+      res.json({ settings });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch dog clothing page settings" });
+    }
+  });
+
+  app.put("/api/settings/dog-clothing-page", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ dog_clothing_page_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update dog clothing page settings" });
+    }
+  });
+
+  // ── Dog Clothing Testimonials (public) ────────────────────────────────────
+  app.get("/api/dog-clothing-testimonials", async (req, res) => {
+    try {
+      const items = await storage.getDogClothingTestimonials(true);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch testimonials" });
+    }
+  });
+
+  // ── Dog Clothing Testimonials (admin) ─────────────────────────────────────
+  app.get("/api/admin/dog-clothing-testimonials", isAdmin, async (req, res) => {
+    try {
+      const items = await storage.getDogClothingTestimonials(false);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch testimonials" });
+    }
+  });
+
+  app.post("/api/admin/dog-clothing-testimonials", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createDogClothingTestimonial(req.body);
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create testimonial" });
+    }
+  });
+
+  app.put("/api/admin/dog-clothing-testimonials/:id", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateDogClothingTestimonial(req.params.id, req.body);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update testimonial" });
+    }
+  });
+
+  app.delete("/api/admin/dog-clothing-testimonials/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteDogClothingTestimonial(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete testimonial" });
+    }
+  });
+
+  // ── Dog Clothing Ad Banners (public) ─────────────────────────────────────
+  app.get("/api/dog-clothing-ad-banners", async (req, res) => {
+    try {
+      const placement = req.query.placement as string | undefined;
+      const items = await storage.getDogClothingAdBanners(true, placement);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch ad banners" });
+    }
+  });
+
+  // ── Dog Clothing Ad Banners (admin) ──────────────────────────────────────
+  app.get("/api/admin/dog-clothing-ad-banners", isAdmin, async (req, res) => {
+    try {
+      const items = await storage.getDogClothingAdBanners(false);
+      res.json(items);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch ad banners" });
+    }
+  });
+
+  app.post("/api/admin/dog-clothing-ad-banners", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createDogClothingAdBanner(req.body);
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create ad banner" });
+    }
+  });
+
+  app.put("/api/admin/dog-clothing-ad-banners/:id", isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateDogClothingAdBanner(req.params.id, req.body);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update ad banner" });
+    }
+  });
+
+  app.delete("/api/admin/dog-clothing-ad-banners/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteDogClothingAdBanner(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete ad banner" });
+    }
+  });
+
   return httpServer;
 }
