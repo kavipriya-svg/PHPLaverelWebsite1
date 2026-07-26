@@ -1,0 +1,549 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>19 DOGS | Gifting Services: The Synchronization Vault</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Inter:wght@300;400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-on-surface": "#f0f1ee",
+                    "inverse-primary": "#a5d0b8",
+                    "on-secondary-container": "#77330e",
+                    "error": "#ba1a1a",
+                    "surface-container": "#eeeeeb",
+                    "secondary-container": "#fe9e71",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#414844",
+                    "inverse-surface": "#2f312f",
+                    "tertiary-fixed-dim": "#ffb694",
+                    "on-background": "#1a1c1a",
+                    "tertiary": "#260900",
+                    "surface-container-highest": "#e2e3e0",
+                    "outline-variant": "#c1c8c2",
+                    "on-primary-container": "#6d9681",
+                    "primary-fixed": "#c0edd4",
+                    "on-tertiary-fixed-variant": "#76330d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed": "#002114",
+                    "on-primary-fixed-variant": "#264e3c",
+                    "on-tertiary-container": "#ce774c",
+                    "primary": "#00160c",
+                    "secondary-fixed-dim": "#ffb695",
+                    "secondary-fixed": "#ffdbcc",
+                    "surface-bright": "#f9faf6",
+                    "surface-variant": "#e2e3e0",
+                    "on-secondary-fixed-variant": "#76330e",
+                    "on-secondary-fixed": "#351000",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-tint": "#3e6653",
+                    "surface-dim": "#dadad7",
+                    "primary-fixed-dim": "#a5d0b8",
+                    "surface-container-low": "#f3f4f0",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#471800",
+                    "on-surface": "#1a1c1a",
+                    "on-error": "#ffffff",
+                    "primary-container": "#012d1d",
+                    "background": "#f9faf6",
+                    "on-error-container": "#93000a",
+                    "error-container": "#ffdad6",
+                    "surface": "#f9faf6",
+                    "outline": "#717973",
+                    "tertiary-fixed": "#ffdbcc",
+                    "surface-container-high": "#e8e8e5",
+                    "secondary": "#944923"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "64px",
+                    "stack-sm": "12px",
+                    "gutter": "24px",
+                    "stack-md": "32px",
+                    "stack-lg": "80px",
+                    "margin-mobile": "20px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Playfair Display"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Playfair Display"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Playfair Display"],
+                    "label-caps": ["Inter"],
+                    "headline-md": ["Playfair Display"],
+                    "body-lg": ["Inter"],
+                    "mono": ["monospace"]
+            },
+            "fontSize": {
+                    "display-lg": ["84px", {"lineHeight": "92px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["36px", {"lineHeight": "44px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                    "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "300"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hard-shadow {
+            box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+        }
+        .text-shadow-hero {
+            text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .grayscale-hover {
+            filter: grayscale(100%);
+            transition: filter 0.6s ease;
+        }
+        .grayscale-hover:hover {
+            filter: grayscale(0%);
+        }
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+        .reveal-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .custom-cursor {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ffdbcc;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+        .dossier-image {
+            height: 80vh;
+            min-height: 500px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface overflow-x-hidden">
+<div class="custom-cursor hidden md:block" id="cursor" style="left: 1255px; top: 8501px;"></div>
+<!-- Navigation Shell (TopNavBar) -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex justify-between items-center px-margin-desktop py-4">
+<div class="font-headline-md text-headline-md font-bold text-primary uppercase tracking-tight">19 DOGS</div>
+<div class="hidden md:flex items-center gap-gutter">
+<a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors duration-300" href="#">Shop Food</a>
+<a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors duration-300" href="#">Dog Clothing</a>
+<a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors duration-300" href="#">Twinning</a>
+<a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors duration-300" href="#">Our Story</a>
+</div>
+<div class="flex items-center gap-6">
+<button class="bg-primary text-on-primary px-6 py-2 font-label-md uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all">Join the Pack</button>
+<span class="material-symbols-outlined text-primary cursor-pointer">shopping_bag</span>
+</div>
+</nav>
+<!-- Hero Section: Cinematic Vault -->
+<section class="relative h-screen w-full flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-black/40 z-10"></div>
+<img class="w-full h-full object-cover scale-105 animate-[pulse_10s_infinite]" data-alt="A moody, high-fashion cinematic wide shot of a sleek Doberman standing majestically in a brutalist concrete architectural space with dramatic shaft lighting from above. The color palette is dominated by deep forest greens and charcoal grays, creating a mysterious and prestigious atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYsP8GnqxhFOxyNBXUmvJD-3jOrE5G7fmxHhwbLjQz8voaI1PpP4IqfXjZo5UzwYmfB47e4buBryvn3yBupaBXesMJB8lgZzNCC6ALki1Jqida_kyUAocar8W_J2OUpcoBl2UjXcMTWDJrvLFecuoDwuQ4xuCBhXe3PbuG0SFqxxW4mLAsVWbLjsa4ELcXfonCWL99eCjijZWf79fZNyVZflnIs6K-KU8hldrF2GgxZX5vMR9XtrjiZ-EDoXCRkAtM9x5wQoQydeOb">
+</div>
+<div class="relative z-20 text-center px-margin-mobile">
+<span class="font-label-caps text-secondary-fixed mb-4 block">GIFTING SERVICES</span>
+<h1 class="font-display-lg text-white text-shadow-hero mb-8 max-w-4xl mx-auto">The Synchronization Vault</h1>
+<div class="h-px w-24 bg-secondary-fixed mx-auto mb-8"></div>
+<p class="font-body-lg text-white/80 max-w-xl mx-auto italic">Precision biological alignment. Aesthetic harmony. The ultimate canine-human gift protocols.</p>
+</div>
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 text-white flex flex-col items-center gap-2">
+<span class="font-label-caps text-[10px]">SCROLL TO ACCESS DOSSIERS</span>
+<span class="material-symbols-outlined animate-bounce">expand_more</span>
+</div>
+</section>
+<!-- Product Archive: Dossiers 001 - 010 -->
+<div class="bg-surface-container-low">
+<!-- Dossier 001 -->
+<section class="py-stack-lg border-b border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 visible">
+<img class="w-full dossier-image object-cover grayscale-hover" data-alt="Vibrant organic ingredients: raw venison, bright green kale, and obsidian-black ceramic bowls in a clinical studio setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDACcchjf_TUJFeGg9kuL1gtSddIuwiD1UgqgLms_qFGw-P5g6AYk-m_4_lsrNlAQYAQhMTmZLnqsy_YoXrPTj6oQu9RvAf2DnL7_ZrRBwQtRXUvMFu1vFguIYX3j9TUXkB26jxL2DfJKHVZv3RWsDyIGaQqmVdxY16yjPsJZNOaxbCiJ-BqYU9M5bbHsNFH8nj5kAlZcVvFzYcMs9RLWQErLhrWKMC8B1WaaK50Xmcw4eWADPSXvnaQBMXiUzHgs6P6l8vuZKzpUXG">
+</div>
+<div class="reveal-on-scroll order-2 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 001</span>
+<h2 class="font-headline-lg text-primary mb-6">The Wolf Diet Bundle</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">A scientifically curated nutritional protocol designed to reactivate ancestral metabolic pathways. Features vacuum-sealed, high-protein formulations and hand-thrown obsidian ceramic vessels.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">High-Activity Canines</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">92.4% Bio-Efficiency</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">12kg Protein Core / 3x Ceramics</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-secondary-container hover:text-on-secondary-container transition-all w-full md:w-auto">Acquire Bundle</button>
+</div>
+</div>
+</section>
+<!-- Dossier 002 -->
+<section class="py-stack-lg border-b border-outline-variant/20 bg-surface-container-highest">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 md:order-2 visible">
+<img class="w-full dossier-image object-cover grayscale-hover" data-alt="High-fashion editorial: Human and Greyhound wearing matching high-saturation neon technical textiles in a minimalist concrete hallway." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLsRfwcpjH6qO-b6GYKgBe8c2KuDT57gwsLLmkfOjFsHzW_8YT3meAisgUEg1RxkGGUzVhNhO9DQPXzotcyoHlOWYgLFXcNUZGqCYMg2r2ZDSnD5Jw4Y_OtUh4rg3AI3hx227evuVbOkrGwLfjftZHYQQBViqPk9egCiEPX5Uf-SU0WHFydJr3H_wAneKtxBzK5iXyE2MyPLcPk5UmQcsq33eFKkO-br_Qv9AhRdsE32b9qpIlQtMNDJIx7Xbl9SD_AShBcuHJLiqA">
+</div>
+<div class="reveal-on-scroll order-2 md:order-1 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 002</span>
+<h2 class="font-headline-lg text-primary mb-6">The Twinning Protocol</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">High-fashion aesthetic alignment between guardian and hound. Featuring cashmere-blend knitwear for humans and matching weatherproof structural shells for canines.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">Sighthound Standard</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">88.1% Insulation Match</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">2-Piece Ensemble / ID Tags</span>
+</div>
+</div>
+<button class="border-2 border-primary text-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-all w-full md:w-auto">Request Access</button>
+</div>
+</div>
+</section>
+<!-- Dossier 003 -->
+<section class="py-stack-lg border-b border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 visible">
+<div class="w-full dossier-image bg-primary flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover opacity-80 grayscale-hover" data-alt="Macro shot of vibrant high-saturation neon orange nylon straps and industrial titanium buckles against a dark slate background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWWUH-UjApLt9IGQgUuWiQxrJR6z_W0AxevIWU095aPJinzU1W-Ygdgw1JKltmk4x4Itk436tP_iAk3PyK5ne2rnwE2Gv45e0N1zzy-qvRMChbutaSZpfs2R_lOmZ9rGPseAlezghqQ6N8yXe8HXuX0U8OU852GEaiiZSj6It36Jx5zNAjqe3Zg2iNJglGvUFz0goV58XMzQ6tvjCwGN-0HgNEogz9mRr2psQ3hr0tyg4GISXK_kF3T4bnv4DFD5GjnUmWgOS0oP5I">
+</div>
+</div>
+<div class="reveal-on-scroll order-2 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 003</span>
+<h2 class="font-headline-lg text-primary mb-6">Neon Kinetic Kit</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">High-visibility performance gear for low-light exploration. Constructed from laser-cut ballistic nylon and radioactive-dye webbing for maximum chromatic presence.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">Urban Trail Runners</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">Zero Breathability Loss</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">Harness / Leash / Beams</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-10 py-5 font-label-md uppercase tracking-widest hover:opacity-90 transition-all w-full md:w-auto">Acquire Bundle</button>
+</div>
+</div>
+</section>
+<!-- Dossier 004 -->
+<section class="py-stack-lg border-b border-outline-variant/20 bg-surface-container-high">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 md:order-2 visible">
+<div class="w-full dossier-image bg-on-surface-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover opacity-90 grayscale-hover" data-alt="Cinematic shot of a sculptural, brutalist dog bed made of charcoal felt and brushed aluminum in a sunlit art gallery." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC86Gt2HJRrkwTHZlWHHjXgz7w2biFdYdtQ7-_8EIspuM52UQOrXFUXqtFAHpxTl-S-IuzqWarVHxNZsvO9Z1fYuSp0iKzduFswdMzb4QIe9kfVSenSVfxiWvHsd0BZPO_HrxffFoBhL2d5sd5Ya3SimsBFKQN-NNCjgia_qXzyz7zPwu2z0thEGnxgUX_7qVziLdR-0XHNYsGQKI6mz4J6hFfw6leGzMEWvxg1sj5w1CdLIMr1FIcY09LUWwdFV_lgXwVMGIqeV_GQ">
+</div>
+</div>
+<div class="reveal-on-scroll order-2 md:order-1 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 004</span>
+<h2 class="font-headline-lg text-primary mb-6">The Somatic Cradle</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">A structural recovery environment utilizing phase-change memory foam and an architectural aluminum base. Engineered for total skeletal decompression during REM cycles.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">All Skeletal Frameworks</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">Constant 22°C Regulation</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">Structural Cradle / Weighted Lid</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-secondary-container hover:text-on-secondary-container transition-all w-full md:w-auto">Acquire Bundle</button>
+</div>
+</div>
+</section>
+<!-- Dossier 005 -->
+<section class="py-stack-lg border-b border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 visible">
+<div class="w-full dossier-image bg-surface-container-highest flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover grayscale-hover" data-alt="Vibrant organic oils in glass vials, featuring bright orange sea buckthorn and deep green algae extracts on a white marble slab." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGtfw4Ks0weY1ozUpzlHY-QPQlrMA6IfOoBj61y6XuhlnV4iYHIKgm5cIF8RkW8y-Z9dxsExdklBcIa1EimlYNyD4nA7IbezSY3Ohg8zImifUGg7XRi2tnB-cs4EPt9xGKHCEF32WUPj4eJt5df03DXWABy4x-cKPyC6AphouzReN7dEk6TDCqFiScscirQQ1q5xSKZq0K180WYm8nGY1sqTGK3OECrrLUSZkewbV3Ydxnr9Z6WWDlBA-BzvzF6hg8OB1F12wAeqex">
+</div>
+</div>
+<div class="reveal-on-scroll order-2 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 005</span>
+<h2 class="font-headline-lg text-primary mb-6">Dermal Integrity Set</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">Biological topical treatments focusing on the canine lipid barrier. Cold-pressed botanical extracts in UV-protected violet glass maintain maximum nutrient potency.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">Sensitive Coats / Senior Care</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">Anti-Inflammatory Optimized</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">3x Oils / 1x Solid Balm</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-secondary-container hover:text-on-secondary-container transition-all w-full md:w-auto">Acquire Bundle</button>
+</div>
+</div>
+</section>
+<!-- Dossier 006 -->
+<section class="py-stack-lg border-b border-outline-variant/20 bg-primary">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 md:order-2 visible">
+<div class="w-full dossier-image bg-black/20 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover grayscale-hover" data-alt="High-fashion photo of a Poodle interacting with complex, neon-yellow sculptural puzzles made of high-density recycled polymers." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdnQP4-QtXfYsArtkb8t2gmKQst1UcG0PWu3PVyQR9mb_clldXKPF8qdSjGtU0cwEEyl2gy2p_tNrvmt7XPelaFwii9ifQrSHjn0QIhh_Gyr9OoucLZz3V0EFyax9dsdEsMHIpggFutYzkWm-ILehoXTXYT-Lh5NXGi8hQ95MQwYVJ9eW7gqPZ5pu91fssOMhSv2in9VCOu_226qgG4akrKCRTVy3_VuqAGd9Wf8juernCBee7G5VHyWzLhvt1LUzfjPxWVuZ0-OgI">
+</div>
+</div>
+<div class="reveal-on-scroll order-2 md:order-1 visible px-margin-desktop">
+<span class="font-mono text-secondary-fixed font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 006</span>
+<h2 class="font-headline-lg text-white mb-6">Cognitive Stimuli Pack</h2>
+<p class="font-body-md text-white/70 mb-10 leading-relaxed">A suite of problem-solving modules designed to engage high-intelligence breeds. These vibrant, tactile artifacts demand complex neural processing and motor skills.</p>
+<div class="space-y-6 mb-10 border-l border-white/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-white/40 uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-white">Shepherds / Collies / Poodles</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-white/40 uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-white">Neural Output Max</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-white/40 uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-white">4x Progressive Modules</span>
+</div>
+</div>
+<button class="bg-secondary-fixed text-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-white transition-all w-full md:w-auto">Request Access</button>
+</div>
+</div>
+</section>
+<!-- Dossier 007 -->
+<section class="py-stack-lg border-b border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 visible">
+<div class="w-full dossier-image bg-surface-container-low flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover grayscale-hover" data-alt="Technical flat lay of a folding travel module in vibrant emergency-orange cordura fabric with magnetic attachments." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfmEvDYPIeS58dVDEZe4wo8TsEvHoJfoMsOtkJDuv-ENxzPV3Oax2m_kzOwMeHE4etAdoS1-9af1KVZKOB47ExJocObiWM_2T8Ea51yn-K53MuozQDPFLAdw1rfg3VmaHmGhOEd35ReArGA1__mrcX7YS15QaqMW0go7EcwBxSC3O1sy1x_20l8XWyZOEvlVFIRVde_7a--rKaaow2X0wnZQLWKB_8N0tapz_KoBXBxSTvhHrxXosN0Fq-tazdQzdaJA9zrj30IkTB">
+</div>
+</div>
+<div class="reveal-on-scroll order-2 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 007</span>
+<h2 class="font-headline-lg text-primary mb-6">The Nomad Module</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">Integrated mobility system for the modern expeditionary. Lightweight, collapsible, and finished in high-saturation technical dyes for ease of identification in the field.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">All Active Sizes</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">Breathable Mesh Tech</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">Bowl / Mat / Storage Pod</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-secondary-container hover:text-on-secondary-container transition-all w-full md:w-auto">Acquire Bundle</button>
+</div>
+</div>
+</section>
+<!-- Dossier 008 -->
+<section class="py-stack-lg border-b border-outline-variant/20 bg-surface-container-lowest">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 md:order-2 visible">
+<div class="w-full dossier-image bg-secondary-fixed/20 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover grayscale-hover" data-alt="Macro artistic shot of vibrant red and pink freeze-dried beet and raspberry powder swirling in a crystal clear glass bottle." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKWRmdULLMArAfUvsExBhs7Xiwd7eQvJqoy33dBr1TwxLtpetNH3wWpbmCAZIlo6Ek50qaLsOWXaW_Lq1kUtDnHAonynu7oENgvC1o9ggMv7NI1rwf6zFBmJEVpRlp6TFD4tN1tKyUaPISs3AiRwbjqy-29B1X6DGKEzoxt2r2j2ZDLSoR3l_yyhmQUmDoMqryZsZyCD3zmXpaI5Ctaq6ppddgwGLsfwSLjRrQNgRjwGjKELxZMxj8rmem4DQFAGtMYAkA_Kc4RiVd">
+</div>
+</div>
+<div class="reveal-on-scroll order-2 md:order-1 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 008</span>
+<h2 class="font-headline-lg text-primary mb-6">Micro-Nutrient Elixir</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">A liquid supplement focusing on cellular longevity. Formulated with vibrant antioxidant concentrates and suspended in pharmaceutical-grade hydration bases.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">All Genetic Baselines</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">100% Bio-Absorption</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">30-Day Supply Vials</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-secondary-container hover:text-on-secondary-container transition-all w-full md:w-auto">Acquire Bundle</button>
+</div>
+</div>
+</section>
+<!-- Dossier 009 -->
+<section class="py-stack-lg border-b border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 visible">
+<div class="w-full dossier-image bg-primary flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover opacity-80 grayscale-hover" data-alt="Close up of a sleek, brushed gunmetal collar with a glowing cyan LED status indicator strip." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjGEqRI3A8GXsuCWdjkLlyEYiVvpYZUXPhfu_O9VrWHxhWu5v6fMc2AxJ1bRrIq8GL6XFjQtnLGKQYDiWyIWd8LdP64c9EaIkuIvn-6-wTkXzxnZ5AnNAaWTFG9s3tHttIMLkzklSuT9reLZaBu-I-7I408JGgSlUSIBC4qpKvSIAdwnhnCYpprogF808IcHXS0LoiBvyOTRrh5TiQEsZ50IFSHMoFGuXC_iuDbKQKRKnWa0UUDT5jhKLWpQkENUsvVeTsXxtkwRgU">
+</div>
+</div>
+<div class="reveal-on-scroll order-2 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 009</span>
+<h2 class="font-headline-lg text-primary mb-6">The Identity Link</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">Encrypted identification jewelry. A marriage of cryptographic safety and brutalist jewelry design. Milled from single-billet aerospace titanium.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">Permanent Pairing</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">Skin-Safe Anodization</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">Collar / Tag / App Access</span>
+</div>
+</div>
+<button class="border-2 border-primary text-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-all w-full md:w-auto">Request Access</button>
+</div>
+</div>
+</section>
+<!-- Dossier 010 -->
+<section class="py-stack-lg border-b border-outline-variant/20 bg-surface-dim">
+<div class="grid grid-cols-1 md:grid-cols-2 items-center">
+<div class="reveal-on-scroll order-1 md:order-2 visible">
+<div class="w-full dossier-image bg-black/40 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover grayscale-hover" data-alt="High-contrast photo of a Samoyed in a stark arctic landscape wearing a vibrant electric-blue quilted thermal vest." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAg-OC8oTbqpP-GYsu99zE4ju8jE9QBaGHWzHPb4lpiOhyy3iRipqa-wfJyLh-n5sHhDZDsnh8KcHAwbrLV_B8bJFs5KoCz05cVF1QZDLn7f4C1BCkuS93058pizdG49kRLIXJGU1BUfEA4uDz33Fsb6yGbZ6hgShO-imRz3pTa37HeMFul6APmuGDVSVoxUpplJFptL9-X3AKhwzhv83ColKTG0ErYGTJHA9oAnqO1DGWSn8cgfKDD_p8_AU-R72MTtO1ZWMpUEc-">
+</div>
+</div>
+<div class="reveal-on-scroll order-2 md:order-1 visible px-margin-desktop">
+<span class="font-mono text-secondary font-bold text-sm tracking-widest block mb-4 uppercase">Protocol // 010</span>
+<h2 class="font-headline-lg text-primary mb-6">Arctic Shield Shell</h2>
+<p class="font-body-md text-on-surface-variant mb-10 leading-relaxed">The pinnacle of canine thermal protection. High-loft synthetic insulation encased in a vibrant electric-blue ripstop shell. Designed for sub-zero synchronization.</p>
+<div class="space-y-6 mb-10 border-l border-primary/20 pl-6">
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Biometric Match</span>
+<span class="font-label-md text-primary">Cold-Weather Primaries</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Thermal Sync Rate</span>
+<span class="font-label-md text-primary">-30°C Integrity</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[10px] text-outline uppercase tracking-tighter">Content Spec</span>
+<span class="font-label-md text-primary">Insulated Shell / Boots</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-10 py-5 font-label-md uppercase tracking-widest hover:bg-secondary-container hover:text-on-secondary-container transition-all w-full md:w-auto">Acquire Bundle</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-low w-full pt-stack-lg pb-stack-sm border-t border-outline-variant">
+<div class="grid grid-cols-12 gap-gutter px-margin-desktop w-full mx-auto">
+<div class="col-span-12 md:col-span-4 mb-8 md:mb-0">
+<div class="font-headline-lg text-headline-lg font-bold text-primary mb-4">19 DOGS</div>
+<p class="font-body-md text-on-surface-variant max-w-xs">Precision in every bowl. Architecture in every silhouette. Biological excellence in every gift.</p>
+</div>
+<div class="col-span-6 md:col-span-2 space-y-4">
+<h4 class="font-label-caps text-primary">COLLECTIONS</h4>
+<ul class="space-y-2">
+<li class=""><a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors" href="#">The Core Diet</a></li>
+<li class=""><a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors" href="#">Technical Apparel</a></li>
+<li class=""><a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors" href="#">Biological Gifts</a></li>
+</ul>
+</div>
+<div class="col-span-6 md:col-span-2 space-y-4">
+<h4 class="font-label-caps text-primary">PROTOCOL</h4>
+<ul class="space-y-2">
+<li class=""><a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors" href="#">Membership</a></li>
+<li class=""><a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors" href="#">Concierge</a></li>
+<li class=""><a class="text-on-surface-variant font-body-md hover:text-secondary transition-colors" href="#">Lab Results</a></li>
+</ul>
+</div>
+<div class="col-span-12 md:col-span-4 mt-8 md:mt-0">
+<h4 class="font-label-caps text-primary mb-4">THE DOSSIER NEWSLETTER</h4>
+<div class="flex border-b border-outline">
+<input class="bg-transparent border-none focus:ring-0 w-full font-label-md py-3 placeholder:text-outline-variant text-primary" placeholder="ENCRYPTED EMAIL ADDRESS" type="email">
+<button class="material-symbols-outlined text-primary p-2">arrow_forward</button>
+</div>
+</div>
+<div class="col-span-12 pt-stack-md mt-stack-md border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="font-body-md text-on-surface-variant text-sm">© 2024 19 DOGS. All rights reserved. Precision in every bowl.</p>
+<div class="flex gap-6">
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary underline" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary underline" href="#">Terms of Service</a>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary underline" href="#">Accessibility</a>
+</div>
+</div>
+</div>
+</footer>
+<script>
+    // Custom Cursor Movement
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', (e) => {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+    });
+
+    // Reveal animations on scroll
+    const reveals = document.querySelectorAll('.reveal-on-scroll');
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    reveals.forEach(reveal => revealObserver.observe(reveal));
+
+    // Interactive cursor state
+    document.querySelectorAll('button, a').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            cursor.style.transform = 'scale(2.5)';
+            cursor.style.backgroundColor = 'rgba(255, 219, 204, 0.2)';
+        });
+        el.addEventListener('mouseleave', () => {
+            cursor.style.transform = 'scale(1)';
+            cursor.style.backgroundColor = 'transparent';
+        });
+    });
+</script>
+
+
+</body></html>
