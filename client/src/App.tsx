@@ -86,6 +86,9 @@ const AdminDogTreatsAdBanners = lazy(() => import("@/pages/admin/DogTreatsAdBann
 const AdminDogClothingPageSettings = lazy(() => import("@/pages/admin/DogClothingPageSettings"));
 const AdminDogClothingTestimonials = lazy(() => import("@/pages/admin/DogClothingTestimonials"));
 const AdminDogClothingAdBanners = lazy(() => import("@/pages/admin/DogClothingAdBanners"));
+const AdminDogParentClothingPageSettings = lazy(() => import("@/pages/admin/DogParentClothingPageSettings"));
+const AdminDogParentClothingTestimonials = lazy(() => import("@/pages/admin/DogParentClothingTestimonials"));
+const AdminDogParentClothingAdBanners = lazy(() => import("@/pages/admin/DogParentClothingAdBanners"));
 const DogTreatProductDetail = lazy(() => import("@/pages/DogTreatProductDetail"));
 const DogClothingProductDetail = lazy(() => import("@/pages/DogClothingProductDetail"));
 const SwimGroom = lazy(() => import("@/pages/SwimGroom"));
@@ -547,6 +550,21 @@ function Router() {
       <Route path="/admin/dog-clothing-ad-banners">
         <AdminLayout>
           <AdminDogClothingAdBanners />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/dog-parent-clothing-page">
+        <AdminLayout>
+          <AdminDogParentClothingPageSettings />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/dog-parent-clothing-testimonials">
+        <AdminLayout>
+          <AdminDogParentClothingTestimonials />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/dog-parent-clothing-ad-banners">
+        <AdminLayout>
+          <AdminDogParentClothingAdBanners />
         </AdminLayout>
       </Route>
       <Route path="/admin/special-offers">

@@ -60,6 +60,12 @@ import {
   dogClothingAdBanners,
   type DogClothingAdBanner,
   type InsertDogClothingAdBanner,
+  dogParentClothingTestimonials,
+  type DogParentClothingTestimonial,
+  type InsertDogParentClothingTestimonial,
+  dogParentClothingAdBanners,
+  type DogParentClothingAdBanner,
+  type InsertDogParentClothingAdBanner,
   type User,
   type UpsertUser,
   type Category,
@@ -470,6 +476,15 @@ export interface IStorage {
   createDogClothingAdBanner(data: InsertDogClothingAdBanner): Promise<DogClothingAdBanner>;
   updateDogClothingAdBanner(id: string, data: Partial<InsertDogClothingAdBanner>): Promise<DogClothingAdBanner | undefined>;
   deleteDogClothingAdBanner(id: string): Promise<void>;
+  // Dog Parent Clothing
+  getDogParentClothingTestimonials(activeOnly?: boolean): Promise<DogParentClothingTestimonial[]>;
+  createDogParentClothingTestimonial(data: InsertDogParentClothingTestimonial): Promise<DogParentClothingTestimonial>;
+  updateDogParentClothingTestimonial(id: string, data: Partial<InsertDogParentClothingTestimonial>): Promise<DogParentClothingTestimonial | undefined>;
+  deleteDogParentClothingTestimonial(id: string): Promise<void>;
+  getDogParentClothingAdBanners(activeOnly?: boolean, placement?: string): Promise<DogParentClothingAdBanner[]>;
+  createDogParentClothingAdBanner(data: InsertDogParentClothingAdBanner): Promise<DogParentClothingAdBanner>;
+  updateDogParentClothingAdBanner(id: string, data: Partial<InsertDogParentClothingAdBanner>): Promise<DogParentClothingAdBanner | undefined>;
+  deleteDogParentClothingAdBanner(id: string): Promise<void>;
 }
 
 export interface ProductFilters {
@@ -3331,6 +3346,48 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDogClothingAdBanner(id: string): Promise<void> {
     await db.delete(dogClothingAdBanners).where(eq(dogClothingAdBanners.id, id));
+  }
+
+  // ── Dog Parent Clothing Testimonials ─────────────────────────────────────
+  async getDogParentClothingTestimonials(activeOnly = false): Promise<DogParentClothingTestimonial[]> {
+    const conditions = activeOnly ? [eq(dogParentClothingTestimonials.isActive, true)] : [];
+    return db.select().from(dogParentClothingTestimonials)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(asc(dogParentClothingTestimonials.sortOrder), asc(dogParentClothingTestimonials.createdAt));
+  }
+  async createDogParentClothingTestimonial(data: InsertDogParentClothingTestimonial): Promise<DogParentClothingTestimonial> {
+    const [created] = await db.insert(dogParentClothingTestimonials).values(data).returning();
+    return created;
+  }
+  async updateDogParentClothingTestimonial(id: string, data: Partial<InsertDogParentClothingTestimonial>): Promise<DogParentClothingTestimonial | undefined> {
+    const [updated] = await db.update(dogParentClothingTestimonials).set(data).where(eq(dogParentClothingTestimonials.id, id)).returning();
+    return updated;
+  }
+  async deleteDogParentClothingTestimonial(id: string): Promise<void> {
+    await db.delete(dogParentClothingTestimonials).where(eq(dogParentClothingTestimonials.id, id));
+  }
+
+  // ── Dog Parent Clothing Ad Banners ────────────────────────────────────────
+  async getDogParentClothingAdBanners(activeOnly = false, placement?: string): Promise<DogParentClothingAdBanner[]> {
+    const conditions: any[] = [];
+    if (activeOnly) conditions.push(eq(dogParentClothingAdBanners.isActive, true));
+    if (placement) conditions.push(
+      or(eq(dogParentClothingAdBanners.placement, placement), eq(dogParentClothingAdBanners.placement, "both"))
+    );
+    return db.select().from(dogParentClothingAdBanners)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(asc(dogParentClothingAdBanners.sortOrder), asc(dogParentClothingAdBanners.createdAt));
+  }
+  async createDogParentClothingAdBanner(data: InsertDogParentClothingAdBanner): Promise<DogParentClothingAdBanner> {
+    const [created] = await db.insert(dogParentClothingAdBanners).values(data).returning();
+    return created;
+  }
+  async updateDogParentClothingAdBanner(id: string, data: Partial<InsertDogParentClothingAdBanner>): Promise<DogParentClothingAdBanner | undefined> {
+    const [updated] = await db.update(dogParentClothingAdBanners).set(data).where(eq(dogParentClothingAdBanners.id, id)).returning();
+    return updated;
+  }
+  async deleteDogParentClothingAdBanner(id: string): Promise<void> {
+    await db.delete(dogParentClothingAdBanners).where(eq(dogParentClothingAdBanners.id, id));
   }
 
   async updateSwimGroomProviderRating(providerId: string): Promise<void> {

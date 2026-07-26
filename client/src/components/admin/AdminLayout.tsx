@@ -388,6 +388,35 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Dog Parent Clothing
+                    </p>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/dog-parent-clothing-page"}>
+                      <Link href="/admin/dog-parent-clothing-page" data-testid="link-admin-dog-parent-clothing-page">
+                        <Dog className="h-4 w-4" />
+                        <span>Page Settings</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/dog-parent-clothing-testimonials"}>
+                      <Link href="/admin/dog-parent-clothing-testimonials" data-testid="link-admin-dog-parent-clothing-testimonials">
+                        <Star className="h-4 w-4" />
+                        <span>Testimonials</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/dog-parent-clothing-ad-banners"}>
+                      <Link href="/admin/dog-parent-clothing-ad-banners" data-testid="link-admin-dog-parent-clothing-ad-banners">
+                        <Layers className="h-4 w-4" />
+                        <span>Ad Banners</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                       Others
                     </p>
                   </SidebarMenuItem>
