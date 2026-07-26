@@ -77,6 +77,7 @@ const AdminSwimGroomProviders = lazy(() => import("@/pages/admin/SwimGroomProvid
 const AdminSwimGroomBookings = lazy(() => import("@/pages/admin/SwimGroomBookings"));
 const AdminHomepageSettings = lazy(() => import("@/pages/admin/HomepageSettings"));
 const AdminFullMealPageSettings = lazy(() => import("@/pages/admin/FullMealPageSettings"));
+const DogParentClothing = lazy(() => import("@/pages/DogParentClothing"));
 const AdminFullMealFeedback = lazy(() => import("@/pages/admin/FullMealFeedback"));
 const AdminFullMealAdBanners = lazy(() => import("@/pages/admin/FullMealAdBanners"));
 const AdminDogTreatsPageSettings = lazy(() => import("@/pages/admin/DogTreatsPageSettings"));
@@ -159,6 +160,14 @@ function Router() {
       <Route path="/category/clothing">
         <HomeLayout>
           <DogClothing />
+        </HomeLayout>
+      </Route>
+
+      <Route path="/category/twinning">
+        <HomeLayout>
+          <Suspense fallback={<PageLoader />}>
+            <DogParentClothing />
+          </Suspense>
         </HomeLayout>
       </Route>
 
