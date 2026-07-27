@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Initialize Profile | 19 DOGS</title>
+<!-- Google Fonts: Playfair Display for Serifs, Inter for Sans/Labels -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    /* Custom Scrollbar for a premium look */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #f9faf6; }
+    ::-webkit-scrollbar-thumb { background: #012d1d; }
+
+    /* Hard Paper Stack Shadow implementation as per Style Guidance */
+    .hard-paper-shadow {
+      box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+    }
+
+    /* Transition for editorial collage images */
+    .grayscale-to-color {
+      filter: grayscale(100%);
+      transition: filter 0.5s ease-in-out, transform 0.5s ease-in-out;
+    }
+    .grayscale-to-color:hover {
+      filter: grayscale(0%);
+      transform: scale(1.02);
+    }
+
+    /* Input focus animation */
+    .input-border-bottom {
+      border: none;
+      border-bottom: 1px solid #DBDAD5;
+      background: transparent;
+      padding: 12px 0;
+      transition: border-color 0.3s ease;
+    }
+    .input-border-bottom:focus {
+      outline: none;
+      border-bottom: 2px solid #00160c;
+      box-shadow: none;
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "outline-variant": "#c1c8c2",
+                  "on-primary-fixed-variant": "#264e3c",
+                  "inverse-primary": "#a5d0b8",
+                  "error-container": "#ffdad6",
+                  "background": "#f9faf6",
+                  "surface-container-lowest": "#ffffff",
+                  "primary-container": "#012d1d",
+                  "outline": "#717973",
+                  "on-secondary-fixed-variant": "#76330e",
+                  "surface-container-low": "#f3f4f0",
+                  "on-secondary-fixed": "#351000",
+                  "secondary-fixed": "#ffdbcc",
+                  "primary-fixed": "#c0edd4",
+                  "surface-container-highest": "#e2e3e0",
+                  "primary": "#00160c",
+                  "on-secondary-container": "#77330e",
+                  "error": "#ba1a1a",
+                  "on-error": "#ffffff",
+                  "secondary": "#944923",
+                  "on-surface-variant": "#414844",
+                  "on-primary-container": "#6d9681",
+                  "tertiary-fixed-dim": "#ffb694",
+                  "surface-dim": "#dadad7",
+                  "surface-variant": "#e2e3e0",
+                  "secondary-fixed-dim": "#ffb695",
+                  "on-tertiary-fixed-variant": "#76330d",
+                  "on-surface": "#1a1c1a",
+                  "surface-container-high": "#e8e8e5",
+                  "surface-bright": "#f9faf6",
+                  "on-primary-fixed": "#002114",
+                  "on-background": "#1a1c1a",
+                  "tertiary-fixed": "#ffdbcc",
+                  "on-error-container": "#93000a",
+                  "on-secondary": "#ffffff",
+                  "on-tertiary-container": "#ce774c",
+                  "inverse-surface": "#2f312f",
+                  "on-tertiary": "#ffffff",
+                  "surface-container": "#eeeeeb",
+                  "secondary-container": "#fe9e71",
+                  "primary-fixed-dim": "#a5d0b8",
+                  "tertiary-container": "#471800",
+                  "surface-tint": "#3e6653",
+                  "inverse-on-surface": "#f0f1ee",
+                  "surface": "#f9faf6",
+                  "on-primary": "#ffffff",
+                  "tertiary": "#260900",
+                  "on-tertiary-fixed": "#351000"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "gutter": "24px",
+                  "stack-lg": "80px",
+                  "margin-mobile": "20px",
+                  "margin-desktop": "64px",
+                  "stack-sm": "12px",
+                  "stack-md": "32px"
+          },
+          "fontFamily": {
+                  "headline-lg": ["Playfair Display"],
+                  "body-md": ["Inter"],
+                  "body-lg": ["Inter"],
+                  "label-md": ["Inter"],
+                  "label-caps": ["Inter"],
+                  "headline-lg-mobile": ["Playfair Display"],
+                  "headline-md": ["Playfair Display"],
+                  "display-lg": ["Playfair Display"]
+          },
+          "fontSize": {
+                  "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                  "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                  "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "300"}],
+                  "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                  "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                  "headline-lg-mobile": ["36px", {"lineHeight": "44px", "fontWeight": "600"}],
+                  "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                  "display-lg": ["84px", {"lineHeight": "92px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background text-primary font-body-md min-h-screen overflow-x-hidden">
+<!-- TopNavBar (Shared Component) - Rendered as per Destination Rule: Hidden on Transactional Screens -->
+<!-- Note: This is a sign-up page, nav is suppressed to prioritize focus -->
+<main class="flex flex-col md:flex-row min-h-screen w-full relative">
+<!-- LEFT SIDE: Editorial & Visual Context -->
+<section class="w-full md:w-1/2 h-[512px] md:h-screen relative overflow-hidden bg-primary-container">
+<div class="absolute inset-0 z-0">
+<!-- Placeholder for Cinematic Laboratory Image -->
+<img class="w-full h-full object-cover grayscale-to-color opacity-70" data-alt="A cinematic, high-fashion editorial photograph of a sharp-featured male handler and a muscular Doberman Pinscher standing in a futuristic, minimalist laboratory. The setting features curved glass walls, obsidian black floors, and glowing copper-toned light accents. The man wears a sleek dark green tactical suit with illuminated neural patches, while the dog wears a matching biometric harness. The mood is scientific yet highly prestigious, with high-contrast lighting and deep shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq2YayzNQ-MImh_gBSFrk9iscTO5MRxvndxlSm6rKOe58AdwrW7U_CxRvKQixiOFbNppK014YqDa5Fx4-WW01ogP42saythPpD7xAhYNnS8ArPxj_E3iAI-9t6B-mYgpgbYsvOpxgw9jV0St73UhxcBo34A5pU38sxEzUMOq44UG1yK2F-VY1_Rx6Iu0fhjb2VgxP2s4fdnLT-AVIDVyqwzCv_87bJrO1UO4fJ760JDtrtR5jo9f4Ojn6h8UmxaXEz3oMkXNDRVUZD"/>
+</div>
+<!-- Overlay Text Container -->
+<div class="absolute bottom-0 left-0 p-margin-mobile md:p-margin-desktop z-10 max-w-xl">
+<div class="flex items-center gap-2 mb-stack-sm">
+<div class="h-[1px] w-12 bg-on-primary-container"></div>
+<span class="font-label-caps text-label-caps text-on-primary-container tracking-widest">BIOLOGICAL_PROTOCOL_V2</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white mb-stack-sm italic leading-tight">
+          Biological prestige is a shared journey.
+        </h2>
+<p class="font-body-lg text-body-lg text-on-primary-container max-w-md opacity-90">
+          Synchronize your life with the 19 DOGS standard. Excellence is not a baseline; it is our biological mandate.
+        </p>
+</div>
+</section>
+<!-- RIGHT SIDE: Technical Form -->
+<section class="w-full md:w-1/2 flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-stack-lg bg-surface relative">
+<!-- Mobile Brand Anchor -->
+<div class="md:hidden absolute top-8 left-margin-mobile">
+<span class="font-headline-md text-headline-md text-primary tracking-tighter">19 DOGS</span>
+</div>
+<div class="max-w-md w-full mx-auto md:mx-0">
+<header class="mb-stack-md">
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight mb-2">
+            Initialize Profile
+          </h1>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+            Begin your synchronization with the 19 DOGS ecosystem.
+          </p>
+</header>
+<!-- Signup Form -->
+<form class="space-y-stack-md" onsubmit="event.preventDefault();">
+<!-- SUBJECT_NAME -->
+<div class="relative">
+<label class="font-label-caps text-label-caps text-outline uppercase block mb-1">SUBJECT_NAME</label>
+<input class="w-full font-body-md text-body-md input-border-bottom placeholder:text-surface-dim" placeholder="FULL NAME" type="text"/>
+</div>
+<!-- BIOLOGICAL_ID / EMAIL -->
+<div class="relative">
+<label class="font-label-caps text-label-caps text-outline uppercase block mb-1">BIOLOGICAL_ID / EMAIL</label>
+<input class="w-full font-body-md text-body-md input-border-bottom placeholder:text-surface-dim" placeholder="ACCESS_ENDPOINT@19DOGS.COM" type="email"/>
+</div>
+<!-- ACCESS_KEY / PASSWORD -->
+<div class="relative">
+<label class="font-label-caps text-label-caps text-outline uppercase block mb-1">ACCESS_KEY / PASSWORD</label>
+<input class="w-full font-body-md text-body-md input-border-bottom placeholder:text-surface-dim" placeholder="••••••••••••" type="password"/>
+</div>
+<!-- CONFIRM_ACCESS_KEY -->
+<div class="relative">
+<label class="font-label-caps text-label-caps text-outline uppercase block mb-1">CONFIRM_ACCESS_KEY</label>
+<input class="w-full font-body-md text-body-md input-border-bottom placeholder:text-surface-dim" placeholder="••••••••••••" type="password"/>
+</div>
+<!-- ROLE SELECTION GRID -->
+<div class="pt-stack-sm">
+<label class="font-label-caps text-label-caps text-outline block mb-stack-sm">PROTOCOL_ROLE_SELECTION</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="border border-outline-variant py-4 px-2 hover:border-primary hover:bg-primary-container hover:text-on-primary-container transition-all text-center" type="button">
+<span class="font-label-caps text-label-caps">CUSTOMER</span>
+</button>
+<button class="border border-outline-variant py-4 px-2 hover:border-primary hover:bg-primary-container hover:text-on-primary-container transition-all text-center" type="button">
+<span class="font-label-caps text-label-caps">PROVIDER</span>
+</button>
+<button class="border border-outline-variant py-4 px-2 hover:border-primary hover:bg-primary-container hover:text-on-primary-container transition-all text-center" type="button">
+<span class="font-label-caps text-label-caps">ADMIN</span>
+</button>
+</div>
+</div>
+<!-- CTA BUTTON -->
+<div class="pt-stack-md">
+<button class="w-full bg-primary-container text-white py-6 flex justify-between items-center px-8 hover:bg-primary transition-all duration-300 group shadow-lg">
+<span class="font-label-caps text-label-caps tracking-widest">INITIALIZE SESSION</span>
+<span class="material-symbols-outlined group-hover:translate-x-2 transition-transform duration-300" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<!-- SECONDARY ACTION -->
+<div class="text-center md:text-left pt-stack-sm">
+<a class="font-label-caps text-label-caps text-secondary hover:text-on-secondary-container transition-colors tracking-tighter" href="#">
+              Already a subject? Sign In
+            </a>
+</div>
+</form>
+<!-- SECURITY BADGE & FOOTER -->
+<footer class="mt-stack-lg border-t border-outline-variant pt-stack-md flex flex-col md:flex-row justify-between items-center opacity-60">
+<div class="flex items-center gap-2 mb-stack-sm md:mb-0">
+<span class="material-symbols-outlined text-[16px]" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-label-caps text-label-caps">SECURE ENCRYPTED REGISTRATION_V1.0</span>
+</div>
+<div class="font-label-caps text-label-caps">
+            © 2024 19 DOGS. BIOLOGICAL PRESTIGE.
+          </div>
+</footer>
+</div>
+<!-- Subtle Decorative Element: Floating Copper Line -->
+<div class="absolute top-1/2 right-0 w-24 h-[1px] bg-secondary-container opacity-20 transform translate-y-24 rotate-90 hidden lg:block"></div>
+</section>
+</main>
+<!-- Interactive Shader for background texture (if available) -->
+
+<script>
+    // Subtle hover effect for role cards
+    const roleButtons = document.querySelectorAll('button[type="button"]');
+    roleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        roleButtons.forEach(b => b.classList.remove('bg-primary-container', 'text-on-primary-container', 'border-primary'));
+        btn.classList.add('bg-primary-container', 'text-on-primary-container', 'border-primary');
+      });
+    });
+
+    // Custom interaction for visual flair
+    document.addEventListener('mousemove', (e) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      
+      // Moving the copper line subtly
+      const deco = document.querySelector('.absolute.top-1\\/2.right-0');
+      if(deco) {
+        deco.style.transform = `translate(${x * 10}px, calc(6rem + ${y * 10}px)) rotate(90deg)`;
+      }
+    });
+  </script>
+</body></html>
