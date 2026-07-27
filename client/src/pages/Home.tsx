@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ShoppingBag, Plus, ShieldCheck, FlaskConical, Leaf, Droplets,
   PawPrint, Globe, Camera, PlayCircle, Quote, Menu, X, Search, PackageSearch,
+  UserPlus, LogIn,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import {
@@ -178,17 +179,35 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
       )}
 
       <div className="flex items-center gap-4">
-        <Link href={nav.ctaHref}>
-          <button
-            className="hidden md:block font-inter text-label-caps uppercase tracking-widest px-6 py-3 transition-all duration-200 cursor-pointer"
-            style={{ backgroundColor: C.primary, color: C.white }}
-            onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
-            onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
-            data-testid="button-join-the-pack"
-          >
-            {nav.ctaText}
-          </button>
-        </Link>
+        {/* Join the Pack icon (desktop) */}
+        {!searchOpen && (
+          <Link href={nav.ctaHref}>
+            <button
+              className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+              aria-label={nav.ctaText}
+              title={nav.ctaText}
+              data-testid="button-join-the-pack"
+              style={{ color: C.white, backgroundColor: C.primary, borderRadius: 4, padding: "6px 8px" }}
+            >
+              <UserPlus className="w-5 h-5" />
+            </button>
+          </Link>
+        )}
+
+        {/* Login icon (desktop) */}
+        {!searchOpen && (
+          <Link href="/admin/login">
+            <button
+              className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+              aria-label="Login"
+              title="Login"
+              data-testid="link-login-header"
+              style={{ color: C.onSurface }}
+            >
+              <LogIn className="w-5 h-5" />
+            </button>
+          </Link>
+        )}
 
         {/* Track Order icon (desktop) */}
         {!searchOpen && (
