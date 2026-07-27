@@ -85,6 +85,7 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [, navigate] = useLocation();
+  const { data: brandingData } = useQuery<{ settings: { logoUrl?: string; storeName?: string } }>({ queryKey: ["/api/settings/branding"] });
 
   const handleSearchOpen = () => {
     setSearchOpen(true);
@@ -113,12 +114,20 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
       style={{ backgroundColor: `${C.surface}F2`, backdropFilter: "blur(12px)" }}
     >
       <Link href="/">
-        <span
-          className="font-playfair font-bold cursor-pointer select-none"
-          style={{ fontSize: 24, letterSpacing: "0.1em", color: C.primary }}
-        >
-          19 DOGS
-        </span>
+        {brandingData?.settings?.logoUrl ? (
+          <img
+            src={brandingData.settings.logoUrl}
+            alt={brandingData.settings.storeName || "19 DOGS"}
+            style={{ height: 36, objectFit: "contain", display: "block" }}
+          />
+        ) : (
+          <span
+            className="font-playfair font-bold cursor-pointer select-none"
+            style={{ fontSize: 24, letterSpacing: "0.1em", color: C.primary }}
+          >
+            {brandingData?.settings?.storeName || "19 DOGS"}
+          </span>
+        )}
       </Link>
 
       {/* Desktop nav — hidden when search is expanded */}
@@ -1150,6 +1159,7 @@ function NewsletterSection({
 
 // ─── 13. Editorial Footer ──────────────────────────────────────────
 function EditorialFooter({ footer }: { footer: HomepageSettings["footer"] }) {
+  const { data: brandingData } = useQuery<{ settings: { logoUrl?: string; storeName?: string } }>({ queryKey: ["/api/settings/branding"] });
   return (
     <footer
       className="border-t pt-stack-lg pb-stack-sm"
@@ -1157,7 +1167,19 @@ function EditorialFooter({ footer }: { footer: HomepageSettings["footer"] }) {
     >
       <div className="grid grid-cols-12 gap-gutter px-margin-desktop mb-stack-lg">
         <div className="col-span-12 md:col-span-4">
-          <div className="font-playfair font-bold mb-8" style={{ fontSize: 40, color: C.primary }}>19 DOGS</div>
+          <div className="mb-8">
+            {brandingData?.settings?.logoUrl ? (
+              <img
+                src={brandingData.settings.logoUrl}
+                alt={brandingData.settings.storeName || "19 DOGS"}
+                style={{ height: 48, objectFit: "contain", display: "block" }}
+              />
+            ) : (
+              <span className="font-playfair font-bold" style={{ fontSize: 40, color: C.primary }}>
+                {brandingData?.settings?.storeName || "19 DOGS"}
+              </span>
+            )}
+          </div>
           <p className="font-inter text-body-md max-w-xs" style={{ color: C.onSurfaceVariant }}>
             {footer.tagline}
           </p>
