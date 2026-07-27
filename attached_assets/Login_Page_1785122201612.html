@@ -1,0 +1,253 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Welcome Back | 19 DOGS</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&amp;family=Playfair+Display:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "on-surface": "#1a1c1a",
+                  "secondary-fixed": "#ffdbcc",
+                  "on-secondary": "#ffffff",
+                  "surface-bright": "#f9faf6",
+                  "surface-tint": "#3e6653",
+                  "surface-dim": "#dadad7",
+                  "surface-container": "#eeeeeb",
+                  "surface-container-lowest": "#ffffff",
+                  "on-error": "#ffffff",
+                  "surface-container-highest": "#e2e3e0",
+                  "on-primary-container": "#6d9681",
+                  "surface": "#f9faf6",
+                  "primary-fixed-dim": "#a5d0b8",
+                  "secondary-container": "#fe9e71",
+                  "on-primary-fixed-variant": "#264e3c",
+                  "on-background": "#1a1c1a",
+                  "on-tertiary-fixed": "#351000",
+                  "outline-variant": "#c1c8c2",
+                  "surface-container-low": "#f3f4f0",
+                  "background": "#f9faf6",
+                  "error": "#ba1a1a",
+                  "on-error-container": "#93000a",
+                  "inverse-on-surface": "#f0f1ee",
+                  "tertiary": "#260900",
+                  "tertiary-fixed": "#ffdbcc",
+                  "on-primary-fixed": "#002114",
+                  "on-secondary-container": "#77330e",
+                  "inverse-primary": "#a5d0b8",
+                  "on-surface-variant": "#414844",
+                  "on-tertiary-fixed-variant": "#76330d",
+                  "tertiary-fixed-dim": "#ffb694",
+                  "primary-container": "#012d1d",
+                  "surface-variant": "#e2e3e0",
+                  "outline": "#717973",
+                  "on-primary": "#ffffff",
+                  "surface-container-high": "#e8e8e5",
+                  "primary-fixed": "#c0edd4",
+                  "secondary": "#944923",
+                  "tertiary-container": "#471800",
+                  "secondary-fixed-dim": "#ffb695",
+                  "on-tertiary": "#ffffff",
+                  "on-secondary-fixed-variant": "#76330e",
+                  "primary": "#00160c",
+                  "error-container": "#ffdad6",
+                  "inverse-surface": "#2f312f",
+                  "on-secondary-fixed": "#351000",
+                  "on-tertiary-container": "#ce774c"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "stack-md": "32px",
+                  "stack-sm": "12px",
+                  "margin-mobile": "20px",
+                  "gutter": "24px",
+                  "stack-lg": "80px",
+                  "margin-desktop": "64px"
+          },
+          "fontFamily": {
+                  "label-md": ["Inter"],
+                  "label-caps": ["Inter"],
+                  "body-lg": ["Inter"],
+                  "headline-lg": ["Playfair Display"],
+                  "headline-lg-mobile": ["Playfair Display"],
+                  "display-lg": ["Playfair Display"],
+                  "body-md": ["Inter"],
+                  "headline-md": ["Playfair Display"],
+                  "mono": ["JetBrains Mono"]
+          },
+          "fontSize": {
+                  "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                  "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                  "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "300"}],
+                  "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                  "headline-lg-mobile": ["36px", {"lineHeight": "44px", "fontWeight": "600"}],
+                  "display-lg": ["84px", {"lineHeight": "92px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                  "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                  "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+    .hard-shadow {
+      box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+    }
+    .copper-focus:focus-within {
+      border-color: #944923;
+    }
+    .monospaced-label {
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 10px;
+    }
+    input::placeholder {
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      color: #717973;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-x-hidden min-h-screen flex flex-col">
+<!-- TopNavBar (Suppressed for focused login journey per rules, but included if user expects the "Back to Store" logic) -->
+<header class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-stack-sm fixed top-0 z-50 bg-transparent">
+<div class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tighter uppercase">19 DOGS</div>
+<a class="text-on-surface-variant font-label-caps text-label-caps hover:text-secondary transition-colors duration-300 flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+      STORE
+    </a>
+</header>
+<main class="flex-grow grid grid-cols-1 md:grid-cols-12 min-h-screen">
+<!-- LEFT: Authentication Form -->
+<section class="md:col-span-5 flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-24 bg-surface-bright z-10 relative">
+<div class="max-w-md w-full mx-auto md:ml-0">
+<div class="mb-12">
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Welcome Back</h1>
+<p class="font-body-md text-on-surface-variant">Sign in to your 19 DOGS account.</p>
+</div>
+<form class="space-y-stack-md">
+<!-- Email Field -->
+<div class="group">
+<label class="monospaced-label block mb-2 text-primary">Biological_ID / Email</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant py-3 px-0 focus:ring-0 focus:border-secondary transition-all outline-none font-body-md text-primary" placeholder="identifier@19dogs.lab" type="email">
+</div>
+<!-- Password Field -->
+<div class="group">
+<div class="flex justify-between items-end mb-2">
+<label class="monospaced-label text-primary">ACCESS_KEY / PASSWORD</label>
+<a class="monospaced-label text-secondary hover:underline" href="#">Forgot_Password?</a>
+</div>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant py-3 px-0 focus:ring-0 focus:border-secondary transition-all outline-none font-body-md text-primary" placeholder="••••••••" type="password">
+</div>
+<!-- Action -->
+<div class="pt-6">
+<button class="w-full bg-primary-container text-on-primary py-5 font-label-md uppercase tracking-widest hover:bg-primary transition-all duration-300 group flex items-center justify-center gap-3">
+<span class="">Sign In</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</form>
+<div class="mt-8">
+<p class="font-label-md text-on-surface-variant">
+            Don't have an account? 
+            <a class="text-secondary font-bold hover:underline" href="#">Create one</a>
+</p>
+</div>
+<!-- Persona Selection (Bento Style) -->
+<div class="mt-16 grid grid-cols-3 gap-3">
+<div class="flex flex-col gap-2 p-4 bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer border-l-2 border-transparent hover:border-secondary">
+<span class="material-symbols-outlined text-secondary text-[20px]">person</span>
+<div class="monospaced-label text-primary">CUSTOMERS</div>
+<div class="text-[9px] font-mono text-on-surface-variant opacity-70">SHOP &amp; TRACK</div>
+</div>
+<div class="flex flex-col gap-2 p-4 bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer border-l-2 border-transparent hover:border-secondary">
+<span class="material-symbols-outlined text-secondary text-[20px]">medical_services</span>
+<div class="monospaced-label text-primary">PROVIDERS</div>
+<div class="text-[9px] font-mono text-on-surface-variant opacity-70">MANAGE SERVICES</div>
+</div>
+<div class="flex flex-col gap-2 p-4 bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer border-l-2 border-transparent hover:border-secondary">
+<span class="material-symbols-outlined text-secondary text-[20px]">terminal</span>
+<div class="monospaced-label text-primary">ADMINS</div>
+<div class="text-[9px] font-mono text-on-surface-variant opacity-70">FULL CONTROL</div>
+</div>
+</div>
+<div class="mt-12 flex items-center gap-2 text-on-surface-variant opacity-60">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<span class="monospaced-label">Secure encrypted sign-in_V4.0</span>
+</div>
+</div>
+</section>
+<!-- RIGHT: Cinematic Background -->
+<section class="hidden md:block md:col-span-7 relative h-full">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-fashion editorial shot of a sleek, dark-furred Doberman Pinscher wearing a copper-accented technical harness, standing next to a model in a high-tech obsidian tactical suit within a futuristic glass laboratory. The lighting is low-key with dramatic copper glows reflecting off the glass walls. The atmosphere is clinical yet incredibly luxurious, with high contrast between deep forest greens and metallic copper accents. A masterpiece of veterinary sci-fi aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSHKgZ6mkE_yG3a0RB-tp_gCTNI2yC6rnTTgDSgXG6TN1qpVngbe6Tmo3MncWvQqhCSXvGabAxih5fzojU2kRA4rkkrJ5ZGskuwyAa3T2YHxQkIPQD6UY2Nz6-itd63-He9yEhx0HwqEgYLtolZku6_ZUazP01z1BVtwH2shGvtNa_YeN9xI7ioUHPPDJGz-U4jGz6fGzXXj8YDa6dkwYeF4quo1hAq6t4dCVeAyGl88Tl1QC1cJ-yNNlwHXfM_1_b6J1YYQ0mP8J1">
+</div>
+<!-- Overlay Gradient -->
+<div class="absolute inset-0 bg-gradient-to-r from-surface-bright/40 to-transparent z-[1]"></div>
+<!-- Editorial Quote Layer -->
+<div class="absolute bottom-margin-desktop left-margin-desktop right-margin-desktop z-[2] text-on-primary">
+<div class="max-w-lg p-stack-md bg-primary-container/80 backdrop-blur-md border-l border-secondary" style="transform: translate(-1.85156px, 4.92028px);">
+<div class="monospaced-label text-secondary mb-4">PROTOCOL_019</div>
+<p class="font-headline-md italic leading-tight mb-4">"Biological prestige is not inherited; it is engineered through rigorous scientific devotion."</p>
+<div class="flex items-center gap-4">
+<div class="w-12 h-[1px] bg-secondary"></div>
+<span class="font-label-caps text-[10px]">THE NEURAL BRIDGE PROJECT</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="flex flex-col md:flex-row justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-stack-md bg-surface border-t border-outline-variant mt-auto">
+<div class="font-headline-md text-headline-md text-primary mb-4 md:mb-0">19 DOGS</div>
+<div class="flex flex-wrap justify-center gap-gutter mb-4 md:mb-0">
+<a class="text-on-surface-variant font-label-caps text-label-caps hover:text-secondary transition-colors" href="#">PRIVACY</a>
+<a class="text-on-surface-variant font-label-caps text-label-caps hover:text-secondary transition-colors" href="#">TERMS</a>
+<a class="text-on-surface-variant font-label-caps text-label-caps hover:text-secondary transition-colors" href="#">SCIENTIFIC PROTOCOL</a>
+</div>
+<div class="text-on-surface-variant font-label-caps text-label-caps opacity-80">
+      © 2024 19 DOGS. BIOLOGICAL PRESTIGE.
+    </div>
+</footer>
+<script>
+    // Subtle hover effect for the cinematic quote box
+    const quoteBox = document.querySelector('.bg-primary-container\\/80');
+    if (quoteBox) {
+      document.addEventListener('mousemove', (e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 10;
+        const y = (e.clientY / window.innerHeight - 0.5) * 10;
+        quoteBox.style.transform = `translate(${x}px, ${y}px)`;
+      });
+    }
+
+    // Input interaction focus effects
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.addEventListener('focus', () => {
+        input.parentElement.querySelector('.monospaced-label').style.color = '#944923';
+      });
+      input.addEventListener('blur', () => {
+        input.parentElement.querySelector('.monospaced-label').style.color = '#00160c';
+      });
+    });
+  </script>
+
+
+</body></html>
