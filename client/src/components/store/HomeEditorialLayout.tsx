@@ -1,7 +1,32 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { ShoppingBag, Menu, X, Search, Globe, Camera, PlayCircle, PackageSearch } from "lucide-react";
 import type { HomepageSettings } from "@/lib/homepageDefaults";
+
+interface BrandingSettings { logoUrl: string; storeName: string; showStoreName: boolean; }
+
+function BrandLogo({ height = 36, textSize = 24, textStyle }: { height?: number; textSize?: number; textStyle?: React.CSSProperties }) {
+  const { data } = useQuery<{ settings: BrandingSettings }>({ queryKey: ["/api/settings/branding"] });
+  const b = data?.settings;
+  if (b?.logoUrl) {
+    return (
+      <img
+        src={b.logoUrl}
+        alt={b.storeName || "19 DOGS"}
+        style={{ height, objectFit: "contain", display: "block" }}
+      />
+    );
+  }
+  return (
+    <span
+      className="font-playfair font-bold select-none"
+      style={{ fontSize: textSize, letterSpacing: "0.1em", color: C.primary, ...textStyle }}
+    >
+      {b?.storeName || "19 DOGS"}
+    </span>
+  );
+}
 
 const C = {
   primary:            "#00160c",
@@ -46,11 +71,8 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
       style={{ backgroundColor: `${C.surface}F2`, backdropFilter: "blur(12px)" }}
     >
       <Link href="/">
-        <span
-          className="font-playfair font-bold cursor-pointer select-none"
-          style={{ fontSize: 24, letterSpacing: "0.1em", color: C.primary }}
-        >
-          19 DOGS
+        <span className="cursor-pointer flex items-center" style={{ minHeight: 36 }}>
+          <BrandLogo height={36} textSize={24} />
         </span>
       </Link>
 
@@ -220,7 +242,9 @@ export function HomeEditorialFooter({ footer }: { footer: HomepageSettings["foot
     >
       <div className="grid grid-cols-12 gap-gutter px-margin-desktop mb-stack-lg">
         <div className="col-span-12 md:col-span-4">
-          <div className="font-playfair font-bold mb-8" style={{ fontSize: 40, color: C.primary }}>19 DOGS</div>
+          <div className="mb-8">
+            <BrandLogo height={48} textSize={40} />
+          </div>
           <p className="font-inter text-body-md max-w-xs" style={{ color: C.onSurfaceVariant }}>
             {footer.tagline}
           </p>

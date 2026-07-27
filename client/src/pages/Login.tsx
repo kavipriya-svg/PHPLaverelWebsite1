@@ -166,8 +166,14 @@ export default function Login() {
         width: "100%", paddingTop: 12, paddingBottom: 12,
         position: "fixed", top: 0, zIndex: 50, background: "transparent",
       }}>
-        <div style={{ fontFamily: PLAYFAIR, fontSize: "clamp(24px,3vw,48px)", lineHeight: 1.1, fontWeight: 600, color: T.primary, letterSpacing: "-0.02em", textTransform: "uppercase" }}>
-          {storeName}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {branding.logoUrl ? (
+            <img src={branding.logoUrl} alt={storeName} style={{ height: 40, objectFit: "contain", display: "block" }} />
+          ) : (
+            <span style={{ fontFamily: PLAYFAIR, fontSize: "clamp(24px,3vw,48px)", lineHeight: 1.1, fontWeight: 600, color: T.primary, letterSpacing: "-0.02em", textTransform: "uppercase" }}>
+              {storeName}
+            </span>
+          )}
         </div>
         <Link href="/" className="nav-store-link">
           <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_back</span>
@@ -361,8 +367,14 @@ export default function Login() {
 
       {/* ── Footer ── */}
       <footer className="h-padding footer-row" style={{ display: "flex", justifyContent: "space-between", width: "100%", paddingTop: 32, paddingBottom: 32, background: T.surface, borderTop: `1px solid ${T.outlineVariant}`, marginTop: "auto" }}>
-        <div className="footer-mb" style={{ fontFamily: PLAYFAIR, fontSize: 32, lineHeight: "40px", fontWeight: 400, color: T.primary }}>
-          {storeName}
+        <div className="footer-mb" style={{ display: "flex", alignItems: "center" }}>
+          {branding.logoUrl ? (
+            <img src={branding.logoUrl} alt={storeName} style={{ height: 36, objectFit: "contain", display: "block" }} />
+          ) : (
+            <span style={{ fontFamily: PLAYFAIR, fontSize: 32, lineHeight: "40px", fontWeight: 400, color: T.primary }}>
+              {storeName}
+            </span>
+          )}
         </div>
         <div className="footer-mb" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 24 }}>
           {["PRIVACY", "TERMS", "SCIENTIFIC PROTOCOL"].map(lnk => (

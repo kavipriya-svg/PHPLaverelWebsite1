@@ -248,8 +248,14 @@ export default function Signup() {
         {/* ── RIGHT: Form panel ── */}
         <section className="right-panel">
           {/* Mobile brand anchor */}
-          <div style={{ display: "block", position: "absolute", top: 32, left: 20, fontFamily: PLAYFAIR, fontSize: 32, lineHeight: "40px", color: T.primary, letterSpacing: "-0.02em" }} className="md-hidden">
-            {storeName}
+          <div style={{ display: "block", position: "absolute", top: 32, left: 20 }} className="md-hidden">
+            {branding.logoUrl ? (
+              <img src={branding.logoUrl} alt={storeName} style={{ height: 36, objectFit: "contain", display: "block" }} />
+            ) : (
+              <span style={{ fontFamily: PLAYFAIR, fontSize: 32, lineHeight: "40px", color: T.primary, letterSpacing: "-0.02em" }}>
+                {storeName}
+              </span>
+            )}
           </div>
 
           <div style={{ maxWidth: 448, width: "100%", marginLeft: 0 }} className="mx-auto md-mx-0">
