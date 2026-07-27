@@ -118,7 +118,7 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
           <img
             src={brandingData.settings.logoUrl}
             alt={brandingData.settings.storeName || "19 DOGS"}
-            style={{ height: 36, objectFit: "contain", display: "block" }}
+            style={{ height: 56, objectFit: "contain", display: "block" }}
           />
         ) : (
           <span

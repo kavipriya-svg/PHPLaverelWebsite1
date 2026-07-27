@@ -168,7 +168,7 @@ export default function Login() {
       }}>
         <div style={{ display: "flex", alignItems: "center" }}>
           {branding.logoUrl ? (
-            <img src={branding.logoUrl} alt={storeName} style={{ height: 40, objectFit: "contain", display: "block" }} />
+            <img src={branding.logoUrl} alt={storeName} style={{ height: 56, objectFit: "contain", display: "block" }} />
           ) : (
             <span style={{ fontFamily: PLAYFAIR, fontSize: "clamp(24px,3vw,48px)", lineHeight: 1.1, fontWeight: 600, color: T.primary, letterSpacing: "-0.02em", textTransform: "uppercase" }}>
               {storeName}

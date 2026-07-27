@@ -250,7 +250,7 @@ export default function Signup() {
           {/* Mobile brand anchor */}
           <div style={{ display: "block", position: "absolute", top: 32, left: 20 }} className="md-hidden">
             {branding.logoUrl ? (
-              <img src={branding.logoUrl} alt={storeName} style={{ height: 36, objectFit: "contain", display: "block" }} />
+              <img src={branding.logoUrl} alt={storeName} style={{ height: 56, objectFit: "contain", display: "block" }} />
             ) : (
               <span style={{ fontFamily: PLAYFAIR, fontSize: 32, lineHeight: "40px", color: T.primary, letterSpacing: "-0.02em" }}>
                 {storeName}
