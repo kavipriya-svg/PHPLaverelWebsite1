@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>19 DOGS | Biological Protocol Synchronized</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Inter:wght@300;400;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#ffb695",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#471800",
+                        "primary-fixed-dim": "#a5d0b8",
+                        "tertiary": "#260900",
+                        "inverse-on-surface": "#f0f1ee",
+                        "on-tertiary-container": "#ce774c",
+                        "primary-fixed": "#c0edd4",
+                        "primary": "#00160c",
+                        "tertiary-fixed-dim": "#ffb694",
+                        "on-error": "#ffffff",
+                        "on-background": "#1a1c1a",
+                        "surface-container": "#eeeeeb",
+                        "outline-variant": "#c1c8c2",
+                        "on-surface": "#1a1c1a",
+                        "surface-variant": "#e2e3e0",
+                        "surface-container-low": "#f3f4f0",
+                        "primary-container": "#012d1d",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#717973",
+                        "on-tertiary-fixed-variant": "#76330d",
+                        "inverse-primary": "#a5d0b8",
+                        "secondary": "#944923",
+                        "on-secondary-fixed": "#351000",
+                        "on-primary-container": "#6d9681",
+                        "surface-container-high": "#e8e8e5",
+                        "surface-tint": "#3e6653",
+                        "on-primary-fixed": "#002114",
+                        "background": "#f9faf6",
+                        "surface-dim": "#dadad7",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2f312f",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface": "#f9faf6",
+                        "secondary-container": "#fe9e71",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#351000",
+                        "on-primary-fixed-variant": "#264e3c",
+                        "on-surface-variant": "#414844",
+                        "on-secondary-fixed-variant": "#76330e",
+                        "surface-container-highest": "#e2e3e0",
+                        "secondary-fixed": "#ffdbcc",
+                        "on-secondary-container": "#77330e",
+                        "surface-bright": "#f9faf6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "20px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "stack-sm": "12px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Playfair Display"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Playfair Display"],
+                        "headline-md": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "300"}],
+                        "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["36px", {"lineHeight": "44px", "fontWeight": "600"}],
+                        "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                        "display-lg": ["84px", {"lineHeight": "92px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .hard-shadow {
+            box-shadow: 40px 40px 0 0 rgba(1, 45, 29, 0.05);
+        }
+        .technical-grid {
+            background-image: linear-gradient(to right, rgba(113, 121, 115, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(113, 121, 115, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .clip-slant {
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0% 100%);
+        }
+        .mono-label {
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background technical-grid min-h-screen selection:bg-primary selection:text-white">
+<!-- Top Navigation Bar -->
+<nav class="w-full top-0 border-b border-outline-variant bg-background/80 backdrop-blur-md z-50 sticky">
+<div class="flex justify-between items-center px-margin-desktop py-stack-sm w-full mx-auto">
+<div class="font-headline-lg text-headline-lg font-bold tracking-tighter text-primary">19 DOGS</div>
+<div class="hidden md:flex gap-8">
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-md text-label-md" href="#">PROTOCOLS</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-md text-label-md" href="#">VITALITY</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-md text-label-md" href="#">SCIENCE</a>
+</div>
+<button class="font-label-caps text-label-caps tracking-[0.15em] text-primary border border-primary px-6 py-2 hover:bg-primary hover:text-white transition-all active:scale-95">LOGIN</button>
+</div>
+</nav>
+<main class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+<!-- Hero Section: Clinical Success -->
+<section class="grid grid-cols-12 gap-gutter relative mb-stack-lg">
+<div class="col-span-12 md:col-span-7 z-10">
+<div class="bg-primary p-12 text-white hard-shadow relative">
+<div class="mono-label text-primary-fixed-dim mb-4">TRANS_ID: 1785222316691</div>
+<h1 class="font-display-lg text-headline-lg-mobile md:text-display-lg leading-none mb-6">Biological Protocol:<br/>Synchronization Complete</h1>
+<div class="flex items-center gap-3 py-4 border-y border-white/10 mt-8">
+<span class="material-symbols-outlined text-secondary-fixed-dim" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<p class="font-label-caps text-label-caps tracking-widest">PROTOCOL SYNCHRONIZED // TRANSACTION SUCCESSFUL</p>
+</div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-6 md:absolute md:right-0 md:-top-12 md:h-[600px] w-full md:w-7/12 -mt-8 md:mt-0">
+<img alt="Neural Bridge Synchronization" class="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-700 cursor-crosshair" src="https://lh3.googleusercontent.com/aida/AP1WRLtxEHbMKkEhpccW2yhuzysXFNq0TRRpOn64PfbiDLpQNhbmevCHlp9mUOGr_KR4we4CdOOB-xvyIYsa9UKslqDU1O8gDXfTSCeFGOgYU4NHfFrXqvJ2AYEILL4gZ6FzuEUzpI1YTK7qLQHwDofMOTolAGu8LdwC7G-rJ4_taYWO0qxWjhmpzmhp7Y3wFzg1zMq_CGVNlQ6TzEgAUDK7yIVG8vh4xOQuKq8GK8DVfT7R_xRn-CuzRkCdrctg"/>
+</div>
+</section>
+<!-- Order Metadata Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12 mt-stack-lg border-t border-outline-variant pt-stack-md">
+<!-- Order Core Info -->
+<div class="space-y-6">
+<div>
+<h3 class="font-label-caps text-label-caps text-outline mb-2">IDENTIFIER</h3>
+<p class="font-mono text-body-md font-bold text-primary">#ORD-1785222316691-JAV3</p>
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-outline mb-2">TEMPORAL LOG</h3>
+<p class="font-mono text-body-md">28 July 2026 at 12:35 pm</p>
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-outline mb-2">CURRENT STATUS</h3>
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-high border border-outline-variant">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<p class="font-mono text-[10px] font-bold text-on-surface">PENDING LOGISTICS INITIALIZATION</p>
+</div>
+</div>
+</div>
+<!-- Shipping Dossier -->
+<div class="space-y-6">
+<div>
+<h3 class="font-label-caps text-label-caps text-outline mb-2">SHIPPING COORDINATES</h3>
+<div class="font-body-md text-on-surface-variant leading-relaxed">
+<p class="font-bold text-primary">Prasanna V</p>
+<p>6/11, Vidhyodhya Main Road,</p>
+<p>Chenani, Tamil Nadu 600004, India</p>
+</div>
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-outline mb-2">FINANCIAL SYNCHRONIZATION</h3>
+<p class="font-mono text-body-md">Method: Cash on Delivery</p>
+<p class="font-mono text-label-caps text-secondary mt-1">(Status: Pending)</p>
+</div>
+</div>
+<!-- Totals & Ledger -->
+<div class="bg-surface-container-low p-8 border-l border-primary-container relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 opacity-5">
+<span class="material-symbols-outlined text-6xl">verified_user</span>
+</div>
+<h3 class="font-label-caps text-label-caps text-primary mb-6">FINANCIAL LEDGER</h3>
+<div class="space-y-3 font-mono text-sm border-b border-outline-variant pb-4 mb-4">
+<div class="flex justify-between">
+<span>SUBTOTAL</span>
+<span>₹499.00</span>
+</div>
+<div class="flex justify-between">
+<span>LOGISTICS</span>
+<span>₹99.00</span>
+</div>
+<div class="flex justify-between">
+<span>GST (8%)</span>
+<span>₹0.00</span>
+</div>
+</div>
+<div class="flex justify-between font-mono text-lg font-bold text-primary">
+<span>TOTAL</span>
+<span>₹598.00</span>
+</div>
+</div>
+</div>
+<!-- Order Items Dossier -->
+<section class="mt-stack-lg">
+<h2 class="font-headline-md text-headline-md text-primary mb-8 border-b border-outline-variant pb-4">Order Items Dossier</h2>
+<div class="flex flex-col md:flex-row items-center gap-8 bg-white p-6 hard-shadow border-l-4 border-secondary">
+<div class="w-24 h-24 bg-surface-variant flex-shrink-0 relative">
+<img class="w-full h-full object-cover grayscale" data-alt="A clinical, top-down product photograph of a vacuum-sealed raw chicken and rice dog meal in premium minimalist packaging. The lighting is bright and even, highlighting the fresh texture of the chicken. The aesthetic is clean, medical-grade, and sophisticated with deep forest green accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBekOPKpI47qN4nydYwLfCetKPg-aPSghfRHmwX1xDUe9bTga-qnUqTXhVQw-8Db0iXAXM3EX93OSJAgYETQ2rlu14WMNmMEJq8QuWzltYBt7Y8CqbvFXKtJciW4vjbtDddJPEsHX9f11hObgHaSkXATlSCzDUIb5TDWsYMTLD-bO3HFEv8Kvz0RAOP7QehjjGsFHUCP9SfBpfNZOseiHC1AY6YtUL0jdYuyfZhShkDxISSIb21KEd7_njJHqGILoosx4zxqLK7Zn9X"/>
+<div class="absolute inset-0 border border-black/5"></div>
+</div>
+<div class="flex-grow">
+<div class="font-mono text-[10px] text-outline mb-1">SKU: 19D-FM-001</div>
+<h4 class="font-headline-md text-body-lg font-bold text-primary">Raw Chicken &amp; Rice Complete Meal</h4>
+<p class="font-body-md text-on-surface-variant mt-1">High-bioavailability canine nutrition optimized for metabolic synchronization.</p>
+</div>
+<div class="text-right">
+<div class="font-mono text-label-caps text-outline mb-1">UNIT x QUANTITY</div>
+<div class="font-mono text-body-md font-bold text-primary">₹499.00 x 1</div>
+</div>
+</div>
+</section>
+<!-- What's Next? (Process Visualization) -->
+<section class="mt-stack-lg grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-6">What's Next?</h2>
+<div class="space-y-8">
+<div class="flex gap-6">
+<div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center font-mono text-xs flex-shrink-0">01</div>
+<div>
+<h4 class="font-label-caps text-label-caps text-primary mb-1">Preparation for Shipment</h4>
+<p class="font-body-md text-on-surface-variant">Your order is being queued for cold-chain fulfillment. Biological integrity is maintained through -18°C stable transport.</p>
+</div>
+</div>
+<div class="flex gap-6">
+<div class="w-8 h-8 rounded-full border border-outline text-outline flex items-center justify-center font-mono text-xs flex-shrink-0">02</div>
+<div>
+<h4 class="font-label-caps text-label-caps text-outline mb-1">Logistics Initialization</h4>
+<p class="font-body-md text-on-surface-variant opacity-60">You will receive a neural link via SMS/Email once the subject dossier has been dispatched to our premium courier partner.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary-container p-10 text-white flex flex-col gap-6">
+<h3 class="font-label-caps text-label-caps text-primary-fixed-dim">PRIMARY ACTIONS</h3>
+<button class="w-full bg-white text-primary font-label-caps text-label-caps tracking-widest py-4 hover:bg-secondary-fixed transition-colors active:scale-[0.98]">TRACK YOUR ORDER</button>
+<button class="w-full border border-white/20 text-white font-label-caps text-label-caps tracking-widest py-4 hover:bg-white/10 transition-colors active:scale-[0.98]">DOWNLOAD INVOICE</button>
+<a class="text-center font-label-caps text-[10px] text-primary-fixed-dim underline underline-offset-8 mt-4 hover:text-white transition-colors" href="#">CONTINUE SHOPPING</a>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full bg-primary dark:bg-primary-container mt-stack-lg">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop py-stack-md w-full border-t border-outline-variant">
+<div class="font-headline-md text-headline-md text-on-primary mb-6 md:mb-0">19 DOGS</div>
+<div class="flex flex-wrap justify-center gap-8 mb-6 md:mb-0">
+<a class="font-label-caps text-label-caps tracking-[0.15em] text-on-primary opacity-50 hover:opacity-100 transition-opacity" href="#">FDA COMPLIANCE</a>
+<a class="font-label-caps text-label-caps tracking-[0.15em] text-on-primary opacity-50 hover:opacity-100 transition-opacity" href="#">CLINICAL DATA</a>
+<a class="font-label-caps text-label-caps tracking-[0.15em] text-on-primary opacity-50 hover:opacity-100 transition-opacity" href="#">PRIVACY</a>
+<a class="font-label-caps text-label-caps tracking-[0.15em] text-on-primary opacity-50 hover:opacity-100 transition-opacity" href="#">ETHICS</a>
+</div>
+<p class="font-label-caps text-[9px] text-on-primary opacity-30 tracking-[0.2em] text-center md:text-right">
+                © 2024 19 DOGS BIOLOGICAL SYSTEMS. ALL RIGHTS RESERVED.
+            </p>
+</div>
+</footer>
+<script>
+        // Subtle interaction for image hover
+        const heroImg = document.querySelector('img');
+        heroImg.addEventListener('mouseenter', () => {
+            heroImg.classList.remove('grayscale');
+        });
+        heroImg.addEventListener('mouseleave', () => {
+            heroImg.classList.add('grayscale');
+        });
+
+        // Background Animation (Floating particles)
+        const canvas = document.createElement('canvas');
+        canvas.className = 'fixed inset-0 pointer-events-none opacity-20 z-0';
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1 + 0.5;
+                this.speedX = Math.random() * 0.2 - 0.1;
+                this.speedY = Math.random() * 0.2 - 0.1;
+                this.life = Math.random() * 100;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = '#012d1d';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            for (let i = 0; i < 50; i++) particles.push(new Particle());
+            animate();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        init();
+    </script>
+</body></html>

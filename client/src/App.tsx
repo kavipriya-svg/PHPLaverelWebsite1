@@ -205,9 +205,9 @@ function Router() {
       </Route>
       
       <Route path="/order-confirmation/:orderNumber">
-        <StoreLayout>
+        <HomeLayout>
           <OrderConfirmation />
-        </StoreLayout>
+        </HomeLayout>
       </Route>
       
       <Route path="/track-order">
