@@ -1,7 +1,7 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -742,12 +742,33 @@ function Router() {
   );
 }
 
+function DynamicFavicon() {
+  const { data } = useQuery<{ settings: { faviconUrl?: string; logoUrl?: string } }>({
+    queryKey: ["/api/settings/branding"],
+  });
+
+  useEffect(() => {
+    const url = data?.settings?.faviconUrl || data?.settings?.logoUrl;
+    if (!url) return;
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = url;
+  }, [data]);
+
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <StoreProvider>
           <TooltipProvider>
+            <DynamicFavicon />
             <Router />
             <Toaster />
           </TooltipProvider>
