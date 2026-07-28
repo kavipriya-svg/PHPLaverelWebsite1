@@ -1,0 +1,393 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>19 DOGS | Biological Protocol Finalization</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Inter:wght@300;400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#414844",
+                        "outline-variant": "#c1c8c2",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#012d1d",
+                        "inverse-primary": "#a5d0b8",
+                        "surface-variant": "#e2e3e0",
+                        "on-tertiary-fixed-variant": "#76330d",
+                        "on-primary-fixed-variant": "#264e3c",
+                        "tertiary-container": "#471800",
+                        "tertiary-fixed": "#ffdbcc",
+                        "inverse-on-surface": "#f0f1ee",
+                        "surface": "#f9faf6",
+                        "on-primary-fixed": "#002114",
+                        "on-tertiary-fixed": "#351000",
+                        "primary-fixed-dim": "#a5d0b8",
+                        "secondary-fixed-dim": "#ffb695",
+                        "on-surface": "#1a1c1a",
+                        "background": "#f9faf6",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "outline": "#717973",
+                        "secondary-fixed": "#ffdbcc",
+                        "on-secondary-container": "#77330e",
+                        "surface-dim": "#dadad7",
+                        "on-secondary-fixed-variant": "#76330e",
+                        "on-secondary-fixed": "#351000",
+                        "inverse-surface": "#2f312f",
+                        "surface-container-highest": "#e2e3e0",
+                        "surface-tint": "#3e6653",
+                        "surface-container-high": "#e8e8e5",
+                        "tertiary": "#260900",
+                        "primary-fixed": "#c0edd4",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#6d9681",
+                        "on-error": "#ffffff",
+                        "secondary": "#944923",
+                        "surface-bright": "#f9faf6",
+                        "on-tertiary-container": "#ce774c",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#eeeeeb",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f3f4f0",
+                        "tertiary-fixed-dim": "#ffb694",
+                        "on-background": "#1a1c1a",
+                        "secondary-container": "#fe9e71",
+                        "primary": "#00160c",
+                        "error": "#ba1a1a"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "stack-lg": "80px",
+                        "margin-mobile": "20px",
+                        "gutter": "24px",
+                        "stack-md": "32px",
+                        "stack-sm": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Playfair Display"],
+                        "headline-lg": ["Playfair Display"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                        "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #f9faf6;
+            color: #1a1c1a;
+            -webkit-font-smoothing: antialiased;
+        }
+        .hard-shadow {
+            box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.08);
+        }
+        .input-border-only {
+            border: none;
+            border-bottom: 1px solid #DBDAD5;
+            background: transparent;
+            border-radius: 0;
+            padding: 8px 0;
+        }
+        .input-border-only:focus {
+            outline: none;
+            border-bottom: 2px solid #00160c;
+            box-shadow: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        select.input-border-only {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23717973'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right center;
+            background-size: 1.5em;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-background">
+<!-- Top Navigation -->
+<header class="w-full top-0 sticky bg-surface z-50 border-b border-outline-variant">
+<div class="max-w-full mx-auto px-margin-desktop py-6 flex justify-between items-center">
+<div class="font-headline-lg text-[32px] tracking-tighter text-primary font-bold">19 DOGS</div>
+<div class="flex items-center gap-8">
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PROTOCOL STATUS</span>
+<span class="font-label-caps text-label-caps text-secondary">STAGE 2/3: FINALIZATION</span>
+</div>
+<div class="w-24 h-[2px] bg-surface-variant relative">
+<div class="absolute inset-y-0 left-0 bg-secondary w-2/3"></div>
+</div>
+<a class="text-on-surface hover:opacity-70 transition-opacity" href="#">
+<span class="material-symbols-outlined">close</span>
+</a>
+</div>
+</div>
+</header>
+<main class="max-w-[1440px] mx-auto px-margin-desktop py-stack-lg grid grid-cols-12 gap-gutter items-start">
+<!-- Left Column: Form -->
+<div class="col-span-7 flex flex-col gap-stack-lg">
+<!-- Contact Information -->
+<section id="contact-information">
+<div class="flex justify-between items-baseline mb-stack-md">
+<h2 class="font-headline-md text-headline-md">Contact Information</h2>
+<p class="font-body-md text-sm">
+<span class="text-on-surface-variant">Already have an account?</span>
+<a class="text-secondary font-semibold hover:underline" href="#">Sign in</a>
+</p>
+</div>
+<div class="col-span-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase tracking-wider">Communication_Link (Email)</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="ENTER EMAIL ADDRESS" type="email">
+</div>
+</section>
+<!-- Shipping Address -->
+<section id="shipping-protocol">
+<div class="mb-stack-md">
+<h2 class="font-headline-md text-headline-md mb-2">Shipping Address</h2>
+<p class="font-body-md text-on-surface-variant max-w-lg">Define the geographic termination point for protocol deployment.</p>
+</div>
+<form class="grid grid-cols-2 gap-x-gutter gap-y-stack-md">
+<div class="col-span-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1">FIRST NAME</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="ENTER FIRST NAME" type="text">
+</div>
+<div class="col-span-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1">LAST NAME</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="ENTER LAST NAME" type="text">
+</div>
+<div class="col-span-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase">Logistics_Coordinates (Address)</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="STREET ADDRESS" type="text">
+</div>
+<div class="col-span-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase">Sub_Location (Apartment / Suite / etc.)</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="APT, SUITE, UNIT (OPTIONAL)" type="text">
+</div>
+<div class="col-span-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase">Logistics_Zone (City)</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="CITY" type="text">
+</div>
+<div class="col-span-1 flex gap-gutter">
+<div class="flex-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1">STATE</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="STATE" type="text">
+</div>
+<div class="w-32">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1">POSTAL CODE</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="000000" type="text">
+</div>
+</div>
+<div class="col-span-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase">Territorial_Domain (Country)</label>
+<select class="w-full input-border-only font-body-md uppercase text-sm tracking-wide bg-transparent">
+<option value="IN">INDIA</option>
+<option value="US">UNITED STATES</option>
+<option value="CA">CANADA</option>
+<option value="UK">UNITED KINGDOM</option>
+<option value="AU">AUSTRALIA</option>
+</select>
+</div>
+<div class="col-span-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase">Voice_Protocol (Phone)</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="+91 00000 00000" type="text">
+</div>
+<div class="col-span-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1">GST NUMBER (OPTIONAL)</label>
+<input class="w-full input-border-only font-body-md uppercase text-sm tracking-wide" placeholder="ENTER GST NUMBER" type="text">
+</div>
+</form>
+</section>
+<!-- Billing Address -->
+<section id="billing-protocol">
+<div class="mb-stack-md">
+<h2 class="font-headline-md text-headline-md mb-2">Billing Address</h2>
+</div>
+<div class="mb-6">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded-none border-outline border-2 text-primary focus:ring-0" type="checkbox">
+<span class="font-label-caps text-label-caps text-on-surface uppercase group-hover:text-secondary transition-colors">USE THE SHIPPING ADDRESS FOR BILLING</span>
+</label>
+</div>
+</section>
+<!-- Payment Protocol -->
+<section id="payment-protocol">
+<div class="mb-stack-md">
+<h2 class="font-headline-md text-headline-md mb-2">Financial Synchronization</h2>
+<p class="font-body-md text-on-surface-variant">Encrypted gateway for resource allocation.</p>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Credit Card -->
+<label class="flex items-start gap-4 p-6 border border-primary bg-surface-container-low cursor-pointer group transition-colors">
+<input checked="" class="mt-1 w-4 h-4 text-primary focus:ring-0 border-outline" name="payment_method" type="radio">
+<div class="flex-1">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-caps text-label-md text-primary uppercase">PAY ONLINE</span>
+<span class="material-symbols-outlined text-primary">credit_card</span>
+</div>
+<p class="font-body-md text-xs text-on-surface-variant">Pay securely with your credit card</p>
+<div class="flex flex-col gap-4 mt-6 pt-6 border-t border-outline-variant/30"><div class="flex items-center justify-between p-3 border border-outline-variant/30 bg-surface-container-highest/30 group/gateway cursor-pointer hover:border-primary transition-colors"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-primary">account_balance_wallet</span><span class="font-label-caps text-[10px] tracking-widest uppercase">Razorpay_Gateway</span></div><span class="material-symbols-outlined text-xs opacity-0 group-hover/gateway:opacity-100 transition-opacity">arrow_forward_ios</span></div><div class="flex items-center justify-between p-3 border border-outline-variant/30 bg-surface-container-highest/30 group/gateway cursor-pointer hover:border-primary transition-colors"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-primary">security</span><span class="font-label-caps text-[10px] tracking-widest uppercase">CC_Avenue_Secure</span></div><span class="material-symbols-outlined text-xs opacity-0 group-hover/gateway:opacity-100 transition-opacity">arrow_forward_ios</span></div><p class="font-label-caps text-[9px] text-on-surface-variant opacity-60 uppercase mt-2">Redirecting to secure external synchronization node upon selection.</p></div>
+</div>
+</label>
+<!-- COD -->
+<label class="flex items-start gap-4 p-6 border border-outline-variant hover:border-primary cursor-pointer group transition-colors">
+<input class="mt-1 w-4 h-4 text-primary focus:ring-0 border-outline" name="payment_method" type="radio">
+<div class="flex-1">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-caps text-label-md text-on-surface group-hover:text-primary uppercase">Cash on Delivery</span>
+<span class="material-symbols-outlined text-outline">payments</span>
+</div>
+<p class="font-body-md text-xs text-on-surface-variant">Pay when you receive your order</p>
+</div>
+</label>
+</div>
+</section>
+<div class="flex flex-col gap-stack-sm pt-4">
+<button class="w-full bg-primary text-on-primary py-6 px-10 font-label-caps text-label-md tracking-[0.2em] hover:bg-primary-container transition-all flex justify-between items-center">
+                    PLACE ORDER
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<p class="font-label-caps text-[9px] text-center text-on-surface-variant opacity-60">BY PLACING THIS ORDER, YOU AGREE TO OUR TERMS OF SERVICE AND PRIVACY POLICY.</p>
+</div>
+</div>
+<!-- Right Column: Protocol Summary -->
+<div class="col-span-5 sticky top-32">
+<div class="bg-surface-container-high p-10 hard-shadow border border-outline-variant/30 flex flex-col gap-stack-md" style="box-shadow: rgba(1, 45, 29, 0.08) 45.35px 26.1812px 0px 0px;">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-md text-[24px] uppercase tracking-tight">Protocol Dossier</h3>
+<span class="font-label-caps text-label-caps bg-secondary/10 text-secondary px-3 py-1">V.01-REV</span>
+</div>
+<!-- Items List -->
+<div class="flex flex-col gap-8">
+<!-- Item 1 -->
+<div class="flex gap-gutter group cursor-default">
+<div class="w-20 h-24 bg-surface-dim overflow-hidden flex-shrink-0">
+<img alt="Wild Duck Protein Bowl" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlGGE4Iro-LWRYb8cmqu5DQ7botKuZ6w9oNpVKveNcU0pVTTknS_yK-kYoOOfU_jRRaD834KngI6YF2FQII5BhgaNI6o1Ko6Mj7ZXnY2wUyNvClCfjl8T-wYhczW87CS74FRHcIAQS_qsrYheeKZ0hfzohmrA78UvA_T3e92pbpBY9VY7A19J0UR_K4efvokddPvPVygpURk5P5p8_7Y35-TjH58GYjOYmS8qhK64QR7CBK9G9GA4mg1FY7zI2bq3nY7yxTclKipEM">
+</div>
+<div class="flex flex-col justify-between py-1 flex-1">
+<div>
+<span class="font-label-caps text-[9px] text-secondary-container bg-primary-container px-2 py-0.5 mb-1 inline-block uppercase">ID: 19D-WDPB</span>
+<h4 class="font-headline-md text-body-md font-bold leading-tight">1x Wild Duck Protein Bowl</h4>
+<p class="font-label-caps text-[10px] text-on-surface-variant">Qty: 1 Unit</p>
+</div>
+<div class="font-headline-md text-md">₹649.00</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-gutter group cursor-default">
+<div class="w-20 h-24 bg-surface-dim overflow-hidden flex-shrink-0">
+<img alt="Raw Chicken &amp; Rice" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXAemXrsIYQni4beS9XBxWG4-mYmUNsqm4vjqD0ugU0ewcT7d_MSHtsu_awc7TImsaMqjpon3rYzNXAZscZHNLWJ3txBloGtrVPLMJA4D070cEEm93UXqV2aXoSirqzJzmmdaz5vrTjfhhFRyj9Znw6plKpWumIfXCWXWJt46hnL-rmhnjAjh4fL0AmEOx0gUvnaJ9Z-1RNDDobw2iXzvcnmVTvpvFa8vfs1e8cOk06BA927Bl5tc9Qs4coPy_Zc2afSJxLluqiQeI">
+</div>
+<div class="flex flex-col justify-between py-1 flex-1">
+<div>
+<span class="font-label-caps text-[9px] text-secondary-container bg-primary-container px-2 py-0.5 mb-1 inline-block uppercase">ID: 19D-RCRCM</span>
+<h4 class="font-headline-md text-body-md font-bold leading-tight">1x Raw Chicken &amp; Rice Complete Meal</h4>
+<p class="font-label-caps text-[10px] text-on-surface-variant">Qty: 1 Unit</p>
+</div>
+<div class="font-headline-md text-md">₹499.00</div>
+</div>
+</div>
+</div>
+<div class="h-[1px] bg-outline-variant/30 w-full"></div>
+<!-- Financial Breakdown -->
+<div class="flex flex-col gap-stack-sm">
+<div class="flex justify-between items-center font-label-caps text-label-caps">
+<span class="text-on-surface-variant uppercase">Subtotal</span>
+<span class="text-on-surface">₹1,148.00</span>
+</div>
+<div class="flex justify-between items-center font-label-caps text-label-caps">
+<span class="text-on-surface-variant uppercase">Shipping</span>
+<span class="text-secondary font-bold">FREE</span>
+</div>
+<div class="flex justify-between items-center font-label-caps text-label-caps">
+<span class="text-on-surface-variant uppercase">Incl. GST</span>
+<span class="text-on-surface">₹175.12</span>
+</div>
+</div>
+<div class="pt-4 mt-4 border-t-2 border-primary">
+<div class="flex justify-between items-end">
+<div>
+<span class="font-label-caps text-label-caps text-secondary-container bg-primary-container px-2 py-1 mb-1 inline-block uppercase">Total_Allocation</span>
+<div class="font-headline-lg text-[42px] leading-none">₹1,148.00</div>
+</div>
+<span class="font-label-caps text-[10px] text-on-surface-variant mb-1">INR (SECURE)</span>
+</div>
+</div>
+<!-- Security Assurance -->
+<div class="mt-4 p-4 border border-outline-variant bg-surface-container-low flex gap-4 items-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<div>
+<div class="font-label-caps text-[10px] text-on-surface font-bold">19 DOGS QUANTUM ENCRYPTION</div>
+<div class="font-label-caps text-[9px] text-on-surface-variant leading-tight uppercase">Biometric and financial data is handled under ISO-9001 biological security standards.</div>
+</div>
+</div>
+</div>
+<!-- Side Support Access -->
+<div class="mt-gutter flex justify-between px-4">
+<button class="flex items-center gap-2 font-label-caps text-[10px] text-on-surface-variant hover:text-primary transition-colors uppercase">
+<span class="material-symbols-outlined text-[16px]">help_center</span>
+                    Technical_Assistance
+                </button>
+<button class="flex items-center gap-2 font-label-caps text-[10px] text-on-surface-variant hover:text-primary transition-colors uppercase">
+<span class="material-symbols-outlined text-[16px]">history_edu</span>
+                    Protocol_Archive
+                </button>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full bg-primary-container text-on-primary-container py-12 mt-stack-lg border-t border-outline-variant/10">
+<div class="max-w-full mx-auto px-margin-desktop grid grid-cols-12 gap-gutter items-center">
+<div class="col-span-4">
+<div class="font-headline-lg text-[24px] tracking-tighter text-on-primary mb-2 uppercase">19 Dogs</div>
+<p class="font-label-caps text-[9px] opacity-60 leading-relaxed uppercase">
+                    © 19 DOGS BIOLOGICAL WELLNESS. ALL RIGHTS RESERVED. FOR SCIENTIFIC USE ONLY. PROPRIETARY EQUIPMENT AND LOGISTICS SYSTEMS.
+                </p>
+</div>
+<div class="col-span-8 flex justify-end gap-12 font-label-caps text-label-caps opacity-80 uppercase">
+<a class="hover:text-secondary-container transition-colors" href="#">Biological Compliance</a>
+<a class="hover:text-secondary-container transition-colors" href="#">Privacy_Protocols</a>
+<a class="hover:text-secondary-container transition-colors" href="#">System_Contact</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction: Input focus highlights section labels
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                const label = input.previousElementSibling;
+                if (label && label.tagName === 'LABEL') label.style.color = '#944923'; // secondary rust
+            });
+            input.addEventListener('blur', () => {
+                const label = input.previousElementSibling;
+                if (label && label.tagName === 'LABEL') label.style.color = '';
+            });
+        });
+
+        // Subtle parallax/hover for the product card shadow
+        const summaryCard = document.querySelector('.hard-shadow');
+        if (summaryCard) {
+            document.addEventListener('mousemove', (e) => {
+                const x = (window.innerWidth / 2 - e.pageX) / 80;
+                const y = (window.innerHeight / 2 - e.pageY) / 80;
+                summaryCard.style.boxShadow = `${40 + x}px ${40 + y}px 0px 0px rgba(1, 45, 29, 0.08)`;
+            });
+        }
+    </script>
+
+
+</body></html>

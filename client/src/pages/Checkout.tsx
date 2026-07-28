@@ -855,285 +855,373 @@ export default function Checkout() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
-        <p className="text-muted-foreground mb-8">
-          Add some items to your cart before checking out.
-        </p>
-        <Button asChild>
-          <a href="/">Continue Shopping</a>
-        </Button>
+      <div className="min-h-screen bg-[#f9faf6] flex flex-col items-center justify-center gap-6 px-4">
+        <p className="font-bold tracking-[0.2em] uppercase text-[#00160c] text-xl">Your Cart Is Empty</p>
+        <p className="text-sm text-[#00160c]/60 uppercase tracking-widest">No items to finalize. Return to the catalog.</p>
+        <a
+          href="/"
+          className="inline-flex items-center gap-3 bg-[#00160c] text-white px-8 py-4 text-xs tracking-[0.2em] uppercase font-bold hover:bg-[#012d1d] transition-colors"
+          data-testid="link-continue-shopping"
+        >
+          Return to Catalog
+        </a>
       </div>
     );
   }
 
   const subtotal = isSubscriptionCustomer ? subscriptionPricing.adjustedTotal : cartTotal;
   const couponDiscount = calculateDiscount();
-  // For subscription customers, use weight-based shipping per delivery date; otherwise use default logic
-  const shipping = isSubscriptionCustomer 
-    ? deliveryDateShipping.totalShipping 
+  const shipping = isSubscriptionCustomer
+    ? deliveryDateShipping.totalShipping
     : (subtotal >= 500 ? 0 : 99);
   const total = subtotal - couponDiscount - comboDiscount + shipping;
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+  const inputCls = "w-full bg-transparent border-0 border-b border-[#00160c]/25 rounded-none px-0 py-2 text-sm text-[#00160c] placeholder:text-[#00160c]/30 focus:outline-none focus:border-[#944923] transition-colors";
+  const labelCls = "block text-[10px] tracking-[0.15em] uppercase text-[#00160c]/50 mb-1 font-medium";
+  const sectionHeadingCls = "text-xs tracking-[0.25em] uppercase font-bold text-[#00160c] border-b border-[#00160c]/10 pb-3 mb-6";
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              {!isAuthenticated && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Contact Information</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="email" 
-                              placeholder="email@example.com" 
-                              {...field}
-                              data-testid="input-email"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Already have an account?{" "}
-                      <a href="/api/login" className="text-primary hover:underline">
-                        Sign in
-                      </a>
+  return (
+    <div className="min-h-screen bg-[#f9faf6] flex flex-col">
+      {/* Checkout Header */}
+      <header className="sticky top-0 z-50 bg-[#f9faf6] border-b border-[#00160c]/10">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-16 py-4 flex items-center justify-between gap-4">
+          <a href="/" className="font-black tracking-[-0.05em] text-[#00160c] text-xl uppercase" data-testid="link-header-logo">
+            19 Dogs
+          </a>
+          <div className="flex-1 max-w-md hidden md:block">
+            <div className="text-[9px] tracking-[0.2em] uppercase text-[#00160c]/40 mb-1.5">
+              Protocol Status / Stage 2/3: Finalization
+            </div>
+            <div className="h-[2px] bg-[#00160c]/10 relative">
+              <div className="absolute left-0 top-0 h-full bg-[#944923] transition-all" style={{ width: "66%" }} />
+            </div>
+          </div>
+          <a href="/cart" className="text-[10px] tracking-[0.15em] uppercase text-[#00160c]/50 hover:text-[#00160c] transition-colors flex items-center gap-2" data-testid="link-back-to-cart">
+            <X className="h-3.5 w-3.5" />
+            Cancel
+          </a>
+        </div>
+      </header>
+
+      {/* Main Grid */}
+      <main className="flex-1 max-w-[1400px] mx-auto w-full px-6 lg:px-16 py-12 grid grid-cols-12 gap-8 lg:gap-16 items-start">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="col-span-12 lg:col-span-7 flex flex-col gap-12">
+
+            {/* Contact Info */}
+            {!isAuthenticated && (
+              <section>
+                <div className={sectionHeadingCls}>Contact Information</div>
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <label className={labelCls}>Email Address</label>
+                        <FormControl>
+                          <input
+                            type="email"
+                            placeholder="operative@domain.com"
+                            className={inputCls}
+                            data-testid="input-email"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-[10px] text-red-600 mt-1" />
+                      </FormItem>
+                    )}
+                  />
+                  <p className="text-[10px] tracking-[0.1em] uppercase text-[#00160c]/40">
+                    Already registered?{" "}
+                    <a href="/api/login" className="text-[#944923] hover:underline">
+                      Authenticate here
+                    </a>
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* Shipping Address */}
+            <section>
+              <div className={sectionHeadingCls}>Shipping Address</div>
+
+              {/* Saved addresses for authenticated users */}
+              {isAuthenticated && (
+                <div className="mb-6">
+                  {addressesLoading ? (
+                    <div className="flex items-center gap-2 py-4 text-[#00160c]/40">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-[10px] tracking-[0.1em] uppercase">Loading protocols...</span>
+                    </div>
+                  ) : savedAddresses.length > 0 ? (
+                    <div className="space-y-2 mb-6">
+                      <p className="text-[10px] tracking-[0.1em] uppercase text-[#00160c]/50 mb-3">Select saved address or enter new:</p>
+                      {savedAddresses.map((address) => (
+                        <div
+                          key={address.id}
+                          onClick={() => handleSelectShippingAddress(address.id)}
+                          className={`border p-4 cursor-pointer transition-colors ${
+                            selectedShippingAddressId === address.id
+                              ? "border-[#944923] bg-[#944923]/5"
+                              : "border-[#00160c]/15 hover:border-[#00160c]/30"
+                          }`}
+                          data-testid={`shipping-address-option-${address.id}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-[#00160c] uppercase tracking-wide">
+                                {address.firstName} {address.lastName}
+                                {address.isDefault && <span className="ml-2 text-[9px] text-[#944923] normal-case tracking-normal font-normal">Default</span>}
+                              </p>
+                              <p className="text-[11px] text-[#00160c]/50 mt-0.5">
+                                {address.address1}{address.address2 && `, ${address.address2}`}, {address.city}, {address.state} {address.postalCode}
+                              </p>
+                            </div>
+                            {selectedShippingAddressId === address.id && (
+                              <Check className="h-4 w-4 text-[#944923] shrink-0" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <div
+                        onClick={() => handleSelectShippingAddress("new")}
+                        className={`border border-dashed p-4 cursor-pointer transition-colors flex items-center gap-2 ${
+                          selectedShippingAddressId === "new"
+                            ? "border-[#944923] bg-[#944923]/5"
+                            : "border-[#00160c]/20 hover:border-[#00160c]/40"
+                        }`}
+                        data-testid="shipping-address-option-new"
+                      >
+                        <Plus className="h-3.5 w-3.5 text-[#00160c]/40" />
+                        <span className="text-[10px] tracking-[0.15em] uppercase text-[#00160c]/50">Use different address</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] tracking-[0.1em] uppercase text-[#00160c]/40 mb-4 flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5" />
+                      No saved addresses. Enter below.
                     </p>
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Truck className="h-5 w-5" />
-                    Shipping Address
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Shipping Address Selection for Authenticated Users */}
+              {/* Address form */}
+              {(!isAuthenticated || showNewShippingForm || savedAddresses.length === 0) && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <FormField control={form.control} name="firstName" render={({ field }) => (
+                      <FormItem>
+                        <label className={labelCls}>First Name</label>
+                        <FormControl><input className={inputCls} data-testid="input-firstname" {...field} /></FormControl>
+                        <FormMessage className="text-[10px] text-red-600 mt-1" />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="lastName" render={({ field }) => (
+                      <FormItem>
+                        <label className={labelCls}>Last Name</label>
+                        <FormControl><input className={inputCls} data-testid="input-lastname" {...field} /></FormControl>
+                        <FormMessage className="text-[10px] text-red-600 mt-1" />
+                      </FormItem>
+                    )} />
+                  </div>
+                  <FormField control={form.control} name="address1" render={({ field }) => (
+                    <FormItem>
+                      <label className={labelCls}>Street Address</label>
+                      <FormControl><input className={inputCls} placeholder="Unit / Building / Street" data-testid="input-address1" {...field} /></FormControl>
+                      <FormMessage className="text-[10px] text-red-600 mt-1" />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="address2" render={({ field }) => (
+                    <FormItem>
+                      <label className={labelCls}>Apt / Suite / Floor (optional)</label>
+                      <FormControl><input className={inputCls} data-testid="input-address2" {...field} /></FormControl>
+                    </FormItem>
+                  )} />
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField control={form.control} name="city" render={({ field }) => (
+                      <FormItem>
+                        <label className={labelCls}>City</label>
+                        <FormControl><input className={inputCls} data-testid="input-city" {...field} /></FormControl>
+                        <FormMessage className="text-[10px] text-red-600 mt-1" />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="state" render={({ field }) => (
+                      <FormItem>
+                        <label className={labelCls}>State</label>
+                        <FormControl><input className={inputCls} data-testid="input-state" {...field} /></FormControl>
+                        <FormMessage className="text-[10px] text-red-600 mt-1" />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="postalCode" render={({ field }) => (
+                      <FormItem>
+                        <label className={labelCls}>Postal Code</label>
+                        <FormControl><input className={inputCls} data-testid="input-postal" {...field} /></FormControl>
+                        <FormMessage className="text-[10px] text-red-600 mt-1" />
+                      </FormItem>
+                    )} />
+                  </div>
+                  <FormField control={form.control} name="country" render={({ field }) => (
+                    <FormItem>
+                      <label className={labelCls}>Country</label>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger className="bg-transparent border-0 border-b border-[#00160c]/25 rounded-none px-0 py-2 text-sm text-[#00160c] focus:ring-0 focus:border-[#944923]" data-testid="select-country">
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="India">India</SelectItem>
+                            <SelectItem value="US">United States</SelectItem>
+                            <SelectItem value="CA">Canada</SelectItem>
+                            <SelectItem value="GB">United Kingdom</SelectItem>
+                            <SelectItem value="AU">Australia</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage className="text-[10px] text-red-600 mt-1" />
+                    </FormItem>
+                  )} />
+                  <div className="grid grid-cols-2 gap-6">
+                    <FormField control={form.control} name="phone" render={({ field }) => (
+                      <FormItem>
+                        <label className={labelCls}>Phone</label>
+                        <FormControl><input type="tel" className={inputCls} data-testid="input-phone" {...field} /></FormControl>
+                        <FormMessage className="text-[10px] text-red-600 mt-1" />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="gstNumber" render={({ field }) => (
+                      <FormItem>
+                        <label className={labelCls}>GST Number (optional)</label>
+                        <FormControl><input className={inputCls} placeholder="22AAAAA0000A1Z5" data-testid="input-gst-number" {...field} /></FormControl>
+                      </FormItem>
+                    )} />
+                  </div>
                   {isAuthenticated && (
-                    <div className="space-y-3">
-                      {addressesLoading ? (
-                        <div className="flex items-center justify-center py-4">
-                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                          <span className="ml-2 text-sm text-muted-foreground">Loading saved addresses...</span>
-                        </div>
-                      ) : savedAddresses.length > 0 ? (
-                        <>
-                          <p className="text-sm text-muted-foreground mb-2">Select a saved address or enter a new one:</p>
-                          <div className="grid gap-3">
-                            {savedAddresses.map((address) => (
-                              <div
-                                key={address.id}
-                                onClick={() => handleSelectShippingAddress(address.id)}
-                                className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
-                                  selectedShippingAddressId === address.id
-                                    ? "border-primary bg-primary/5 ring-1 ring-primary"
-                                    : "border-border"
-                                }`}
-                                data-testid={`shipping-address-option-${address.id}`}
-                              >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="font-medium">{address.firstName} {address.lastName}</span>
-                                      {address.isDefault && (
-                                        <Badge variant="secondary" className="text-xs">Default</Badge>
-                                      )}
-                                      {address.type && (
-                                        <Badge variant="outline" className="text-xs capitalize">{address.type}</Badge>
-                                      )}
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                      {address.address1}
-                                      {address.address2 && `, ${address.address2}`}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {address.city}, {address.state} {address.postalCode}
-                                    </p>
-                                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                                      {user?.email && (
-                                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                                      )}
-                                      {address.phone && (
-                                        <p className="text-sm text-muted-foreground">{address.phone}</p>
-                                      )}
-                                    </div>
-                                    {address.gstNumber && (
-                                      <p className="text-sm text-muted-foreground mt-1">
-                                        <span className="font-medium">GST:</span> {address.gstNumber}
-                                      </p>
-                                    )}
-                                  </div>
-                                  {selectedShippingAddressId === address.id && (
-                                    <div className="shrink-0">
-                                      <Check className="h-5 w-5 text-primary" />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                            
-                            {/* Option to add new shipping address */}
-                            <div
-                              onClick={() => handleSelectShippingAddress("new")}
-                              className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
-                                selectedShippingAddressId === "new"
-                                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                                  : "border-dashed border-border"
-                              }`}
-                              data-testid="shipping-address-option-new"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Plus className="h-5 w-5 text-muted-foreground" />
-                                <span className="font-medium">Use a different address</span>
-                              </div>
+                    <FormField control={form.control} name="saveShippingAddress" render={({ field }) => (
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-save-shipping" />
+                        </FormControl>
+                        <label className={`${labelCls} mb-0 cursor-pointer`}>Save address to account</label>
+                      </FormItem>
+                    )} />
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* Billing Address */}
+            <section>
+              <div className={sectionHeadingCls}>Billing Address</div>
+              <FormField control={form.control} name="sameAsBilling" render={({ field }) => (
+                <FormItem className="flex items-center gap-3 mb-6">
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-same-billing" />
+                  </FormControl>
+                  <label className={`${labelCls} mb-0 cursor-pointer`}>Same as shipping address</label>
+                </FormItem>
+              )} />
+
+              {!sameAsBilling && (
+                <>
+                  {isAuthenticated && savedAddresses.length > 0 && (
+                    <div className="space-y-2 mb-6">
+                      <p className="text-[10px] tracking-[0.1em] uppercase text-[#00160c]/50 mb-3">Select billing address:</p>
+                      {savedAddresses.map((address) => (
+                        <div
+                          key={address.id}
+                          onClick={() => handleSelectBillingAddress(address.id)}
+                          className={`border p-4 cursor-pointer transition-colors ${
+                            selectedBillingAddressId === address.id
+                              ? "border-[#944923] bg-[#944923]/5"
+                              : "border-[#00160c]/15 hover:border-[#00160c]/30"
+                          }`}
+                          data-testid={`billing-address-option-${address.id}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-bold text-[#00160c] uppercase tracking-wide">{address.firstName} {address.lastName}</p>
+                              <p className="text-[11px] text-[#00160c]/50 mt-0.5">{address.address1}, {address.city}, {address.state} {address.postalCode}</p>
                             </div>
+                            {selectedBillingAddressId === address.id && <Check className="h-4 w-4 text-[#944923] shrink-0" />}
                           </div>
-                          
-                          {selectedShippingAddressId !== "new" && (
-                            <Separator className="my-4" />
-                          )}
-                        </>
-                      ) : (
-                        <div className="text-sm text-muted-foreground mb-4">
-                          <MapPin className="h-4 w-4 inline mr-1" />
-                          No saved addresses. Enter your shipping address below.
                         </div>
-                      )}
+                      ))}
+                      <div
+                        onClick={() => handleSelectBillingAddress("new")}
+                        className={`border border-dashed p-4 cursor-pointer flex items-center gap-2 transition-colors ${
+                          selectedBillingAddressId === "new" ? "border-[#944923] bg-[#944923]/5" : "border-[#00160c]/20 hover:border-[#00160c]/40"
+                        }`}
+                        data-testid="billing-address-option-new"
+                      >
+                        <Plus className="h-3.5 w-3.5 text-[#00160c]/40" />
+                        <span className="text-[10px] tracking-[0.15em] uppercase text-[#00160c]/50">New billing address</span>
+                      </div>
                     </div>
                   )}
 
-                  {/* Show shipping address form for: guests, or when "new address" is selected, or when no saved addresses */}
-                  {(!isAuthenticated || showNewShippingForm || savedAddresses.length === 0) && (
-                    <>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="firstName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>First Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} data-testid="input-firstname" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="lastName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Last Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} data-testid="input-lastname" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="address1"
-                        render={({ field }) => (
+                  {(!isAuthenticated || showNewBillingForm || savedAddresses.length === 0) && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-6">
+                        <FormField control={form.control} name="billingFirstName" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Address</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Street address" {...field} data-testid="input-address1" />
-                            </FormControl>
-                            <FormMessage />
+                            <label className={labelCls}>First Name</label>
+                            <FormControl><input className={inputCls} data-testid="input-billing-firstname" {...field} /></FormControl>
+                            <FormMessage className="text-[10px] text-red-600 mt-1" />
                           </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="address2"
-                        render={({ field }) => (
+                        )} />
+                        <FormField control={form.control} name="billingLastName" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Apartment, suite, etc. (optional)</FormLabel>
-                            <FormControl>
-                              <Input {...field} data-testid="input-address2" />
-                            </FormControl>
-                            <FormMessage />
+                            <label className={labelCls}>Last Name</label>
+                            <FormControl><input className={inputCls} data-testid="input-billing-lastname" {...field} /></FormControl>
+                            <FormMessage className="text-[10px] text-red-600 mt-1" />
                           </FormItem>
-                        )}
-                      />
-
-                      <div className="grid sm:grid-cols-3 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>City</FormLabel>
-                              <FormControl>
-                                <Input {...field} data-testid="input-city" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="state"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>State</FormLabel>
-                              <FormControl>
-                                <Input {...field} data-testid="input-state" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="postalCode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Postal Code</FormLabel>
-                              <FormControl>
-                                <Input {...field} data-testid="input-postal" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        )} />
                       </div>
-
-                      <FormField
-                        control={form.control}
-                        name="country"
-                        render={({ field }) => (
+                      <FormField control={form.control} name="billingAddress1" render={({ field }) => (
+                        <FormItem>
+                          <label className={labelCls}>Street Address</label>
+                          <FormControl><input className={inputCls} placeholder="Street address" data-testid="input-billing-address1" {...field} /></FormControl>
+                          <FormMessage className="text-[10px] text-red-600 mt-1" />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="billingAddress2" render={({ field }) => (
+                        <FormItem>
+                          <label className={labelCls}>Apt / Suite (optional)</label>
+                          <FormControl><input className={inputCls} data-testid="input-billing-address2" {...field} /></FormControl>
+                        </FormItem>
+                      )} />
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField control={form.control} name="billingCity" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Country</FormLabel>
+                            <label className={labelCls}>City</label>
+                            <FormControl><input className={inputCls} data-testid="input-billing-city" {...field} /></FormControl>
+                            <FormMessage className="text-[10px] text-red-600 mt-1" />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="billingState" render={({ field }) => (
+                          <FormItem>
+                            <label className={labelCls}>State</label>
+                            <FormControl><input className={inputCls} data-testid="input-billing-state" {...field} /></FormControl>
+                            <FormMessage className="text-[10px] text-red-600 mt-1" />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="billingPostalCode" render={({ field }) => (
+                          <FormItem>
+                            <label className={labelCls}>Postal Code</label>
+                            <FormControl><input className={inputCls} data-testid="input-billing-postal" {...field} /></FormControl>
+                            <FormMessage className="text-[10px] text-red-600 mt-1" />
+                          </FormItem>
+                        )} />
+                      </div>
+                      <FormField control={form.control} name="billingCountry" render={({ field }) => (
+                        <FormItem>
+                          <label className={labelCls}>Country</label>
+                          <FormControl>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-country">
-                                  <SelectValue placeholder="Select country" />
-                                </SelectTrigger>
-                              </FormControl>
+                              <SelectTrigger className="bg-transparent border-0 border-b border-[#00160c]/25 rounded-none px-0 py-2 text-sm text-[#00160c] focus:ring-0 focus:border-[#944923]" data-testid="select-billing-country">
+                                <SelectValue placeholder="Select country" />
+                              </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="India">India</SelectItem>
                                 <SelectItem value="US">United States</SelectItem>
@@ -1142,576 +1230,301 @@ export default function Checkout() {
                                 <SelectItem value="AU">Australia</SelectItem>
                               </SelectContent>
                             </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
+                          </FormControl>
+                          <FormMessage className="text-[10px] text-red-600 mt-1" />
+                        </FormItem>
+                      )} />
+                      <div className="grid grid-cols-2 gap-6">
+                        <FormField control={form.control} name="billingPhone" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone</FormLabel>
-                            <FormControl>
-                              <Input type="tel" {...field} data-testid="input-phone" />
-                            </FormControl>
-                            <FormMessage />
+                            <label className={labelCls}>Phone (optional)</label>
+                            <FormControl><input type="tel" className={inputCls} data-testid="input-billing-phone" {...field} /></FormControl>
                           </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="gstNumber"
-                        render={({ field }) => (
+                        )} />
+                        <FormField control={form.control} name="billingGstNumber" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>GST Number (optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} data-testid="input-gst-number" />
-                            </FormControl>
-                            <FormMessage />
+                            <label className={labelCls}>GST Number (optional)</label>
+                            <FormControl><input className={inputCls} placeholder="22AAAAA0000A1Z5" data-testid="input-billing-gst" {...field} /></FormControl>
                           </FormItem>
-                        )}
-                      />
-
+                        )} />
+                      </div>
                       {isAuthenticated && (
-                        <FormField
-                          control={form.control}
-                          name="saveShippingAddress"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center gap-2 space-y-0">
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  data-testid="switch-save-shipping"
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">Save this address to my account</FormLabel>
-                            </FormItem>
-                          )}
+                        <FormField control={form.control} name="saveBillingAddress" render={({ field }) => (
+                          <FormItem className="flex items-center gap-3">
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-save-billing" />
+                            </FormControl>
+                            <label className={`${labelCls} mb-0 cursor-pointer`}>Save billing address to account</label>
+                          </FormItem>
+                        )} />
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+
+            {/* Payment Method */}
+            <section>
+              <div className={sectionHeadingCls}>Payment Method</div>
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="space-y-3">
+                        {/* Pay Online (Stripe) */}
+                        <label className={`flex items-start gap-5 p-6 border cursor-pointer group transition-colors ${field.value === "stripe" ? "border-[#944923] bg-[#944923]/5" : "border-[#00160c]/15 hover:border-[#00160c]/30"}`}>
+                          <RadioGroupItem value="stripe" id="stripe" className="mt-0.5" data-testid="radio-stripe" />
+                          <div className="flex-1">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs tracking-[0.15em] uppercase font-bold text-[#00160c]">Pay Online</span>
+                              <CreditCard className="h-4 w-4 text-[#00160c]/40" />
+                            </div>
+                            <p className="text-[11px] text-[#00160c]/50">Pay securely with your credit card</p>
+                          </div>
+                        </label>
+
+                        {/* Razorpay */}
+                        {isRazorpayEnabled && (
+                          <label className={`flex items-start gap-5 p-6 border cursor-pointer group transition-colors ${field.value === "razorpay" ? "border-[#944923] bg-[#944923]/5" : "border-[#00160c]/15 hover:border-[#00160c]/30"}`}>
+                            <RadioGroupItem value="razorpay" id="razorpay" className="mt-0.5" data-testid="radio-razorpay" />
+                            <div className="flex-1">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs tracking-[0.15em] uppercase font-bold text-[#00160c]">Razorpay</span>
+                                <Package className="h-4 w-4 text-[#00160c]/40" />
+                              </div>
+                              <p className="text-[11px] text-[#00160c]/50">UPI, Cards, Net Banking, Wallets</p>
+                            </div>
+                          </label>
+                        )}
+
+                        {/* COD */}
+                        <label className={`flex items-start gap-5 p-6 border cursor-pointer group transition-colors ${field.value === "cod" ? "border-[#944923] bg-[#944923]/5" : "border-[#00160c]/15 hover:border-[#00160c]/30"}`}>
+                          <RadioGroupItem value="cod" id="cod" className="mt-0.5" data-testid="radio-cod" />
+                          <div className="flex-1">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs tracking-[0.15em] uppercase font-bold text-[#00160c]">Cash on Delivery</span>
+                              <Truck className="h-4 w-4 text-[#00160c]/40" />
+                            </div>
+                            <p className="text-[11px] text-[#00160c]/50">Pay when you receive your order</p>
+                          </div>
+                        </label>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage className="text-[10px] text-red-600 mt-2" />
+                  </FormItem>
+                )}
+              />
+            </section>
+
+            {/* Place Order Button (mobile / form footer) */}
+            <div className="flex flex-col gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={isProcessing}
+                className="w-full bg-[#00160c] text-white py-5 px-10 text-xs tracking-[0.25em] uppercase font-bold hover:bg-[#012d1d] transition-all flex justify-between items-center disabled:opacity-60 disabled:cursor-not-allowed"
+                data-testid="button-place-order"
+              >
+                {isProcessing ? "Processing Protocol..." : "Place Order"}
+                {!isProcessing && <span className="text-lg">&#8594;</span>}
+              </button>
+              <p className="text-[9px] text-center text-[#00160c]/40 tracking-[0.1em] uppercase">
+                By placing this order, you agree to our Terms of Service and Privacy Policy.
+              </p>
+            </div>
+          </form>
+
+          {/* Right Column: Protocol Dossier */}
+          <div className="col-span-12 lg:col-span-5 lg:sticky lg:top-32">
+            <div
+              className="bg-[#edf0eb] border border-[#00160c]/10 p-8 flex flex-col gap-8"
+              style={{ boxShadow: "45px 26px 0px 0px rgba(1,45,29,0.08)" }}
+            >
+              {/* Header */}
+              <div className="flex justify-between items-start">
+                <h3 className="text-2xl font-black uppercase tracking-tight text-[#00160c]">Protocol Dossier</h3>
+                <span className="text-[10px] tracking-[0.15em] bg-[#944923]/15 text-[#944923] px-3 py-1 uppercase font-bold">V.01-REV</span>
+              </div>
+
+              {/* Items */}
+              <div className="flex flex-col gap-6">
+                {cartItems.map((item) => {
+                  const price = item.variant?.price || item.product.salePrice || item.product.price;
+                  const itemSubscriptionPricing = subscriptionPricing.itemPrices.get(item.id);
+                  const displayPrice = itemSubscriptionPricing?.finalPrice ?? (parseFloat(price as string) * item.quantity);
+                  const hasItemSubscriptionDiscount = itemSubscriptionPricing?.hasDiscount ?? false;
+                  const primaryImage = item.product.images?.find(img => img.isPrimary)?.url || item.product.images?.[0]?.url;
+
+                  return (
+                    <div key={item.id} className="flex gap-4 group cursor-default" data-testid={`checkout-item-${item.id}`}>
+                      <div className="w-20 h-24 bg-[#dde0db] overflow-hidden flex-shrink-0">
+                        <img
+                          src={primaryImage || "/placeholder-product.jpg"}
+                          alt={item.product.title}
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                         />
-                      )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Billing Address Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <FileText className="h-5 w-5" />
-                    Billing Address
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="sameAsBilling"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="font-medium">Same as shipping address</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            Use the shipping address for billing
-                          </p>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            data-testid="switch-same-billing"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Show billing address selection/form when different from shipping */}
-                  {!sameAsBilling && (
-                    <>
-                      {/* Billing Address Selection for Authenticated Users */}
-                      {isAuthenticated && savedAddresses.length > 0 && (
-                        <div className="space-y-3">
-                          <p className="text-sm text-muted-foreground">Select a billing address or enter a new one:</p>
-                          <div className="grid gap-3">
-                            {savedAddresses.map((address) => (
-                              <div
-                                key={address.id}
-                                onClick={() => handleSelectBillingAddress(address.id)}
-                                className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
-                                  selectedBillingAddressId === address.id
-                                    ? "border-primary bg-primary/5 ring-1 ring-primary"
-                                    : "border-border"
-                                }`}
-                                data-testid={`billing-address-option-${address.id}`}
-                              >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="font-medium">{address.firstName} {address.lastName}</span>
-                                      {address.type && (
-                                        <Badge variant="outline" className="text-xs capitalize">{address.type}</Badge>
-                                      )}
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                      {address.address1}, {address.city}, {address.state} {address.postalCode}
-                                    </p>
-                                    {address.gstNumber && (
-                                      <p className="text-sm text-muted-foreground">
-                                        <span className="font-medium">GST:</span> {address.gstNumber}
-                                      </p>
-                                    )}
-                                  </div>
-                                  {selectedBillingAddressId === address.id && (
-                                    <Check className="h-5 w-5 text-primary shrink-0" />
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                            
-                            <div
-                              onClick={() => handleSelectBillingAddress("new")}
-                              className={`relative border rounded-lg p-4 cursor-pointer transition-all hover-elevate ${
-                                selectedBillingAddressId === "new"
-                                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                                  : "border-dashed border-border"
-                              }`}
-                              data-testid="billing-address-option-new"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Plus className="h-5 w-5 text-muted-foreground" />
-                                <span className="font-medium">Enter a new billing address</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Billing Address Form */}
-                      {(!isAuthenticated || showNewBillingForm || savedAddresses.length === 0) && (
-                        <>
-                          <div className="grid sm:grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="billingFirstName"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>First Name</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} data-testid="input-billing-firstname" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="billingLastName"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Last Name</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} data-testid="input-billing-lastname" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          <FormField
-                            control={form.control}
-                            name="billingAddress1"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Address</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Street address" {...field} data-testid="input-billing-address1" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="billingAddress2"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Apartment, suite, etc. (optional)</FormLabel>
-                                <FormControl>
-                                  <Input {...field} data-testid="input-billing-address2" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <div className="grid sm:grid-cols-3 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="billingCity"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>City</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} data-testid="input-billing-city" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="billingState"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>State</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} data-testid="input-billing-state" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="billingPostalCode"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Postal Code</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} data-testid="input-billing-postal" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          <FormField
-                            control={form.control}
-                            name="billingCountry"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Country</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger data-testid="select-billing-country">
-                                      <SelectValue placeholder="Select country" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="India">India</SelectItem>
-                                    <SelectItem value="US">United States</SelectItem>
-                                    <SelectItem value="CA">Canada</SelectItem>
-                                    <SelectItem value="GB">United Kingdom</SelectItem>
-                                    <SelectItem value="AU">Australia</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="billingPhone"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Phone (optional)</FormLabel>
-                                <FormControl>
-                                  <Input type="tel" {...field} data-testid="input-billing-phone" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="billingGstNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>GST Number (optional)</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} data-testid="input-billing-gst" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          {isAuthenticated && (
-                            <FormField
-                              control={form.control}
-                              name="saveBillingAddress"
-                              render={({ field }) => (
-                                <FormItem className="flex items-center gap-2 space-y-0">
-                                  <FormControl>
-                                    <Switch
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                      data-testid="switch-save-billing"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">Save this billing address to my account</FormLabel>
-                                </FormItem>
-                              )}
-                            />
+                      </div>
+                      <div className="flex flex-col justify-between py-1 flex-1">
+                        <div>
+                          <span className="text-[9px] text-white bg-[#00160c] px-2 py-0.5 mb-1 inline-block uppercase tracking-widest">
+                            {item.product.sku ? `ID: ${item.product.sku}` : "19D-ITEM"}
+                          </span>
+                          <h4 className="text-sm font-bold text-[#00160c] leading-tight">
+                            {item.quantity}x {item.product.title}
+                          </h4>
+                          {item.variant && (
+                            <p className="text-[10px] text-[#00160c]/50 mt-0.5">{item.variant.optionValue}</p>
                           )}
-                        </>
-                      )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                          <p className="text-[10px] text-[#00160c]/40 uppercase tracking-widest">Qty: {item.quantity} Unit</p>
+                        </div>
+                        <div className="flex items-end justify-between">
+                          {hasItemSubscriptionDiscount ? (
+                            <div>
+                              <span className="text-sm font-bold text-[#00160c]">{formatCurrency(displayPrice)}</span>
+                              <span className="text-[10px] text-[#00160c]/40 line-through ml-2">{formatCurrency(itemSubscriptionPricing?.originalPrice ?? 0)}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm font-bold text-[#00160c]">{formatCurrency(displayPrice)}</span>
+                          )}
+                          {hasItemSubscriptionDiscount && (
+                            <span className="text-[9px] bg-[#944923]/15 text-[#944923] px-2 py-0.5 uppercase tracking-widest">Sub Price</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <CreditCard className="h-5 w-5" />
-                    Payment Method
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FormField
-                    control={form.control}
-                    name="paymentMethod"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="space-y-3"
-                          >
-                            <div className="flex items-center space-x-3 p-4 border rounded-lg hover-elevate cursor-pointer">
-                              <RadioGroupItem value="stripe" id="stripe" data-testid="radio-stripe" />
-                              <Label htmlFor="stripe" className="flex-1 cursor-pointer">
-                                <div className="font-medium">Credit Card</div>
-                                <p className="text-sm text-muted-foreground">
-                                  Pay securely with your credit card
-                                </p>
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-3 p-4 border rounded-lg hover-elevate cursor-pointer">
-                              <RadioGroupItem value="cod" id="cod" data-testid="radio-cod" />
-                              <Label htmlFor="cod" className="flex-1 cursor-pointer">
-                                <div className="font-medium">Cash on Delivery</div>
-                                <p className="text-sm text-muted-foreground">
-                                  Pay when you receive your order
-                                </p>
-                              </Label>
-                            </div>
-                            {isRazorpayEnabled && (
-                              <div className="flex items-center space-x-3 p-4 border rounded-lg hover-elevate cursor-pointer">
-                                <RadioGroupItem value="razorpay" id="razorpay" data-testid="radio-razorpay" />
-                                <Label htmlFor="razorpay" className="flex-1 cursor-pointer">
-                                  <div className="font-medium">Razorpay</div>
-                                  <p className="text-sm text-muted-foreground">
-                                    Pay via UPI, Cards, Net Banking, Wallets
-                                  </p>
-                                </Label>
-                              </div>
-                            )}
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
+              <div className="h-px bg-[#00160c]/10 w-full" />
+
+              {/* Coupon badge */}
+              {appliedCoupon && (
+                <div className="flex items-center justify-between border border-[#944923]/30 bg-[#944923]/5 p-3">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-3.5 w-3.5 text-[#944923]" />
+                    <span className="text-[10px] tracking-[0.15em] uppercase font-bold text-[#944923]" data-testid="text-checkout-coupon">{appliedCoupon.code}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeCoupon}
+                    className="text-[#944923] hover:text-[#00160c] transition-colors"
+                    data-testid="button-checkout-remove-coupon"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Financial Breakdown */}
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#00160c]/50">Subtotal</span>
+                  <span className="text-sm text-[#00160c] font-medium">{formatCurrency(subtotal)}</span>
+                </div>
+                {subscriptionPricing.subscriptionDiscount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] tracking-[0.15em] uppercase text-[#944923]">Subscription Savings</span>
+                    <span className="text-sm text-[#944923] font-medium" data-testid="text-checkout-subscription-discount">-{formatCurrency(subscriptionPricing.subscriptionDiscount)}</span>
+                  </div>
+                )}
+                {comboDiscount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] tracking-[0.15em] uppercase text-[#944923]">Combo Discount</span>
+                    <span className="text-sm text-[#944923] font-medium" data-testid="text-checkout-combo-discount">-{formatCurrency(comboDiscount)}</span>
+                  </div>
+                )}
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] tracking-[0.15em] uppercase text-[#944923]">Coupon Discount</span>
+                    <span className="text-sm text-[#944923] font-medium" data-testid="text-checkout-discount">-{formatCurrency(couponDiscount)}</span>
+                  </div>
+                )}
+                {isSubscriptionCustomer && deliveryDateShipping.hasMultipleDeliveryDates ? (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] tracking-[0.15em] uppercase text-[#00160c]/50">Shipping (multi-date)</span>
+                      <span className="text-sm text-[#00160c] font-medium">{shipping === 0 ? "FREE" : formatCurrency(shipping)}</span>
+                    </div>
+                    {Array.from(deliveryDateShipping.groups.entries()).map(([date, group]) => (
+                      <div key={date} className="flex justify-between items-center pl-3 border-l border-[#00160c]/10">
+                        <span className="text-[9px] tracking-[0.1em] uppercase text-[#00160c]/40">
+                          {date === 'unassigned' ? 'No date' : format(new Date(date), 'MMM d, yyyy')} ({group.totalWeight.toFixed(1)}kg)
+                        </span>
+                        <span className="text-[11px] text-[#00160c]/60">{group.shippingFee === 0 ? "Free" : formatCurrency(group.shippingFee)}</span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] tracking-[0.15em] uppercase text-[#00160c]/50">Shipping</span>
+                    <span className="text-sm font-bold text-[#00160c]">{shipping === 0 ? "FREE" : formatCurrency(shipping)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#00160c]/50">Incl. GST</span>
+                  <span className="text-[11px] text-[#00160c]/60" data-testid="text-checkout-included-gst">{formatCurrency(includedGst)}</span>
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="pt-4 mt-2 border-t-2 border-[#00160c]">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <span className="text-[9px] tracking-[0.15em] bg-[#00160c] text-white px-2 py-1 mb-2 inline-block uppercase">Total_Allocation</span>
+                    <div className="text-4xl font-black text-[#00160c] leading-none" data-testid="text-checkout-total">
+                      {formatCurrency(total)}
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-[#00160c]/40 tracking-widest mb-1">INR (SECURE)</span>
+                </div>
+              </div>
+
+              {/* Security Badge */}
+              <div className="border border-[#00160c]/15 bg-[#f9faf6] p-4 flex gap-4 items-center">
+                <div className="shrink-0 w-6 h-6 text-[#00160c]">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-[#00160c] uppercase tracking-wide">19 Dogs Quantum Encryption</div>
+                  <div className="text-[9px] text-[#00160c]/40 leading-tight uppercase tracking-wide mt-0.5">Biometric and financial data handled under ISO-9001 biological security standards.</div>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <Card className="sticky top-24">
-                <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    {cartItems.map((item) => {
-                      const price = item.variant?.price || item.product.salePrice || item.product.price;
-                      const itemSubscriptionPricing = subscriptionPricing.itemPrices.get(item.id);
-                      const displayPrice = itemSubscriptionPricing?.finalPrice ?? (parseFloat(price as string) * item.quantity);
-                      const hasItemSubscriptionDiscount = itemSubscriptionPricing?.hasDiscount ?? false;
-                      
-                      return (
-                        <div key={item.id} className="flex gap-3">
-                          <div className="relative">
-                            <img
-                              src={item.product.images?.[0]?.url || "/placeholder-product.jpg"}
-                              alt={item.product.title}
-                              className="w-16 h-16 object-cover rounded-md"
-                            />
-                            <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                              {item.quantity}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium line-clamp-2">{item.product.title}</p>
-                            {item.variant && (
-                              <p className="text-xs text-muted-foreground">
-                                {item.variant.optionValue}
-                              </p>
-                            )}
-                            {hasItemSubscriptionDiscount && (
-                              <Badge variant="secondary" className="mt-1 text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                                <Tag className="h-2.5 w-2.5 mr-1" />
-                                Subscription
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            {hasItemSubscriptionDiscount ? (
-                              <div className="flex flex-col items-end">
-                                <span className="text-sm font-medium text-green-600">
-                                  {formatCurrency(displayPrice)}
-                                </span>
-                                <span className="text-xs text-muted-foreground line-through">
-                                  {formatCurrency(itemSubscriptionPricing?.originalPrice ?? 0)}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-sm font-medium">
-                                {formatCurrency(displayPrice)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <Separator />
-
-                  {appliedCoupon && (
-                    <div className="flex items-center justify-between bg-green-50 dark:bg-green-950/30 p-2 rounded-md border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-2">
-                        <Tag className="h-3 w-3 text-green-600 dark:text-green-400" />
-                        <span className="text-xs font-medium text-green-700 dark:text-green-300" data-testid="text-checkout-coupon">
-                          {appliedCoupon.code}
-                        </span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 text-green-600 hover:text-destructive"
-                        onClick={removeCoupon}
-                        type="button"
-                        data-testid="button-checkout-remove-coupon"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>{formatCurrency(subtotal)}</span>
-                    </div>
-                    {subscriptionPricing.subscriptionDiscount > 0 && (
-                      <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span className="flex items-center gap-1">
-                          <Tag className="h-3 w-3" />
-                          Subscription Savings (included)
-                        </span>
-                        <span data-testid="text-checkout-subscription-discount">
-                          {formatCurrency(subscriptionPricing.subscriptionDiscount)}
-                        </span>
-                      </div>
-                    )}
-                    {comboDiscount > 0 && (
-                      <div className="flex justify-between text-sm text-purple-600 dark:text-purple-400">
-                        <span className="flex items-center gap-1">
-                          <Gift className="h-3 w-3" />
-                          Combo Discount
-                        </span>
-                        <span data-testid="text-checkout-combo-discount">-{formatCurrency(comboDiscount)}</span>
-                      </div>
-                    )}
-                    {couponDiscount > 0 && (
-                      <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span>Coupon Discount</span>
-                        <span data-testid="text-checkout-discount">-{formatCurrency(couponDiscount)}</span>
-                      </div>
-                    )}
-                    {isSubscriptionCustomer && deliveryDateShipping.hasMultipleDeliveryDates ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <Truck className="h-4 w-4 text-muted-foreground" />
-                          <span>Delivery Charges</span>
-                        </div>
-                        {Array.from(deliveryDateShipping.groups.entries()).map(([date, group]) => (
-                          <div key={date} className="flex justify-between text-sm pl-6">
-                            <span className="text-muted-foreground">
-                              {date === 'unassigned' ? 'No date selected' : format(new Date(date), 'MMM d, yyyy')}
-                              <span className="text-xs ml-1">({group.totalWeight.toFixed(2)}kg)</span>
-                            </span>
-                            <span>{group.shippingFee === 0 ? "Free" : formatCurrency(group.shippingFee)}</span>
-                          </div>
-                        ))}
-                        <div className="flex justify-between text-sm pl-6 pt-1 border-t">
-                          <span className="text-muted-foreground font-medium">Total Shipping</span>
-                          <span className="font-medium">{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Shipping</span>
-                        <span>{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex justify-between font-semibold text-lg">
-                    <span>Total</span>
-                    <span data-testid="text-checkout-total">{formatCurrency(total)}</span>
-                  </div>
-                  
-                  {/* GST included info */}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="flex items-center gap-1 cursor-help">
-                          <Info className="h-3 w-3" />
-                          Incl. GST
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>GST is included in product prices</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <span data-testid="text-checkout-included-gst">{formatCurrency(includedGst)}</span>
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    size="lg"
-                    disabled={isProcessing}
-                    data-testid="button-place-order"
-                  >
-                    {isProcessing ? "Processing..." : "Place Order"}
-                  </Button>
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    By placing this order, you agree to our Terms of Service and Privacy Policy.
-                  </p>
-                </CardContent>
-              </Card>
+            {/* Support links */}
+            <div className="mt-4 flex justify-between px-2">
+              <button type="button" className="flex items-center gap-2 text-[10px] text-[#00160c]/40 hover:text-[#00160c] transition-colors uppercase tracking-widest">
+                <Info className="h-3.5 w-3.5" />
+                Technical Assistance
+              </button>
+              <button type="button" className="flex items-center gap-2 text-[10px] text-[#00160c]/40 hover:text-[#00160c] transition-colors uppercase tracking-widest">
+                <FileText className="h-3.5 w-3.5" />
+                Protocol Archive
+              </button>
             </div>
           </div>
-        </form>
-      </Form>
+        </Form>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full bg-[#012d1d] text-white py-10 border-t border-white/5 mt-16">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-16 grid grid-cols-12 gap-8 items-center">
+          <div className="col-span-12 md:col-span-4">
+            <div className="text-2xl font-black tracking-tight uppercase mb-2">19 Dogs</div>
+            <p className="text-[9px] opacity-50 leading-relaxed uppercase tracking-wide">
+              &copy; 19 Dogs Biological Wellness. All rights reserved. For scientific use only. Proprietary equipment and logistics systems.
+            </p>
+          </div>
+          <div className="col-span-12 md:col-span-8 flex flex-wrap justify-end gap-8 text-[10px] tracking-[0.15em] opacity-70 uppercase">
+            <a href="/pages/terms" className="hover:opacity-100 transition-opacity">Biological Compliance</a>
+            <a href="/pages/privacy" className="hover:opacity-100 transition-opacity">Privacy Protocols</a>
+            <a href="/contact" className="hover:opacity-100 transition-opacity">System Contact</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
