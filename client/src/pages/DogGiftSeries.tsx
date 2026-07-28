@@ -417,7 +417,7 @@ function DossierSkeleton() {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 export default function DogGiftSeries() {
   // Homepage nav/footer settings
-  const { data: rawNav } = useQuery<{ settings: Record<string, string> }>({ queryKey: ["/api/homepage-settings"] });
+  const { data: rawNav } = useQuery<{ settings: any }>({ queryKey: ["/api/settings/homepage"] });
   const navSettings = rawNav ? mergeHomepageSettings(rawNav.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
 
   // Gift Services page content settings
