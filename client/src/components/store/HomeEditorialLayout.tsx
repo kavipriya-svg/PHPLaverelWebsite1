@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingBag, Menu, X, Search, Globe, Camera, PlayCircle, PackageSearch, UserPlus, LogIn } from "lucide-react";
 import type { HomepageSettings } from "@/lib/homepageDefaults";
+import { useStore } from "@/contexts/StoreContext";
 
 interface BrandingSettings { logoUrl: string; storeName: string; showStoreName: boolean; }
 
@@ -46,6 +47,7 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [, navigate]   = useLocation();
+  const { cartCount } = useStore();
 
   const handleSearchOpen = () => {
     setSearchOpen(true);
@@ -178,12 +180,21 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
           </button>
         )}
 
-        <Link href="/cart">
+        <Link href="/cart" className="relative" data-testid="link-cart-header">
           <ShoppingBag
             className="w-6 h-6 cursor-pointer transition-opacity hover:opacity-60"
             style={{ color: C.onSurface }}
             data-testid="icon-cart-header"
           />
+          {cartCount > 0 && (
+            <span
+              className="absolute -top-2 -right-2 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold leading-none px-1"
+              style={{ backgroundColor: C.secondary, color: C.white }}
+              data-testid="badge-cart-count"
+            >
+              {cartCount > 99 ? "99+" : cartCount}
+            </span>
+          )}
         </Link>
 
         <button
