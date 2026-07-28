@@ -65,6 +65,7 @@ const AdminBrandingSettings = lazy(() => import("@/pages/admin/BrandingSettings"
 const AdminSpecialOffersSettings = lazy(() => import("@/pages/admin/SpecialOffersSettings"));
 const AdminComboOffersSettings = lazy(() => import("@/pages/admin/ComboOffersSettings"));
 const AdminOrderThanksSettings = lazy(() => import("@/pages/admin/OrderThanksSettings"));
+const AdminShoppingCartSettings = lazy(() => import("@/pages/admin/ShoppingCartSettings"));
 const AdminCategorySectionSettings = lazy(() => import("@/pages/admin/CategorySectionSettings"));
 const AdminBlogSettings = lazy(() => import("@/pages/admin/BlogSettings"));
 const AdminComboOffers = lazy(() => import("@/pages/admin/ComboOffers"));
@@ -632,6 +633,11 @@ function Router() {
       <Route path="/admin/cart/order-thanks">
         <AdminLayout>
           <AdminOrderThanksSettings />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/cart/shopping-cart">
+        <AdminLayout>
+          <AdminShoppingCartSettings />
         </AdminLayout>
       </Route>
       <Route path="/admin/category-section">

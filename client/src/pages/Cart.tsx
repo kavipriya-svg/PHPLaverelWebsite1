@@ -103,6 +103,31 @@ export default function Cart() {
   const { data: rawNav } = useQuery<{ settings: any }>({ queryKey: ["/api/settings/homepage"] });
   const navSettings = rawNav ? mergeHomepageSettings(rawNav.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
 
+  // Cart page dynamic settings
+  const { data: rawCartSettings } = useQuery<{ settings: any }>({ queryKey: ["/api/settings/shopping-cart"] });
+  const cs = {
+    pageTitle: "Biological Protocol: Shopping Cart",
+    pageSubLabel: "Inventory Verification Stage 1/3",
+    emptyCartTitle: "Your dossier is empty.",
+    emptyCartButtonText: "Begin Protocol",
+    integrityBadgeTitle: "Biological Integrity Guaranteed",
+    integrityBadgeDescription:
+      "Every protocol item undergoes rigorous clinical sanitization and veterinary inspection prior to dispatch from our 19 DOGS biological logistics center.",
+    showIntegrityBadge: true,
+    relatedSectionLabel: "Related Dossiers",
+    relatedSectionTitle: "Complete the biological set.",
+    relatedSectionDescription:
+      "Our atelier designs products that work in synergy — engineered to enhance the biomechanics of active canine movement during high-intensity intervals.",
+    showRelatedSection: true,
+    orderSummaryTitle: "Order Summary",
+    checkoutButtonText: "Proceed to Checkout",
+    trustBadge1: "Secure Encrypted Connection",
+    trustBadge2Text: "Free Shipping on Orders Over",
+    heroImageUrl: "",
+    showHeroImage: false,
+    ...(rawCartSettings?.settings || {}),
+  };
+
   // Related products
   const { data: relatedRaw } = useQuery<any>({
     queryKey: ["/api/products", { limit: 6, featured: true }],
@@ -347,14 +372,14 @@ export default function Cart() {
         <HomeEditorialHeader nav={navSettings.nav} />
         <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 md:px-16 pt-[120px] pb-20">
           <header className="mb-16 border-b border-[#c1c8c2] pb-4">
-            <h1 className="font-['Playfair_Display'] text-4xl md:text-5xl font-semibold italic mb-2">Biological Protocol: Shopping Cart</h1>
-            <span className="text-[11px] font-['Inter'] font-bold uppercase tracking-[0.2em] text-[#414844]">Inventory Verification Stage 1/3</span>
+            <h1 className="font-['Playfair_Display'] text-4xl md:text-5xl font-semibold italic mb-2">{cs.pageTitle}</h1>
+            <span className="text-[11px] font-['Inter'] font-bold uppercase tracking-[0.2em] text-[#414844]">{cs.pageSubLabel}</span>
           </header>
           <div className="text-center py-24">
-            <p className="font-['Playfair_Display'] text-2xl italic text-[#414844] mb-8">Your dossier is empty.</p>
+            <p className="font-['Playfair_Display'] text-2xl italic text-[#414844] mb-8">{cs.emptyCartTitle}</p>
             <Link href="/">
               <button className="bg-[#012d1d] text-white font-['Inter'] text-[11px] font-bold uppercase tracking-[0.2em] px-8 py-4 hover:bg-black transition-all" data-testid="button-continue-shopping">
-                Begin Protocol
+                {cs.emptyCartButtonText}
               </button>
             </Link>
           </div>
@@ -374,11 +399,11 @@ export default function Cart() {
         {/* ── Page header ─────────────────────────────────────────────── */}
         <header className="mb-16 border-b border-[#c1c8c2] pb-4">
           <h1 className="font-['Playfair_Display'] text-4xl md:text-5xl font-semibold italic mb-3">
-            Biological Protocol: Shopping Cart
+            {cs.pageTitle}
           </h1>
           <div className="flex items-center justify-between flex-wrap gap-3">
             <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#414844]">
-              Inventory Verification Stage 1/3
+              {cs.pageSubLabel}
             </span>
             <Link href="/" className="flex items-center gap-2 group text-[#414844] hover:text-[#00160c] transition-colors">
               <span className="text-[11px] font-bold uppercase tracking-[0.1em]">Continue Shopping</span>
@@ -386,6 +411,18 @@ export default function Cart() {
             </Link>
           </div>
         </header>
+
+        {/* ── Optional Hero Image ───────────────────────────────────────── */}
+        {cs.showHeroImage && cs.heroImageUrl && (
+          <div className="mb-12 w-full overflow-hidden" style={{ maxHeight: 320 }}>
+            <img
+              src={cs.heroImageUrl}
+              alt="Cart banner"
+              className="w-full h-full object-cover"
+              style={{ maxHeight: 320 }}
+            />
+          </div>
+        )}
 
         {/* ── 12-col grid: cart items + order summary ──────────────────── */}
         <div className="grid grid-cols-12 gap-6 items-start">
@@ -584,22 +621,24 @@ export default function Cart() {
             </div>
 
             {/* Biological Integrity badge */}
-            <div className="mt-10 p-6 bg-[#f3f4f0] border-l-4 border-[#00160c]">
-              <div className="flex items-start gap-4">
-                <ShieldCheck className="w-5 h-5 text-[#00160c] mt-0.5 shrink-0" />
-                <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-[0.15em] mb-1">Biological Integrity Guaranteed</h4>
-                  <p className="text-sm text-[#414844] max-w-md leading-relaxed">
-                    Every protocol item undergoes rigorous clinical sanitization and veterinary inspection prior to dispatch from our 19 DOGS biological logistics center.
-                  </p>
+            {cs.showIntegrityBadge && (
+              <div className="mt-10 p-6 bg-[#f3f4f0] border-l-4 border-[#00160c]">
+                <div className="flex items-start gap-4">
+                  <ShieldCheck className="w-5 h-5 text-[#00160c] mt-0.5 shrink-0" />
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase tracking-[0.15em] mb-1">{cs.integrityBadgeTitle}</h4>
+                    <p className="text-sm text-[#414844] max-w-md leading-relaxed">
+                      {cs.integrityBadgeDescription}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </section>
 
           {/* ── Right: order summary (4 cols, offset 1) ──────────────── */}
           <section className="col-span-12 lg:col-span-4 lg:col-start-9 bg-white p-8 lg:p-10 border border-[#c1c8c2] relative sticky top-8">
-            <h3 className="font-['Playfair_Display'] text-3xl italic mb-8">Order Summary</h3>
+            <h3 className="font-['Playfair_Display'] text-3xl italic mb-8">{cs.orderSummaryTitle}</h3>
 
             {/* Line items */}
             <div className="flex flex-col gap-5 mb-8">
@@ -734,7 +773,7 @@ export default function Cart() {
                   className="w-full bg-[#012d1d] text-white py-5 font-['Inter'] text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                   data-testid="button-checkout"
                 >
-                  Proceed to Checkout
+                  {cs.checkoutButtonText}
                   <Lock className="w-3.5 h-3.5" />
                 </button>
               </Link>
@@ -742,14 +781,14 @@ export default function Cart() {
               <div className="flex flex-col gap-3 text-[10px] text-[#717973] font-bold uppercase tracking-wider opacity-70 mt-2">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Secure Encrypted Connection</span>
+                  <span>{cs.trustBadge1}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Truck className="w-3.5 h-3.5" />
                   <span>
                     {!isSubscriptionCustomer && shipping === 0
                       ? "Free Shipping Applied"
-                      : `Free shipping on orders over ${CURRENCY_SYMBOL}500`}
+                      : `${cs.trustBadge2Text} ${CURRENCY_SYMBOL}500`}
                   </span>
                 </div>
               </div>
@@ -761,15 +800,15 @@ export default function Cart() {
         </div>
 
         {/* ── Related Dossiers section ──────────────────────────────────── */}
-        {relatedProducts.length > 0 && (
+        {cs.showRelatedSection && relatedProducts.length > 0 && (
           <section className="mt-20 grid grid-cols-12 gap-6 border-t border-[#c1c8c2] pt-16">
             <div className="col-span-12 md:col-span-4">
-              <span className="text-[#944923] text-[11px] font-bold uppercase tracking-[0.15em] mb-4 block italic">Related Dossiers</span>
+              <span className="text-[#944923] text-[11px] font-bold uppercase tracking-[0.15em] mb-4 block italic">{cs.relatedSectionLabel}</span>
               <h3 className="font-['Playfair_Display'] text-4xl font-semibold mb-6 leading-tight">
-                Complete the biological set.
+                {cs.relatedSectionTitle}
               </h3>
               <p className="text-[#414844] text-base leading-relaxed font-light">
-                Our atelier designs products that work in synergy — engineered to enhance the biomechanics of active canine movement during high-intensity intervals.
+                {cs.relatedSectionDescription}
               </p>
             </div>
             <div className="col-span-12 md:col-span-7 md:col-start-6">

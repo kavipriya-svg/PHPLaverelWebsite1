@@ -458,6 +458,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/cart/shopping-cart"}>
+                      <Link href="/admin/cart/shopping-cart" data-testid="link-admin-cart-shopping-cart">
+                        <ShoppingCart className="h-4 w-4" />
+                        <span>Shopping Cart</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
                     <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                       Others
                     </p>

@@ -1951,6 +1951,53 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ── Shopping Cart Page Settings ────────────────────────────────────
+  app.get("/api/settings/shopping-cart", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("shopping_cart_settings");
+      const defaultSettings = {
+        pageTitle: "Biological Protocol: Shopping Cart",
+        pageSubLabel: "Inventory Verification Stage 1/3",
+        emptyCartTitle: "Your dossier is empty.",
+        emptyCartButtonText: "Begin Protocol",
+        integrityBadgeTitle: "Biological Integrity Guaranteed",
+        integrityBadgeDescription: "Every protocol item undergoes rigorous clinical sanitization and veterinary inspection prior to dispatch from our 19 DOGS biological logistics center.",
+        showIntegrityBadge: true,
+        relatedSectionLabel: "Related Dossiers",
+        relatedSectionTitle: "Complete the biological set.",
+        relatedSectionDescription: "Our atelier designs products that work in synergy — engineered to enhance the biomechanics of active canine movement during high-intensity intervals.",
+        showRelatedSection: true,
+        orderSummaryTitle: "Order Summary",
+        checkoutButtonText: "Proceed to Checkout",
+        trustBadge1: "Secure Encrypted Connection",
+        trustBadge2Text: "Free Shipping on Orders Over",
+        heroImageUrl: "",
+        showHeroImage: false,
+      };
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          res.json({ settings: { ...defaultSettings, ...parsed } });
+        } catch {
+          res.json({ settings: defaultSettings });
+        }
+      } else {
+        res.json({ settings: defaultSettings });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch shopping cart settings" });
+    }
+  });
+
+  app.put("/api/settings/shopping-cart", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ shopping_cart_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update shopping cart settings" });
+    }
+  });
+
   // ── Full Meal Page Settings ──────────────────────────────────────
   app.get("/api/settings/full-meal-page", async (req, res) => {
     try {
