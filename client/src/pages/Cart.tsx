@@ -332,7 +332,7 @@ export default function Cart() {
     return (
       <div className="min-h-screen bg-[#f9faf6] flex flex-col">
         <HomeEditorialHeader nav={navSettings.nav} />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center pt-[120px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00160c]" />
         </div>
         <HomeEditorialFooter footer={navSettings.footer} />
@@ -345,7 +345,7 @@ export default function Cart() {
     return (
       <div className="min-h-screen bg-[#f9faf6] flex flex-col">
         <HomeEditorialHeader nav={navSettings.nav} />
-        <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 md:px-16 py-20">
+        <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 md:px-16 pt-[120px] pb-20">
           <header className="mb-16 border-b border-[#c1c8c2] pb-4">
             <h1 className="font-['Playfair_Display'] text-4xl md:text-5xl font-semibold italic mb-2">Biological Protocol: Shopping Cart</h1>
             <span className="text-[11px] font-['Inter'] font-bold uppercase tracking-[0.2em] text-[#414844]">Inventory Verification Stage 1/3</span>
@@ -369,7 +369,7 @@ export default function Cart() {
     <div className="min-h-screen bg-[#f9faf6] flex flex-col" style={{ fontFamily: "Inter, sans-serif" }}>
       <HomeEditorialHeader nav={navSettings.nav} />
 
-      <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 md:px-16 py-20">
+      <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 md:px-16 pt-[120px] pb-20">
 
         {/* ── Page header ─────────────────────────────────────────────── */}
         <header className="mb-16 border-b border-[#c1c8c2] pb-4">
