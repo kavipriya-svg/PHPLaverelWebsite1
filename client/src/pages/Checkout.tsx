@@ -198,6 +198,40 @@ export default function Checkout() {
     queryKey: ["/api/combo-offers"],
   });
 
+  // Checkout page dynamic settings
+  const { data: rawCheckoutSettings } = useQuery<{ settings: any }>({
+    queryKey: ["/api/settings/checkout-page"],
+  });
+  const cs = {
+    headerLogoText: "19 Dogs",
+    protocolStatusText: "Protocol Status / Stage 2/3: Finalization",
+    emptyCartTitle: "Your Cart Is Empty",
+    emptyCartMessage: "No items to finalize. Return to the catalog.",
+    emptyCartButtonText: "Return to Catalog",
+    dossierTitle: "Protocol Dossier",
+    dossierBadge: "V.01-REV",
+    totalLabel: "Total_Allocation",
+    currencyNote: "INR (SECURE)",
+    securityBadgeTitle: "19 Dogs Quantum Encryption",
+    securityBadgeDescription: "Biometric and financial data handled under ISO-9001 biological security standards.",
+    supportLink1Text: "Technical Assistance",
+    supportLink2Text: "Protocol Archive",
+    placeOrderButtonText: "Place Order",
+    processingButtonText: "Processing Protocol...",
+    termsText: "By placing this order, you agree to our Terms of Service and Privacy Policy.",
+    footerBrandName: "19 Dogs",
+    footerCopyright: "© 19 Dogs Biological Wellness. All rights reserved. For scientific use only. Proprietary equipment and logistics systems.",
+    footerLink1Text: "Biological Compliance",
+    footerLink1Href: "/pages/terms",
+    footerLink2Text: "Privacy Protocols",
+    footerLink2Href: "/pages/privacy",
+    footerLink3Text: "System Contact",
+    footerLink3Href: "/contact",
+    heroImageUrl: "",
+    showHeroImage: false,
+    ...(rawCheckoutSettings?.settings || {}),
+  };
+
   // Calculate combo discount based on cart items with comboOfferId
   const comboDiscount = useMemo(() => {
     if (!comboOffersData?.offers || cartItems.length === 0) return 0;
@@ -856,14 +890,14 @@ export default function Checkout() {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-[#f9faf6] flex flex-col items-center justify-center gap-6 px-4">
-        <p className="font-bold tracking-[0.2em] uppercase text-[#00160c] text-xl">Your Cart Is Empty</p>
-        <p className="text-sm text-[#00160c]/60 uppercase tracking-widest">No items to finalize. Return to the catalog.</p>
+        <p className="font-bold tracking-[0.2em] uppercase text-[#00160c] text-xl">{cs.emptyCartTitle}</p>
+        <p className="text-sm text-[#00160c]/60 uppercase tracking-widest">{cs.emptyCartMessage}</p>
         <a
           href="/"
           className="inline-flex items-center gap-3 bg-[#00160c] text-white px-8 py-4 text-xs tracking-[0.2em] uppercase font-bold hover:bg-[#012d1d] transition-colors"
           data-testid="link-continue-shopping"
         >
-          Return to Catalog
+          {cs.emptyCartButtonText}
         </a>
       </div>
     );
@@ -886,11 +920,11 @@ export default function Checkout() {
       <header className="sticky top-0 z-50 bg-[#f9faf6] border-b border-[#00160c]/10">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-16 py-4 flex items-center justify-between gap-4">
           <a href="/" className="font-black tracking-[-0.05em] text-[#00160c] text-xl uppercase" data-testid="link-header-logo">
-            19 Dogs
+            {cs.headerLogoText}
           </a>
           <div className="flex-1 max-w-md hidden md:block">
             <div className="text-[9px] tracking-[0.2em] uppercase text-[#00160c]/40 mb-1.5">
-              Protocol Status / Stage 2/3: Finalization
+              {cs.protocolStatusText}
             </div>
             <div className="h-[2px] bg-[#00160c]/10 relative">
               <div className="absolute left-0 top-0 h-full bg-[#944923] transition-all" style={{ width: "66%" }} />
@@ -902,6 +936,13 @@ export default function Checkout() {
           </a>
         </div>
       </header>
+
+      {/* Optional Hero Image */}
+      {cs.showHeroImage && cs.heroImageUrl && (
+        <div className="w-full overflow-hidden" style={{ maxHeight: 280 }}>
+          <img src={cs.heroImageUrl} alt="Checkout banner" className="w-full h-full object-cover" style={{ maxHeight: 280 }} />
+        </div>
+      )}
 
       {/* Main Grid */}
       <main className="flex-1 max-w-[1400px] mx-auto w-full px-6 lg:px-16 py-12 grid grid-cols-12 gap-8 lg:gap-16 items-start">
@@ -1327,11 +1368,11 @@ export default function Checkout() {
                 className="w-full bg-[#00160c] text-white py-5 px-10 text-xs tracking-[0.25em] uppercase font-bold hover:bg-[#012d1d] transition-all flex justify-between items-center disabled:opacity-60 disabled:cursor-not-allowed"
                 data-testid="button-place-order"
               >
-                {isProcessing ? "Processing Protocol..." : "Place Order"}
+                {isProcessing ? cs.processingButtonText : cs.placeOrderButtonText}
                 {!isProcessing && <span className="text-lg">&#8594;</span>}
               </button>
               <p className="text-[9px] text-center text-[#00160c]/40 tracking-[0.1em] uppercase">
-                By placing this order, you agree to our Terms of Service and Privacy Policy.
+                {cs.termsText}
               </p>
             </div>
           </form>
@@ -1344,8 +1385,8 @@ export default function Checkout() {
             >
               {/* Header */}
               <div className="flex justify-between items-start">
-                <h3 className="text-2xl font-black uppercase tracking-tight text-[#00160c]">Protocol Dossier</h3>
-                <span className="text-[10px] tracking-[0.15em] bg-[#944923]/15 text-[#944923] px-3 py-1 uppercase font-bold">V.01-REV</span>
+                <h3 className="text-2xl font-black uppercase tracking-tight text-[#00160c]">{cs.dossierTitle}</h3>
+                <span className="text-[10px] tracking-[0.15em] bg-[#944923]/15 text-[#944923] px-3 py-1 uppercase font-bold">{cs.dossierBadge}</span>
               </div>
 
               {/* Items */}
@@ -1473,12 +1514,12 @@ export default function Checkout() {
               <div className="pt-4 mt-2 border-t-2 border-[#00160c]">
                 <div className="flex justify-between items-end">
                   <div>
-                    <span className="text-[9px] tracking-[0.15em] bg-[#00160c] text-white px-2 py-1 mb-2 inline-block uppercase">Total_Allocation</span>
+                    <span className="text-[9px] tracking-[0.15em] bg-[#00160c] text-white px-2 py-1 mb-2 inline-block uppercase">{cs.totalLabel}</span>
                     <div className="text-4xl font-black text-[#00160c] leading-none" data-testid="text-checkout-total">
                       {formatCurrency(total)}
                     </div>
                   </div>
-                  <span className="text-[9px] text-[#00160c]/40 tracking-widest mb-1">INR (SECURE)</span>
+                  <span className="text-[9px] text-[#00160c]/40 tracking-widest mb-1">{cs.currencyNote}</span>
                 </div>
               </div>
 
@@ -1488,8 +1529,8 @@ export default function Checkout() {
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-[#00160c] uppercase tracking-wide">19 Dogs Quantum Encryption</div>
-                  <div className="text-[9px] text-[#00160c]/40 leading-tight uppercase tracking-wide mt-0.5">Biometric and financial data handled under ISO-9001 biological security standards.</div>
+                  <div className="text-[10px] font-bold text-[#00160c] uppercase tracking-wide">{cs.securityBadgeTitle}</div>
+                  <div className="text-[9px] text-[#00160c]/40 leading-tight uppercase tracking-wide mt-0.5">{cs.securityBadgeDescription}</div>
                 </div>
               </div>
             </div>
@@ -1498,11 +1539,11 @@ export default function Checkout() {
             <div className="mt-4 flex justify-between px-2">
               <button type="button" className="flex items-center gap-2 text-[10px] text-[#00160c]/40 hover:text-[#00160c] transition-colors uppercase tracking-widest">
                 <Info className="h-3.5 w-3.5" />
-                Technical Assistance
+                {cs.supportLink1Text}
               </button>
               <button type="button" className="flex items-center gap-2 text-[10px] text-[#00160c]/40 hover:text-[#00160c] transition-colors uppercase tracking-widest">
                 <FileText className="h-3.5 w-3.5" />
-                Protocol Archive
+                {cs.supportLink2Text}
               </button>
             </div>
           </div>
@@ -1513,15 +1554,15 @@ export default function Checkout() {
       <footer className="w-full bg-[#012d1d] text-white py-10 border-t border-white/5 mt-16">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-16 grid grid-cols-12 gap-8 items-center">
           <div className="col-span-12 md:col-span-4">
-            <div className="text-2xl font-black tracking-tight uppercase mb-2">19 Dogs</div>
+            <div className="text-2xl font-black tracking-tight uppercase mb-2">{cs.footerBrandName}</div>
             <p className="text-[9px] opacity-50 leading-relaxed uppercase tracking-wide">
-              &copy; 19 Dogs Biological Wellness. All rights reserved. For scientific use only. Proprietary equipment and logistics systems.
+              {cs.footerCopyright}
             </p>
           </div>
           <div className="col-span-12 md:col-span-8 flex flex-wrap justify-end gap-8 text-[10px] tracking-[0.15em] opacity-70 uppercase">
-            <a href="/pages/terms" className="hover:opacity-100 transition-opacity">Biological Compliance</a>
-            <a href="/pages/privacy" className="hover:opacity-100 transition-opacity">Privacy Protocols</a>
-            <a href="/contact" className="hover:opacity-100 transition-opacity">System Contact</a>
+            <a href={cs.footerLink1Href} className="hover:opacity-100 transition-opacity">{cs.footerLink1Text}</a>
+            <a href={cs.footerLink2Href} className="hover:opacity-100 transition-opacity">{cs.footerLink2Text}</a>
+            <a href={cs.footerLink3Href} className="hover:opacity-100 transition-opacity">{cs.footerLink3Text}</a>
           </div>
         </div>
       </footer>

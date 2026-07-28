@@ -1998,6 +1998,62 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ── Checkout Page Settings ─────────────────────────────────────────
+  app.get("/api/settings/checkout-page", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("checkout_page_settings");
+      const defaultSettings = {
+        headerLogoText: "19 Dogs",
+        protocolStatusText: "Protocol Status / Stage 2/3: Finalization",
+        emptyCartTitle: "Your Cart Is Empty",
+        emptyCartMessage: "No items to finalize. Return to the catalog.",
+        emptyCartButtonText: "Return to Catalog",
+        dossierTitle: "Protocol Dossier",
+        dossierBadge: "V.01-REV",
+        totalLabel: "Total_Allocation",
+        currencyNote: "INR (SECURE)",
+        securityBadgeTitle: "19 Dogs Quantum Encryption",
+        securityBadgeDescription: "Biometric and financial data handled under ISO-9001 biological security standards.",
+        supportLink1Text: "Technical Assistance",
+        supportLink2Text: "Protocol Archive",
+        placeOrderButtonText: "Place Order",
+        processingButtonText: "Processing Protocol...",
+        termsText: "By placing this order, you agree to our Terms of Service and Privacy Policy.",
+        footerBrandName: "19 Dogs",
+        footerCopyright: "© 19 Dogs Biological Wellness. All rights reserved. For scientific use only. Proprietary equipment and logistics systems.",
+        footerLink1Text: "Biological Compliance",
+        footerLink1Href: "/pages/terms",
+        footerLink2Text: "Privacy Protocols",
+        footerLink2Href: "/pages/privacy",
+        footerLink3Text: "System Contact",
+        footerLink3Href: "/contact",
+        heroImageUrl: "",
+        showHeroImage: false,
+      };
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          res.json({ settings: { ...defaultSettings, ...parsed } });
+        } catch {
+          res.json({ settings: defaultSettings });
+        }
+      } else {
+        res.json({ settings: defaultSettings });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch checkout page settings" });
+    }
+  });
+
+  app.put("/api/settings/checkout-page", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ checkout_page_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update checkout page settings" });
+    }
+  });
+
   // ── Full Meal Page Settings ──────────────────────────────────────
   app.get("/api/settings/full-meal-page", async (req, res) => {
     try {

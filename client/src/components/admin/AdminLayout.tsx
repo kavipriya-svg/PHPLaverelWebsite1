@@ -39,6 +39,7 @@ import {
   MapPin,
   Building2,
   Calendar,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -462,6 +463,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                       <Link href="/admin/cart/shopping-cart" data-testid="link-admin-cart-shopping-cart">
                         <ShoppingCart className="h-4 w-4" />
                         <span>Shopping Cart</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/cart/checkout"}>
+                      <Link href="/admin/cart/checkout" data-testid="link-admin-cart-checkout">
+                        <CreditCard className="h-4 w-4" />
+                        <span>Checkout</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
