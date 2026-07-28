@@ -3,6 +3,37 @@ import { useParams, Link } from "wouter";
 import { formatCurrency, CURRENCY_SYMBOL } from "@/lib/currency";
 import { FileText, Package } from "lucide-react";
 
+interface OrderThanksSettings {
+  heroHeadline: string;
+  heroSubLabel: string;
+  heroImageUrl: string;
+  whatsNextHeading: string;
+  step1Title: string;
+  step1Description: string;
+  step2Title: string;
+  step2Description: string;
+  step3Title: string;
+  step3Description: string;
+  actionsHeading: string;
+}
+
+const defaultThanksSettings: OrderThanksSettings = {
+  heroHeadline: "Biological Protocol: Synchronization Complete",
+  heroSubLabel: "PROTOCOL SYNCHRONIZED // TRANSACTION SUCCESSFUL",
+  heroImageUrl: "",
+  whatsNextHeading: "What's Next?",
+  step1Title: "Preparation for Shipment",
+  step1Description:
+    "Your order is being queued for cold-chain fulfillment. Biological integrity is maintained through -18°C stable transport.",
+  step2Title: "Logistics Initialization",
+  step2Description:
+    "You will receive a notification via SMS/Email once the subject dossier has been dispatched to our premium courier partner.",
+  step3Title: "Biological Payload Received",
+  step3Description:
+    "Your order arrives. For COD, payment is collected at delivery. Track progress anytime using your order identifier.",
+  actionsHeading: "PRIMARY ACTIONS",
+};
+
 const GST_PERCENTAGE = 8;
 
 interface OrderItem {
@@ -189,6 +220,12 @@ export default function OrderConfirmation() {
     enabled: !!orderNumber,
   });
 
+  const { data: thanksData } = useQuery<{ settings: OrderThanksSettings }>({
+    queryKey: ["/api/settings/order-thanks"],
+  });
+
+  const ts = { ...defaultThanksSettings, ...(thanksData?.settings ?? {}) };
+
   const order = data?.order;
 
   const handleExportInvoice = () => {
@@ -314,24 +351,24 @@ export default function OrderConfirmation() {
                 TRANS_ID: {order.orderNumber}
               </div>
               <h1 className="text-4xl md:text-6xl font-black leading-none mb-6 tracking-tighter" data-testid="text-order-success">
-                Biological Protocol:<br />Synchronization Complete
+                {ts.heroHeadline}
               </h1>
               <div className="flex items-center gap-3 py-4 border-y border-white/10 mt-8">
                 <svg viewBox="0 0 24 24" fill="#ffb695" className="w-5 h-5 flex-shrink-0">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
                 <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#a5d0b8]">
-                  PROTOCOL SYNCHRONIZED // TRANSACTION SUCCESSFUL
+                  {ts.heroSubLabel}
                 </p>
               </div>
             </div>
           </div>
-          {/* Hero image — first cart item if available */}
-          {order.items[0]?.imageUrl && (
+          {/* Hero image — admin override OR first cart item */}
+          {(ts.heroImageUrl || order.items[0]?.imageUrl) && (
             <div className="col-span-12 md:col-span-6 md:absolute md:right-0 md:-top-12 md:h-[420px] w-full md:w-7/12 -mt-6 md:mt-0">
               <img
-                src={order.items[0].imageUrl}
-                alt={order.items[0].title}
+                src={ts.heroImageUrl || order.items[0].imageUrl}
+                alt={ts.heroImageUrl ? "Hero image" : order.items[0].title}
                 className="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-700 cursor-crosshair"
                 loading="lazy"
               />
@@ -469,7 +506,7 @@ export default function OrderConfirmation() {
         {/* What's Next */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start mb-20">
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight text-[#00160c] mb-8">What's Next?</h2>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-[#00160c] mb-8">{ts.whatsNextHeading}</h2>
             <div className="space-y-8">
               <div className="flex gap-6">
                 <div className="w-8 h-8 rounded-full bg-[#012d1d] text-white flex items-center justify-center font-mono text-xs flex-shrink-0">
@@ -477,13 +514,9 @@ export default function OrderConfirmation() {
                 </div>
                 <div>
                   <h4 className="text-[10px] tracking-[0.2em] uppercase font-bold text-[#00160c] mb-1">
-                    Preparation for Shipment
+                    {ts.step1Title}
                   </h4>
-                  <p className="text-sm text-[#414844] leading-relaxed">
-                    {order.paymentMethod === "cod"
-                      ? "Your order is being queued for cold-chain fulfillment. Biological integrity is maintained through -18°C stable transport."
-                      : "Your payment has been confirmed. Your order is now being queued for cold-chain fulfillment."}
-                  </p>
+                  <p className="text-sm text-[#414844] leading-relaxed">{ts.step1Description}</p>
                 </div>
               </div>
               <div className="flex gap-6">
@@ -492,11 +525,9 @@ export default function OrderConfirmation() {
                 </div>
                 <div>
                   <h4 className="text-[10px] tracking-[0.2em] uppercase font-bold text-[#717973] mb-1">
-                    Logistics Initialization
+                    {ts.step2Title}
                   </h4>
-                  <p className="text-sm text-[#414844] opacity-60 leading-relaxed">
-                    You will receive a notification via SMS/Email once the subject dossier has been dispatched to our premium courier partner.
-                  </p>
+                  <p className="text-sm text-[#414844] opacity-60 leading-relaxed">{ts.step2Description}</p>
                 </div>
               </div>
               <div className="flex gap-6">
@@ -505,11 +536,9 @@ export default function OrderConfirmation() {
                 </div>
                 <div>
                   <h4 className="text-[10px] tracking-[0.2em] uppercase font-bold text-[#c1c8c2] mb-1">
-                    Biological Payload Received
+                    {ts.step3Title}
                   </h4>
-                  <p className="text-sm text-[#414844] opacity-40 leading-relaxed">
-                    Your order arrives. For COD, payment is collected at delivery. Track progress anytime using your order identifier.
-                  </p>
+                  <p className="text-sm text-[#414844] opacity-40 leading-relaxed">{ts.step3Description}</p>
                 </div>
               </div>
             </div>
@@ -517,7 +546,7 @@ export default function OrderConfirmation() {
 
           {/* Primary Actions Panel */}
           <div className="bg-[#012d1d] p-10 text-white flex flex-col gap-5">
-            <h3 className="text-[10px] tracking-[0.2em] uppercase font-bold text-[#a5d0b8]">PRIMARY ACTIONS</h3>
+            <h3 className="text-[10px] tracking-[0.2em] uppercase font-bold text-[#a5d0b8]">{ts.actionsHeading}</h3>
             <Link
               href="/track-order"
               className="block w-full bg-white text-[#00160c] font-mono text-[10px] tracking-[0.2em] uppercase py-4 text-center hover:bg-[#ffdbcc] transition-colors"

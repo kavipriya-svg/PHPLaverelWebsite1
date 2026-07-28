@@ -1910,6 +1910,47 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ── Order Thanks (Confirmation) Page Settings ─────────────────────
+  app.get("/api/settings/order-thanks", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("order_thanks_settings");
+      const defaultSettings = {
+        heroHeadline: "Biological Protocol: Synchronization Complete",
+        heroSubLabel: "PROTOCOL SYNCHRONIZED // TRANSACTION SUCCESSFUL",
+        heroImageUrl: "",
+        whatsNextHeading: "What's Next?",
+        step1Title: "Preparation for Shipment",
+        step1Description: "Your order is being queued for cold-chain fulfillment. Biological integrity is maintained through -18°C stable transport.",
+        step2Title: "Logistics Initialization",
+        step2Description: "You will receive a notification via SMS/Email once the subject dossier has been dispatched to our premium courier partner.",
+        step3Title: "Biological Payload Received",
+        step3Description: "Your order arrives. For COD, payment is collected at delivery. Track progress anytime using your order identifier.",
+        actionsHeading: "PRIMARY ACTIONS",
+      };
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          res.json({ settings: { ...defaultSettings, ...parsed } });
+        } catch {
+          res.json({ settings: defaultSettings });
+        }
+      } else {
+        res.json({ settings: defaultSettings });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch order thanks settings" });
+    }
+  });
+
+  app.put("/api/settings/order-thanks", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ order_thanks_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update order thanks settings" });
+    }
+  });
+
   // ── Full Meal Page Settings ──────────────────────────────────────
   app.get("/api/settings/full-meal-page", async (req, res) => {
     try {
