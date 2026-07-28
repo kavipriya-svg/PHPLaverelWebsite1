@@ -1,9 +1,12 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag, Menu, X, Search, Globe, Camera, PlayCircle, PackageSearch, UserPlus, LogIn } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, PackageSearch, UserPlus, LogIn, LogOut, User, ShoppingBag as BagIcon, Heart, ChevronDown } from "lucide-react";
 import type { HomepageSettings } from "@/lib/homepageDefaults";
 import { useStore } from "@/contexts/StoreContext";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 
 interface BrandingSettings { logoUrl: string; storeName: string; showStoreName: boolean; }
 
@@ -48,6 +51,21 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [, navigate]   = useLocation();
   const { cartCount } = useStore();
+  const { user, isAuthenticated } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await apiRequest("POST", "/api/auth/logout");
+    queryClient.clear();
+    window.location.href = "/";
+  };
+
+  const getInitials = () => {
+    if (user?.firstName && user?.lastName) return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    if (user?.firstName) return user.firstName[0].toUpperCase();
+    if (user?.email) return user.email[0].toUpperCase();
+    return "U";
+  };
 
   const handleSearchOpen = () => {
     setSearchOpen(true);
@@ -124,34 +142,106 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
       )}
 
       <div className="flex items-center gap-4">
-        {/* Join the Pack icon */}
+        {/* Auth section */}
         {!searchOpen && (
-          <Link href={nav.ctaHref}>
-            <button
-              className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
-              aria-label={nav.ctaText}
-              title={nav.ctaText}
-              data-testid="button-join-the-pack"
-              style={{ color: C.white, backgroundColor: C.primary, borderRadius: 4, padding: "6px 8px" }}
-            >
-              <UserPlus className="w-5 h-5" />
-            </button>
-          </Link>
-        )}
+          isAuthenticated ? (
+            /* Logged-in: avatar + dropdown */
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => setProfileOpen(p => !p)}
+                className="flex items-center gap-2 transition-opacity hover:opacity-80"
+                data-testid="button-profile-menu"
+                aria-label="Profile menu"
+              >
+                {/* Avatar circle with initials */}
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold select-none"
+                  style={{ backgroundColor: C.secondary, color: C.white }}
+                >
+                  {getInitials()}
+                </span>
+                <span className="text-sm font-medium hidden lg:block" style={{ color: C.onSurface }}>
+                  {user?.firstName || user?.email?.split("@")[0]}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 hidden lg:block" style={{ color: C.onSurface }} />
+              </button>
 
-        {/* Login icon */}
-        {!searchOpen && (
-          <Link href="/admin/login">
-            <button
-              className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
-              aria-label="Login"
-              title="Login"
-              data-testid="link-login-header"
-              style={{ color: C.onSurface }}
-            >
-              <LogIn className="w-5 h-5" />
-            </button>
-          </Link>
+              {profileOpen && (
+                <>
+                  {/* Backdrop */}
+                  <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                  {/* Dropdown */}
+                  <div
+                    className="absolute right-0 top-full mt-2 w-52 z-50 rounded-md shadow-lg overflow-hidden"
+                    style={{ backgroundColor: C.surface, border: `1px solid ${C.outlineVariant}` }}
+                  >
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b" style={{ borderColor: C.outlineVariant }}>
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: C.primary }}>
+                        {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "My Account"}
+                      </p>
+                      <p className="text-[10px] mt-0.5 truncate" style={{ color: C.outline }}>{user?.email}</p>
+                    </div>
+                    {/* Links */}
+                    {[
+                      { href: "/account", icon: User, label: "My Account" },
+                      { href: "/account/orders", icon: BagIcon, label: "My Orders" },
+                      { href: "/wishlist", icon: Heart, label: "Wishlist" },
+                      { href: "/track-order", icon: PackageSearch, label: "Track Order" },
+                    ].map(({ href, icon: Icon, label }) => (
+                      <Link key={href} href={href}>
+                        <button
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-black/5"
+                          style={{ color: C.onSurface }}
+                          onClick={() => setProfileOpen(false)}
+                          data-testid={`link-profile-${label.toLowerCase().replace(/\s/g, "-")}`}
+                        >
+                          <Icon className="w-4 h-4 flex-shrink-0" style={{ color: C.outline }} />
+                          {label}
+                        </button>
+                      </Link>
+                    ))}
+                    <div className="border-t" style={{ borderColor: C.outlineVariant }} />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-black/5"
+                      style={{ color: C.secondary }}
+                      data-testid="button-logout"
+                    >
+                      <LogOut className="w-4 h-4 flex-shrink-0" />
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            /* Guest: Join + Login buttons */
+            <>
+              <Link href={nav.ctaHref}>
+                <button
+                  className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+                  aria-label={nav.ctaText}
+                  title={nav.ctaText}
+                  data-testid="button-join-the-pack"
+                  style={{ color: C.white, backgroundColor: C.primary, borderRadius: 4, padding: "6px 8px" }}
+                >
+                  <UserPlus className="w-5 h-5" />
+                </button>
+              </Link>
+              <Link href="/login">
+                <button
+                  className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+                  aria-label="Login"
+                  title="Login"
+                  data-testid="link-login-header"
+                  style={{ color: C.onSurface }}
+                >
+                  <LogIn className="w-5 h-5" />
+                </button>
+              </Link>
+            </>
+          )
         )}
 
         {!searchOpen && (
@@ -248,15 +338,58 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
             </span>
           </Link>
 
-          <Link href={nav.ctaHref}>
-            <button
-              className="font-inter text-label-caps uppercase tracking-widest px-6 py-3 w-fit cursor-pointer"
-              style={{ backgroundColor: C.primary, color: C.white }}
-              onClick={() => setMenuOpen(false)}
-            >
-              {nav.ctaText}
-            </button>
-          </Link>
+          {isAuthenticated ? (
+            /* Logged-in mobile: profile block + links */
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 pb-3 border-b" style={{ borderColor: C.outlineVariant }}>
+                <span
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold select-none flex-shrink-0"
+                  style={{ backgroundColor: C.secondary, color: C.white }}
+                >
+                  {getInitials()}
+                </span>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: C.primary }}>
+                    {user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "My Account"}
+                  </p>
+                  <p className="text-[11px]" style={{ color: C.outline }}>{user?.email}</p>
+                </div>
+              </div>
+              {[
+                { href: "/account", label: "My Account" },
+                { href: "/account/orders", label: "My Orders" },
+                { href: "/wishlist", label: "Wishlist" },
+              ].map(({ href, label }) => (
+                <Link key={href} href={href}>
+                  <span
+                    className="font-inter text-sm cursor-pointer"
+                    style={{ color: C.onSurface }}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              ))}
+              <button
+                onClick={handleLogout}
+                className="font-inter text-sm text-left w-fit"
+                style={{ color: C.secondary }}
+                data-testid="button-logout-mobile"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <Link href={nav.ctaHref}>
+              <button
+                className="font-inter text-label-caps uppercase tracking-widest px-6 py-3 w-fit cursor-pointer"
+                style={{ backgroundColor: C.primary, color: C.white }}
+                onClick={() => setMenuOpen(false)}
+              >
+                {nav.ctaText}
+              </button>
+            </Link>
+          )}
         </div>
       )}
     </header>
