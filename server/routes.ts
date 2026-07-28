@@ -1751,6 +1751,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Site Branding Settings - GET
+  app.get("/api/favicon", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("branding_settings");
+      const branding = setting?.value ? JSON.parse(setting.value) : {};
+      const url = branding.faviconUrl || branding.logoUrl;
+      if (url) {
+        return res.redirect(302, url);
+      }
+      // Fall back to static file
+      return res.redirect(302, "/favicon.png");
+    } catch {
+      return res.redirect(302, "/favicon.png");
+    }
+  });
+
   app.get("/api/settings/branding", async (req, res) => {
     try {
       const setting = await storage.getSetting("branding_settings");
