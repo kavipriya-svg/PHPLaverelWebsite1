@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag, Menu, X, Search, Globe, Camera, PlayCircle, PackageSearch } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, Globe, Camera, PlayCircle, PackageSearch, UserPlus, LogIn } from "lucide-react";
 import type { HomepageSettings } from "@/lib/homepageDefaults";
 
 interface BrandingSettings { logoUrl: string; storeName: string; showStoreName: boolean; }
@@ -71,8 +71,8 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
       style={{ backgroundColor: `${C.surface}F2`, backdropFilter: "blur(12px)" }}
     >
       <Link href="/">
-        <span className="cursor-pointer flex items-center" style={{ minHeight: 36 }}>
-          <BrandLogo height={36} textSize={24} />
+        <span className="cursor-pointer flex items-center" style={{ minHeight: 56 }}>
+          <BrandLogo height={56} textSize={24} />
         </span>
       </Link>
 
@@ -122,17 +122,35 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
       )}
 
       <div className="flex items-center gap-4">
-        <Link href={nav.ctaHref}>
-          <button
-            className="hidden md:block font-inter text-label-caps uppercase tracking-widest px-6 py-3 transition-all duration-200 cursor-pointer"
-            style={{ backgroundColor: C.primary, color: C.white }}
-            onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
-            onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
-            data-testid="button-join-the-pack"
-          >
-            {nav.ctaText}
-          </button>
-        </Link>
+        {/* Join the Pack icon */}
+        {!searchOpen && (
+          <Link href={nav.ctaHref}>
+            <button
+              className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+              aria-label={nav.ctaText}
+              title={nav.ctaText}
+              data-testid="button-join-the-pack"
+              style={{ color: C.white, backgroundColor: C.primary, borderRadius: 4, padding: "6px 8px" }}
+            >
+              <UserPlus className="w-5 h-5" />
+            </button>
+          </Link>
+        )}
+
+        {/* Login icon */}
+        {!searchOpen && (
+          <Link href="/admin/login">
+            <button
+              className="hidden md:flex items-center justify-center transition-opacity hover:opacity-60"
+              aria-label="Login"
+              title="Login"
+              data-testid="link-login-header"
+              style={{ color: C.onSurface }}
+            >
+              <LogIn className="w-5 h-5" />
+            </button>
+          </Link>
+        )}
 
         {!searchOpen && (
           <Link href="/track-order">
