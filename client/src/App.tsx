@@ -193,9 +193,9 @@ function Router() {
       </Route>
       
       <Route path="/cart">
-        <StoreLayout>
+        <HomeLayout>
           <Cart />
-        </StoreLayout>
+        </HomeLayout>
       </Route>
       
       <Route path="/checkout">
