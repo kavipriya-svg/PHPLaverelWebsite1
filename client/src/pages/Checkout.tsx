@@ -274,6 +274,39 @@ export default function Checkout() {
     enabled: isSubscriptionCustomer,
   });
 
+  const form = useForm<CheckoutFormData>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      email: user?.email || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      address1: "",
+      address2: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "India",
+      phone: "",
+      gstNumber: "",
+      saveShippingAddress: true,
+      sameAsBilling: true,
+      billingFirstName: "",
+      billingLastName: "",
+      billingAddress1: "",
+      billingAddress2: "",
+      billingCity: "",
+      billingState: "",
+      billingPostalCode: "",
+      billingCountry: "India",
+      billingPhone: "",
+      billingGstNumber: "",
+      saveBillingAddress: true,
+      paymentMethod: "cod",
+    },
+  });
+
+  const sameAsBilling = form.watch("sameAsBilling");
+
   // Watch shipping city to determine Chennai vs PAN India rates
   const shippingCity = form.watch("city");
   
@@ -419,39 +452,6 @@ export default function Checkout() {
       return Math.min(parseFloat(appliedCoupon.amount), cartTotal);
     }
   };
-
-  const form = useForm<CheckoutFormData>({
-    resolver: zodResolver(checkoutSchema),
-    defaultValues: {
-      email: user?.email || "",
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      address1: "",
-      address2: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "India",
-      phone: "",
-      gstNumber: "",
-      saveShippingAddress: true,
-      sameAsBilling: true,
-      billingFirstName: "",
-      billingLastName: "",
-      billingAddress1: "",
-      billingAddress2: "",
-      billingCity: "",
-      billingState: "",
-      billingPostalCode: "",
-      billingCountry: "India",
-      billingPhone: "",
-      billingGstNumber: "",
-      saveBillingAddress: true,
-      paymentMethod: "cod",
-    },
-  });
-
-  const sameAsBilling = form.watch("sameAsBilling");
 
   // Function to fill shipping form with address data
   const fillShippingFormWithAddress = (address: Address) => {
