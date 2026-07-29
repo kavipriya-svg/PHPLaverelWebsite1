@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag, Menu, X, Search, PackageSearch, UserPlus, LogIn, LogOut, User, ShoppingBag as BagIcon, Heart, ChevronDown } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, PackageSearch, UserPlus, LogIn, LogOut, User, ShoppingBag as BagIcon, Heart, ChevronDown, Globe, Camera, PlayCircle } from "lucide-react";
 import type { HomepageSettings } from "@/lib/homepageDefaults";
 import { useStore } from "@/contexts/StoreContext";
 import { useAuth } from "@/hooks/useAuth";
