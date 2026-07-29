@@ -341,7 +341,7 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
 
       {menuOpen && (
         <div
-          className="absolute top-full left-0 right-0 flex flex-col py-6 px-margin-desktop gap-6"
+          className="absolute top-full left-0 right-0 flex flex-col py-6 px-5 md:px-margin-desktop gap-6"
           style={{ backgroundColor: C.surface, borderTop: `1px solid ${C.outlineVariant}` }}
         >
           {/* Mobile search */}

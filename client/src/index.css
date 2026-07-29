@@ -4,7 +4,23 @@
 
 /* ─── Editorial Homepage Utilities ────────────────────────────────── */
 .hard-shadow {
-  box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+  box-shadow: 10px 10px 0px 0px rgba(1, 45, 29, 0.15);
+}
+@media (min-width: 768px) {
+  .hard-shadow {
+    box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+  }
+}
+/* Prevent horizontal overflow from shadows/fixed elements */
+.overflow-x-clip {
+  overflow-x: hidden;
+}
+/* ─── Responsive desktop margin override ───────────────────────── */
+@media (max-width: 767px) {
+  .px-margin-desktop {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 }
 .reveal {
   opacity: 0;

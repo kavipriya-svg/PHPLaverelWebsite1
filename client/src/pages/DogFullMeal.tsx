@@ -170,7 +170,7 @@ function EditorialProductCard({ product, index, onAddToCart }: { product: any; i
     : `"Precision-formulated nutrition. Biologically appropriate for the modern canine predator."`;
 
   return (
-    <div className={`flex flex-col ${isReversed ? "md:flex-row-reverse" : "md:flex-row"} items-center px-[64px] gap-20`}>
+    <div className={`flex flex-col ${isReversed ? "md:flex-row-reverse" : "md:flex-row"} items-center px-5 md:px-[64px] gap-8 md:gap-20`}>
       {/* Image */}
       <div className="w-full md:w-3/5 relative flex-shrink-0">
         <div className={`absolute z-10 font-mono text-[11px] px-4 py-2 ${isReversed ? "top-8 right-8" : "top-8 left-8"}`}
@@ -470,7 +470,7 @@ export default function DogFullMeal() {
       {/* ── 2. Why the Wolf ───────────────────────────────── */}
       {s.whyTheWolf.visible && (
         <section
-          className="border-y py-[80px] flex flex-col md:flex-row items-center justify-between gap-12 px-[64px]"
+          className="border-y py-[80px] flex flex-col md:flex-row items-center justify-between gap-12 px-5 md:px-[64px]"
           style={{ borderColor: C.outlineVariant, backgroundColor: C.surfaceContainerLow }}
         >
           <div className="flex-1">
@@ -521,7 +521,7 @@ export default function DogFullMeal() {
 
       {/* ── 3. Products Gallery ───────────────────────────── */}
       <main id="dfm-meals" className="py-[80px] overflow-hidden" style={{ backgroundColor: C.surface }}>
-        <div className="px-[64px] mb-[56px]">
+        <div className="px-5 md:px-[64px] mb-[56px]">
           <h2 className="font-playfair mb-4" style={{ fontSize: "clamp(48px,7vw,84px)", fontWeight: 700, color: C.primary }}>
             {s.wetFood.title}
           </h2>
@@ -532,7 +532,7 @@ export default function DogFullMeal() {
 
         {/* ── Filter Bar ─────────────────────────────────── */}
         <div
-          className="px-[64px] mb-[64px] border-y py-6 flex flex-wrap items-center gap-8"
+          className="px-5 md:px-[64px] mb-[64px] border-y py-6 flex flex-wrap items-center gap-8"
           style={{ borderColor: C.outlineVariant }}
         >
           {/* Sort */}
@@ -603,7 +603,7 @@ export default function DogFullMeal() {
         </div>
 
         {isLoading ? (
-          <div className="px-[64px] space-y-8">
+          <div className="px-5 md:px-[64px] space-y-8">
             {[1, 2, 3].map((i) => <div key={i} className="h-96 animate-pulse rounded" style={{ backgroundColor: C.surfaceContainerLow }} />)}
           </div>
         ) : filteredProducts.length > 0 ? (
@@ -613,7 +613,7 @@ export default function DogFullMeal() {
             ))}
           </div>
         ) : products.length > 0 ? (
-          <div className="px-[64px] py-24 text-center">
+          <div className="px-5 md:px-[64px] py-24 text-center">
             <p className="font-inter text-sm uppercase tracking-widest mb-4" style={{ color: C.outline, letterSpacing: "0.25em" }}>
               No specimens match
             </p>
@@ -647,7 +647,7 @@ export default function DogFullMeal() {
         <section className="relative w-full flex items-center justify-start overflow-hidden" style={{ height: "80vh" }}>
           <img src={s.interstitialBanner.imageUrl} alt="Interstitial" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
-          <div className="relative z-10 w-full px-[64px] text-left">
+          <div className="relative z-10 w-full px-5 md:px-[64px] text-left">
             <span className="font-inter block mb-4" style={{ fontSize: "18px", letterSpacing: "0.8em", color: C.primary, fontWeight: 700, textTransform: "uppercase" }}>
               {s.interstitialBanner.label}
             </span>
@@ -671,7 +671,7 @@ export default function DogFullMeal() {
       {/* ── 4. Biryani Collection ─────────────────────────── */}
       {s.biryaniSection.visible && (
         <section className="py-[80px] overflow-hidden relative" style={{ backgroundColor: C.primary }}>
-          <div className="px-[64px] mb-[80px] relative z-10">
+          <div className="px-5 md:px-[64px] mb-[80px] relative z-10">
             <h2 className="font-playfair mb-6" style={{ fontSize: "clamp(48px,7vw,84px)", fontWeight: 700, color: C.white }}>
               {s.biryaniSection.title}
             </h2>
@@ -708,7 +708,7 @@ export default function DogFullMeal() {
             }));
             const displayItems = liveItems.length > 0 ? liveItems : s.biryaniSection.products.map((x: any) => ({ ...x, _isLive: false }));
             return (
-              <div className="space-y-48 px-[64px] relative z-10">
+              <div className="space-y-16 md:space-y-48 px-5 md:px-[64px] relative z-10">
                 {displayItems.map((item: any, i: number) => {
                   const reversed = i % 2 === 0;
                   return (

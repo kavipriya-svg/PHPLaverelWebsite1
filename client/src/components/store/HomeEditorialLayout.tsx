@@ -300,7 +300,7 @@ export function HomeEditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
 
       {menuOpen && (
         <div
-          className="absolute top-full left-0 right-0 flex flex-col py-6 px-margin-desktop gap-6"
+          className="absolute top-full left-0 right-0 flex flex-col py-6 px-5 md:px-margin-desktop gap-6"
           style={{ backgroundColor: C.surface, borderTop: `1px solid ${C.outlineVariant}` }}
         >
           <form onSubmit={handleSearchSubmit} className="flex items-center border-b pb-4" style={{ borderColor: C.outlineVariant }}>
@@ -402,7 +402,7 @@ export function HomeEditorialFooter({ footer }: { footer: HomepageSettings["foot
       className="border-t pt-stack-lg pb-stack-sm"
       style={{ backgroundColor: C.surfaceContainerLow, borderColor: C.outlineVariant }}
     >
-      <div className="grid grid-cols-12 gap-gutter px-margin-desktop mb-stack-lg">
+      <div className="grid grid-cols-12 gap-gutter px-5 md:px-margin-desktop mb-stack-lg">
         <div className="col-span-12 md:col-span-4">
           <div className="mb-8">
             <BrandLogo height={48} textSize={40} />
@@ -473,7 +473,7 @@ export function HomeEditorialFooter({ footer }: { footer: HomepageSettings["foot
       </div>
 
       <div
-        className="px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-6 border-t pt-8"
+        className="px-5 md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-6 border-t pt-8"
         style={{ borderColor: `${C.outlineVariant}4D` }}
       >
         <p className="font-inter text-body-md" style={{ color: C.onSurfaceVariant }}>

@@ -400,7 +400,7 @@ export default function DogClothing() {
   const testimonialSettings = pageSettings.testimonials;
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: C.surface }}>
+    <div style={{ minHeight: "100vh", backgroundColor: C.surface, overflowX: "hidden" }}>
       <EditorialHeader nav={navSettings.nav} />
 
       {/* ════════════════════════════════════════════════════════════════
@@ -466,7 +466,7 @@ export default function DogClothing() {
       {/* ════════════════════════════════════════════════════════════════
           2. STICKY FILTER BAR
           ════════════════════════════════════════════════════════════════ */}
-      <section className="sticky z-40 border-b" style={{ top: 72, backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "24px 64px" }}>
+      <section className="sticky z-40 border-b" style={{ top: 72, backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "16px clamp(20px,5vw,64px)" }}>
         <div className="flex flex-wrap justify-between items-center gap-6">
           <div className="flex gap-12 flex-wrap">
             <FilterDropdown label="SPECIMEN TYPE" options={FILTER_TYPES} value={filterType} onChange={setFilterType} />
@@ -489,7 +489,7 @@ export default function DogClothing() {
       {pageSettings.productSection.visible && (
         <>
           <AdBannerSlot banners={adBanners} placement="products-1" position="top" />
-          <main id="collection" style={{ padding: "80px 64px" }}>
+          <main id="collection" style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-20">
               {grid1.map((product, i) => (
                 <div key={product.id} className={i === 1 ? "lg:mt-24" : ""}>
@@ -508,7 +508,7 @@ export default function DogClothing() {
       {bio.visible && (
         <>
           <AdBannerSlot banners={adBanners} placement="bio" position="top" />
-          <section className="relative overflow-hidden" style={{ backgroundColor: C.primary, color: C.white, padding: "80px 64px" }}>
+          <section className="relative overflow-hidden" style={{ backgroundColor: C.primary, color: C.white, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
             <div className="absolute right-0 top-0 w-1/2 h-full pointer-events-none"
               style={{ background: "linear-gradient(135deg, transparent 30%, rgba(165,208,184,0.05) 100%)" }} />
             <div className="grid grid-cols-12 gap-6 items-center relative z-10">
@@ -565,7 +565,7 @@ export default function DogClothing() {
       {pageSettings.productSection.visible && grid2.length > 0 && (
         <>
           <AdBannerSlot banners={adBanners} placement="products-2" position="top" />
-          <main style={{ backgroundColor: C.surfaceContainerLow, padding: "80px 64px" }}>
+          <main style={{ backgroundColor: C.surfaceContainerLow, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-20">
               {grid2.map((product, i) => (
                 <div key={product.id} className={i === 1 ? "lg:-mt-12" : ""}>
@@ -599,7 +599,7 @@ export default function DogClothing() {
       {testimonialSettings.visible && (testimonials.length > 0) && (
         <>
           <AdBannerSlot banners={adBanners} placement="testimonials" position="top" />
-          <section style={{ backgroundColor: C.surface, padding: "80px 64px", borderTop: `1px solid ${C.outlineVariant}` }}>
+          <section style={{ backgroundColor: C.surface, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)", borderTop: `1px solid ${C.outlineVariant}` }}>
             <p style={{ ...MONO, ...LABEL_CAPS, color: C.secondary, marginBottom: 48 }}>
               {testimonialSettings.sectionLabel}
             </p>

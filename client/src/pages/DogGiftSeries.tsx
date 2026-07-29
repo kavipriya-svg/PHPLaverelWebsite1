@@ -292,7 +292,7 @@ function TestimonialsSection({ testimonials, banners, tag, headline }: { testimo
   return (
     <>
       <AdBannerStrip banners={sectionBanners} position="top" />
-      <section ref={ref} style={{ backgroundColor: C.primary, padding: "96px 64px", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(40px)", transition: "opacity 0.9s ease, transform 0.9s ease" }}>
+      <section ref={ref} style={{ backgroundColor: C.primary, padding: "clamp(48px,8vw,96px) clamp(20px,5vw,64px)", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(40px)", transition: "opacity 0.9s ease, transform 0.9s ease" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <span style={{ ...LABEL_CAPS, color: C.secondaryFixed, display: "block", marginBottom: 16 }}>{tag}</span>
@@ -343,7 +343,7 @@ function RelatedProductsSection({ products, banners, tag, headline, ctaText, cta
   return (
     <>
       <AdBannerStrip banners={sectionBanners} position="top" />
-      <section ref={ref} style={{ backgroundColor: C.surfaceContainerLow, padding: "96px 64px", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(40px)", transition: "opacity 0.9s ease, transform 0.9s ease" }}>
+      <section ref={ref} style={{ backgroundColor: C.surfaceContainerLow, padding: "clamp(48px,8vw,96px) clamp(20px,5vw,64px)", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(40px)", transition: "opacity 0.9s ease, transform 0.9s ease" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <span style={{ ...LABEL_CAPS, color: C.secondary, display: "block", marginBottom: 16 }}>{tag}</span>
@@ -542,7 +542,7 @@ export default function DogGiftSeries() {
               <DossierSection key={p.id} product={p} index={i} allBanners={allBanners} sectionLabel={page.dossiers.sectionLabel} />
             ))
           ) : (
-            <section style={{ backgroundColor: C.surfaceContainerLow, padding: "96px 64px", textAlign: "center" }}>
+            <section style={{ backgroundColor: C.surfaceContainerLow, padding: "clamp(48px,8vw,96px) clamp(20px,5vw,64px)", textAlign: "center" }}>
               <div style={{ maxWidth: 480, margin: "0 auto" }}>
                 <span style={{ ...LABEL_CAPS, color: C.secondary, display: "block", marginBottom: 16 }}>No Products Yet</span>
                 <p style={{ ...INTER, color: C.onSurfaceVariant, fontSize: 16 }}>

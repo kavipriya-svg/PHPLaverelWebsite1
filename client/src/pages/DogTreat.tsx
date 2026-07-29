@@ -379,7 +379,7 @@ export default function DogTreat() {
   };
 
   return (
-    <div style={{ backgroundColor: C.surface, color: C.onSurface, fontFamily: "Inter, sans-serif" }}>
+    <div style={{ backgroundColor: C.surface, color: C.onSurface, fontFamily: "Inter, sans-serif", overflowX: "hidden" }}>
       <EditorialHeader nav={nav} />
 
       {/* ══════════════ 1. HERO ══════════════ */}
@@ -389,7 +389,7 @@ export default function DogTreat() {
           <div ref={heroBgRef} className="w-full h-full bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: `url('${dt.hero.bgImageUrl}')`, willChange: "transform" }} />
         </div>
-        <div className="relative z-20 px-[64px] max-w-4xl">
+        <div className="relative z-20 px-5 md:px-[64px] max-w-4xl">
           <h1 style={{ ...PLAYFAIR, fontSize: "clamp(56px,9vw,84px)", fontWeight: 700, color: C.surface, lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: 24 }}>
             {dt.hero.headline}
           </h1>
@@ -410,7 +410,7 @@ export default function DogTreat() {
             </button>
           </div>
         </div>
-        <div className="absolute z-20"
+        <div className="absolute z-20 hidden md:block"
           style={{ bottom: 64, right: 64, color: C.surface, borderLeft: "1px solid rgba(255,255,255,0.3)", paddingLeft: 24, paddingTop: 8, paddingBottom: 8 }}>
           <p style={{ ...LABEL_CAPS, opacity: 0.6, marginBottom: 4 }}>{dt.hero.locationTitle}</p>
           <p style={{ ...PLAYFAIR, fontSize: 18, color: C.surface }}>{dt.hero.locationSubtitle}</p>
@@ -419,7 +419,7 @@ export default function DogTreat() {
 
       {/* ══════════════ 2. PROTEIN LIBRARY ══════════════ */}
       {dt.proteinLibrary.visible && (
-        <section className="border-b" style={{ backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "80px 64px" }}>
+        <section className="border-b" style={{ backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div style={{ marginBottom: 48 }}>
             <h2 style={{ ...PLAYFAIR, fontSize: "clamp(36px,5vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 16 }}>
               {dt.proteinLibrary.title}
@@ -476,7 +476,7 @@ export default function DogTreat() {
 
       {/* ══════════════ 3. WOLF PRINCIPLE ══════════════ */}
       {dt.wolfPrinciple.visible && (
-        <section className="grid grid-cols-12 gap-6 items-center" style={{ padding: "80px 64px" }}>
+        <section className="grid grid-cols-12 gap-6 items-center" style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div className="col-span-12 lg:col-span-5">
             <span style={{ ...LABEL_CAPS, color: C.secondary, display: "block", marginBottom: 16 }}>{dt.wolfPrinciple.label}</span>
             <h2 style={{ ...PLAYFAIR, fontSize: "clamp(36px,5vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 32, lineHeight: 1.2 }}>
@@ -513,7 +513,7 @@ export default function DogTreat() {
 
       {/* ══════════════ 4. FEATURES ══════════════ */}
       {dt.features.visible && (
-        <section style={{ backgroundColor: C.surfaceContainerHigh, padding: "80px 64px" }}>
+        <section style={{ backgroundColor: C.surfaceContainerHigh, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div className="flex justify-between items-end mb-16 flex-wrap gap-6">
             <div>
               <h2 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 16 }}>
@@ -531,7 +531,7 @@ export default function DogTreat() {
 
       {/* ══════════════ 5. PRODUCT PORTFOLIO ══════════════ */}
       {dt.productSection.visible && (
-        <section style={{ padding: "80px 64px" }}>
+        <section style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-20 flex-wrap">
             <div style={{ maxWidth: 560 }}>
               <h2 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 16 }}>
@@ -584,7 +584,7 @@ export default function DogTreat() {
       )}
 
       {/* ══════════════ 7. CTA ══════════════ */}
-      <section className="flex flex-col items-center text-center" style={{ backgroundColor: C.surface, padding: "80px 64px" }}>
+      <section className="flex flex-col items-center text-center" style={{ backgroundColor: C.surface, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
         <span style={{ ...LABEL_CAPS, color: C.secondary, marginBottom: 24 }}>{dt.cta.label}</span>
         <h2 style={{ ...PLAYFAIR, fontSize: "clamp(40px,7vw,84px)", fontWeight: 700, color: C.onSurface, marginBottom: 48, maxWidth: 800, lineHeight: 1.1 }}>
           {dt.cta.headline}

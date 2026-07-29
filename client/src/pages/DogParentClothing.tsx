@@ -337,7 +337,7 @@ export default function DogParentClothing() {
       <EditorialHeader nav={navSettings.nav} />
 
       {/* ══ 1. HERO ════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full flex items-center overflow-hidden" style={{ height: "90vh", paddingLeft: 64, paddingRight: 64, paddingTop: 96 }}>
+      <section className="relative w-full flex items-center overflow-hidden" style={{ minHeight: "90vh", paddingLeft: "clamp(20px,5vw,64px)", paddingRight: "clamp(20px,5vw,64px)", paddingTop: 96 }}>
         <div className="absolute inset-0 z-0">
           <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${heroImg}')`, filter: "grayscale(100%) brightness(0.55)" }} />
           <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(1,45,29,0.7) 40%, transparent)" }} />
@@ -383,7 +383,7 @@ export default function DogParentClothing() {
       {/* ══ 2. FILTER BAR ═══════════════════════════════════════════════════════ */}
       <section
         className="sticky z-40 flex flex-wrap items-center gap-6"
-        style={{ top: 72, backgroundColor: C.surfaceContainer, borderBottom: `1px solid ${C.outlineVariant}`, padding: "32px 64px" }}
+        style={{ top: 72, backgroundColor: C.surfaceContainer, borderBottom: `1px solid ${C.outlineVariant}`, padding: "16px clamp(20px,5vw,64px)" }}
       >
         <div className="flex items-center gap-2 pr-8" style={{ borderRight: `1px solid ${C.outlineVariant}` }}>
           <SlidersHorizontal size={18} style={{ color: C.primary }} />
@@ -424,7 +424,7 @@ export default function DogParentClothing() {
       {S.productSection.visible && grid1.length > 0 && (
         <>
           <AdBannerStrip banners={bannersFor("products-1")} position="top" />
-          <section id="series02" style={{ padding: "80px 64px", backgroundColor: C.surface }}>
+          <section id="series02" style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)", backgroundColor: C.surface }}>
             <div
               className="flex flex-col md:flex-row justify-between items-baseline flex-wrap gap-4"
               style={{ borderBottom: `1px solid ${C.outlineVariant}`, paddingBottom: 24, marginBottom: 48 }}
@@ -450,8 +450,8 @@ export default function DogParentClothing() {
       {S.molecularSection.visible && (
         <>
           <AdBannerStrip banners={bannersFor("molecular")} position="top" />
-          <section style={{ padding: "80px 0", backgroundColor: C.surfaceContainerLowest, overflow: "hidden" }}>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center" style={{ padding: "0 64px" }}>
+          <section style={{ padding: "clamp(40px,8vw,80px) 0", backgroundColor: C.surfaceContainerLowest, overflow: "hidden" }}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center" style={{ padding: "0 clamp(20px,5vw,64px)" }}>
               <div className="lg:col-span-5 relative z-10">
                 <p style={{ ...LABEL_CAPS, color: C.secondary, marginBottom: 24 }}>{S.molecularSection.label}</p>
                 <h2 className="leading-tight" style={{ ...PLAYFAIR, fontSize: 48, fontWeight: 600, color: C.primary, marginBottom: 32 }}>
@@ -499,7 +499,7 @@ export default function DogParentClothing() {
       {S.fieldLogs.visible && (
         <>
           <AdBannerStrip banners={bannersFor("field-logs")} position="top" />
-          <section style={{ padding: "80px 64px", backgroundColor: C.surface }}>
+          <section style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)", backgroundColor: C.surface }}>
             <div
               className="flex flex-col md:flex-row justify-between items-baseline flex-wrap gap-4"
               style={{ borderBottom: `1px solid ${C.outlineVariant}`, paddingBottom: 24, marginBottom: 32 }}
@@ -573,8 +573,8 @@ export default function DogParentClothing() {
       {S.neuralBridge.visible && (
         <>
           <AdBannerStrip banners={bannersFor("neural-bridge")} position="top" />
-          <section style={{ padding: "80px 0", backgroundColor: C.primary, color: C.white }}>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center" style={{ padding: "0 64px" }}>
+          <section style={{ padding: "clamp(40px,8vw,80px) 0", backgroundColor: C.primary, color: C.white }}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center" style={{ padding: "0 clamp(20px,5vw,64px)" }}>
               <div className="lg:col-span-6 order-2 lg:order-1">
                 <div
                   className="w-full bg-cover bg-center"
@@ -611,7 +611,7 @@ export default function DogParentClothing() {
       {S.productSection.visible && grid2.length > 0 && (
         <>
           <AdBannerStrip banners={bannersFor("products-2")} position="top" />
-          <section id="series03" style={{ padding: "80px 64px", backgroundColor: C.surface }}>
+          <section id="series03" style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)", backgroundColor: C.surface }}>
             <div
               className="flex flex-col md:flex-row justify-between items-baseline flex-wrap gap-4"
               style={{ borderBottom: `1px solid ${C.outlineVariant}`, paddingBottom: 24, marginBottom: 48 }}
