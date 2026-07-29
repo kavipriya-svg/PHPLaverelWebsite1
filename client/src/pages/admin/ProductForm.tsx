@@ -232,18 +232,31 @@ export default function ProductForm() {
   const watchedCategoryId = form.watch("categoryId");
   const allCategories = categoriesData?.categories || [];
 
-  // Walk the ancestor chain to check if category belongs to Full Meals family
+  // Walk the ancestor chain to determine which editorial page family this category belongs to
   const getCategoryFamilySlug = (catId: string): string | null => {
     let current = allCategories.find(c => c.id === catId);
     while (current) {
       if (current.slug === "full-meals") return "full-meals";
       if (current.slug === "biryani") return "biryani";
+      if (current.slug === "wild-treats") return "wild-treats";
+      if (current.slug === "clothing") return "clothing";
+      if (current.slug === "gift-services") return "gift-services";
       current = current.parentId ? allCategories.find(c => c.id === current.parentId) : undefined;
     }
     return null;
   };
   const familySlug = watchedCategoryId ? getCategoryFamilySlug(watchedCategoryId) : null;
   const isFullMealFamily = familySlug === "full-meals" || familySlug === "biryani";
+  const isTreatsFamily = familySlug === "wild-treats";
+  const isClothingFamily = familySlug === "clothing";
+  const isGiftSeriesFamily = familySlug === "gift-services";
+  const showImageHint = isFullMealFamily || isTreatsFamily || isClothingFamily || isGiftSeriesFamily;
+
+  const imageSizeHintTitle = isFullMealFamily ? "Full Meals"
+    : isTreatsFamily ? "Wild Treats"
+    : isClothingFamily ? "Clothing"
+    : isGiftSeriesFamily ? "Gift Series"
+    : "";
 
   useEffect(() => {
     if (productData?.product) {
@@ -944,15 +957,15 @@ export default function ProductForm() {
                 </div>
 
                 {/* Page-specific image size hint */}
-                {isFullMealFamily && (
-                  <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4" data-testid="image-size-hint-full-meal">
+                {showImageHint && (
+                  <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4" data-testid="image-size-hint">
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                         <Image className="h-4 w-4 text-amber-700" />
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-semibold text-amber-900 mb-1">
-                          Full Meals Page — Recommended Image Sizes
+                          {imageSizeHintTitle} Page — Recommended Image Sizes
                         </p>
                         <p className="text-xs text-amber-800 mb-3">
                           Products in this category are displayed in <strong>portrait 4:5 ratio</strong> on both the listing grid and the product detail page.
@@ -969,9 +982,21 @@ export default function ProductForm() {
                             <p className="text-[10px] text-amber-600 mt-0.5">Portrait · 4:5 ratio · multiple images supported</p>
                           </div>
                         </div>
-                        <p className="text-[10px] text-amber-600 mt-2">
-                          Tip: Upload at least 2 images — the second image is used in the "Biological Synthesis" narrative section on the detail page.
-                        </p>
+                        {isFullMealFamily && (
+                          <p className="text-[10px] text-amber-600 mt-2">
+                            Tip: Upload at least 2 images — the second image is used in the "Biological Synthesis" narrative section on the detail page.
+                          </p>
+                        )}
+                        {isClothingFamily && (
+                          <p className="text-[10px] text-amber-600 mt-2">
+                            Tip: Upload multiple angles — detail pages support a vertical thumbnail strip for all uploaded images.
+                          </p>
+                        )}
+                        {isGiftSeriesFamily && (
+                          <p className="text-[10px] text-amber-600 mt-2">
+                            Tip: Upload at least 2 images — the second image appears in the editorial narrative section on the detail page.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

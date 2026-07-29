@@ -206,7 +206,7 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
   const [, navigate] = useLocation();
   return (
     <div className="grid items-stretch group" style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 24 }}>
-      <div className="overflow-hidden relative" style={{ boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}>
+      <div className="overflow-hidden relative" style={{ aspectRatio: "4/5", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}>
         <img src={product.img} alt={product.name} loading="lazy" className="w-full h-full object-cover"
           style={{ transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1)" }}
           onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1.1)"}
