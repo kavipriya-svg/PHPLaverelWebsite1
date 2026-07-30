@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { HomeEditorialHeader, HomeEditorialFooter } from "@/components/store/HomeEditorialLayout";
+import { mergeHomepageSettings, DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/homepageDefaults";
+import type { HomepageSettings } from "@/lib/homepageDefaults";
 
 // ─── Design tokens ────────────────────────────────────────────────
 const C = {
@@ -146,6 +149,12 @@ export default function AccountSettings() {
     }
   }, [isAuthenticated, authLoading]);
 
+  // Homepage settings for header / footer
+  const { data: hpData } = useQuery<{ settings: Partial<HomepageSettings> }>({
+    queryKey: ["/api/settings/homepage"],
+  });
+  const s = hpData ? mergeHomepageSettings(hpData.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
+
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Member";
   const initials    = (user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase();
 
@@ -163,28 +172,27 @@ export default function AccountSettings() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="overflow-x-hidden" style={{ backgroundColor: C.surface, color: C.onSurface, minHeight: "100vh" }}>
+    <div className="overflow-x-hidden" style={{ backgroundColor: C.surface, color: C.onSurface }}>
 
-      {/* ── Fixed sidebar ─────────────────────────────────────── */}
+      {/* ── Global editorial header ───────────────────────────── */}
+      <HomeEditorialHeader nav={s.nav} />
+
+      {/* ── Below-header flex layout ─────────────────────────── */}
+      <div style={{ display: "flex", paddingTop: 104, minHeight: "100vh" }}>
+
+      {/* ── Sticky sidebar ────────────────────────────────────── */}
       <aside
-        className="fixed left-0 top-0 h-screen flex flex-col z-50"
+        className="hidden md:flex flex-col flex-shrink-0 self-start sticky"
         style={{
+          top: 104,
           width: 256,
+          minHeight: "calc(100vh - 104px)",
           padding: "32px 16px",
-          backgroundColor: C.surface,
+          backgroundColor: C.surfaceContainerLow,
           borderRight: `1px solid ${C.outlineVariant}`,
+          boxShadow: "40px 0px 0px 0px rgba(1,45,29,0.05)",
         }}
       >
-        {/* Brand */}
-        <div className="mb-12 px-2">
-          <h1 style={{ ...PLAYFAIR, fontSize: 32, fontWeight: 700, color: C.primary, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
-            19 DOGS
-          </h1>
-          <p style={{ ...JETBRAINS, fontSize: 10, letterSpacing: "0.15em", color: C.outline, textTransform: "uppercase", marginTop: 4 }}>
-            Biological Wellness System
-          </p>
-        </div>
-
         {/* Nav */}
         <nav className="flex-grow" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {NAV_ITEMS.map((item) => {
@@ -259,7 +267,7 @@ export default function AccountSettings() {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────── */}
-      <main style={{ marginLeft: 256, minHeight: "100vh", padding: "32px 64px 80px", position: "relative" }}>
+      <main className="flex-grow" style={{ padding: "32px 64px 80px", position: "relative" }}>
 
         {/* Top utility bar */}
         <div className="flex justify-between items-center" style={{ marginBottom: 64 }}>
@@ -624,6 +632,10 @@ export default function AccountSettings() {
           </div>
         </div>
       </main>
+      </div>{/* ── end flex layout ── */}
+
+      {/* ── Global editorial footer ───────────────────────────── */}
+      <HomeEditorialFooter footer={s.footer} />
     </div>
   );
 }
