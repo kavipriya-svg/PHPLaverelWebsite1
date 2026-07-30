@@ -35,20 +35,130 @@ const C = {
   white:                  "#ffffff",
 };
 
-const PLAYFAIR  = { fontFamily: "'Playfair Display', Georgia, serif" } as const;
-const INTER     = { fontFamily: "Inter, sans-serif" } as const;
-const JETBRAINS = { fontFamily: "'JetBrains Mono', 'Courier New', monospace" } as const;
+const PLAYFAIR   = { fontFamily: "'Playfair Display', Georgia, serif" } as const;
+const INTER      = { fontFamily: "Inter, sans-serif" } as const;
+const JETBRAINS  = { fontFamily: "'JetBrains Mono', 'Courier New', monospace" } as const;
 const LABEL_CAPS = { ...INTER, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, textTransform: "uppercase" as const };
 
-// ─── Sidebar nav ──────────────────────────────────────────────────
-const NAV_ITEMS = [
-  { icon: "biotech",     label: "Bio-Profile",      href: "/account" },
-  { icon: "history_edu", label: "Order History",    href: "/account/orders" },
-  { icon: "bookmark",    label: "Saved Specimens",  href: "/wishlist" },
-  { icon: "location_on", label: "Bio. Coordinates", href: "/account/addresses" },
-  { icon: "settings",    label: "Preferences",      href: "/account/settings" },
-];
+// ─── Settings types & defaults ────────────────────────────────────
+interface NavItem { icon: string; label: string; href: string }
 
+interface AddressesSettings {
+  header: {
+    secureLabel: string;
+    timestampPrefix: string;
+    title: string;
+    subtitle: string;
+    progressLabel: string;
+    maxCoordinates: number;
+  };
+  sidebar: {
+    title: string;
+    version: string;
+    userStatus: string;
+    ctaText: string;
+    navItems: NavItem[];
+  };
+  actionBar: {
+    label: string;
+    description: string;
+    addButtonText: string;
+    addTileText: string;
+  };
+  emptyState: {
+    loadingText: string;
+    title: string;
+    description: string;
+    addButtonText: string;
+  };
+  cards: {
+    shippingBadge: string;
+    billingBadge: string;
+    defaultBadge: string;
+    setDefaultText: string;
+  };
+  dialog: {
+    addModeLabel: string;
+    editModeLabel: string;
+    addTitle: string;
+    editTitle: string;
+  };
+  background: {
+    decorativeText: string;
+  };
+  footerNote: string;
+}
+
+const SETTINGS_DEFAULTS: AddressesSettings = {
+  header: {
+    secureLabel:      "STATUS: SECURE",
+    timestampPrefix:  "SECURE_SYNC:",
+    title:            "Biological Coordinates",
+    subtitle:         "// Delivery Nodes",
+    progressLabel:    "COORDINATES LOGGED",
+    maxCoordinates:   5,
+  },
+  sidebar: {
+    title:      "CANINE BIOMETRIC ID",
+    version:    "V.01.2024 REV",
+    userStatus: "Verified Entity",
+    ctaText:    "Request Lab Access",
+    navItems: [
+      { icon: "biotech",     label: "Bio-Profile",      href: "/account" },
+      { icon: "history_edu", label: "Order History",    href: "/account/orders" },
+      { icon: "bookmark",    label: "Saved Specimens",  href: "/wishlist" },
+      { icon: "location_on", label: "Bio. Coordinates", href: "/account/addresses" },
+      { icon: "settings",    label: "Preferences",      href: "/account/settings" },
+    ],
+  },
+  actionBar: {
+    label:         "Dossier Access // Internal Use Only",
+    description:   "Registered receiving locations for delicate biological transports.",
+    addButtonText: "REGISTER COORDINATE",
+    addTileText:   "Register New Coordinate",
+  },
+  emptyState: {
+    loadingText:   "SCANNING COORDINATES...",
+    title:         "No Coordinates Registered",
+    description:   "There are no registered biological coordinates in the current dossier. Register a delivery node to begin receiving specimens.",
+    addButtonText: "Register First Coordinate",
+  },
+  cards: {
+    shippingBadge:  "SHIPPING_COORD",
+    billingBadge:   "BILLING_COORD",
+    defaultBadge:   "DEFAULT",
+    setDefaultText: "SET DEFAULT",
+  },
+  dialog: {
+    addModeLabel: "REGISTER // NEW COORDINATE",
+    editModeLabel: "MODIFY // COORDINATE",
+    addTitle:     "New Biological Coordinate",
+    editTitle:    "Edit Biological Coordinate",
+  },
+  background: {
+    decorativeText: "BC-001",
+  },
+  footerNote: "Coordinate data managed by 19 DOGS Secure Encryption Systems. All location data is strictly confidential and encrypted at rest using AES-256 standards for biological compliance.",
+};
+
+function mergeAddressSettings(saved: Partial<AddressesSettings>): AddressesSettings {
+  return {
+    header:     { ...SETTINGS_DEFAULTS.header,     ...(saved.header     || {}) },
+    sidebar: {
+      ...SETTINGS_DEFAULTS.sidebar,
+      ...(saved.sidebar || {}),
+      navItems: saved.sidebar?.navItems?.length ? saved.sidebar.navItems : SETTINGS_DEFAULTS.sidebar.navItems,
+    },
+    actionBar:  { ...SETTINGS_DEFAULTS.actionBar,  ...(saved.actionBar  || {}) },
+    emptyState: { ...SETTINGS_DEFAULTS.emptyState, ...(saved.emptyState || {}) },
+    cards:      { ...SETTINGS_DEFAULTS.cards,      ...(saved.cards      || {}) },
+    dialog:     { ...SETTINGS_DEFAULTS.dialog,     ...(saved.dialog     || {}) },
+    background: { ...SETTINGS_DEFAULTS.background, ...(saved.background || {}) },
+    footerNote: saved.footerNote ?? SETTINGS_DEFAULTS.footerNote,
+  };
+}
+
+// ─── Indian states dropdown ────────────────────────────────────────
 const INDIAN_STATES = [
   "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh",
   "Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka",
@@ -90,8 +200,13 @@ function useLiveTimestamp() {
 
 // ─── Address Form Dialog ───────────────────────────────────────────
 function AddressDialog({
-  open, onClose, editing,
-}: { open: boolean; onClose: () => void; editing: Address | null }) {
+  open, onClose, editing, strings,
+}: {
+  open: boolean;
+  onClose: () => void;
+  editing: Address | null;
+  strings: AddressesSettings["dialog"];
+}) {
   const { toast } = useToast();
 
   const form = useForm<AddressForm>({
@@ -158,10 +273,10 @@ function AddressDialog({
         <DialogHeader>
           <DialogTitle>
             <span style={{ ...JETBRAINS, fontSize: 10, color: C.secondary, display: "block", marginBottom: 6, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 400 }}>
-              {editing ? "MODIFY // COORDINATE" : "REGISTER // NEW COORDINATE"}
+              {editing ? strings.editModeLabel : strings.addModeLabel}
             </span>
             <span style={{ ...PLAYFAIR, fontSize: 24, fontWeight: 700, color: C.primary, fontStyle: "italic", display: "block" }}>
-              {editing ? "Edit Biological Coordinate" : "New Biological Coordinate"}
+              {editing ? strings.editTitle : strings.addTitle}
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -171,7 +286,6 @@ function AddressDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 
-            {/* Row: name */}
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="firstName" render={({ field }) => (
                 <FormItem>
@@ -189,7 +303,6 @@ function AddressDialog({
               )} />
             </div>
 
-            {/* Row: company + phone */}
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="company" render={({ field }) => (
                 <FormItem>
@@ -241,8 +354,8 @@ function AddressDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {INDIAN_STATES.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      {INDIAN_STATES.map((st) => (
+                        <SelectItem key={st} value={st}>{st}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -313,12 +426,13 @@ function AddressDialog({
 
 // ─── Address Card ─────────────────────────────────────────────────
 function AddressCard({
-  address, onEdit, onDelete, onSetDefault,
+  address, onEdit, onDelete, onSetDefault, strings,
 }: {
   address: Address;
   onEdit: (a: Address) => void;
   onDelete: (id: string) => void;
   onSetDefault: (id: string) => void;
+  strings: AddressesSettings["cards"];
 }) {
   return (
     <div
@@ -332,7 +446,6 @@ function AddressCard({
       }}
       data-testid={`card-address-${address.id}`}
     >
-      {/* Top row: badges + actions */}
       <div className="flex items-start justify-between mb-5 gap-2 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
           <span
@@ -341,7 +454,7 @@ function AddressCard({
               color: C.white, textTransform: "uppercase" }}
             data-testid={`badge-type-${address.id}`}
           >
-            {address.type === "billing" ? "BILLING_COORD" : "SHIPPING_COORD"}
+            {address.type === "billing" ? strings.billingBadge : strings.shippingBadge}
           </span>
           {address.isDefault && (
             <span
@@ -349,7 +462,7 @@ function AddressCard({
                 backgroundColor: C.secondaryContainer, color: C.primary, textTransform: "uppercase" }}
               data-testid={`badge-default-${address.id}`}
             >
-              DEFAULT
+              {strings.defaultBadge}
             </span>
           )}
         </div>
@@ -363,7 +476,7 @@ function AddressCard({
                 textTransform: "uppercase" }}
               data-testid={`button-set-default-${address.id}`}
             >
-              SET DEFAULT
+              {strings.setDefaultText}
             </button>
           )}
           <button
@@ -391,10 +504,8 @@ function AddressCard({
         </div>
       </div>
 
-      {/* Protocol line */}
       <div style={{ height: 1, background: `linear-gradient(90deg, ${address.isDefault ? C.secondaryContainer : C.outlineVariant}80 0%, transparent 70%)`, marginBottom: 20 }} />
 
-      {/* Address body */}
       <p style={{ ...INTER, fontSize: 15, fontWeight: 600, color: C.onSurface, marginBottom: 6 }}
          data-testid={`text-name-${address.id}`}>
         {address.firstName} {address.lastName}
@@ -427,9 +538,9 @@ export default function Addresses() {
   const timestamp       = useLiveTimestamp();
   const scrollBgRef     = useRef<HTMLDivElement>(null);
 
-  const [dialogOpen,     setDialogOpen]     = useState(false);
-  const [editing,        setEditing]        = useState<Address | null>(null);
-  const [deleteConfirm,  setDeleteConfirm]  = useState<string | null>(null);
+  const [dialogOpen,    setDialogOpen]    = useState(false);
+  const [editing,       setEditing]       = useState<Address | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Parallax bg
   useEffect(() => {
@@ -454,6 +565,12 @@ export default function Addresses() {
     queryKey: ["/api/settings/homepage"],
   });
   const s = hpData ? mergeHomepageSettings(hpData.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
+
+  // Page-specific settings
+  const { data: pgData } = useQuery<{ settings: Partial<AddressesSettings> }>({
+    queryKey: ["/api/settings/account-addresses"],
+  });
+  const pg = pgData?.settings ? mergeAddressSettings(pgData.settings) : SETTINGS_DEFAULTS;
 
   // Addresses
   const { data, isLoading } = useQuery<{ addresses: Address[] }>({
@@ -485,7 +602,6 @@ export default function Addresses() {
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Member";
   const initials    = (user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase();
 
-  // Loading state
   if (authLoading) {
     return (
       <div style={{ backgroundColor: C.surface, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -515,7 +631,7 @@ export default function Addresses() {
         className="fixed pointer-events-none select-none -z-10"
         style={{ bottom: "10%", left: "5%", ...JETBRAINS, fontSize: 180, color: `${C.primary}05`, lineHeight: 1 }}
       >
-        BC-001
+        {pg.background.decorativeText}
       </div>
 
       <div style={{ display: "flex", paddingTop: 104, minHeight: "100vh" }}>
@@ -535,10 +651,10 @@ export default function Addresses() {
           {/* Brand tag */}
           <div className="mb-10">
             <h1 style={{ ...PLAYFAIR, fontSize: 22, fontWeight: 700, color: C.primary }}>
-              CANINE BIOMETRIC ID
+              {pg.sidebar.title}
             </h1>
             <p style={{ ...JETBRAINS, fontSize: 10, letterSpacing: "0.15em", color: C.onSurfaceVariant, opacity: 0.6, marginTop: 4, textTransform: "uppercase" }}>
-              V.01.2024 REV
+              {pg.sidebar.version}
             </p>
           </div>
 
@@ -555,13 +671,13 @@ export default function Addresses() {
             </div>
             <div className="min-w-0">
               <p style={{ ...INTER, fontSize: 14, fontWeight: 600, color: C.primary }} className="truncate">{displayName}</p>
-              <p style={{ ...JETBRAINS, fontSize: 10, color: C.onSurfaceVariant }}>Verified Entity</p>
+              <p style={{ ...JETBRAINS, fontSize: 10, color: C.onSurfaceVariant }}>{pg.sidebar.userStatus}</p>
             </div>
           </div>
 
           {/* Nav links */}
           <nav className="flex flex-col gap-1 flex-grow">
-            {NAV_ITEMS.map((item) => {
+            {pg.sidebar.navItems.map((item) => {
               const isActive = item.href === "/account/addresses";
               return (
                 <Link key={item.href} href={item.href}>
@@ -600,7 +716,7 @@ export default function Addresses() {
             style={{ ...LABEL_CAPS, backgroundColor: C.primary, color: C.white, letterSpacing: "0.2em" }}
             data-testid="button-sidebar-cta"
           >
-            Request Lab Access
+            {pg.sidebar.ctaText}
           </button>
         </aside>
 
@@ -619,13 +735,13 @@ export default function Addresses() {
                     backgroundColor: C.primary, color: C.white, textTransform: "uppercase" }}
                   data-testid="badge-secure"
                 >
-                  STATUS: SECURE
+                  {pg.header.secureLabel}
                 </span>
                 <span
                   style={{ ...JETBRAINS, fontSize: 10, color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.1em" }}
                   data-testid="text-timestamp"
                 >
-                  SECURE_SYNC: {timestamp}
+                  {pg.header.timestampPrefix} {timestamp}
                 </span>
               </div>
               <h2
@@ -633,24 +749,28 @@ export default function Addresses() {
                 style={{ ...PLAYFAIR, fontSize: "clamp(28px,4vw,52px)", color: C.primary }}
                 data-testid="heading-title"
               >
-                Biological Coordinates
+                {pg.header.title}
               </h2>
               <h3
                 className="leading-none uppercase tracking-tighter mt-2"
                 style={{ ...PLAYFAIR, fontSize: "clamp(18px,2.5vw,32px)", color: `${C.onSurfaceVariant}60` }}
                 data-testid="heading-subtitle"
               >
-                // Delivery Nodes
+                {pg.header.subtitle}
               </h3>
             </div>
 
             {/* Progress meter */}
             <div className="text-right hidden md:block">
-              <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.primary, marginBottom: 6 }}>COORDINATES LOGGED</p>
+              <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.primary, marginBottom: 6 }}>
+                {pg.header.progressLabel}
+              </p>
               <div style={{ width: 192, height: 4, backgroundColor: C.surfaceContainerHighest }}>
                 <div
                   style={{
-                    width: addresses.length > 0 ? `${Math.min((addresses.length / 5) * 100, 100)}%` : "2%",
+                    width: addresses.length > 0
+                      ? `${Math.min((addresses.length / pg.header.maxCoordinates) * 100, 100)}%`
+                      : "2%",
                     height: "100%",
                     backgroundColor: C.secondaryContainer,
                     transition: "width 0.5s ease",
@@ -658,7 +778,7 @@ export default function Addresses() {
                 />
               </div>
               <p style={{ ...JETBRAINS, fontSize: 10, color: C.onSurfaceVariant, marginTop: 8, textTransform: "uppercase" }}>
-                {addresses.length} / 5 REGISTERED
+                {addresses.length} / {pg.header.maxCoordinates} REGISTERED
               </p>
             </div>
           </header>
@@ -667,10 +787,10 @@ export default function Addresses() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
             <div>
               <p style={{ ...JETBRAINS, fontSize: 11, letterSpacing: "0.1em", color: C.secondary, textTransform: "uppercase", marginBottom: 4 }}>
-                Dossier Access // Internal Use Only
+                {pg.actionBar.label}
               </p>
               <p style={{ ...INTER, fontSize: 14, color: C.onSurfaceVariant }}>
-                Registered receiving locations for delicate biological transports.
+                {pg.actionBar.description}
               </p>
             </div>
             <button
@@ -680,7 +800,7 @@ export default function Addresses() {
               data-testid="button-add-address"
             >
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add_location</span>
-              REGISTER COORDINATE
+              {pg.actionBar.addButtonText}
             </button>
           </div>
 
@@ -689,7 +809,7 @@ export default function Addresses() {
             <div className="flex flex-col items-center justify-center py-24">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 mb-4" style={{ borderColor: C.primary }} />
               <p style={{ ...JETBRAINS, fontSize: 11, letterSpacing: "0.2em", color: C.onSurfaceVariant, textTransform: "uppercase" }}>
-                SCANNING COORDINATES...
+                {pg.emptyState.loadingText}
               </p>
             </div>
           ) : addresses.length === 0 ? (
@@ -702,17 +822,17 @@ export default function Addresses() {
                 location_off
               </span>
               <p style={{ ...PLAYFAIR, fontSize: 22, fontWeight: 700, color: C.primary, marginBottom: 8, fontStyle: "italic" }}>
-                No Coordinates Registered
+                {pg.emptyState.title}
               </p>
               <p style={{ ...INTER, fontSize: 14, color: C.onSurfaceVariant, maxWidth: 360, marginBottom: 28, lineHeight: 1.6 }}>
-                There are no registered biological coordinates in the current dossier. Register a delivery node to begin receiving specimens.
+                {pg.emptyState.description}
               </p>
               <button
                 onClick={() => { setEditing(null); setDialogOpen(true); }}
                 style={{ ...LABEL_CAPS, backgroundColor: C.primary, color: C.white, padding: "12px 28px" }}
                 data-testid="button-empty-add"
               >
-                Register First Coordinate
+                {pg.emptyState.addButtonText}
               </button>
             </div>
           ) : (
@@ -721,6 +841,7 @@ export default function Addresses() {
                 <AddressCard
                   key={addr.id}
                   address={addr}
+                  strings={pg.cards}
                   onEdit={(a) => { setEditing(a); setDialogOpen(true); }}
                   onDelete={(id) => setDeleteConfirm(id)}
                   onSetDefault={(id) => setDefaultMutation.mutate(id)}
@@ -739,7 +860,7 @@ export default function Addresses() {
                 <span className="material-symbols-outlined" style={{ fontSize: 36, color: C.outlineVariant }}>
                   add_location_alt
                 </span>
-                <span style={{ ...LABEL_CAPS, fontSize: 11 }}>Register New Coordinate</span>
+                <span style={{ ...LABEL_CAPS, fontSize: 11 }}>{pg.actionBar.addTileText}</span>
               </button>
             </div>
           )}
@@ -749,7 +870,7 @@ export default function Addresses() {
             className="mt-16 pt-8 italic text-xs"
             style={{ borderTop: `1px solid ${C.outlineVariant}30`, color: C.onSurfaceVariant, ...INTER, lineHeight: 1.6 }}
           >
-            Coordinate data managed by 19 DOGS Secure Encryption Systems. All location data is strictly confidential and encrypted at rest using AES-256 standards for biological compliance.
+            {pg.footerNote}
           </div>
         </main>
       </div>
@@ -763,6 +884,7 @@ export default function Addresses() {
           open={dialogOpen}
           onClose={() => { setDialogOpen(false); setEditing(null); }}
           editing={editing}
+          strings={pg.dialog}
         />
       )}
 
