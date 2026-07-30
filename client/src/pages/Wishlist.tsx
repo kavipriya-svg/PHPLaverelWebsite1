@@ -296,7 +296,7 @@ export default function Wishlist() {
   if (!isAuthenticated) return null;
 
   return (
-    <div style={{ backgroundColor: C.surface, minHeight: "100vh", position: "relative", overflow: "hidden" }}>
+    <div className="overflow-x-hidden" style={{ backgroundColor: C.surface, color: C.onSurface }}>
       {/* Editorial global header */}
       <HomeEditorialHeader nav={homepageSettings.nav} />
 
@@ -322,7 +322,7 @@ export default function Wishlist() {
         WL-001
       </div>
 
-      <div style={{ display: "flex", paddingTop: 104 }}>
+      <div style={{ display: "flex", paddingTop: 104, minHeight: "100vh" }}>
         {/* ── Sidebar ──────────────────────────────────────────────── */}
         <aside
           style={{
