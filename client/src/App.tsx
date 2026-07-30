@@ -317,9 +317,9 @@ function Router() {
       </Route>
       
       <Route path="/account/orders">
-        <StoreLayout>
+        <HomeLayout>
           <AccountOrders />
-        </StoreLayout>
+        </HomeLayout>
       </Route>
       
       <Route path="/account/profile">

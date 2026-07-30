@@ -1,0 +1,331 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Logistics Archive // VET-ELITE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Inter:wght@300;400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f3f4f0",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface-container-highest": "#e2e3e0",
+                        "on-primary-container": "#6d9681",
+                        "tertiary-container": "#471800",
+                        "inverse-on-surface": "#f0f1ee",
+                        "primary": "#00160c",
+                        "inverse-primary": "#a5d0b8",
+                        "surface-dim": "#dadad7",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#a5d0b8",
+                        "on-primary-fixed-variant": "#264e3c",
+                        "on-surface-variant": "#414844",
+                        "on-secondary-fixed": "#351000",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#76330d",
+                        "on-secondary-fixed-variant": "#76330e",
+                        "surface-variant": "#e2e3e0",
+                        "surface-bright": "#f9faf6",
+                        "on-tertiary-fixed": "#351000",
+                        "outline-variant": "#c1c8c2",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#fe9e71",
+                        "background": "#f9faf6",
+                        "secondary": "#944923",
+                        "primary-fixed": "#c0edd4",
+                        "primary-container": "#012d1d",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#eeeeeb",
+                        "inverse-surface": "#2f312f",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb694",
+                        "tertiary": "#260900",
+                        "secondary-fixed-dim": "#ffb695",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e8e8e5",
+                        "surface": "#f9faf6",
+                        "on-secondary-container": "#77330e",
+                        "outline": "#717973",
+                        "on-tertiary-container": "#ce774c",
+                        "on-primary-fixed": "#002114",
+                        "surface-tint": "#3e6653",
+                        "on-surface": "#1a1c1a",
+                        "on-background": "#1a1c1a",
+                        "secondary-fixed": "#ffdbcc"
+                    },
+                    "spacing": {
+                        "stack-sm": "12px",
+                        "margin-mobile": "20px",
+                        "stack-md": "32px",
+                        "stack-lg": "80px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Playfair Display"],
+                        "headline-lg": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "body-lg": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f9faf6; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .hard-shadow { box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15); }
+        .ledger-row:hover .ledger-action { opacity: 1; transform: translateX(0); }
+        .ledger-action { opacity: 0; transform: translateX(-10px); transition: all 0.3s ease; }
+        .editorial-line { height: 1px; background: #DBDAD5; width: 100%; position: relative; }
+        .editorial-line::after { content: ''; position: absolute; left: 0; top: 0; height: 1px; width: 40px; background: #012d1d; }
+    </style>
+</head>
+<body class="bg-background text-on-background overflow-x-hidden">
+<!-- SIDE NAVIGATION BAR (Predicted Component SideNavBar) -->
+<aside class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-low py-stack-md px-6 shadow-[40px_0px_0px_0px_rgba(1,45,29,0.15)] z-50">
+<div class="mb-10">
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">VET-ELITE</h1>
+<p class="font-label-caps text-[10px] tracking-widest text-on-surface-variant opacity-60 mt-1 uppercase">Biological Systems</p>
+</div>
+<div class="flex items-center gap-3 mb-8 p-2 border border-outline-variant/30 rounded-sm">
+<div class="w-10 h-10 bg-primary-container flex items-center justify-center text-on-primary font-mono text-xs">A-1</div>
+<div>
+<p class="font-label-md text-label-md text-primary leading-none">Protocol Alpha</p>
+<p class="text-[10px] text-on-surface-variant">Verified Entity</p>
+</div>
+</div>
+<nav class="flex-grow space-y-2">
+<a class="text-on-surface-variant p-3 flex items-center gap-3 hover:bg-surface-container-highest transition-all group duration-200" href="#">
+<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">biotech</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Bio-Profile</span>
+</a>
+<!-- ACTIVE TAB: Logistics Archive -->
+<a class="bg-primary text-on-primary p-3 flex items-center gap-3 translate-x-1 duration-200 shadow-lg" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Logistics Archive</span>
+</a>
+<a class="text-on-surface-variant p-3 flex items-center gap-3 hover:bg-surface-container-highest transition-all group duration-200" href="#">
+<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">find_replace</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Saved Specimens</span>
+</a>
+<a class="text-on-surface-variant p-3 flex items-center gap-3 hover:bg-surface-container-highest transition-all group duration-200" href="#">
+<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">settings</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Account Preferences</span>
+</a>
+</nav>
+<button class="mt-auto bg-primary text-on-primary py-4 font-label-caps text-center text-xs tracking-[0.2em] hover:bg-primary/90 transition-colors uppercase">
+            Request Lab Access
+        </button>
+</aside>
+<!-- MAIN CANVAS -->
+<main class="md:ml-64 min-h-screen px-margin-mobile md:px-margin-desktop py-stack-md max-w-[1440px]">
+<!-- HEADER SECTION (Editorial Layout) -->
+<header class="flex flex-col md:flex-row justify-between items-end gap-gutter mb-stack-lg border-b border-outline-variant pb-8">
+<div class="max-w-2xl">
+<div class="flex items-center gap-4 mb-4">
+<span class="px-2 py-1 bg-primary text-white font-mono text-[10px] tracking-tighter">STATUS: SECURE</span>
+<span class="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest" id="timestamp">TIMESTAMP // 2026.07.30_04:20_UTC</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-primary leading-none uppercase tracking-tighter italic">Logistics Archive</h2>
+<h3 class="font-headline-md text-headline-md text-on-surface-variant/40 leading-none uppercase tracking-tighter mt-2">// Deployment History</h3>
+</div>
+<div class="text-right hidden md:block">
+<p class="font-label-caps text-xs text-primary mb-1">DATA INTEGRITY</p>
+<div class="w-48 h-1 bg-surface-container-highest">
+<div class="w-full h-full bg-secondary-container"></div>
+</div>
+<p class="font-mono text-[10px] mt-2 text-on-surface-variant uppercase">SHA-256 Verified Ledger</p>
+</div>
+</header>
+<!-- SEARCH & FILTER (Technical Bar) -->
+<section class="mb-stack-md grid grid-cols-1 md:grid-cols-12 gap-gutter items-center">
+<div class="md:col-span-8 flex flex-col md:flex-row gap-4">
+<div class="relative flex-grow group">
+<label class="font-label-caps text-[10px] text-on-surface-variant absolute -top-4 left-0">ORD_ID / SPECIMEN_TYPE</label>
+<input class="w-full bg-transparent border-b border-outline-variant focus:border-primary focus:ring-0 py-2 font-mono text-sm uppercase tracking-widest placeholder:text-outline-variant transition-colors" placeholder="SEARCH ARCHIVE..." type="text">
+<span class="material-symbols-outlined absolute right-2 top-2 text-primary opacity-40">search</span>
+</div>
+</div>
+<div class="md:col-span-4 flex justify-end gap-4">
+<button class="flex items-center gap-2 border border-outline-variant px-4 py-2 hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span class="font-label-caps text-[10px] uppercase">Filter Parameters</span>
+</button>
+<button class="flex items-center gap-2 border border-outline-variant px-4 py-2 hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-sm">download</span>
+<span class="font-label-caps text-[10px] uppercase">Export CSV</span>
+</button>
+</div>
+</section>
+<!-- ARCHIVE LEDGER (The List) -->
+<section class="space-y-gutter relative">
+<div class="editorial-line mb-10"></div>
+<!-- LEDGER ENTRY 1: DEPLOYED -->
+<article class="ledger-row grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center py-6 border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors px-4 group">
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">ID_SEQUENCE</p>
+<p class="font-mono text-base font-bold text-primary tracking-tight">ORD-7729-BX</p>
+</div>
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">SYNCH_DATE</p>
+<p class="font-label-md text-label-md uppercase">14 OCT 2023</p>
+</div>
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">STATUS</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#264e3c]"></span>
+<span class="font-label-caps text-[10px] text-primary tracking-widest">DEPLOYED</span>
+</div>
+</div>
+<div class="lg:col-span-3 flex -space-x-4 overflow-hidden py-2">
+<div class="w-12 h-12 border-2 border-background overflow-hidden flex-shrink-0 grayscale hover:grayscale-0 transition-all cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="A minimalist overhead product photography shot of a sleek biological wellness canister labeled Wild Duck Protein Bowl, styled like a luxury medical specimen in a high-fashion editorial magazine, soft top-down clinical lighting, primary forest green accents, muted beige background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjQzWdGJZdFADTm1e2WZRshPv9lr6u0fvP2BLlSoOBIoj1F8hs8HPMtlXNXJPcCuOFkT6Q1lcgiquLLOEaVy9Op69C5SqT-Lzsz58O8jshB3GooyK_cDwPOQ0JNWKMFTB8oFegnvGDiiDYvTuRFZ19IxKf6z_B9YvICjtHusKhNgQRmXIf__uHBxcgp2JDtVlunztnl5hQB2tNRJxboSl0UR8-bZHsMIXzjod3XVINtmvccex1706TY0I8OvUrVyqwgKbJ2_XsJgth">
+</div>
+<div class="w-12 h-12 border-2 border-background overflow-hidden flex-shrink-0 grayscale hover:grayscale-0 transition-all cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="Close-up of a premium canine supplement container, Raw Chicken &amp; Rice variant, featured in a brutalist editorial layout, sharp shadows, minimalist laboratory setting, high contrast, scientific prestige aesthetic, neutral color palette with sage green hints." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdPfE7IoAW6nCHkSg65KVMoDQ1K9tUUNkRpARU-HGhTfIpPXWrS8rIbhzOlsXannqc4gECA8dS4fMwv44rDRnJeMxITB80Pb6qsX51Bh2CXb7geMm6AnzIih3j6WyT5nY5XMkd2htwkdppfoJuyqcYOIA5_is5GgAF2sChXpixoBNV5MH8erLoCe7HS8c4hc475WOOdfYhPrZCNNFxwVz5aT0Ol6BVbCeMADq91bG-TgLQlqjXXKL7zj2Xdwx8bZSuxuFmUR-KiPCK">
+</div>
+<div class="w-12 h-12 bg-surface-container flex items-center justify-center border-2 border-background">
+<span class="text-[10px] font-mono">+1</span>
+</div>
+</div>
+<div class="lg:col-span-1">
+<p class="font-mono text-xs text-on-surface-variant mb-1">VALUE</p>
+<p class="font-mono text-sm font-bold">$284.00</p>
+<div class="mt-2 flex flex-col gap-1"><a href="#" class="flex items-center gap-1 text-primary hover:text-secondary transition-colors group"><span class="material-symbols-outlined text-[14px]">location_on</span><span class="font-label-caps text-[9px] uppercase tracking-widest">Track Deployment</span></a><a href="#" class="flex items-center gap-1 text-primary hover:text-secondary transition-colors group"><span class="material-symbols-outlined text-[14px]">download</span><span class="font-label-caps text-[9px] uppercase tracking-widest">Download Invoice</span></a></div></div>
+<div class="lg:col-span-2 flex justify-end gap-2 ledger-action">
+<button class="px-3 py-1 bg-primary text-white font-label-caps text-[9px] tracking-widest uppercase hover:bg-secondary-container hover:text-primary transition-colors">Dossier</button>
+<button class="px-3 py-1 border border-primary text-primary font-label-caps text-[9px] tracking-widest uppercase hover:bg-primary hover:text-white transition-colors">Track</button>
+</div>
+</article>
+<!-- LEDGER ENTRY 2: IN_TRANSIT -->
+<article class="ledger-row grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center py-6 border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors px-4 group">
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">ID_SEQUENCE</p>
+<p class="font-mono text-base font-bold text-primary tracking-tight">ORD-8941-XJ</p>
+</div>
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">SYNCH_DATE</p>
+<p class="font-label-md text-label-md uppercase">12 OCT 2023</p>
+</div>
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">STATUS</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#944923] animate-pulse"></span>
+<span class="font-label-caps text-[10px] text-secondary tracking-widest">IN_TRANSIT</span>
+</div>
+</div>
+<div class="lg:col-span-3 flex -space-x-4 overflow-hidden py-2">
+<div class="w-12 h-12 border-2 border-background overflow-hidden flex-shrink-0 grayscale hover:grayscale-0 transition-all cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="Luxury biological canine nutrition packaging, high-end design, sharp product focus, clinical editorial photography, dark green and off-white color scheme, soft ambient shadows, sophisticated medical aesthetic, minimalist 12-column grid background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYL4s_do4OGxt49-PF82Su2XxxHCAf1c7kON1OReDKO5-kff3czzfGWyWQyPrTudxhvavbs8raqoocnhYTrxUDAH08OsgrQWxLLYfTCJxyj1nwRJ_gkbmFWHCYyg3x5gKjE04bKcE8o5meJilDBcuIB0PKUqBWwgnlK4hqMa5qE_Ui72HoDGfIB9wYj700qgWe9EtNiQiHbg1w0uR_fGjIm0cZGcVdR1FkHIvR-wu0cZm8EqLQlvLF1dZYKazCNSiFk-SxGl9W_LWm">
+</div>
+</div>
+<div class="lg:col-span-1">
+<p class="font-mono text-xs text-on-surface-variant mb-1">VALUE</p>
+<p class="font-mono text-sm font-bold">$142.50</p>
+<div class="mt-2 flex flex-col gap-1"><a href="#" class="flex items-center gap-1 text-primary hover:text-secondary transition-colors group"><span class="material-symbols-outlined text-[14px]">location_on</span><span class="font-label-caps text-[9px] uppercase tracking-widest">Track Deployment</span></a><a href="#" class="flex items-center gap-1 text-primary hover:text-secondary transition-colors group"><span class="material-symbols-outlined text-[14px]">download</span><span class="font-label-caps text-[9px] uppercase tracking-widest">Download Invoice</span></a></div></div>
+<div class="lg:col-span-2 flex justify-end gap-2 ledger-action">
+<button class="px-3 py-1 bg-primary text-white font-label-caps text-[9px] tracking-widest uppercase hover:bg-secondary-container transition-colors">Dossier</button>
+<button class="px-3 py-1 border border-primary text-primary font-label-caps text-[9px] tracking-widest uppercase hover:bg-primary hover:text-white transition-colors">Track</button>
+</div>
+</article>
+<!-- LEDGER ENTRY 3: SYNCHRONIZED -->
+<article class="ledger-row grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center py-6 border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors px-4 group opacity-70">
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">ID_SEQUENCE</p>
+<p class="font-mono text-base font-bold text-primary tracking-tight">ORD-4402-LM</p>
+</div>
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">SYNCH_DATE</p>
+<p class="font-label-md text-label-md uppercase">01 OCT 2023</p>
+</div>
+<div class="lg:col-span-2">
+<p class="font-mono text-xs text-on-surface-variant mb-1">STATUS</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-label-caps text-[10px] text-outline tracking-widest">SYNCHRONIZED</span>
+</div>
+</div>
+<div class="lg:col-span-3 flex -space-x-4 overflow-hidden py-2">
+<div class="w-12 h-12 border-2 border-background overflow-hidden flex-shrink-0 grayscale cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="Minimalist veterinary science product photography, clean biological canister, brutalist studio lighting, monochrome palette with primary green shadow, high fashion medical editorial, sharp focus on typography and packaging textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9pz1N7Nz7bx2sJOd2eWpkFwSAcXmbbtbuyBKhmjlb5-IZplQxMcX4yhBBxLSrMU_TShN7VsEXR7YRLjnRW25dLit0DbzRwKR2vDeCI6gigz04WOOCxNecqhV_BvByH_DEAZw2d_KuA6s0Ie-ZPW8PAEhCSlC46MwLY9lGTqPOqZeQNTv5brYXuN1y9jUHf1TfLnYEktGFYXc4bhX5y4HAs283bu9Cd6VILnf9_Xvk_zbTrDs4Mv8O6kf5xmeseyM7ScGDSkE2SMip">
+</div>
+<div class="w-12 h-12 border-2 border-background overflow-hidden flex-shrink-0 grayscale cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="Overhead shot of luxury dog nutrition supplements, clinical environment, minimalist beige surface, sharp paper stack shadows, primary green accents, scientific precision, high-end editorial feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX_psFMRo1o4Mpa6ODIACjONYI1yyKz2tL5J2H0ImXhiTs5pZJflolCD3Q-5y8QQpb752M4fIJFe635w790u5rfD6pq4TONuQZOT8uWwW-7p2h37qNsmuqzMCSKOVHaCrNXLuENgwkhx8hKq3BD9tnwCaPmqoYO4Sj7uFW0XAwCIn4HZg4STS-hPDCrzr7U3LayAK86siWViF1MxQmUxrVQ5oFwq-lIBytti7-LdYDxPezBLB7bz0ac_UrmDy58X48lJZLcn4INtyC">
+</div>
+</div>
+<div class="lg:col-span-1">
+<p class="font-mono text-xs text-on-surface-variant mb-1">VALUE</p>
+<p class="font-mono text-sm font-bold">$98.00</p>
+<div class="mt-2 flex flex-col gap-1"><a href="#" class="flex items-center gap-1 text-primary hover:text-secondary transition-colors group"><span class="material-symbols-outlined text-[14px]">location_on</span><span class="font-label-caps text-[9px] uppercase tracking-widest">Track Deployment</span></a><a href="#" class="flex items-center gap-1 text-primary hover:text-secondary transition-colors group"><span class="material-symbols-outlined text-[14px]">download</span><span class="font-label-caps text-[9px] uppercase tracking-widest">Download Invoice</span></a></div></div>
+<div class="lg:col-span-2 flex justify-end gap-2 ledger-action">
+<button class="px-3 py-1 bg-primary text-white font-label-caps text-[9px] tracking-widest uppercase hover:bg-secondary-container transition-colors">Dossier</button>
+<button class="px-3 py-1 border border-primary text-primary font-label-caps text-[9px] tracking-widest uppercase hover:bg-primary hover:text-white transition-colors">Track</button>
+</div>
+</article>
+</section>
+<!-- EMPTY STATE (Hidden) -->
+<section class="hidden flex flex-col items-center justify-center py-32 text-center">
+<span class="material-symbols-outlined text-display-lg text-outline-variant mb-8">inventory_2</span>
+<h4 class="font-headline-md text-headline-md text-primary uppercase">No deployment data found</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-sm">There is no documented biological movement in the current archive segment.</p>
+</section>
+<!-- FOOTER (Predicted Component Footer) -->
+<footer class="mt-stack-lg pt-stack-md border-t border-primary">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-start">
+<div class="md:col-span-6">
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tighter uppercase mb-4">VET-ELITE</h2>
+<p class="font-label-caps text-[10px] text-on-surface-variant tracking-[0.3em] mb-8">© 2024 VET-ELITE BIOLOGICAL SYSTEMS. ALL RIGHTS RESERVED.</p>
+</div>
+<div class="md:col-span-6 grid grid-cols-2 gap-gutter">
+<ul class="space-y-2">
+<li class=""><a class="font-label-caps text-[10px] text-primary hover:text-secondary-container transition-colors" href="#">Biological Compliance</a></li>
+<li class=""><a class="font-label-caps text-[10px] text-primary hover:text-secondary-container transition-colors" href="#">Clinical Trials</a></li>
+</ul>
+<ul class="space-y-2">
+<li class=""><a class="font-label-caps text-[10px] text-primary hover:text-secondary-container transition-colors" href="#">Data Ethics</a></li>
+<li class=""><a class="font-label-caps text-[10px] text-primary hover:text-secondary-container transition-colors" href="#">SOP Documentation</a></li>
+</ul>
+</div>
+</div>
+</footer>
+</main>
+<!-- FLOATING BACKGROUND ELEMENT (Editorial Brutalist) -->
+<div class="fixed top-[20%] right-[-10%] w-[40%] h-[60%] border-[0.5px] border-outline-variant/20 -z-10 rotate-12 pointer-events-none"></div>
+<div class="fixed bottom-[10%] left-[5%] font-mono text-[180px] text-primary/[0.02] leading-none pointer-events-none select-none">LE-001</div>
+<script>
+        // Micro-interaction: Live Timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const year = now.getUTCFullYear();
+            const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(now.getUTCDate()).padStart(2, '0');
+            const hours = String(now.getUTCHours()).padStart(2, '0');
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            const timestampStr = `TIMESTAMP // ${year}.${month}.${day}_${hours}:${minutes}_UTC`;
+            document.getElementById('timestamp').textContent = timestampStr;
+        }
+        setInterval(updateTimestamp, 60000);
+        updateTimestamp();
+
+        // Parallax-ish scroll effect for background numbers
+        window.addEventListener('scroll', () => {
+            const scroll = window.scrollY;
+            const bgText = document.querySelector('.fixed.bottom-\\[10\\%\\]');
+            if(bgText) bgText.style.transform = `translateY(${scroll * -0.1}px)`;
+        });
+    </script>
+
+
+</body></html>
