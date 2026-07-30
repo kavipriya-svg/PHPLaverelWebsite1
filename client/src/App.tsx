@@ -348,9 +348,9 @@ function Router() {
       </Route>
       
       <Route path="/wishlist">
-        <StoreLayout>
+        <HomeLayout>
           <Wishlist />
-        </StoreLayout>
+        </HomeLayout>
       </Route>
       
       <Route path="/gift-registry">

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Saved Specimens Archive | CANINE SYSTEM</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Inter:wght@300;400;600;700&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .hard-shadow {
+            box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+        }
+        .editorial-line {
+            height: 1px;
+            background: #DBDAD5;
+            width: 100%;
+        }
+        .specimen-card:hover .hover-reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .mono-text {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        body {
+            background-color: #f9faf6;
+            color: #1a1c1a;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e2e3e0",
+                        "outline": "#717973",
+                        "tertiary": "#260900",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#351000",
+                        "surface-bright": "#f9faf6",
+                        "on-surface": "#1a1c1a",
+                        "on-primary-fixed-variant": "#264e3c",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#ffdbcc",
+                        "secondary-container": "#fe9e71",
+                        "surface-tint": "#3e6653",
+                        "tertiary-container": "#471800",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#c1c8c2",
+                        "primary-container": "#012d1d",
+                        "surface": "#f9faf6",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#2f312f",
+                        "on-tertiary-fixed": "#351000",
+                        "tertiary-fixed-dim": "#ffb694",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e8e8e5",
+                        "on-secondary-container": "#77330e",
+                        "on-tertiary-container": "#ce774c",
+                        "on-primary-container": "#6d9681",
+                        "on-background": "#1a1c1a",
+                        "secondary-fixed-dim": "#ffb695",
+                        "surface-container": "#eeeeeb",
+                        "surface-dim": "#dadad7",
+                        "on-surface-variant": "#414844",
+                        "inverse-on-surface": "#f0f1ee",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#76330d",
+                        "on-secondary-fixed-variant": "#76330e",
+                        "tertiary-fixed": "#ffdbcc",
+                        "secondary": "#944923",
+                        "primary-fixed-dim": "#a5d0b8",
+                        "inverse-primary": "#a5d0b8",
+                        "primary-fixed": "#c0edd4",
+                        "on-primary-fixed": "#002114",
+                        "surface-container-highest": "#e2e3e0",
+                        "primary": "#00160c",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f3f4f0",
+                        "on-secondary": "#ffffff",
+                        "background": "#f9faf6"
+                    },
+                    "spacing": {
+                        "stack-lg": "80px",
+                        "stack-md": "32px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "stack-sm": "12px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Playfair Display"],
+                        "headline-lg": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-body-md overflow-x-hidden">
+<!-- Sidebar Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-80 bg-surface-container-low dark:bg-surface-container-lowest flex flex-col py-stack-md z-40 shadow-[40px_0_0_0_rgba(1,45,29,0.15)] transition-all duration-300">
+<div class="px-8 mb-12">
+<h1 class="font-headline-md text-headline-md text-primary tracking-tighter font-bold uppercase">CANINE SYSTEM</h1>
+<div class="mt-8 flex items-center gap-4">
+<div class="w-12 h-12 bg-primary-container rounded-none flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">fingerprint</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-primary uppercase">System Access</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Biological ID: 882-04</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col space-y-4">
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant pl-5 hover:bg-surface-container-high transition-all py-3 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">biotech</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Subject Profile</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant dark:text-on-surface-variant pl-5 hover:bg-surface-container-high transition-all py-3 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">inventory_2</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Logistics Archive</span>
+</a>
+<!-- Active Tab -->
+<a class="flex items-center gap-4 text-primary dark:text-primary-fixed-dim font-bold border-l-4 border-primary pl-4 py-3 bg-surface-container-high" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Saved Specimens</span>
+</a>
+</nav>
+<div class="px-8 mb-8">
+<button class="w-full bg-primary text-white font-label-caps text-label-caps py-4 uppercase tracking-widest hover:brightness-110 transition-all active:scale-95">
+                Consult Specialist
+            </button>
+</div>
+<div class="border-t border-outline-variant pt-6 space-y-2">
+<a class="flex items-center gap-4 text-on-surface-variant pl-5 hover:text-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined text-sm">settings</span>
+<span class="font-label-caps text-[10px] uppercase tracking-widest">Settings</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant pl-5 hover:text-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined text-sm">help_center</span>
+<span class="font-label-caps text-[10px] uppercase tracking-widest">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-80 min-h-screen px-margin-desktop py-stack-md">
+<!-- Header Section -->
+<header class="mb-stack-lg">
+<div class="flex justify-between items-end mb-6">
+<div class="max-w-2xl">
+<p class="font-label-caps text-label-caps text-secondary mb-4 uppercase tracking-[0.3em]">Institutional Repository</p>
+<h2 class="font-display-lg text-display-lg leading-tight text-primary">Saved Specimens<br/><span class="italic font-normal opacity-70">// Research Archive</span></h2>
+</div>
+<div class="flex flex-col items-end space-y-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="mono-text text-[12px] uppercase text-on-surface-variant">Archive Status: Secure</span>
+</div>
+<p class="mono-text text-[12px] uppercase text-on-surface-variant">Specimens Earmarked: 12</p>
+<div class="h-px w-32 bg-outline-variant mt-2"></div>
+</div>
+</div>
+<div class="editorial-line"></div>
+</header>
+<!-- Specimens Grid -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Specimen 01 -->
+<div class="col-span-12 lg:col-span-4 specimen-card group">
+<div class="relative bg-surface-container overflow-hidden hard-shadow aspect-[3/4] transition-all duration-500 hover:-translate-y-2">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A high-fashion editorial product photograph of a premium canine supplement bottle placed on a reflective glass surface. The lighting is clinical and sharp, using cold white tones and deep forest green shadows. The bottle is minimalist with black serif typography. The mood is sophisticated, rigorous, and luxurious." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCTyYCIOHy9dChgf0e5YrfeWcXQh-Vxf8kTgASRUnyaU3xxnRDNZu-Eh5ApR4xLEvLjGSWgqVyyeWeGA8odZW9vRHP0YVDn56zPqtkh6s6zI3e8yz7HOot-ZdjTk43-gJuQ_NujSQ2L1DiR5SlH7gvr7OhTMQaWxt2jKp1oFsyOJJRdKPh8m3Hx7pUq3b5pIejYLN3Uxw7fVWu4iwiwv70o5XLCIUXCOuKyD6okPn4wZnxYgoYaQRAiFQ')"></div>
+<div class="absolute top-4 left-4 bg-primary px-3 py-1">
+<span class="mono-text text-[10px] text-white">RE-ID: 042</span>
+</div>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+<button class="bg-white text-primary p-4 rounded-full hover:bg-primary hover:text-white transition-colors active:scale-90">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+<button class="bg-white text-error p-4 rounded-full hover:bg-error hover:text-white transition-colors active:scale-90">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<div class="mt-12 space-y-3 pr-10">
+<h3 class="font-headline-md text-headline-md tracking-tight uppercase text-primary">Specimen No. 042:<br/>Raw Chicken</h3>
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-secondary uppercase bg-secondary/10 px-2 py-0.5">Muscle Optimization</span>
+<span class="mono-text text-label-md">$142.00</span>
+</div>
+<div class="editorial-line opacity-30 mt-4"></div>
+<div class="flex gap-4 pt-2">
+<button class="flex-1 bg-primary text-white font-label-caps text-label-caps py-3 uppercase tracking-widest hover:bg-primary-container transition-colors">Synchronize to Cart</button>
+</div>
+</div>
+</div>
+<!-- Specimen 02 -->
+<div class="col-span-12 lg:col-span-4 specimen-card group lg:mt-stack-md">
+<div class="relative bg-surface-container overflow-hidden hard-shadow aspect-[3/4] transition-all duration-500 hover:-translate-y-2">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="An editorial minimalist shot of organic marrow bones for canines, presented on a pristine white marble slab. The aesthetic is brutalist with hard geometric edges and deep shadows. The color palette is dominated by off-whites and dark forest greens. The lighting is dramatic, highlighting the texture of the bone as if it were a scientific artifact." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADzmRkvyJOmhP6fJHcrb5aHFFNK2i1Dp8PS8aPX8WZn2B3qY08rklU8-hyVpnsv7hb3-x_o3Bfcu6D790S9TwyTo2c_WYsW61khqKQvJSZLGD1Vh6EKoJMDMNEji1kQNgGHsvlOqaP1aiisqgkGm9X6RrkRi0XOcGwgZYxBUAID9ipMaDDjC4dKmhYAuVqF5QXiqd0dNkJg_wsADFSg_UJFyxQCdSYBSmhQ5WOgAg1A2bt3js01AlrxQ')"></div>
+<div class="absolute top-4 left-4 bg-primary px-3 py-1">
+<span class="mono-text text-[10px] text-white">RE-ID: 089</span>
+</div>
+</div>
+<div class="mt-12 space-y-3 pr-10">
+<h3 class="font-headline-md text-headline-md tracking-tight uppercase text-primary">Specimen No. 089:<br/>Bio-Marrow</h3>
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-secondary uppercase bg-secondary/10 px-2 py-0.5">Skeletal Fortification</span>
+<span class="mono-text text-label-md">$88.50</span>
+</div>
+<div class="editorial-line opacity-30 mt-4"></div>
+<div class="flex gap-4 pt-2">
+<button class="flex-1 bg-primary text-white font-label-caps text-label-caps py-3 uppercase tracking-widest hover:bg-primary-container transition-colors">Synchronize to Cart</button>
+</div>
+</div>
+</div>
+<!-- Specimen 03 -->
+<div class="col-span-12 lg:col-span-4 specimen-card group">
+<div class="relative bg-surface-container overflow-hidden hard-shadow aspect-[3/4] transition-all duration-500 hover:-translate-y-2">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A macro lens photograph of premium wild-caught salmon oil for dogs, with a single golden drop suspended in mid-air against a pitch-black background. The style is high-fashion science, using high-key contrast. The branding on the vial is subtle and architectural. The mood is one of pure, concentrated biological luxury and veterinary precision." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBZ6g1zX5YHXlVQkLODXkkQq5K8pbI8GngeAk8ZwqEheU_qmd3i2bR8SgZkoCgiYUtVozRZ4Y64V_4Jxcm8qPlVoUqZxSGyrNMQPm4hy0iG7Ne898wImEISg8FICI388qxPWj2dyZVQ2kOA3mafQ09uljAjADI8d2JXsVOBxjczUChKkrdkMl0uZ_WC8pgzMwOPdkTIiwTDii1_L9zB5_9FtBkfuCBvRJI5nBPMUUzXAs0arlmcmcfS1g')"></div>
+<div class="absolute top-4 left-4 bg-primary px-3 py-1">
+<span class="mono-text text-[10px] text-white">RE-ID: 112</span>
+</div>
+</div>
+<div class="mt-12 space-y-3 pr-10">
+<h3 class="font-headline-md text-headline-md tracking-tight uppercase text-primary">Specimen No. 112:<br/>Arctic Lipid</h3>
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-secondary uppercase bg-secondary/10 px-2 py-0.5">Dermal Integrity</span>
+<span class="mono-text text-label-md">$210.00</span>
+</div>
+<div class="editorial-line opacity-30 mt-4"></div>
+<div class="flex gap-4 pt-2">
+<button class="flex-1 bg-primary text-white font-label-caps text-label-caps py-3 uppercase tracking-widest hover:bg-primary-container transition-colors">Synchronize to Cart</button>
+</div>
+</div>
+</div>
+<!-- Specimen 04 (Asymmetric Layout shift) -->
+<div class="col-span-12 lg:col-start-2 lg:col-span-5 specimen-card group mt-stack-lg">
+<div class="relative bg-surface-container overflow-hidden hard-shadow aspect-[16/9] transition-all duration-500 hover:-translate-y-2">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A wide-angle editorial shot of a sleek, black ceramic canine feeding bowl set within a brutalist concrete environment. Soft natural light streams from the side, creating long artistic shadows. The color palette is strictly monochromatic with a hint of deep green. The scene is quiet, authoritative, and speaks to the elevated lifestyle of the modern canine." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDVXaZ5bG4qyUj00wx3lnNcnxFHYpNoWjwuGHPV_l-QhuH0iXRAk-j9p-n6by3J-4oH47lRaouxpPNBxo1U84deG5sey05GrMG7Omy5Ku-aSgG9GgkveJt05Z0_hFU6bLz9PxkfMhkG39DyUsU-8PpLSYfIiKb0V8Bm4S7jPjgHQTBjfGEk4wr1G9-dku_TGBZfibrwUmQ4nHpO1zoWzpv_-GjC7-7zgvXS1NCh3Ys5FTxiDMmfS5ywmA')"></div>
+<div class="absolute top-4 left-4 bg-primary px-3 py-1">
+<span class="mono-text text-[10px] text-white">RE-ID: 015</span>
+</div>
+</div>
+<div class="mt-12 space-y-3">
+<h3 class="font-headline-md text-headline-md tracking-tight uppercase text-primary">Specimen No. 015: Ceramic Vessel</h3>
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-secondary uppercase bg-secondary/10 px-2 py-0.5">Neutral Intake Environment</span>
+<span class="mono-text text-label-md">$340.00</span>
+</div>
+<div class="editorial-line opacity-30 mt-4"></div>
+<div class="flex gap-4 pt-2">
+<button class="flex-1 bg-primary text-white font-label-caps text-label-caps py-3 uppercase tracking-widest hover:bg-primary-container transition-colors">Synchronize to Cart</button>
+<button class="border border-outline px-6 flex items-center justify-center text-primary hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">delete</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- System Messaging (Empty State Component - Hidden by default but structured) -->
+<div class="hidden flex-col items-center justify-center py-stack-lg text-center" id="empty-state">
+<span class="material-symbols-outlined text-6xl text-outline-variant mb-6">inventory</span>
+<h4 class="font-headline-md text-headline-md text-primary mb-2">No specimens currently earmarked for research</h4>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">Your archive is currently devoid of biological data. Return to the Science Registry to begin categorization.</p>
+<button class="mt-8 border-b-2 border-primary pb-1 font-label-caps text-label-caps uppercase tracking-widest text-primary hover:opacity-70 transition-opacity">Return to Registry</button>
+</div>
+<!-- Archive Footer Metadata -->
+<footer class="mt-stack-lg pt-stack-md border-t border-outline-variant grid grid-cols-12 gap-gutter pb-12">
+<div class="col-span-12 lg:col-span-4">
+<p class="mono-text text-[11px] text-outline uppercase tracking-wider">Authentication Log: 2024.11.14 // 14:22:01 UTC</p>
+</div>
+<div class="col-span-12 lg:col-span-8 flex justify-end gap-12">
+<div class="text-right">
+<p class="font-label-caps text-[10px] text-outline uppercase mb-1">Archive Integrity</p>
+<div class="w-32 h-1 bg-surface-container-highest relative overflow-hidden">
+<div class="absolute left-0 top-0 h-full w-4/5 bg-secondary-container"></div>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-caps text-[10px] text-outline uppercase mb-1">Encryption Protocol</p>
+<p class="mono-text text-[11px] text-primary">AES-256-BIT-CANINE</p>
+</div>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interaction for synchronizing to cart
+        document.querySelectorAll('button').forEach(btn => {
+            if (btn.innerText.includes('Synchronize')) {
+                btn.addEventListener('click', function() {
+                    const originalText = this.innerText;
+                    this.innerText = 'SYNCHRONIZING...';
+                    this.classList.add('opacity-50');
+                    this.disabled = true;
+                    
+                    setTimeout(() => {
+                        this.innerText = 'DATA UPLOADED';
+                        this.classList.remove('bg-primary');
+                        this.classList.add('bg-secondary');
+                        
+                        setTimeout(() => {
+                            this.innerText = originalText;
+                            this.classList.remove('bg-secondary', 'opacity-50');
+                            this.classList.add('bg-primary');
+                            this.disabled = false;
+                        }, 2000);
+                    }, 1200);
+                });
+            }
+        });
+
+        // Hover effect for side nav items
+        const navItems = document.querySelectorAll('aside nav a');
+        navItems.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                if (!item.classList.contains('font-bold')) {
+                    item.style.paddingLeft = '1.5rem';
+                }
+            });
+            item.addEventListener('mouseleave', () => {
+                if (!item.classList.contains('font-bold')) {
+                    item.style.paddingLeft = '1.25rem';
+                }
+            });
+        });
+    </script>
+</body></html>
