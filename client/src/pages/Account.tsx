@@ -4,6 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { HomeEditorialHeader, HomeEditorialFooter } from "@/components/store/HomeEditorialLayout";
+import { mergeHomepageSettings, DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/homepageDefaults";
+import type { HomepageSettings } from "@/lib/homepageDefaults";
 
 type Order = {
   id: string;
@@ -108,6 +111,13 @@ export default function Account() {
     }
   }, [isAuthenticated, isLoading, toast, setLocation]);
 
+  const { data: settingsData } = useQuery<{ settings: Partial<HomepageSettings> }>({
+    queryKey: ["/api/settings/homepage"],
+  });
+  const s = settingsData
+    ? mergeHomepageSettings(settingsData.settings || {})
+    : DEFAULT_HOMEPAGE_SETTINGS;
+
   const { data: ordersData } = useQuery<{ orders: Order[] }>({
     queryKey: ["/api/account/orders"],
     enabled: isAuthenticated,
@@ -161,9 +171,11 @@ export default function Account() {
   ).toUpperCase();
 
   return (
+    <div className="overflow-x-hidden" style={{ backgroundColor: C.surface, color: C.onSurface }}>
+      <HomeEditorialHeader nav={s.nav} />
     <div
       className="flex relative"
-      style={{ minHeight: "calc(100vh - 80px)", overflowX: "hidden" }}
+      style={{ minHeight: "100vh", overflowX: "hidden" }}
     >
       {/* Animated dot-grid background */}
       <div
@@ -690,6 +702,8 @@ export default function Account() {
           </div>
         </div>
       </main>
+    </div>
+      <HomeEditorialFooter footer={s.footer} />
     </div>
   );
 }

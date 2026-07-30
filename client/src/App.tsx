@@ -304,9 +304,9 @@ function Router() {
       </Route>
       
       <Route path="/account">
-        <StoreLayout>
+        <HomeLayout>
           <Account />
-        </StoreLayout>
+        </HomeLayout>
       </Route>
       
       <Route path="/account/orders/:orderNumber">
