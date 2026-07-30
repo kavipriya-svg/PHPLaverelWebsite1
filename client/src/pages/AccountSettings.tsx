@@ -177,135 +177,8 @@ export default function AccountSettings() {
       {/* ── Global editorial header ───────────────────────────── */}
       <HomeEditorialHeader nav={s.nav} />
 
-      {/* ── Below-header flex layout ─────────────────────────── */}
-      <div style={{ display: "flex", paddingTop: 104, minHeight: "100vh" }}>
-
-      {/* ── Sticky sidebar ────────────────────────────────────── */}
-      <aside
-        className="hidden md:flex flex-col flex-shrink-0 self-start sticky"
-        style={{
-          top: 104,
-          width: 256,
-          minHeight: "calc(100vh - 104px)",
-          padding: "32px 16px",
-          backgroundColor: C.surfaceContainerLow,
-          borderRight: `1px solid ${C.outlineVariant}`,
-          boxShadow: "40px 0px 0px 0px rgba(1,45,29,0.05)",
-        }}
-      >
-        {/* Nav */}
-        <nav className="flex-grow" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {NAV_ITEMS.map((item) => {
-            const isActive = item.href === "/account/settings";
-            return (
-              <Link key={item.href} href={item.href}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "14px 12px",
-                    ...INTER,
-                    fontSize: 14,
-                    fontWeight: isActive ? 700 : 400,
-                    letterSpacing: "0.07em",
-                    textTransform: "uppercase",
-                    color: isActive ? C.secondary : C.onSurfaceVariant,
-                    borderLeft: isActive ? `4px solid ${C.secondary}` : "4px solid transparent",
-                    backgroundColor: isActive ? C.surfaceContainerLow : "transparent",
-                    cursor: "pointer",
-                    transition: "background-color 0.15s",
-                  }}
-                  onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = C.surfaceContainerHigh; }}
-                  onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
-                  data-testid={`nav-${item.label.toLowerCase().replace(/[\s/]+/g, "-")}`}
-                >
-                  <span
-                    className="material-symbols-outlined"
-                    style={{
-                      fontSize: 20,
-                      fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0",
-                    }}
-                  >
-                    {item.icon}
-                  </span>
-                  {item.label}
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom section */}
-        <div style={{ marginTop: "auto" }}>
-          <button
-            className="w-full"
-            style={{ ...LABEL_CAPS, padding: "12px 0", textAlign: "center", backgroundColor: C.primaryContainer, color: C.primaryFixed, letterSpacing: "0.2em" }}
-            data-testid="button-upgrade-protocol"
-          >
-            UPGRADE PROTOCOL
-          </button>
-          <div style={{ paddingTop: 24, marginTop: 24, borderTop: `1px solid ${C.outlineVariant}` }}>
-            <a
-              href="#"
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", ...JETBRAINS, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: C.onSurfaceVariant }}
-              data-testid="link-support"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>help_center</span>
-              Support
-            </a>
-            <a
-              href="#"
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", ...JETBRAINS, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: C.onSurfaceVariant }}
-              data-testid="link-safety-data"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>description</span>
-              Safety Data
-            </a>
-          </div>
-        </div>
-      </aside>
-
       {/* ── Main content ─────────────────────────────────────── */}
-      <main className="flex-grow" style={{ padding: "32px 64px 80px", position: "relative" }}>
-
-        {/* Top utility bar */}
-        <div className="flex justify-between items-center" style={{ marginBottom: 64 }}>
-          <Link href="/account">
-            <div
-              style={{ display: "flex", alignItems: "center", gap: 8, ...JETBRAINS, fontSize: 11, letterSpacing: "-0.05em", textTransform: "uppercase", color: C.outline, cursor: "pointer" }}
-              onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.color = C.primary}
-              onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.color = C.outline}
-              data-testid="link-back-account"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_back</span>
-              Back to Account
-            </div>
-          </Link>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 22, color: C.onSurfaceVariant, cursor: "pointer" }}
-              data-testid="icon-notifications"
-            >
-              notifications_active
-            </span>
-            <div
-              style={{
-                width: 40, height: 40,
-                backgroundColor: C.surfaceContainerHighest,
-                border: `1px solid ${C.outlineVariant}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-                ...JETBRAINS, fontSize: 15, fontWeight: 500, color: C.primaryContainer,
-              }}
-              data-testid="avatar-user"
-            >
-              {initials}
-            </div>
-          </div>
-        </div>
+      <main style={{ paddingTop: 104, padding: "104px 64px 80px", position: "relative" }}>
 
         {/* Hero header */}
         <header style={{ marginBottom: 80, maxWidth: 896 }}>
@@ -632,7 +505,6 @@ export default function AccountSettings() {
           </div>
         </div>
       </main>
-      </div>{/* ── end flex layout ── */}
 
       {/* ── Global editorial footer ───────────────────────────── */}
       <HomeEditorialFooter footer={s.footer} />
