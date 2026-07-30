@@ -1,0 +1,62 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+      # ── Optional: deploy dist/ to Hostinger via SSH ──────────────────
+      # Uncomment and configure these steps once you have set the secrets:
+      #   HOSTINGER_SSH_HOST, HOSTINGER_SSH_USER, HOSTINGER_SSH_KEY
+      #
+      # - name: Deploy to Hostinger via SSH
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.HOSTINGER_SSH_HOST }}
+      #     username: ${{ secrets.HOSTINGER_SSH_USER }}
+      #     key: ${{ secrets.HOSTINGER_SSH_KEY }}
+      #     script: |
+      #       cd /home/<your-user>/public_html
+      #       rm -rf dist
+      #       mkdir -p dist
+      #
+      # - name: Upload built files to Hostinger
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.HOSTINGER_SSH_HOST }}
+      #     username: ${{ secrets.HOSTINGER_SSH_USER }}
+      #     key: ${{ secrets.HOSTINGER_SSH_KEY }}
+      #     source: "dist/"
+      #     target: "/home/<your-user>/public_html/"

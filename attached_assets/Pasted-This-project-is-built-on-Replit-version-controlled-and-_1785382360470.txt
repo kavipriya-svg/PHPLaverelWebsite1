@@ -1,0 +1,44 @@
+This project is built on Replit, version-controlled and deployed via GitHub, and hosted in production on Hostinger. Some pages fail to load or perform poorly only in production. Do a full audit across the entire pipeline:
+
+1. Check the build → GitHub → Hostinger pipeline for mismatches
+
+Confirm what exactly gets committed/pushed to GitHub — is it source code only, or the built/compiled output (e.g., dist, build folder)? Check .gitignore to see if build artifacts are excluded when they shouldn't be (or vice versa).
+If Hostinger deploys via a GitHub-connected auto-deploy (e.g., Hostinger's Git integration) or a GitHub Action, check that workflow/config file for the exact build command being run — confirm it matches the build command used successfully in Replit.
+Check for a mismatch in Node.js version, package versions, or environment variables between Replit's environment, the GitHub Action runner, and Hostinger's server.
+Confirm package-lock.json/yarn.lock is committed and consistent, so the production build installs the exact same dependency versions as dev.
+
+2. Diagnose Hostinger-specific deployment issues
+
+Confirm whether this is static hosting or Node.js hosting, and that the deployed folder structure matches what Hostinger expects (public_html for static; correct entry point/start script for Node).
+If this is a single-page app, check for a proper .htaccess with URL rewrite rules so client-side routes don't 404 on direct load/refresh.
+Check for case-sensitivity issues in file/folder/import paths (Hostinger's Linux servers are case-sensitive; local/dev environments often aren't).
+Verify all asset paths are relative/correctly based, not pointing to localhost or dev URLs.
+Confirm environment variables/secrets are set correctly in whichever environment actually builds for production (Replit, GitHub Action, or Hostinger) — not just locally.
+Confirm SSL/HTTPS is correctly configured; check for mixed content errors.
+
+3. Check for broken pages specifically
+
+List every page, its load status, and the exact error (404, 500, blank page, JS console error, timeout, failed network request).
+Check API/backend calls for CORS or firewall differences between environments.
+
+4. Benchmark performance against industry standards
+
+Run Lighthouse on all key pages — report Performance, Accessibility, Best Practices, SEO scores.
+Report Core Web Vitals: LCP (<2.5s), INP (<200ms), CLS (<0.1), TTFB (<0.8s).
+Flag pages failing these thresholds and why.
+
+5. Fix common performance bottlenecks
+
+Minify/compress JS, CSS, HTML.
+Enable Gzip/Brotli compression (via .htaccess if Apache-based).
+Set cache-control headers for static assets.
+Compress/lazy-load images, convert to WebP.
+Reduce render-blocking resources.
+Code-split large JS bundles.
+
+6. Report back
+
+Full list of pages tested with pass/fail status and root cause for each failure.
+Confirm exactly what changed between "works in dev" and "fails in prod" — pinpoint whether it's a build issue, a Git/deploy issue, or a Hostinger config issue.
+Before/after Lighthouse scores and Core Web Vitals.
+Flag anything requiring manual changes outside code — GitHub Action secrets/config, Hostinger control panel settings (PHP/Node version, hosting plan limits, DNS, SSL) — since Replit can't touch those directly.

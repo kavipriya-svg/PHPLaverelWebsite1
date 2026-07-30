@@ -10,10 +10,22 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Serve hashed assets (e.g. /assets/index-AbCdEf.js) with a 1-year cache.
+  // Vite fingerprints every asset filename so stale-cache is never an issue.
+  app.use(
+    "/assets",
+    express.static(path.join(distPath, "assets"), {
+      maxAge: "1y",
+      immutable: true,
+    }),
+  );
 
-  // fall through to index.html if the file doesn't exist
+  // Serve everything else (favicon, manifest, etc.) with a short cache.
+  app.use(express.static(distPath, { maxAge: "1h" }));
+
+  // Fall through to index.html for client-side routing (SPA fallback).
   app.use("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
