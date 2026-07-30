@@ -192,7 +192,7 @@ function FeatureCard({ feature }: { feature: typeof FEATURES[0] }) {
 
 // ─── Editorial product card ──────────────────────────────────────────
 interface EditorialProduct {
-  id: number;
+  id: string | number;
   name: string;
   tag: string;
   taxClass: string;
@@ -202,7 +202,7 @@ interface EditorialProduct {
   nutrients: { k: string; v: string }[];
 }
 
-function EditorialProductCard({ product, onAddToCart }: { product: EditorialProduct; onAddToCart: (id: number) => void }) {
+function EditorialProductCard({ product, onAddToCart }: { product: EditorialProduct; onAddToCart: (id: string | number) => void }) {
   const [, navigate] = useLocation();
   return (
     <div className="grid items-stretch group" style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 24 }}>
@@ -233,7 +233,7 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
           </div>
         </div>
         <div className="space-y-3">
-          {product.id > 0 ? (
+          {typeof product.id === 'string' || (product.id as number) > 0 ? (
             <button onClick={() => onAddToCart(product.id)}
               className="w-full py-4 transition-all"
               style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS }}
@@ -318,21 +318,21 @@ export default function DogTreat() {
   // ── Fetch products (filtered by selected category if any) ──────────
   const categorySlug = dt.productSection.categorySlug || "wild-treats";
   const { data: categoryProducts = [] } = useQuery<any[]>({
-    queryKey: ["/api/products", { categoryId: selectedCategoryId, categorySlug, limit: 20 }],
+    queryKey: ["/api/products", { categoryId: selectedCategoryId, categorySlug, limit: 50 }],
     queryFn: () => {
       if (selectedCategoryId) {
-        return fetch(`/api/products?categoryId=${encodeURIComponent(selectedCategoryId)}&limit=20`)
+        return fetch(`/api/products?categoryId=${encodeURIComponent(selectedCategoryId)}&limit=50`)
           .then(r => r.json()).then(d => Array.isArray(d) ? d : (d.products ?? []));
       }
-      return fetch(`/api/products?categorySlug=${encodeURIComponent(categorySlug)}&limit=20`)
+      return fetch(`/api/products?categorySlug=${encodeURIComponent(categorySlug)}&limit=50`)
         .then(r => r.json()).then(d => Array.isArray(d) ? d : (d.products ?? []));
     },
   });
 
   // If no products found in that category, fall back to general products (always have slugs)
   const { data: fallbackApiProducts = [] } = useQuery<any[]>({
-    queryKey: ["/api/products", { limit: 20 }],
-    queryFn: () => fetch(`/api/products?limit=20`)
+    queryKey: ["/api/products", { limit: 50 }],
+    queryFn: () => fetch(`/api/products?limit=50`)
       .then(r => r.json())
       .then(d => Array.isArray(d) ? d : (d.products ?? [])),
     enabled: categoryProducts.length === 0 && !selectedCategoryId,
@@ -369,12 +369,12 @@ export default function DogTreat() {
     };
   };
 
-  const displayProducts: EditorialProduct[] = apiProducts.slice(0, 8).map(mapProduct);
+  const displayProducts: EditorialProduct[] = apiProducts.map(mapProduct);
 
   // ── Add to cart ───────────────────────────────────────────────────
-  const handleAddToCart = (productId: number) => {
-    if (productId < 0) return;
-    addToCart(productId, 1);
+  const handleAddToCart = (productId: string | number) => {
+    if (typeof productId === 'number' && productId < 0) return;
+    addToCart(String(productId), 1);
     toast({ title: "Added to cart", description: "Item added to your cart." });
   };
 
