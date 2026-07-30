@@ -429,6 +429,8 @@ export default function DogFullMeal() {
           className="absolute inset-0 w-full h-full object-cover"
           style={{ transform: "scale(1.05)" }}
           loading="eager"
+          fetchpriority="high"
+          decoding="async"
         />
         <div
           className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"

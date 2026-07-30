@@ -152,7 +152,7 @@ function AdBannerStrip({ banners, position }: { banners: any[]; position: "top" 
               />
             ) : (
               <div className="relative w-full" style={{ height: 200 }}>
-                <img src={b.mediaUrl} alt={b.title || ""} className="w-full h-full object-cover" />
+                <img src={b.mediaUrl} alt={b.title || ""} className="w-full h-full object-cover" loading="lazy" />
                 {(b.title || b.subtitle || b.ctaText) && (
                   <div className="absolute inset-0 flex flex-col justify-center px-12" style={{ background: "linear-gradient(to right, rgba(1,45,29,0.75) 40%, transparent)" }}>
                     {b.title && <h3 className="text-white text-2xl font-bold mb-2" style={PLAYFAIR}>{b.title}</h3>}
@@ -534,7 +534,7 @@ export default function DogParentClothing() {
                             allowFullScreen
                           />
                         ) : (
-                          <img src={log.mediaUrl} alt="testimonial" className="w-full h-full object-cover" />
+                          <img src={log.mediaUrl} alt="testimonial" className="w-full h-full object-cover" loading="lazy" />
                         )}
                       </div>
                     )}

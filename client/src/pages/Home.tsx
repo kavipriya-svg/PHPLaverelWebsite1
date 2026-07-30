@@ -443,6 +443,8 @@ function HeroSection({ hero }: { hero: HomepageSettings["hero"] }) {
           src={hero.bgImageUrl}
           alt="19 Dogs editorial hero"
           loading="eager"
+          fetchpriority="high"
+          decoding="async"
         />
         <div className="absolute inset-0" style={{ backgroundColor: `${C.primary}1A` }} />
       </div>
