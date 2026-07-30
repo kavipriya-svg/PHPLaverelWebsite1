@@ -336,9 +336,7 @@ function Router() {
       </Route>
       
       <Route path="/account/addresses">
-        <StoreLayout>
-          <Addresses />
-        </StoreLayout>
+        <Addresses />
       </Route>
       
       <Route path="/account/settings">

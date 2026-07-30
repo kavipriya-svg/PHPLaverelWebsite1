@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Subject Profile // Account Dossier - 19 DOGS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Inter:wght@300;400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Hard Paper Stack Shadow from Style Guidance */
+        .hard-shadow {
+            box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15);
+        }
+
+        /* Subtle technical grid background */
+        .grid-pattern {
+            background-image: radial-gradient(circle, #717973 1px, transparent 1px);
+            background-size: 32px 32px;
+            opacity: 0.05;
+        }
+
+        .protocol-line {
+            height: 2px;
+            background: linear-gradient(90deg, #fe9e71 0%, transparent 100%);
+        }
+
+        /* Custom scrollbar for technical look */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #f9faf6; }
+        ::-webkit-scrollbar-thumb { background: #012d1d; }
+    </style>
+<!-- Tailwind Config Injection -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#ce774c",
+                        "on-tertiary-fixed-variant": "#76330d",
+                        "surface-container-low": "#f3f4f0",
+                        "tertiary-fixed": "#ffdbcc",
+                        "outline-variant": "#c1c8c2",
+                        "outline": "#717973",
+                        "on-tertiary-fixed": "#351000",
+                        "on-secondary-container": "#77330e",
+                        "surface-bright": "#f9faf6",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#6d9681",
+                        "primary-fixed": "#c0edd4",
+                        "surface-tint": "#3e6653",
+                        "on-secondary-fixed": "#351000",
+                        "error": "#ba1a1a",
+                        "primary-container": "#012d1d",
+                        "surface-dim": "#dadad7",
+                        "background": "#f9faf6",
+                        "secondary-fixed": "#ffdbcc",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2f312f",
+                        "on-background": "#1a1c1a",
+                        "secondary-container": "#fe9e71",
+                        "inverse-primary": "#a5d0b8",
+                        "tertiary": "#260900",
+                        "surface-container-high": "#e8e8e5",
+                        "secondary-fixed-dim": "#ffb695",
+                        "on-primary-fixed": "#002114",
+                        "on-primary-fixed-variant": "#264e3c",
+                        "tertiary-container": "#471800",
+                        "surface-variant": "#e2e3e0",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#eeeeeb",
+                        "on-surface-variant": "#414844",
+                        "on-surface": "#1a1c1a",
+                        "primary-fixed-dim": "#a5d0b8",
+                        "inverse-on-surface": "#f0f1ee",
+                        "surface-container-highest": "#e2e3e0",
+                        "secondary": "#944923",
+                        "primary": "#00160c",
+                        "surface": "#f9faf6",
+                        "tertiary-fixed-dim": "#ffb694",
+                        "on-secondary-fixed-variant": "#76330e"
+                    },
+                    "spacing": {
+                        "stack-md": "32px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "stack-sm": "12px",
+                        "stack-lg": "80px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Playfair Display"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                        "display-lg": ["84px", {"lineHeight": "92px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "300"}],
+                        "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface selection:bg-secondary-container selection:text-white">
+<!-- Top Navigation Anchor -->
+<header class="w-full top-0 sticky z-50 bg-surface dark:bg-background border-b border-outline-variant dark:border-on-surface-variant flex justify-between items-center px-margin-desktop py-6 max-w-full mx-auto">
+<div class="font-headline-lg text-headline-lg tracking-tighter text-primary dark:text-primary-fixed-dim font-bold">19 DOGS</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Science</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Wellness</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Registry</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Archive</a>
+</nav>
+<div class="flex items-center gap-6">
+<button class="material-symbols-outlined text-primary" data-icon="shopping_bag">shopping_bag</button>
+<button class="material-symbols-outlined text-primary font-bold" data-icon="person">person</button>
+</div>
+</header>
+<div class="flex min-h-screen relative overflow-hidden">
+<div class="grid-pattern absolute inset-0 pointer-events-none"></div>
+<!-- Sidebar Navigation -->
+<aside class="hidden md:flex flex-col h-screen w-80 sticky left-0 top-0 bg-surface-container border-r border-outline-variant py-8 px-6 z-40">
+<div class="mb-10">
+<h3 class="font-headline-md text-headline-md font-bold text-primary mb-1">CANINE BIOMETRIC ID</h3>
+<p class="font-mono text-xs text-on-surface-variant opacity-60">V.01.2024 REV</p>
+</div>
+<nav class="flex flex-col gap-1 flex-grow">
+<!-- Bio-Profile (Active) -->
+<a class="flex items-center gap-3 py-4 text-primary font-bold border-l-4 border-secondary pl-4 translate-x-1 transition-all bg-surface-container-high/50" href="#">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+<span class="font-label-caps text-label-caps">Bio-Profile</span>
+</a>
+<a class="flex items-center gap-3 py-4 text-on-surface-variant pl-5 hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+<span class="font-label-caps text-label-caps">Order History</span>
+</a>
+<a class="flex items-center gap-3 py-4 text-on-surface-variant pl-5 hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-label-caps text-label-caps">Science Vault</span>
+</a>
+<a class="flex items-center gap-3 py-4 text-on-surface-variant pl-5 hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label-caps text-label-caps">Technical Support</span>
+</a>
+<a class="flex items-center gap-3 py-4 text-on-surface-variant pl-5 hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps">Preferences</span>
+</a>
+</nav>
+<div class="pt-8 mt-auto border-t border-outline-variant">
+<button class="w-full bg-primary text-white py-4 font-label-caps text-label-caps tracking-widest hover:opacity-90 transition-opacity mb-4">
+                    UPGRADE PLAN
+                </button>
+<a class="flex items-center gap-3 py-4 text-on-surface-variant hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps uppercase">De-synchronize</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-grow px-margin-mobile md:px-margin-desktop py-12 relative z-10">
+<div class="max-w-6xl mx-auto">
+<!-- Editorial Header -->
+<section class="mb-stack-lg animate-in fade-in slide-in-from-bottom-4 duration-700">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-outline-variant pb-8">
+<div>
+<span class="font-mono text-xs uppercase tracking-widest text-secondary mb-2 block">Dossier Access // Internal Use Only</span>
+<h1 class="font-display-lg text-headline-lg md:text-[84px] leading-tight text-primary">Subject Profile // Account Dossier</h1>
+</div>
+<div class="text-right">
+<p class="font-mono text-sm text-on-surface-variant">NODE_09 // FRANKFURT_DC</p>
+<p class="font-mono text-sm text-on-surface-variant" id="current-timestamp">SECURE_SYNC: --:--:--</p>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Subject Identity Column -->
+<div class="md:col-span-5 space-y-10">
+<div class="bg-surface hard-shadow p-8 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 font-mono text-[10px] opacity-20 rotate-90 origin-top-right">DNA_VERIFIED_IDENTITY</div>
+<!-- Biometric ID Visual -->
+<div class="flex flex-col items-center md:items-start gap-8">
+<div class="relative group">
+<div class="w-48 h-48 bg-surface-container-high overflow-hidden border border-outline-variant p-1">
+<img class="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-700" data-alt="A professional, high-fashion editorial portrait of a subject in soft profile, lit with dramatic clinical cool-toned lighting. The image has a grainy, film-like texture and a minimal, scientific aesthetic. The subject is wearing a high-collared technical garment in deep forest green. The background is a clean, ivory-toned laboratory setting with soft architectural shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRAbavIfsy7NtGXfZ56Y3y2Y8pVpdWVpo0WFVg439pAj0qGj0zyGBmItYPUiXqC5u5QYQzbmBW5ykqEGoUBNwDUV8KTpQ3ZYMw-4Txx7h28l6TV3RidK6pU4TjuNYs9CFHoqvl0x15_IVRYVeBa50RrCjVN9vtd6mSYU7h-y0IYO_SMEUymT3JetdgmhB4sg-Xdc9l4E2_0HWGO-b0u_TLWUPeUFkmxS1oeuxlg5yatA3BdJ4sZ1ic2oZjxdWBdMnaefViwgJawSXb"/>
+</div>
+<!-- Scan Line Animation -->
+<div class="absolute top-0 left-0 w-full h-0.5 bg-secondary-container shadow-[0_0_15px_rgba(254,158,113,0.8)] animate-bounce mt-4 opacity-50 group-hover:opacity-100"></div>
+</div>
+<div class="space-y-4">
+<div>
+<span class="font-label-caps text-[10px] text-on-surface-variant block mb-1">DESIGNATION</span>
+<h2 class="font-headline-md text-primary font-bold">Demo Customer</h2>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-on-surface-variant block mb-1">COMMUNICATION_RELAY</span>
+<p class="font-mono text-on-surface">customer@demo.com</p>
+</div>
+<div class="pt-4 border-t border-outline-variant/30">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-caps text-[10px] text-on-surface-variant">BIOLOGICAL_VALIDITY</span>
+<span class="font-mono text-[10px] text-secondary">98.4%</span>
+</div>
+<div class="w-full h-0.5 bg-surface-variant">
+<div class="h-full bg-secondary-container w-[98.4%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Info/Technical Data -->
+<div class="border border-outline-variant p-6 space-y-4">
+<h4 class="font-label-caps text-label-caps text-primary border-b border-outline-variant pb-2">Technical Summary</h4>
+<div class="grid grid-cols-2 gap-4 font-mono text-[11px] text-on-surface-variant">
+<div>Member Since:</div>
+<div class="text-on-surface">2024-03-12</div>
+<div>Security Clearance:</div>
+<div class="text-on-surface">L3_RESEARCH</div>
+<div>Active Protocols:</div>
+<div class="text-on-surface">04</div>
+<div>Specimens Saved:</div>
+<div class="text-on-surface">12</div>
+</div>
+</div>
+</div>
+<!-- Main Dossier Content -->
+<div class="md:col-span-7 space-y-gutter">
+<!-- Active Protocols Section -->
+<div class="bg-primary-container text-on-primary p-8 hard-shadow relative">
+<div class="flex justify-between items-start mb-6">
+<h3 class="font-headline-md italic text-primary-fixed">Active Protocols</h3>
+<span class="bg-secondary px-3 py-1 font-mono text-[10px] text-white">IN_TRANSIT</span>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="w-20 h-20 bg-surface-variant flex-shrink-0">
+<img class="w-full h-full object-cover grayscale" data-alt="Close-up clinical macro photography of high-end biological supplement glass vials. The lighting is bright and surgical, emphasizing the clarity of the amber glass and the precision of the minimalist label typography. Soft shadows fall on a pristine white marble surface. High-fashion apothecary style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYbyurfl-EcjnxXQKLajba0_vB1mw6NjZRw-MVklHY21GU2ACE9pBScAzYkOctH62oNj2cSUH8HaEmIl4bxFXJ9eweBjvYecvE1QGJuakL3D0pil0iez-HX6zAQLt2Wx67LYTu7HtFSwHxf8kDpRWEBAXI9xzHsk_vk1q_yKaPBb_SyFIq8RqbW-zlGmoeb_5ezLBChP10Y9gDl6V-jxdW8_l6IEO2wk41QzDgIQmxA8TMcYbnNO4KAiFHGRh0D4GUx9CNqKCt1Ook"/>
+</div>
+<div class="flex-grow">
+<p class="font-mono text-xs opacity-60 mb-1">REF: ARCH-9920-DG</p>
+<h4 class="font-body-lg font-bold mb-1">Cellular Rejuvenation Kit // Canine Series 01</h4>
+<p class="font-body-md opacity-80 text-sm italic">Expected arrival at Biological Coordinates: Tuesday, Oct 24.</p>
+</div>
+</div>
+<div class="protocol-line"></div>
+<div class="flex justify-between items-center font-mono text-[10px] opacity-70">
+<span>OR_ID: 100293848</span>
+<a class="underline hover:text-secondary-container transition-colors" href="#">TRACK_SPECIMEN</a>
+</div>
+</div>
+</div>
+<!-- Technical Grid Links -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Logistics Archive -->
+<a class="group border border-outline-variant p-6 hover:bg-surface-container-high transition-all" href="#">
+<div class="flex justify-between mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="history_edu">history_edu</span>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<h5 class="font-label-caps text-label-caps text-primary mb-2">Logistics Archive</h5>
+<p class="text-xs text-on-surface-variant">Complete historical record of biological acquisitions and deployments.</p>
+</a>
+<!-- Saved Specimens -->
+<a class="group border border-outline-variant p-6 hover:bg-surface-container-high transition-all" href="#">
+<div class="flex justify-between mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="bookmark">bookmark</span>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<h5 class="font-label-caps text-label-caps text-primary mb-2">Saved Specimens</h5>
+<p class="text-xs text-on-surface-variant">Curation of research-grade products earmarked for future acquisition.</p>
+</a>
+<!-- Biological Coordinates -->
+<a class="group border border-outline-variant p-6 hover:bg-surface-container-high transition-all" href="#">
+<div class="flex justify-between mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="location_on">location_on</span>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<h5 class="font-label-caps text-label-caps text-primary mb-2">Biological Coordinates</h5>
+<p class="text-xs text-on-surface-variant">Registered receiving locations for delicate biological transports.</p>
+</a>
+<!-- Account Preferences -->
+<a class="group border border-outline-variant p-6 hover:bg-surface-container-high transition-all" href="#">
+<div class="flex justify-between mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="tune">tune</span>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<h5 class="font-label-caps text-label-caps text-primary mb-2">Account Preferences</h5>
+<p class="text-xs text-on-surface-variant">Update protocol settings, communication relays, and security keys.</p>
+</a>
+</div>
+<!-- Technical Footer Note -->
+<div class="mt-8 pt-8 border-t border-outline-variant/30 italic text-xs text-on-surface-variant font-body-md">
+                            Identity verification managed by 19 DOGS Secure Encryption Systems. All data points are strictly confidential and encrypted at rest using AES-256 standards for biological compliance.
+                        </div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="w-full relative mt-stack-lg bg-primary-container dark:bg-surface-container-highest text-on-primary-container dark:text-on-surface">
+<div class="w-full px-margin-desktop py-stack-lg grid grid-cols-12 gap-gutter">
+<div class="col-span-12 md:col-span-4 mb-8 md:mb-0">
+<div class="font-headline-lg text-headline-lg text-on-primary dark:text-primary-fixed mb-6">19 DOGS</div>
+<p class="font-body-md max-w-xs opacity-70">
+                    Advancing the standard of biological excellence for the world's most elite canine companions.
+                </p>
+</div>
+<div class="col-span-6 md:col-span-2">
+<h6 class="font-label-caps text-label-caps mb-4 opacity-50">RESEARCH</h6>
+<ul class="space-y-3 font-body-md text-sm">
+<li><a class="hover:text-secondary-container transition-colors" href="#">Methodology</a></li>
+<li><a class="hover:text-secondary-container transition-colors" href="#">White Papers</a></li>
+<li><a class="hover:text-secondary-container transition-colors" href="#">Clinical Trials</a></li>
+</ul>
+</div>
+<div class="col-span-6 md:col-span-2">
+<h6 class="font-label-caps text-label-caps mb-4 opacity-50">LEGAL</h6>
+<ul class="space-y-3 font-body-md text-sm">
+<li><a class="hover:text-secondary-container transition-colors" href="#">Terms of Research</a></li>
+<li><a class="hover:text-secondary-container transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="hover:text-secondary-container transition-colors" href="#">Biological Compliance</a></li>
+</ul>
+</div>
+<div class="col-span-12 md:col-span-4 flex flex-col items-end justify-between">
+<div class="flex gap-6 mb-8 md:mb-0">
+<a class="material-symbols-outlined" data-icon="language" href="#">language</a>
+<a class="material-symbols-outlined" data-icon="mail" href="#">mail</a>
+<a class="material-symbols-outlined" data-icon="share" href="#">share</a>
+</div>
+<div class="text-right font-mono text-[10px] opacity-40">
+                    © 19 DOGS BIOLOGICAL WELLNESS. ALL RIGHTS RESERVED. FOR SCIENTIFIC USE ONLY.
+                </div>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction: Dynamic Timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-GB', { hour12: false });
+            const elem = document.getElementById('current-timestamp');
+            if (elem) {
+                elem.innerText = `SECURE_SYNC: ${timeStr}`;
+            }
+        }
+        setInterval(updateTimestamp, 1000);
+        updateTimestamp();
+
+        // Parallax-like effect for the grid background on mouse move
+        document.addEventListener('mousemove', (e) => {
+            const grid = document.querySelector('.grid-pattern');
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            grid.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
+        });
+    </script>
+</body></html>
