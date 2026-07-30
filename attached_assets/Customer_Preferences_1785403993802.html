@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>19 DOGS // Account Preferences</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Inter & Playfair Display -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&amp;family=Playfair+Display:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .font-mono-technical { font-family: 'JetBrains Mono', monospace; }
+        .hard-paper-shadow { box-shadow: 40px 40px 0px 0px rgba(1, 45, 29, 0.15); }
+        .toggle-knob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .toggle-checkbox:checked + .toggle-bg { background-color: #012d1d; }
+        .toggle-checkbox:checked + .toggle-bg .toggle-knob { transform: translateX(20px); background-color: #ffffff; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c8c2; }
+    </style>
+<!-- Tailwind Config Injection -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#944923",
+                        "outline": "#717973",
+                        "primary-fixed-dim": "#a5d0b8",
+                        "primary-fixed": "#c0edd4",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#002114",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffdbcc",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1a1c1a",
+                        "on-secondary-fixed": "#351000",
+                        "background": "#f9faf6",
+                        "surface-container-highest": "#e2e3e0",
+                        "on-background": "#1a1c1a",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#ffb695",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f0f1ee",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#76330e",
+                        "secondary-fixed": "#ffdbcc",
+                        "inverse-surface": "#2f312f",
+                        "on-tertiary-fixed": "#351000",
+                        "on-secondary-container": "#77330e",
+                        "surface-container-high": "#e8e8e5",
+                        "surface-container": "#eeeeeb",
+                        "surface-dim": "#dadad7",
+                        "on-primary-container": "#6d9681",
+                        "inverse-primary": "#a5d0b8",
+                        "on-tertiary-container": "#ce774c",
+                        "on-surface-variant": "#414844",
+                        "on-primary": "#ffffff",
+                        "surface": "#f9faf6",
+                        "primary-container": "#012d1d",
+                        "secondary-container": "#fe9e71",
+                        "on-tertiary-fixed-variant": "#76330d",
+                        "surface-variant": "#e2e3e0",
+                        "primary": "#00160c",
+                        "surface-container-low": "#f3f4f0",
+                        "tertiary": "#260900",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#3e6653",
+                        "outline-variant": "#c1c8c2",
+                        "tertiary-container": "#471800",
+                        "surface-bright": "#f9faf6",
+                        "tertiary-fixed-dim": "#ffb694",
+                        "on-primary-fixed-variant": "#264e3c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "12px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "stack-lg": "80px",
+                        "stack-md": "32px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "headline-lg-mobile": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "headline-lg": ["Playfair Display"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Playfair Display"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["36px", {"lineHeight": "44px", "fontWeight": "600"}],
+                        "display-lg": ["84px", {"lineHeight": "92px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["48px", {"lineHeight": "56px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "300"}],
+                        "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-x-hidden">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-screen flex flex-col py-stack-md px-4 h-full w-64 border-r border-outline-variant bg-surface z-50">
+<div class="mb-12 px-2">
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tighter">19 DOGS</h1>
+<p class="text-[10px] font-mono-technical uppercase tracking-widest text-outline mt-1">Biological Wellness System</p>
+</div>
+<nav class="flex-grow space-y-2">
+<!-- Navigation Items Mapping from JSON -->
+<a class="group flex items-center gap-3 px-3 py-4 font-body-md text-body-md uppercase tracking-wider text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-xl">clinical_notes</span>
+                Subject Profile
+            </a>
+<a class="group flex items-center gap-3 px-3 py-4 font-body-md text-body-md uppercase tracking-wider text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-xl">inventory_2</span>
+                Logistics Archive
+            </a>
+<a class="group flex items-center gap-3 px-3 py-4 font-body-md text-body-md uppercase tracking-wider text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-xl">science</span>
+                Saved Specimens
+            </a>
+<a class="group flex items-center gap-3 px-3 py-4 font-body-md text-body-md uppercase tracking-wider text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-xl">my_location</span>
+                Biological Coordinates
+            </a>
+<!-- Active State: Account Preferences -->
+<a class="group flex items-center gap-3 px-3 py-4 font-body-md text-body-md uppercase tracking-wider text-secondary font-bold border-l-4 border-secondary bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">settings</span>
+                Account Preferences
+            </a>
+</nav>
+<div class="mt-auto space-y-4 px-2">
+<button class="w-full bg-primary-container text-on-primary-fixed py-3 font-label-caps text-center hover:opacity-90 transition-opacity">
+                UPGRADE PROTOCOL
+            </button>
+<div class="pt-6 border-t border-outline-variant">
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-secondary transition-colors text-sm uppercase tracking-widest font-mono-technical" href="#">
+<span class="material-symbols-outlined text-lg">help_center</span>
+                    Support
+                </a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-secondary transition-colors text-sm uppercase tracking-widest font-mono-technical" href="#">
+<span class="material-symbols-outlined text-lg">description</span>
+                    Safety Data
+                </a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen px-margin-desktop py-stack-md pb-stack-lg relative">
+<!-- Top App Bar Utility -->
+<div class="flex justify-between items-center mb-16">
+<nav class="flex items-center gap-2">
+<a class="flex items-center gap-2 text-outline hover:text-primary transition-colors font-mono-technical text-xs uppercase tracking-tighter group" href="#">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                    Back to Account
+                </a>
+</nav>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">notifications_active</span>
+<div class="w-10 h-10 bg-surface-container-highest border border-outline-variant flex items-center justify-center grayscale hover:grayscale-0 transition-all cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="A macro photography portrait of a dignified black Doberman looking into the distance, stark lighting, high contrast, editorial fashion style with a hint of clinical precision, white studio background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJO3VxQoRA0ss9GTmf7HMl1GLhywpcjlD5gCqotoD-9Bqx8K_0F0XQMmzbswnpltqBNx2DwV_2-jQ5auJTG1tS9I_bWEtutGgVAYl_eOKlaZ37wTK8_rUGA_8HHIw-j4D5on4b3ssKV1nKvTQFGOEHBcaCu7jhwwYtTj7saWhob4uj3i4kvB9RkHxrKaqnCE6Okilrmr2dwEsPfR-iYJV_2nyo54gU89jRrSl1pugTF7FoOt9zSP_ECw"/>
+</div>
+</div>
+</div>
+<!-- Hero Header Section -->
+<header class="mb-stack-lg max-w-4xl">
+<div class="flex items-baseline gap-4 mb-4">
+<span class="w-2 h-2 bg-secondary rounded-full"></span>
+<span class="font-mono-technical text-xs tracking-[0.3em] uppercase text-outline">Clinical Logistics Layer // 0.19</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tighter mb-4">ACCOUNT PREFERENCES // PROTOCOL SETTINGS</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
+                Security and Communication Logistics. Control the transmission of data between the 19 DOGS laboratory and your primary observation unit.
+            </p>
+</header>
+<!-- Asymmetric Layout Grid -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Left Column: Preference Modules -->
+<div class="col-span-12 lg:col-span-7 space-y-stack-md">
+<!-- Notifications Module -->
+<section class="bg-surface-container-lowest p-stack-md border border-outline-variant relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[80px]">notifications</span>
+</div>
+<h3 class="font-label-caps text-label-caps text-primary mb-8 flex items-center gap-3">
+<span class="w-4 h-[1px] bg-primary"></span>
+                        NOTIFICATIONS
+                    </h3>
+<div class="space-y-8">
+<!-- Toggle Row 1 -->
+<div class="flex items-center justify-between group">
+<div class="max-w-[70%]">
+<p class="font-mono-technical text-sm font-bold text-primary mb-1">ORDER UPDATES</p>
+<p class="text-on-surface-variant text-sm">Get notified about your order status</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only toggle-checkbox" type="checkbox"/>
+<div class="toggle-bg w-11 h-5 bg-surface-container-highest rounded-full p-0.5 border border-outline-variant transition-all">
+<div class="toggle-knob w-3.5 h-3.5 bg-outline rounded-full shadow-sm"></div>
+</div>
+</label>
+</div>
+<!-- Toggle Row 2 -->
+<div class="flex items-center justify-between group">
+<div class="max-w-[70%]">
+<p class="font-mono-technical text-sm font-bold text-primary mb-1">PROMOTIONAL EMAILS</p>
+<p class="text-on-surface-variant text-sm">Receive offers and discount codes</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only toggle-checkbox" type="checkbox"/>
+<div class="toggle-bg w-11 h-5 bg-surface-container-highest rounded-full p-0.5 border border-outline-variant transition-all">
+<div class="toggle-knob w-3.5 h-3.5 bg-outline rounded-full shadow-sm"></div>
+</div>
+</label>
+</div>
+<!-- Toggle Row 3 -->
+<div class="flex items-center justify-between group">
+<div class="max-w-[70%]">
+<p class="font-mono-technical text-sm font-bold text-primary mb-1">RESTOCK ALERTS</p>
+<p class="text-on-surface-variant text-sm">Get notified when wishlist items are back in stock</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only toggle-checkbox" type="checkbox"/>
+<div class="toggle-bg w-11 h-5 bg-surface-container-highest rounded-full p-0.5 border border-outline-variant transition-all">
+<div class="toggle-knob w-3.5 h-3.5 bg-outline rounded-full shadow-sm"></div>
+</div>
+</label>
+</div>
+</div>
+</section>
+<!-- Privacy & Security Module -->
+<section class="bg-surface-container-lowest p-stack-md border border-outline-variant">
+<h3 class="font-label-caps text-label-caps text-primary mb-8 flex items-center gap-3">
+<span class="w-4 h-[1px] bg-primary"></span>
+                        PRIVACY &amp; SECURITY
+                    </h3>
+<div class="space-y-6">
+<div class="flex items-center justify-between p-4 border border-dashed border-outline-variant">
+<div>
+<p class="font-mono-technical text-sm font-bold text-primary mb-1 uppercase">Two-Factor Authentication</p>
+<p class="text-on-surface-variant text-sm">Add an extra layer of security</p>
+</div>
+<span class="font-mono-technical text-[10px] bg-surface-container px-3 py-1 text-outline-variant tracking-widest border border-outline-variant">COMING SOON</span>
+</div>
+<div class="flex items-center justify-between p-4 border border-dashed border-outline-variant">
+<div>
+<p class="font-mono-technical text-sm font-bold text-primary mb-1 uppercase">Login Activity</p>
+<p class="text-on-surface-variant text-sm">View your recent login history</p>
+</div>
+<span class="font-mono-technical text-[10px] bg-surface-container px-3 py-1 text-outline-variant tracking-widest border border-outline-variant">COMING SOON</span>
+</div>
+</div>
+</section>
+<!-- Danger Zone -->
+<section class="bg-surface-container-lowest p-stack-md border-2 border-secondary/20 relative">
+<div class="absolute -top-[1px] left-8 px-4 bg-background">
+<h3 class="font-label-caps text-[10px] text-secondary tracking-widest uppercase">Irreversible Actions</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+<div class="space-y-4">
+<div>
+<p class="font-mono-technical text-sm font-bold text-primary mb-1 uppercase">Sign Out</p>
+<p class="text-on-surface-variant text-xs">Sign out from all devices for security</p>
+</div>
+<button class="px-6 py-2 border border-primary text-primary font-label-caps text-[11px] hover:bg-primary hover:text-white transition-all uppercase">
+                                Sign Out
+                            </button>
+</div>
+<div class="space-y-4">
+<div>
+<p class="font-mono-technical text-sm font-bold text-secondary mb-1 uppercase">Delete Account</p>
+<p class="text-on-surface-variant text-xs">Permanently delete your account and data</p>
+</div>
+<button class="px-6 py-2 bg-secondary text-white font-label-caps text-[11px] hover:opacity-90 transition-all uppercase shadow-md shadow-secondary/10">
+                                Delete Account
+                            </button>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Payment & Aesthetic Accents -->
+<div class="col-span-12 lg:col-span-5 space-y-stack-md">
+<!-- Payment Methods Module (Hard Paper Stack Shadow) -->
+<section class="bg-surface p-stack-md hard-paper-shadow border border-primary transition-all duration-500 hover:translate-x-1 hover:translate-y-1">
+<h3 class="font-label-caps text-label-caps text-primary mb-8 flex items-center gap-3">
+<span class="w-4 h-[1px] bg-primary"></span>
+                        PAYMENT METHODS
+                    </h3>
+<div class="min-h-[200px] flex flex-col justify-center items-center text-center p-8 bg-surface-container-low border border-dotted border-outline-variant">
+<span class="material-symbols-outlined text-outline-variant text-4xl mb-4">credit_card_off</span>
+<p class="font-body-md text-on-surface-variant mb-6 text-sm">
+                            Manage your saved payment options. <br/>
+<span class="opacity-60 italic">No payment methods saved. Add a payment method during checkout for faster purchases.</span>
+</p>
+<button class="pill-shaped px-8 py-3 border border-secondary text-secondary font-label-caps text-[11px] hover:bg-secondary hover:text-white transition-all uppercase rounded-full">
+                            Add Payment Method
+                        </button>
+</div>
+</section>
+<!-- Editorial Collage / Atmospheric Section -->
+<div class="relative pt-12 group">
+<div class="relative z-10 w-full aspect-[4/5] overflow-hidden bg-surface-container-highest border border-outline-variant">
+<img class="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 scale-105 group-hover:scale-100" data-alt="A clinical still life with a stainless steel tray, a set of minimalist vials with green serum, and a soft linen cloth. The lighting is cold, surgical, and prestigious, set against a sterile white backdrop. High-end editorial photography for a biological wellness brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8Wzr7dSApGYOgqAlDdUr9U6EdPVapFN2gL3rlKY4eR6Wy-OxCx4IwkF7aUw6gHZKZYIeG-uQ2FSkwLTP74KMBulYrMWtkAigvH26ABZE-CEpyH5VPpniQRNQzJ3HXlDRS_jmHv2XOEXL3aNLUlzOrG6_W4mwIMFkw7iiGkx-dXoL17QJLPS2KtGIP_2yDsKMnfQ8nqIr8QdjlnqA2GD-kPfU2dIY7uJ7w5-lQSILGrcRDyMB2pgwfUg"/>
+</div>
+<div class="absolute -bottom-6 -left-6 z-20 bg-primary p-6 max-w-[240px]">
+<h4 class="font-headline-md text-white text-2xl leading-tight mb-2 tracking-tighter">Precision in Preference.</h4>
+<p class="font-mono-technical text-[10px] text-primary-fixed uppercase tracking-widest leading-relaxed">
+                            Your interface settings dictate the biological data sync interval. Optimize for peak awareness.
+                        </p>
+</div>
+</div>
+<!-- Technical Footer Decoration -->
+<div class="pt-24 opacity-30">
+<div class="flex items-center gap-4 mb-2">
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+<span class="font-mono-technical text-[9px] tracking-widest">ENCRYPTED PROTOCOL 204.A</span>
+</div>
+<div class="grid grid-cols-4 gap-1">
+<div class="h-1 bg-primary"></div>
+<div class="h-1 bg-outline"></div>
+<div class="h-1 bg-secondary"></div>
+<div class="h-1 bg-outline-variant"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Page Transition Overlay / Loader -->
+<div class="fixed inset-0 bg-primary z-[60] flex items-center justify-center transition-transform duration-1000 ease-in-out pointer-events-none" id="loader">
+<div class="text-center">
+<h2 class="font-headline-lg text-white tracking-tighter mb-4 animate-pulse">19 DOGS // SYSTEM</h2>
+<div class="w-48 h-[1px] bg-white/20 relative mx-auto overflow-hidden">
+<div class="absolute inset-0 bg-secondary w-1/3 animate-[loading_2s_infinite]"></div>
+</div>
+</div>
+</div>
+<script>
+        // Micro-interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            // Loader removal
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.transform = 'translateY(-100%)';
+            }, 800);
+
+            // Toggle Switches Logic
+            const toggles = document.querySelectorAll('.toggle-checkbox');
+            toggles.forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const bg = this.nextElementSibling;
+                    const knob = bg.querySelector('.toggle-knob');
+                    if(this.checked) {
+                        bg.classList.add('bg-primary-container');
+                        knob.style.backgroundColor = '#ffffff';
+                    } else {
+                        bg.classList.remove('bg-primary-container');
+                        knob.style.backgroundColor = '';
+                    }
+                });
+            });
+        });
+    </script>
+<style>
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(300%); }
+        }
+    </style>
+</body></html>
