@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart, FlaskConical, Award, Ban, Leaf } from "lucide-react";
+import { ShoppingCart, FlaskConical, Award, Ban, Leaf, ChevronDown } from "lucide-react";
 import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
 import { HomeEditorialHeader as EditorialHeader, HomeEditorialFooter as EditorialFooter } from "@/components/store/HomeEditorialLayout";
@@ -397,11 +397,10 @@ export default function DogTreat() {
             {dt.hero.subtitle}
           </p>
           <div className="flex gap-6 flex-wrap">
-            <Link href={dt.hero.ctaHref || "/shop"}>
-              <button className="transition-all" style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, padding: "20px 40px" }} data-testid="btn-hero-shop">
-                {dt.hero.ctaText}
-              </button>
-            </Link>
+            <button className="transition-all" style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, padding: "20px 40px" }} data-testid="btn-hero-shop"
+              onClick={() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" })}>
+              {dt.hero.ctaText}
+            </button>
             <button className="transition-all"
               style={{ border: `1px solid ${C.white}`, color: C.white, ...LABEL_CAPS, padding: "20px 40px" }}
               onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.1)"}
@@ -415,6 +414,16 @@ export default function DogTreat() {
           <p style={{ ...LABEL_CAPS, opacity: 0.6, marginBottom: 4 }}>{dt.hero.locationTitle}</p>
           <p style={{ ...PLAYFAIR, fontSize: 18, color: C.surface }}>{dt.hero.locationSubtitle}</p>
         </div>
+        {/* Scroll-down indicator */}
+        <button
+          onClick={() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" })}
+          className="absolute z-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 cursor-pointer"
+          style={{ bottom: 32, color: "rgba(255,255,255,0.7)", background: "none", border: "none", ...LABEL_CAPS, fontSize: 9 }}
+          data-testid="btn-scroll-to-products"
+        >
+          <span>SHOP NOW</span>
+          <ChevronDown size={20} style={{ animation: "bounce 2s infinite" }} />
+        </button>
       </section>
 
       {/* ══════════════ 2. PROTEIN LIBRARY ══════════════ */}
@@ -531,7 +540,7 @@ export default function DogTreat() {
 
       {/* ══════════════ 5. PRODUCT PORTFOLIO ══════════════ */}
       {dt.productSection.visible && (
-        <section style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
+        <section id="products" style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-20 flex-wrap">
             <div style={{ maxWidth: 560 }}>
               <h2 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 16 }}>
