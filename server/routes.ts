@@ -2089,6 +2089,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/settings/account-dashboard", async (req, res) => {
+    try {
+      const row = await storage.getSetting("account_dashboard_settings");
+      const settings = row?.value ? JSON.parse(row.value) : {};
+      res.json({ settings });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch account dashboard settings" });
+    }
+  });
+
+  app.put("/api/settings/account-dashboard", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ account_dashboard_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update account dashboard settings" });
+    }
+  });
+
   // Helper to generate unique IDs for category section items
   const generateCategoryItemId = () => `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
