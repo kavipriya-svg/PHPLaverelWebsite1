@@ -5,9 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { HomeEditorialHeader, HomeEditorialFooter } from "@/components/store/HomeEditorialLayout";
-import { mergeHomepageSettings, DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/homepageDefaults";
-import type { HomepageSettings } from "@/lib/homepageDefaults";
 
 // ─── Design tokens ────────────────────────────────────────────────
 const C = {
@@ -149,12 +146,6 @@ export default function AccountSettings() {
     }
   }, [isAuthenticated, authLoading]);
 
-  // Homepage settings for header / footer
-  const { data: hpData } = useQuery<{ settings: Partial<HomepageSettings> }>({
-    queryKey: ["/api/settings/homepage"],
-  });
-  const s = hpData ? mergeHomepageSettings(hpData.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
-
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Member";
   const initials    = (user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase();
 
@@ -173,12 +164,73 @@ export default function AccountSettings() {
 
   return (
     <div className="overflow-x-hidden" style={{ backgroundColor: C.surface, color: C.onSurface }}>
+      <div className="flex relative" style={{ minHeight: "100vh" }}>
 
-      {/* ── Global editorial header ───────────────────────────── */}
-      <HomeEditorialHeader nav={s.nav} />
+        {/* ── Sidebar ─────────────────────────────────────────── */}
+        <aside
+          className="hidden md:flex flex-col flex-shrink-0 self-start sticky top-0 border-r py-8 px-6 z-40"
+          style={{
+            width: 288,
+            minHeight: "100vh",
+            backgroundColor: C.surfaceContainer,
+            borderColor: C.outlineVariant,
+          }}
+        >
+          <div className="mb-10">
+            <h3 className="mb-1" style={{ ...PLAYFAIR, fontSize: 22, fontWeight: 700, color: C.primary }}>
+              Account
+            </h3>
+            <p className="font-jetbrains text-xs opacity-60" style={{ color: C.onSurfaceVariant }}>
+              Protocol // v0.19
+            </p>
+          </div>
 
-      {/* ── Main content ─────────────────────────────────────── */}
-      <main style={{ paddingTop: 104, padding: "104px 64px 80px", position: "relative" }}>
+          <nav className="flex flex-col gap-1 flex-grow">
+            {NAV_ITEMS.map((item) => {
+              const isActive = item.href === "/account/settings";
+              return (
+                <Link key={item.href} href={item.href}>
+                  <div
+                    data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                    className="flex items-center gap-3 py-4 cursor-pointer transition-all"
+                    style={{
+                      color: isActive ? C.primary : C.onSurfaceVariant,
+                      fontWeight: isActive ? 700 : 400,
+                      paddingLeft: isActive ? 16 : 20,
+                      borderLeft: isActive ? `4px solid ${C.secondary}` : "4px solid transparent",
+                      backgroundColor: isActive ? `${C.surfaceContainerHigh}80` : "transparent",
+                    }}
+                    onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = C.surfaceContainerHigh; }}
+                    onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 20, color: isActive ? C.primary : C.onSurfaceVariant }}>
+                      {item.icon}
+                    </span>
+                    <span style={LABEL_CAPS}>{item.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="pt-8 mt-auto border-t" style={{ borderColor: C.outlineVariant }}>
+            <button
+              className="flex items-center gap-3 py-4 transition-colors w-full"
+              style={{ color: C.onSurfaceVariant }}
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
+              data-testid="button-logout"
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = C.error)}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = C.onSurfaceVariant)}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>logout</span>
+              <span style={LABEL_CAPS}>{logoutMutation.isPending ? "Syncing…" : "De-synchronize"}</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* ── Main content ─────────────────────────────────────── */}
+        <main className="flex-grow relative z-10" style={{ padding: "48px 64px 80px" }}>
 
         {/* Hero header */}
         <header style={{ marginBottom: 80, maxWidth: 896 }}>
@@ -504,10 +556,9 @@ export default function AccountSettings() {
 
           </div>
         </div>
-      </main>
+        </main>
 
-      {/* ── Global editorial footer ───────────────────────────── */}
-      <HomeEditorialFooter footer={s.footer} />
+      </div>{/* ── end flex layout ── */}
     </div>
   );
 }
