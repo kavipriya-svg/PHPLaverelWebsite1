@@ -352,7 +352,7 @@ export default function DogTreat() {
   // ── Map API products → editorial format ───────────────────────────
   const mapProduct = (p: any, idx: number): EditorialProduct => {
     const imgs = p.images ?? [];
-    const img  = imgs.find((i: any) => i.isPrimary)?.imageUrl ?? imgs[0]?.imageUrl ?? FALLBACK_PRODUCTS[idx % 4].img;
+    const img  = imgs.find((i: any) => i.isPrimary)?.url ?? imgs[0]?.url ?? FALLBACK_PRODUCTS[idx % 4].img;
     return {
       id:        p.id,
       name:      p.title ?? p.name,
