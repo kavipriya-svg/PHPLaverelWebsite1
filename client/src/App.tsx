@@ -343,9 +343,9 @@ function Router() {
       </Route>
       
       <Route path="/account/settings">
-        <StoreLayout>
+        <HomeLayout>
           <AccountSettings />
-        </StoreLayout>
+        </HomeLayout>
       </Route>
       
       <Route path="/wishlist">
