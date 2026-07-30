@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { HomeEditorialHeader, HomeEditorialFooter } from "@/components/store/HomeEditorialLayout";
 import { mergeHomepageSettings, DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/homepageDefaults";
-import type { ProductWithDetails, SharedWishlist } from "@shared/schema";
+import type { ProductWithDetails } from "@shared/schema";
 
 // ─── Design tokens ────────────────────────────────────────────────
 const C = {
@@ -283,12 +282,23 @@ export default function Wishlist() {
     return `${y}.${mo}.${d} // ${h}:${mi}:${s} UTC`;
   })();
 
-  if (authLoading || !isAuthenticated) return null;
+  if (authLoading) {
+    return (
+      <div style={{ backgroundColor: C.surface, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 48, color: C.primary, animation: "spin 1s linear infinite" }}>autorenew</span>
+          <p style={{ ...JETBRAINS, fontSize: 11, color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.15em", marginTop: 16 }}>Loading Archive...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return null;
 
   return (
     <div style={{ backgroundColor: C.surface, minHeight: "100vh", position: "relative", overflow: "hidden" }}>
       {/* Editorial global header */}
-      <HomeEditorialHeader settings={homepageSettings} />
+      <HomeEditorialHeader nav={homepageSettings.nav} />
 
       {/* Brutalist background text */}
       <div
@@ -531,7 +541,7 @@ export default function Wishlist() {
       </div>
 
       {/* Editorial footer */}
-      <HomeEditorialFooter settings={homepageSettings} />
+      <HomeEditorialFooter footer={homepageSettings.footer} />
     </div>
   );
 }
