@@ -156,15 +156,13 @@ function AddressDialog({
         style={{ backgroundColor: C.surface, borderRadius: 0 }}
       >
         <DialogHeader>
-          <DialogTitle asChild>
-            <div>
-              <span style={{ ...JETBRAINS, fontSize: 10, color: C.secondary, display: "block", marginBottom: 6, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                {editing ? "MODIFY // COORDINATE" : "REGISTER // NEW COORDINATE"}
-              </span>
-              <span style={{ ...PLAYFAIR, fontSize: 24, fontWeight: 700, color: C.primary, fontStyle: "italic" }}>
-                {editing ? "Edit Biological Coordinate" : "New Biological Coordinate"}
-              </span>
-            </div>
+          <DialogTitle>
+            <span style={{ ...JETBRAINS, fontSize: 10, color: C.secondary, display: "block", marginBottom: 6, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 400 }}>
+              {editing ? "MODIFY // COORDINATE" : "REGISTER // NEW COORDINATE"}
+            </span>
+            <span style={{ ...PLAYFAIR, fontSize: 24, fontWeight: 700, color: C.primary, fontStyle: "italic", display: "block" }}>
+              {editing ? "Edit Biological Coordinate" : "New Biological Coordinate"}
+            </span>
           </DialogTitle>
         </DialogHeader>
 
@@ -759,46 +757,50 @@ export default function Addresses() {
       {/* ── Global editorial footer ───────────────────────────── */}
       <HomeEditorialFooter footer={s.footer} />
 
-      {/* ── Add / Edit Dialog ─────────────────────────────────── */}
-      <AddressDialog
-        open={dialogOpen}
-        onClose={() => { setDialogOpen(false); setEditing(null); }}
-        editing={editing}
-      />
+      {/* ── Add / Edit Dialog — only mounted when open ────────── */}
+      {dialogOpen && (
+        <AddressDialog
+          open={dialogOpen}
+          onClose={() => { setDialogOpen(false); setEditing(null); }}
+          editing={editing}
+        />
+      )}
 
-      {/* ── Delete Confirm Dialog ─────────────────────────────── */}
-      <Dialog open={!!deleteConfirm} onOpenChange={(v) => { if (!v) setDeleteConfirm(null); }}>
-        <DialogContent style={{ backgroundColor: C.surface, borderRadius: 0, maxWidth: 420 }}>
-          <DialogHeader>
-            <DialogTitle asChild>
-              <span style={{ ...PLAYFAIR, fontSize: 22, fontWeight: 700, color: C.primary }}>
-                Remove Coordinate
-              </span>
-            </DialogTitle>
-          </DialogHeader>
-          <div style={{ height: 2, background: `linear-gradient(90deg, ${C.error}60 0%, transparent 100%)`, margin: "8px 0 20px" }} />
-          <p style={{ ...INTER, fontSize: 14, color: C.onSurfaceVariant, marginBottom: 28, lineHeight: 1.6 }}>
-            This will permanently remove the coordinate from your dossier. This action cannot be reversed.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setDeleteConfirm(null)}
-              style={{ ...LABEL_CAPS, padding: "10px 20px", border: `1px solid ${C.outlineVariant}`, color: C.onSurfaceVariant, background: "transparent" }}
-              data-testid="button-delete-cancel"
-            >
-              ABORT
-            </button>
-            <button
-              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}
-              disabled={deleteMutation.isPending}
-              style={{ ...LABEL_CAPS, padding: "10px 24px", backgroundColor: C.error, color: C.white, opacity: deleteMutation.isPending ? 0.7 : 1 }}
-              data-testid="button-delete-confirm"
-            >
-              {deleteMutation.isPending ? "REMOVING..." : "CONFIRM REMOVAL"}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* ── Delete Confirm — only mounted when a target is set ── */}
+      {deleteConfirm && (
+        <Dialog open onOpenChange={(v) => { if (!v) setDeleteConfirm(null); }}>
+          <DialogContent style={{ backgroundColor: C.surface, borderRadius: 0, maxWidth: 420 }}>
+            <DialogHeader>
+              <DialogTitle>
+                <span style={{ ...PLAYFAIR, fontSize: 22, fontWeight: 700, color: C.primary, display: "block" }}>
+                  Remove Coordinate
+                </span>
+              </DialogTitle>
+            </DialogHeader>
+            <div style={{ height: 2, background: `linear-gradient(90deg, ${C.error}60 0%, transparent 100%)`, margin: "8px 0 20px" }} />
+            <p style={{ ...INTER, fontSize: 14, color: C.onSurfaceVariant, marginBottom: 28, lineHeight: 1.6 }}>
+              This will permanently remove the coordinate from your dossier. This action cannot be reversed.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                style={{ ...LABEL_CAPS, padding: "10px 20px", border: `1px solid ${C.outlineVariant}`, color: C.onSurfaceVariant, background: "transparent" }}
+                data-testid="button-delete-cancel"
+              >
+                ABORT
+              </button>
+              <button
+                onClick={() => deleteMutation.mutate(deleteConfirm)}
+                disabled={deleteMutation.isPending}
+                style={{ ...LABEL_CAPS, padding: "10px 24px", backgroundColor: C.error, color: C.white, opacity: deleteMutation.isPending ? 0.7 : 1 }}
+                data-testid="button-delete-confirm"
+              >
+                {deleteMutation.isPending ? "REMOVING..." : "CONFIRM REMOVAL"}
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
