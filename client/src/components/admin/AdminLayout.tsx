@@ -459,6 +459,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/account-order-history"}>
+                      <Link href="/admin/account-order-history" data-testid="link-admin-account-order-history">
+                        <UserCircle className="h-4 w-4" />
+                        <span>Order History</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
                     <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                       Cart
                     </p>

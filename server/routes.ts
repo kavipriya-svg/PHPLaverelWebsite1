@@ -2108,6 +2108,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Account Order History Settings
+  app.get("/api/settings/account-order-history", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("account_order_history_settings");
+      const settings = setting ? JSON.parse(setting) : {};
+      res.json({ settings });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch order history settings" });
+    }
+  });
+
+  app.put("/api/settings/account-order-history", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ account_order_history_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update order history settings" });
+    }
+  });
+
   // Helper to generate unique IDs for category section items
   const generateCategoryItemId = () => `item_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
