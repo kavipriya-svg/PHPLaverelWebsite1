@@ -175,7 +175,7 @@ export default function Account() {
       <HomeEditorialHeader nav={s.nav} />
     <div
       className="flex relative"
-      style={{ minHeight: "100vh", overflowX: "hidden" }}
+      style={{ minHeight: "100vh", overflowX: "hidden", paddingTop: 104 }}
     >
       {/* Animated dot-grid background */}
       <div
