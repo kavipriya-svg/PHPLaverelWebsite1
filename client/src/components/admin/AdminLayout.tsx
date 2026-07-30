@@ -475,6 +475,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === "/admin/account-preferences"}>
+                      <Link href="/admin/account-preferences" data-testid="link-admin-account-preferences">
+                        <Settings className="h-4 w-4" />
+                        <span>Preferences</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
                     <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                       Cart
                     </p>

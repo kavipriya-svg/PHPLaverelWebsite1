@@ -2128,6 +2128,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/settings/account-preferences", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("account_preferences_settings");
+      const settings = setting ? JSON.parse(setting) : {};
+      res.json({ settings });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch account preferences settings" });
+    }
+  });
+
+  app.put("/api/settings/account-preferences", isAdmin, async (req, res) => {
+    try {
+      await storage.upsertSettings({ account_preferences_settings: JSON.stringify(req.body) });
+      res.json({ success: true, settings: req.body });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update account preferences settings" });
+    }
+  });
+
   app.get("/api/settings/account-addresses", async (req, res) => {
     try {
       const setting = await storage.getSetting("account_addresses_settings");
