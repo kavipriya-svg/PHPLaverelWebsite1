@@ -524,7 +524,7 @@ export default function AccountOrders() {
         </aside>
 
         {/* ── Main Content ──────────────────────────────────────── */}
-        <main className="flex-grow px-5 md:px-[64px] py-[32px]" style={{ maxWidth: 1440 - 256 }}>
+        <main className="flex-grow px-5 md:px-[64px] py-[32px]">
 
           {/* Editorial Header */}
           <header
