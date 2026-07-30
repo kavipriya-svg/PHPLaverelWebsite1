@@ -5,6 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { HomeEditorialHeader, HomeEditorialFooter } from "@/components/store/HomeEditorialLayout";
+import { mergeHomepageSettings, DEFAULT_HOMEPAGE_SETTINGS } from "@/lib/homepageDefaults";
+import type { HomepageSettings } from "@/lib/homepageDefaults";
 
 // ─── Design tokens ────────────────────────────────────────────────
 const C = {
@@ -146,6 +149,12 @@ export default function AccountSettings() {
     }
   }, [isAuthenticated, authLoading]);
 
+  // Homepage settings for header/footer
+  const { data: hpData } = useQuery<{ settings: Partial<HomepageSettings> }>({
+    queryKey: ["/api/settings/homepage"],
+  });
+  const s = hpData ? mergeHomepageSettings(hpData.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
+
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Member";
   const initials    = (user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase();
 
@@ -165,15 +174,18 @@ export default function AccountSettings() {
   return (
     <div className="overflow-x-hidden" style={{ backgroundColor: C.surface, color: C.onSurface }}>
 
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      {/* ── Global editorial header ───────────────────────────── */}
+      <HomeEditorialHeader nav={s.nav} />
+
+      <div style={{ display: "flex", paddingTop: 104, minHeight: "100vh" }}>
 
         {/* ── Sidebar ─────────────────────────────────────────── */}
         <aside
           className="hidden md:flex flex-col flex-shrink-0 self-start sticky"
           style={{
-            top: 0,
+            top: 104,
             width: 256,
-            minHeight: "100vh",
+            minHeight: "calc(100vh - 104px)",
             backgroundColor: C.surfaceContainerLow,
             boxShadow: "40px 0px 0px 0px rgba(1,45,29,0.05)",
             padding: "32px 24px",
@@ -578,6 +590,8 @@ export default function AccountSettings() {
 
       </div>{/* ── end flex layout ── */}
 
+      {/* ── Global editorial footer ───────────────────────────── */}
+      <HomeEditorialFooter footer={s.footer} />
     </div>
   );
 }
