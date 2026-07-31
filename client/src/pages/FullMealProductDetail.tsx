@@ -339,7 +339,7 @@ export default function FullMealProductDetail() {
                 </span>
                 <span className="w-px h-4 shrink-0" style={{ backgroundColor: C.outlineVariant }} />
                 <div className="flex flex-col">
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-center gap-3 flex-wrap">
                     {hasDiscount && (
                       <span className="line-through" style={{ color: C.onSurfaceVariant, fontSize: 16 }}>
                         {formatCurrency(originalPrice!)}
@@ -348,6 +348,11 @@ export default function FullMealProductDetail() {
                     <span style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", fontWeight: 400, color: C.primary }}>
                       {formatCurrency(currentPrice!)}
                     </span>
+                    {discountPct > 0 && (
+                      <span style={{ backgroundColor: "#FFD700", color: "#1a1a1a", fontWeight: 800, fontSize: 12, padding: "3px 8px", borderRadius: 2, letterSpacing: "0.05em" }}>
+                        {discountPct}% OFF
+                      </span>
+                    )}
                   </div>
                   {gstRate && (
                     <span style={{ fontSize: 10, color: C.onSurfaceVariant, textTransform: "uppercase" }}>

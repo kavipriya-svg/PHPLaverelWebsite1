@@ -461,13 +461,18 @@ export default function DogParentClothingProductDetail() {
               )}
 
               {/* Price */}
-              <div className="flex items-baseline gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span style={{ ...PLAYFAIR, fontSize: 40, fontWeight: 700, color: C.primary }}>
                   {formatCurrency(currentPrice)}
                 </span>
                 {hasDiscount && (
                   <span style={{ fontSize: 20, color: C.onSurfaceVariant, textDecoration: "line-through" }}>
                     {formatCurrency(originalPrice)}
+                  </span>
+                )}
+                {discountPct > 0 && (
+                  <span style={{ backgroundColor: "#FFD700", color: "#1a1a1a", fontWeight: 800, fontSize: 12, padding: "3px 8px", borderRadius: 2, letterSpacing: "0.05em" }}>
+                    {discountPct}% OFF
                   </span>
                 )}
                 {gstRate && (

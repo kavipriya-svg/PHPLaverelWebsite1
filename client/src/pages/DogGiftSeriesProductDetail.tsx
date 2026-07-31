@@ -329,7 +329,7 @@ export default function DogGiftSeriesProductDetail() {
                 <span style={{ ...MONO, fontSize: 13, color: C.onSurface }}>
                   {product.sku ? `SKU: ${product.sku}` : `ID: ${product.id.slice(-6).toUpperCase()}`}
                 </span>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   {hasDiscount && (
                     <span style={{ color: C.onSurfaceVariant, fontSize: 16, textDecoration: "line-through" }}>
                       {formatCurrency(originalPrice!)}
@@ -338,6 +338,11 @@ export default function DogGiftSeriesProductDetail() {
                   <span style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", fontWeight: 400, color: C.primary }}>
                     {formatCurrency(currentPrice!)}
                   </span>
+                  {discountPct > 0 && (
+                    <span style={{ backgroundColor: "#FFD700", color: "#1a1a1a", fontWeight: 800, fontSize: 12, padding: "3px 8px", borderRadius: 2, letterSpacing: "0.05em" }}>
+                      {discountPct}% OFF
+                    </span>
+                  )}
                 </div>
                 {gstRate && <span style={{ fontSize: 10, color: C.onSurfaceVariant, textTransform: "uppercase" }}>+ {gstRate}% GST</span>}
               </div>
