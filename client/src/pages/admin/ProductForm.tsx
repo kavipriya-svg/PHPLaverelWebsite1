@@ -512,7 +512,7 @@ export default function ProductForm() {
     setVariants([
       ...variants,
       {
-        optionName: "Size",
+        optionName: isTreatsFamily ? "weight" : "Size",
         optionValue: "",
         sku: "",
         price: "",
@@ -1292,9 +1292,15 @@ export default function ProductForm() {
                             </Select>
                           </div>
                           <div>
-                            <label className="text-sm font-medium mb-1 block">Value</label>
+                            <label className="text-sm font-medium mb-1 block">
+                              {variant.optionName === "weight"
+                                ? isTreatsFamily ? "Value (g)" : "Value (kg)"
+                                : "Value"}
+                            </label>
                             <Input
-                              placeholder={variant.optionName === "weight" ? "e.g., 500g" : "e.g., Large"}
+                              placeholder={variant.optionName === "weight"
+                                ? isTreatsFamily ? "e.g., 100, 250, 500" : "e.g., 0.5, 1, 2"
+                                : "e.g., Large"}
                               value={variant.optionValue}
                               onChange={(e) => updateVariant(index, "optionValue", e.target.value)}
                               data-testid={`input-variant-value-${index}`}
