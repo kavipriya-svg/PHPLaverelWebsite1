@@ -27,12 +27,18 @@ const C = {
 // ─── Typography shortcuts ────────────────────────────────────────────
 const PLAYFAIR: React.CSSProperties = { fontFamily: "Playfair Display, serif" };
 const INTER: React.CSSProperties    = { fontFamily: "Inter, sans-serif" };
+const MONO: React.CSSProperties     = { fontFamily: "'Courier New', Courier, monospace" };
 const LABEL_CAPS: React.CSSProperties = {
   ...INTER, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, textTransform: "uppercase",
 };
 
 // ─── Hard-paper shadow ───────────────────────────────────────────────
 const HARD_SHADOW = "40px 40px 0px 0px rgba(1,45,29,0.15)";
+
+function specimenNo(id: string | number) {
+  const n = parseInt(String(id), 10);
+  return String(isNaN(n) ? 42 : (n % 900) + 42).padStart(3, "0");
+}
 
 // ─── Protein Specimens (static catalogue) ───────────────────────────
 const SPECIMENS = [
@@ -230,6 +236,7 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
       </div>
       <div className="flex flex-col justify-between py-4">
         <div>
+          <p style={{ ...MONO, fontSize: 10, color: C.onSurfaceVariant, letterSpacing: "0.12em", marginBottom: 6 }}>SPECIMEN NO. {specimenNo(product.id)}</p>
           <h3 style={{ ...PLAYFAIR, fontSize: 28, fontWeight: 600, color: C.onSurface, marginBottom: 8 }}>{product.name}</h3>
           <p style={{ ...LABEL_CAPS, color: C.secondary, marginBottom: 16 }}>{product.tag}</p>
           <div className="mb-6 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.primary}` }}>
