@@ -399,7 +399,7 @@ export default function DogTreatProductDetail() {
                   <div className="grid grid-cols-2 gap-4">
                     {variants.map((v: any) => {
                       const isSelected = String(v.id) === selectedVariantId;
-                      const vPrice = v.salePrice || v.price;
+                      const vPrice = v.salePrice || v.price || product.salePrice || product.price;
                       const label = v.optionValue || v.name || v.option_value || "Standard";
                       return (
                         <button key={v.id} data-testid={`variant-${v.id}`}
