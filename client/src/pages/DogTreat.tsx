@@ -260,32 +260,32 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
           onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"}
         />
         <div className="absolute top-3 left-3 px-2 py-1"
-          style={{ backgroundColor: "rgba(255,255,255,0.92)", backdropFilter: "blur(4px)", ...LABEL_CAPS, fontSize: 9, color: C.primary }}>
+          style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 10, color: C.white, letterSpacing: "0.12em" }}>
           Class: {product.taxClass}
         </div>
         {product.isOnSale && product.discountPct && product.discountPct > 0 && (
-          <div className="absolute top-3 right-3 flex flex-col items-center">
-            <div className="px-2 py-0.5" style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 9, color: C.white }}>SALE</div>
-            <div className="px-2 py-0.5" style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 9, color: C.white }}>-{product.discountPct}%</div>
+          <div className="absolute top-3 right-3 px-2 py-1"
+            style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 11, color: C.white, letterSpacing: "0.1em" }}>
+            Sale &minus;{product.discountPct}%
           </div>
         )}
       </div>
 
       {/* ── Content — right side, never behind image ── */}
-      <div className="flex flex-col p-5 overflow-y-auto" style={{ flex: 1, gap: 12 }}>
+      <div className="flex flex-col p-6 overflow-y-auto" style={{ flex: 1, gap: 16 }}>
         {/* Name + subtitle */}
         <div>
-          <h3 style={{ ...PLAYFAIR, fontSize: 20, fontWeight: 600, color: C.onSurface, lineHeight: 1.2, marginBottom: 3 }}>{product.name}</h3>
-          <p style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary }}>{product.tag}</p>
+          <h3 style={{ ...PLAYFAIR, fontSize: 26, fontWeight: 700, color: C.onSurface, lineHeight: 1.15, marginBottom: 5 }}>{product.name}</h3>
+          <p style={{ ...LABEL_CAPS, fontSize: 11, color: C.secondary, letterSpacing: "0.1em" }}>{product.tag}</p>
         </div>
 
         {/* Available weight variants */}
         {weightPills.length > 0 && (
           <div>
-            <p style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, marginBottom: 6 }}>Available Weights</p>
-            <div className="flex flex-wrap gap-1.5">
+            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8, letterSpacing: "0.12em" }}>Available Weights</p>
+            <div className="flex flex-wrap gap-2">
               {weightPills.map(w => (
-                <span key={w} style={{ ...LABEL_CAPS, fontSize: 9, color: C.primary, border: `1px solid ${C.outlineVariant}`, padding: "3px 8px" }}>{w}</span>
+                <span key={w} style={{ ...LABEL_CAPS, fontSize: 12, color: C.primary, border: `1.5px solid ${C.primary}`, padding: "5px 14px", letterSpacing: "0.08em" }}>{w}</span>
               ))}
             </div>
           </div>
@@ -294,10 +294,10 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
         {/* Discount coupons */}
         {relevantCoupons.length > 0 && (
           <div>
-            <p style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, marginBottom: 6 }}>Discount Offers</p>
-            <div className="flex flex-col gap-1.5">
+            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8, letterSpacing: "0.12em" }}>Discount Offers</p>
+            <div className="flex flex-col gap-2">
               {relevantCoupons.map(c => (
-                <span key={c.id} style={{ ...MONO, fontSize: 10, color: C.secondary, backgroundColor: `${C.secondary}14`, padding: "3px 8px", border: `1px dashed ${C.secondary}`, display: "inline-block" }}>
+                <span key={c.id} style={{ ...MONO, fontSize: 13, color: C.secondary, backgroundColor: `${C.secondary}14`, padding: "6px 12px", border: `1px dashed ${C.secondary}`, display: "inline-block" }}>
                   {c.code} — {c.discountType === "percentage" ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                 </span>
               ))}
@@ -309,17 +309,17 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
         <div className="flex flex-col gap-2 mt-auto pt-1">
           <button
             onClick={() => isReal && onAddToCart(product.id)}
-            className="w-full py-3 transition-all"
-            style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, fontSize: 10, opacity: isReal ? 1 : 0.6 }}
+            className="w-full py-3.5 transition-all"
+            style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, fontSize: 12, opacity: isReal ? 1 : 0.6, letterSpacing: "0.1em" }}
             data-testid={`btn-add-to-cart-${product.id}`}
           >
-            <ShoppingCart className="inline-block w-3 h-3 mr-1.5" />
+            <ShoppingCart className="inline-block w-3.5 h-3.5 mr-2" />
             Add to Cart — {fmt(product.price)}
           </button>
           <button
             onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
-            className="w-full py-3 transition-all"
-            style={{ border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS, fontSize: 10, opacity: product.slug ? 1 : 0.5 }}
+            className="w-full py-3.5 transition-all"
+            style={{ border: `1.5px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS, fontSize: 12, opacity: product.slug ? 1 : 0.5, letterSpacing: "0.1em" }}
             onMouseEnter={e => { if (product.slug) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; } }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
             data-testid={`btn-view-specimen-${product.id}`}
