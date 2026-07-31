@@ -236,7 +236,6 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
       </div>
       <div className="flex flex-col justify-between py-4">
         <div>
-          <p style={{ ...MONO, fontSize: 10, color: C.onSurfaceVariant, letterSpacing: "0.12em", marginBottom: 6 }}>SPECIMEN NO. {specimenNo(product.id)}</p>
           <h3 style={{ ...PLAYFAIR, fontSize: 28, fontWeight: 600, color: C.onSurface, marginBottom: 8 }}>{product.name}</h3>
           <p style={{ ...LABEL_CAPS, color: C.secondary, marginBottom: 16 }}>{product.tag}</p>
           <div className="mb-6 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.primary}` }}>
