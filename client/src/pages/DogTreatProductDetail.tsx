@@ -240,6 +240,7 @@ export default function DogTreatProductDetail() {
   const originalPrice = selectedVariant?.price || product.price;
   const hasDiscount = !!(currentPrice && originalPrice && parseFloat(String(currentPrice)) < parseFloat(String(originalPrice)));
   const discountPct = hasDiscount ? Math.round(((parseFloat(String(originalPrice)) - parseFloat(String(currentPrice))) / parseFloat(String(originalPrice))) * 100) : 0;
+  const maxStock = selectedVariant?.stock ?? product.stock ?? Infinity;
 
   const allCoupons = (couponsData?.coupons || []).filter((c) => c.isActive);
   const productCoupons = allCoupons.filter((c) => c.productId === product.id);
@@ -506,8 +507,9 @@ export default function DogTreatProductDetail() {
                   <input type="number" value={qty} readOnly data-testid="qty-input"
                     className="w-12 text-center bg-transparent focus:ring-0 border-none"
                     style={{ fontSize: 16, color: C.onSurface }} />
-                  <button data-testid="qty-plus" onClick={() => setQty((q) => q + 1)}
-                    className="px-4 h-full flex items-center transition-colors duration-150 hover:bg-gray-100"
+                  <button data-testid="qty-plus" onClick={() => setQty((q) => Math.min(q + 1, maxStock))}
+                    disabled={qty >= maxStock}
+                    className="px-4 h-full flex items-center transition-colors duration-150 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
                     style={{ fontSize: 18, color: C.primary }}>+</button>
                 </div>
                 <button data-testid="add-to-cart" onClick={handleAddToCart}

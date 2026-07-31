@@ -205,6 +205,7 @@ export default function DogGiftSeriesProductDetail() {
   const selectedVariant  = variants.find((v: any) => String(v.id) === selectedVariantId);
   const currentPrice     = selectedVariant?.salePrice || selectedVariant?.price || product.salePrice || product.price;
   const originalPrice    = selectedVariant?.price || product.price;
+  const maxStock         = selectedVariant?.stock ?? product.stock ?? Infinity;
   const hasDiscount      = !!(currentPrice && originalPrice && parseFloat(String(currentPrice)) < parseFloat(String(originalPrice)));
 
   const allCoupons      = (couponsData?.coupons || []).filter(c => c.isActive);
@@ -451,8 +452,9 @@ export default function DogGiftSeriesProductDetail() {
                 <input type="number" value={qty} readOnly data-testid="qty-input"
                   className="w-12 text-center bg-transparent border-none focus:ring-0"
                   style={{ fontSize: 16, color: C.onSurface }} />
-                <button data-testid="qty-plus" onClick={() => setQty(q => q + 1)}
-                  className="px-4 h-full flex items-center hover:bg-gray-100 transition-colors"
+                <button data-testid="qty-plus" onClick={() => setQty(q => Math.min(q + 1, maxStock))}
+                  disabled={qty >= maxStock}
+                  className="px-4 h-full flex items-center hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   style={{ fontSize: 20, color: C.primary }}>+</button>
               </div>
               <button data-testid="add-to-cart" onClick={handleAddToCart}
