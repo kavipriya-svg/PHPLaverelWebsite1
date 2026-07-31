@@ -541,7 +541,7 @@ export default function DogTreatProductDetail() {
               <div className="flex flex-col gap-2">
                 {/* Benefits */}
                 <div className="border-b py-3" style={{ borderColor: `${C.outlineVariant}4D` }}>
-                  <span style={{ ...LABEL_CAPS, color: C.primary }}>Benefits</span>
+                  <span style={{ ...PLAYFAIR, fontSize: 28, fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</span>
                   {benefitLines.length > 0 ? (
                     <ul className="mt-2 flex flex-col gap-1">
                       {benefitLines.map((line, i) => (
