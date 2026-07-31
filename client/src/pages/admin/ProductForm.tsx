@@ -70,6 +70,7 @@ const productSchema = z.object({
   brandId: z.string().optional(),
   categoryId: z.string().optional(),
   shortDesc: z.string().optional(),
+  benefits: z.string().optional(),
   longDesc: z.string().optional(),
   price: z.string().min(1, "Price is required"),
   salePrice: z.string().optional(),
@@ -208,6 +209,7 @@ export default function ProductForm() {
       brandId: "",
       categoryId: "",
       shortDesc: "",
+      benefits: "",
       longDesc: "",
       price: "",
       salePrice: "",
@@ -287,6 +289,7 @@ export default function ProductForm() {
         brandId: p.brandId || "",
         categoryId: p.categoryId || "",
         shortDesc: p.shortDesc || "",
+        benefits: (p as any).benefits || "",
         longDesc: p.longDesc || "",
         price: p.price as string,
         salePrice: p.salePrice as string || "",
@@ -747,6 +750,21 @@ export default function ProductForm() {
                       <FormControl>
                         <Textarea {...field} rows={2} data-testid="input-product-short-desc" />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="benefits"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Benefits</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} rows={4} placeholder={"e.g.\nSupports joint health\nBoosts immunity\nHigh protein, grain-free"} data-testid="input-product-benefits" />
+                      </FormControl>
+                      <FormDescription>Enter one benefit per line. These appear on the product page.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

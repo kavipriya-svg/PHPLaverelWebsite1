@@ -252,6 +252,8 @@ export default function DogTreatProductDetail() {
   const inWishlist = isInWishlist?.(product.id) ?? false;
 
   const shortDesc = (product as any).shortDesc as string | undefined;
+  const benefits = (product as any).benefits as string | undefined;
+  const benefitLines = benefits ? benefits.split("\n").map(l => l.trim()).filter(Boolean) : [];
   const longDesc = (product as any).longDesc || product.description;
   const longDescText = longDesc ? stripHtml(longDesc) : "";
   const weight = (product as any).weight;
@@ -537,15 +539,26 @@ export default function DogTreatProductDetail() {
 
               {/* Info rows */}
               <div className="flex flex-col gap-2">
-                {[
-                  ["Ancestral Sourcing", "100% traceable, ethically harvested"],
-                  ["Veterinary Approval", "Formulated with nutritional scientists"],
-                ].map(([label]) => (
-                  <div key={label} className="flex justify-between items-center py-3 cursor-pointer group border-b" style={{ borderColor: `${C.outlineVariant}4D` }}>
-                    <span style={{ ...LABEL_CAPS, color: C.primary }}>{label}</span>
-                    <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" style={{ color: C.primary }} />
-                  </div>
-                ))}
+                <div className="flex justify-between items-center py-3 group border-b" style={{ borderColor: `${C.outlineVariant}4D` }}>
+                  <span style={{ ...LABEL_CAPS, color: C.primary }}>Ancestral Sourcing</span>
+                  <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" style={{ color: C.primary }} />
+                </div>
+                {/* Benefits */}
+                <div className="border-b py-3" style={{ borderColor: `${C.outlineVariant}4D` }}>
+                  <span style={{ ...LABEL_CAPS, color: C.primary }}>Benefits</span>
+                  {benefitLines.length > 0 ? (
+                    <ul className="mt-2 flex flex-col gap-1">
+                      {benefitLines.map((line, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span style={{ color: C.secondary, fontWeight: 700, fontSize: 14 }}>—</span>
+                          <span style={{ fontSize: 13, color: C.onSurfaceVariant, lineHeight: 1.5 }}>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ fontSize: 13, color: C.onSurfaceVariant, marginTop: 6 }}>Formulated with nutritional scientists</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
