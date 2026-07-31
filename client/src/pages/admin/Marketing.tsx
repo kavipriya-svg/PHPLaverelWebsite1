@@ -27,8 +27,19 @@ import { useToast } from "@/hooks/use-toast";
 import type { User } from "@shared/schema";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+
+function exportToCSV(data: (string | number | undefined | null)[][], filename: string) {
+  const csvContent = data.map(row =>
+    row.map(cell => {
+      const val = cell === null || cell === undefined ? "" : String(cell);
+      return val.includes(",") || val.includes('"') || val.includes("\n")
+        ? `"${val.replace(/"/g, '""')}"` : val;
+    }).join(",")
+  ).join("\r\n");
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+  saveAs(blob, filename);
+}
 
 interface CustomerWithStats extends User {
   orderCount?: number;
@@ -139,23 +150,8 @@ export default function Marketing() {
       ]),
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Customers");
-
-    ws["!cols"] = [
-      { wch: 25 },
-      { wch: 30 },
-      { wch: 15 },
-      { wch: 10 },
-      { wch: 15 },
-      { wch: 15 },
-    ];
-
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    saveAs(blob, `marketing-${activeSegment}.xlsx`);
-    toast({ title: "Excel file downloaded successfully" });
+    exportToCSV(wsData, `marketing-${activeSegment}.csv`);
+    toast({ title: "CSV file downloaded successfully" });
   };
 
   const downloadTXT = () => {
