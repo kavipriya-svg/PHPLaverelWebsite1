@@ -152,7 +152,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
     label: "REWARD & TRAIN",
     title: "Treats",
     browseText: "BROWSE ALL TREATS",
-    browseHref: "/shop",
+    browseHref: "/treat",
     categorySlug: "wild-treats",
     featuredOnly: true,
     limit: 4,
