@@ -71,6 +71,8 @@ const productSchema = z.object({
   categoryId: z.string().optional(),
   shortDesc: z.string().optional(),
   benefits: z.string().optional(),
+  feedingGuidelines: z.string().optional(),
+  storageInstructions: z.string().optional(),
   longDesc: z.string().optional(),
   price: z.string().min(1, "Price is required"),
   salePrice: z.string().optional(),
@@ -210,6 +212,8 @@ export default function ProductForm() {
       categoryId: "",
       shortDesc: "",
       benefits: "",
+      feedingGuidelines: "",
+      storageInstructions: "",
       longDesc: "",
       price: "",
       salePrice: "",
@@ -290,6 +294,8 @@ export default function ProductForm() {
         categoryId: p.categoryId || "",
         shortDesc: p.shortDesc || "",
         benefits: (p as any).benefits || "",
+        feedingGuidelines: (p as any).feedingGuidelines || "",
+        storageInstructions: (p as any).storageInstructions || "",
         longDesc: p.longDesc || "",
         price: p.price as string,
         salePrice: p.salePrice as string || "",
@@ -765,6 +771,36 @@ export default function ProductForm() {
                         <Textarea {...field} rows={4} placeholder={"e.g.\nSupports joint health\nBoosts immunity\nHigh protein, grain-free"} data-testid="input-product-benefits" />
                       </FormControl>
                       <FormDescription>Enter one benefit per line. These appear on the product page.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="feedingGuidelines"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Feeding Guidelines</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} rows={4} placeholder={"e.g.\nPuppies (up to 6 months): 10g per kg body weight\nAdults: 5–8g per kg body weight\nSeniors: Adjust as per vet advice"} data-testid="input-product-feeding-guidelines" />
+                      </FormControl>
+                      <FormDescription>Enter feeding instructions. These appear on the product listing page.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="storageInstructions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Storage Instructions</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} rows={3} placeholder={"e.g.\nStore in a cool, dry place\nKeep away from direct sunlight\nReseal after opening"} data-testid="input-product-storage-instructions" />
+                      </FormControl>
+                      <FormDescription>Enter storage instructions. These appear on the product listing page.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

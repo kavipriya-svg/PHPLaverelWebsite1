@@ -208,6 +208,8 @@ interface EditorialProduct {
   isOnSale?: boolean;
   discountPct?: number;
   nutrients: { k: string; v: string }[];
+  feedingGuidelines?: string;
+  storageInstructions?: string;
 }
 
 function EditorialProductCard({ product, onAddToCart }: { product: EditorialProduct; onAddToCart: (id: string | number) => void }) {
@@ -238,7 +240,7 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
         <div>
           <h3 style={{ ...PLAYFAIR, fontSize: 28, fontWeight: 600, color: C.onSurface, marginBottom: 8 }}>{product.name}</h3>
           <p style={{ ...LABEL_CAPS, color: C.secondary, marginBottom: 16 }}>{product.tag}</p>
-          <div className="mb-6 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.primary}` }}>
+          <div className="mb-4 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.primary}` }}>
             <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8 }}>Biological Profile</p>
             <ul className="space-y-1">
               {product.nutrients.map(n => (
@@ -249,6 +251,22 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
               ))}
             </ul>
           </div>
+          {product.feedingGuidelines && (
+            <div className="mb-4 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.secondary}` }}>
+              <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 6 }}>Feeding Guidelines</p>
+              {product.feedingGuidelines.split("\n").filter(Boolean).map((line, i) => (
+                <p key={i} style={{ fontSize: 11, color: C.onSurfaceVariant, lineHeight: 1.6, ...INTER }}>{line}</p>
+              ))}
+            </div>
+          )}
+          {product.storageInstructions && (
+            <div className="mb-4 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.outlineVariant}` }}>
+              <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 6 }}>Storage Instructions</p>
+              {product.storageInstructions.split("\n").filter(Boolean).map((line, i) => (
+                <p key={i} style={{ fontSize: 11, color: C.onSurfaceVariant, lineHeight: 1.6, ...INTER }}>{line}</p>
+              ))}
+            </div>
+          )}
         </div>
         <div className="space-y-3">
           {typeof product.id === 'string' || (product.id as number) > 0 ? (
@@ -390,6 +408,8 @@ export default function DogTreat() {
         { k: "FAT",      v: p.fat      ? `${p.fat}g/100g`      : "Low"  },
         { k: "MOISTURE", v: p.moisture ? `${p.moisture}%`      : "<12%" },
       ],
+      feedingGuidelines: p.feedingGuidelines || undefined,
+      storageInstructions: p.storageInstructions || undefined,
     };
   };
 

@@ -226,6 +226,8 @@ export const products = pgTable("products", {
   reviewCount: integer("review_count").default(0),
   gstRate: decimal("gst_rate", { precision: 5, scale: 2 }).default("18"), // GST percentage for this product
   benefits: text("benefits"),
+  feedingGuidelines: text("feeding_guidelines"),
+  storageInstructions: text("storage_instructions"),
   nutritionData: jsonb("nutrition_data"),
   metaTitle: varchar("meta_title"),
   metaDescription: text("meta_description"),
