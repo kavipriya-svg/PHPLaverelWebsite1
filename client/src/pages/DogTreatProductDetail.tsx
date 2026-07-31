@@ -239,6 +239,7 @@ export default function DogTreatProductDetail() {
   const currentPrice = selectedVariant?.salePrice || selectedVariant?.price || product.salePrice || product.price;
   const originalPrice = selectedVariant?.price || product.price;
   const hasDiscount = !!(currentPrice && originalPrice && parseFloat(String(currentPrice)) < parseFloat(String(originalPrice)));
+  const discountPct = hasDiscount ? Math.round(((parseFloat(String(originalPrice)) - parseFloat(String(currentPrice))) / parseFloat(String(originalPrice))) * 100) : 0;
 
   const allCoupons = (couponsData?.coupons || []).filter((c) => c.isActive);
   const productCoupons = allCoupons.filter((c) => c.productId === product.id);
@@ -324,7 +325,12 @@ export default function DogTreatProductDetail() {
               <div className="relative overflow-hidden group" style={{ aspectRatio: "4/5", ...HARD_SHADOW }}>
                 <img src={allImgs[activeImg] || ""} alt={product.title} className="w-full h-full object-cover" loading="lazy" />
                 {hasDiscount && (
-                  <div className="absolute top-5 right-5 px-3 py-1" style={{ backgroundColor: C.secondary, color: "#fff", ...LABEL_CAPS }}>SALE</div>
+                  <div className="absolute top-5 right-5 flex flex-col items-center">
+                    <div className="px-3 py-1" style={{ backgroundColor: C.secondary, color: "#fff", ...LABEL_CAPS }}>SALE</div>
+                    {discountPct > 0 && (
+                      <div className="px-3 py-1" style={{ backgroundColor: C.primary, color: "#fff", ...LABEL_CAPS }}>-{discountPct}%</div>
+                    )}
+                  </div>
                 )}
                 {(product as any).isNewArrival ? (
                   <div className="absolute bottom-6 left-6 px-4 py-1" style={{ backgroundColor: C.primary, color: "#fff", ...LABEL_CAPS, letterSpacing: "0.2em" }}>NEW ARRIVAL</div>
