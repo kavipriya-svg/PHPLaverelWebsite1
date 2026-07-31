@@ -193,6 +193,7 @@ export default function FullMealProductDetail() {
   const originalPrice = selectedVariant?.price || product.price;
   const maxStock = selectedVariant?.stock ?? product.stock ?? Infinity;
   const hasDiscount = !!(currentPrice && originalPrice && parseFloat(String(currentPrice)) < parseFloat(String(originalPrice)));
+  const discountPct = hasDiscount ? Math.round(((parseFloat(String(originalPrice)) - parseFloat(String(currentPrice))) / parseFloat(String(originalPrice))) * 100) : 0;
 
   const allCoupons = (couponsData?.coupons || []).filter((c) => c.isActive);
   const productCoupons = allCoupons.filter((c) => c.productId === product.id);
@@ -531,9 +532,11 @@ export default function FullMealProductDetail() {
                   onMouseOver={(e) => (e.currentTarget.style.backgroundColor = C.primaryContainer)}
                   onMouseOut={(e) => (e.currentTarget.style.backgroundColor = C.primary)}>
                   <span>Add to Cart</span>
-                  {qty > 1 && currentPrice && (
+                  {currentPrice && (qty > 1 || discountPct > 0) && (
                     <span style={{ fontSize: 11, letterSpacing: "0.05em", opacity: 0.85, fontWeight: 400, marginTop: 2 }}>
-                      {qty} × {formatCurrency(parseFloat(String(currentPrice)))} = {formatCurrency(qty * parseFloat(String(currentPrice)))}
+                      {qty > 1 ? `${qty} × ${formatCurrency(parseFloat(String(currentPrice)))} = ${formatCurrency(qty * parseFloat(String(currentPrice)))}` : ""}
+                      {qty > 1 && discountPct > 0 ? "  ·  " : ""}
+                      {discountPct > 0 ? `${discountPct}% off` : ""}
                     </span>
                   )}
                 </button>

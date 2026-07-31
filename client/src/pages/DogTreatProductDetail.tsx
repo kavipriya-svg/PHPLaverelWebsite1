@@ -518,9 +518,11 @@ export default function DogTreatProductDetail() {
                   onMouseOver={(e) => (e.currentTarget.style.backgroundColor = C.primaryContainer)}
                   onMouseOut={(e) => (e.currentTarget.style.backgroundColor = C.primary)}>
                   <span>Add to Cart</span>
-                  {qty > 1 && currentPrice && (
+                  {currentPrice && (qty > 1 || discountPct > 0) && (
                     <span style={{ fontSize: 11, letterSpacing: "0.05em", opacity: 0.85, fontWeight: 400, marginTop: 2 }}>
-                      {qty} × {formatCurrency(parseFloat(String(currentPrice)))} = {formatCurrency(qty * parseFloat(String(currentPrice)))}
+                      {qty > 1 ? `${qty} × ${formatCurrency(parseFloat(String(currentPrice)))} = ${formatCurrency(qty * parseFloat(String(currentPrice)))}` : ""}
+                      {qty > 1 && discountPct > 0 ? "  ·  " : ""}
+                      {discountPct > 0 ? `${discountPct}% off` : ""}
                     </span>
                   )}
                 </button>

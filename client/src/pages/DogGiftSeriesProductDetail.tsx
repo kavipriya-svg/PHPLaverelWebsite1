@@ -207,6 +207,7 @@ export default function DogGiftSeriesProductDetail() {
   const originalPrice    = selectedVariant?.price || product.price;
   const maxStock         = selectedVariant?.stock ?? product.stock ?? Infinity;
   const hasDiscount      = !!(currentPrice && originalPrice && parseFloat(String(currentPrice)) < parseFloat(String(originalPrice)));
+  const discountPct      = hasDiscount ? Math.round(((parseFloat(String(originalPrice)) - parseFloat(String(currentPrice))) / parseFloat(String(originalPrice))) * 100) : 0;
 
   const allCoupons      = (couponsData?.coupons || []).filter(c => c.isActive);
   const productCoupons  = allCoupons.filter(c => c.productId === product.id);
@@ -464,9 +465,11 @@ export default function DogGiftSeriesProductDetail() {
                 onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}><ShoppingCart size={16} /> Add to Cart</div>
-                  {qty > 1 && currentPrice && (
+                  {currentPrice && (qty > 1 || discountPct > 0) && (
                     <span style={{ fontSize: 11, letterSpacing: "0.05em", opacity: 0.85, fontWeight: 400, marginTop: 2 }}>
-                      {qty} × {formatCurrency(parseFloat(String(currentPrice)))} = {formatCurrency(qty * parseFloat(String(currentPrice)))}
+                      {qty > 1 ? `${qty} × ${formatCurrency(parseFloat(String(currentPrice)))} = ${formatCurrency(qty * parseFloat(String(currentPrice)))}` : ""}
+                      {qty > 1 && discountPct > 0 ? "  ·  " : ""}
+                      {discountPct > 0 ? `${discountPct}% off` : ""}
                     </span>
                   )}
                 </div>
