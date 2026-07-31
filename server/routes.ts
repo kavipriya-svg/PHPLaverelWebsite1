@@ -3543,9 +3543,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (variants !== undefined) {
         // Delete existing variants
         await storage.deleteProductVariants(req.params.id);
-        // Add new variants
+        // Add new variants (skip entries missing required fields)
         for (const variant of variants) {
-          await storage.addProductVariant({ productId: req.params.id, ...variant });
+          if (!variant.optionName || !variant.optionValue) continue;
+          try {
+            await storage.addProductVariant({ productId: req.params.id, ...variant });
+          } catch (variantErr) {
+            console.error("Failed to save variant:", variant, variantErr);
+          }
         }
       }
       
