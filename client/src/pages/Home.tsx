@@ -757,7 +757,7 @@ function TreatsSection({
             <div className="group cursor-pointer">
               <div
                 className="relative overflow-hidden mb-4"
-                style={{ aspectRatio: "1/1", backgroundColor: C.surfaceContainerLow }}
+                style={{ aspectRatio: "4/5", backgroundColor: C.surfaceContainerLow }}
               >
                 <img
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
