@@ -174,14 +174,9 @@ export default function DogTreatProductDetail() {
     onError: () => toast({ title: "Error", description: "Could not submit.", variant: "destructive" }),
   });
 
-  // ── Auto-select variant matching base product weight; fallback to first variant ──
+  // ── Reset on product change — base product is default (no variant pre-selected) ──
   useEffect(() => {
-    const variants = product?.variants || [];
-    if (variants.length > 0) {
-      const baseWeight = product?.weight ? String(parseFloat(product.weight) >= 10 ? parseFloat(product.weight) : parseFloat(product.weight) * 1000) : null;
-      const match = baseWeight ? variants.find((v: any) => String(v.optionValue) === baseWeight) : null;
-      setSelectedVariantId(String((match || variants[0]).id));
-    }
+    setSelectedVariantId(undefined);
     setActiveImg(0);
   }, [product?.id]);
 
@@ -404,46 +399,57 @@ export default function DogTreatProductDetail() {
                     <label style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, display: "block" }}>
                       Select {optName.charAt(0).toUpperCase() + optName.slice(1)} {unitLabel}
                     </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      {variants.length > 0 ? (
-                        variants.map((v: any) => {
-                          const isSelected = String(v.id) === selectedVariantId;
-                          const vPrice = v.salePrice || v.price || product.salePrice || product.price;
-                          const rawLabel = v.optionValue || v.name || v.option_value || "Option";
-                          const displayLabel = isWeightOpt ? `${rawLabel}g` : rawLabel;
-                          return (
-                            <button key={v.id} data-testid={`variant-${v.id}`}
-                              onClick={() => setSelectedVariantId(String(v.id))}
-                              className="p-4 text-left flex justify-between items-center transition-colors duration-200"
-                              style={{ border: isSelected ? `2px solid ${C.primary}` : `1px solid ${C.outlineVariant}`, backgroundColor: isSelected ? `${C.primary}08` : "transparent" }}>
-                              <span style={{ fontWeight: 700, color: isSelected ? C.primary : C.onSurface }}>{displayLabel}</span>
-                              <div className="text-right">
-                                {v.salePrice && v.price && parseFloat(String(v.salePrice)) < parseFloat(String(v.price)) && (
-                                  <span style={{ ...MONO, fontSize: 10, color: C.outline, textDecoration: "line-through", display: "block" }}>{formatCurrency(v.price)}</span>
-                                )}
-                                <span style={{ ...MONO, fontSize: 12, color: isSelected ? C.primary : C.onSurfaceVariant }}>{formatCurrency(vPrice)}</span>
-                              </div>
-                            </button>
-                          );
-                        })
-                      ) : (
-                        /* No variants — show base product weight/price as single option */
-                        <button
-                          data-testid="variant-base"
-                          className="p-4 text-left flex justify-between items-center"
-                          style={{ border: `2px solid ${C.primary}`, backgroundColor: `${C.primary}08` }}>
-                          <span style={{ fontWeight: 700, color: C.primary }}>
-                            {weight ? `${parseFloat(weight) >= 10 ? parseFloat(weight) : parseFloat(weight) * 1000}g` : "Standard"}
-                          </span>
-                          <div className="text-right">
-                            {product.salePrice && product.price && parseFloat(String(product.salePrice)) < parseFloat(String(product.price)) && (
-                              <span style={{ ...MONO, fontSize: 10, color: C.outline, textDecoration: "line-through", display: "block" }}>{formatCurrency(product.price)}</span>
-                            )}
-                            <span style={{ ...MONO, fontSize: 12, color: C.primary }}>{formatCurrency(product.salePrice || product.price)}</span>
-                          </div>
-                        </button>
-                      )}
-                    </div>
+                    {(() => {
+                      // Weight label for base product
+                      const baseWeightGrams = weight
+                        ? (parseFloat(weight) >= 10 ? parseFloat(weight) : parseFloat(weight) * 1000)
+                        : null;
+                      const baseWeightLabel = baseWeightGrams ? `${baseWeightGrams}g` : "Standard";
+                      const baseIsSelected = !selectedVariantId;
+                      // Variants that differ from the base weight (avoid showing duplicate)
+                      const filteredVariants = variants.filter((v: any) =>
+                        String(v.optionValue) !== String(baseWeightGrams)
+                      );
+                      return (
+                        <div className="grid grid-cols-2 gap-4">
+                          {/* Base product — always first, selected by default */}
+                          <button
+                            data-testid="variant-base"
+                            onClick={() => setSelectedVariantId(undefined)}
+                            className="p-4 text-left flex justify-between items-center transition-colors duration-200"
+                            style={{ border: baseIsSelected ? `2px solid ${C.primary}` : `1px solid ${C.outlineVariant}`, backgroundColor: baseIsSelected ? `${C.primary}08` : "transparent" }}>
+                            <span style={{ fontWeight: 700, color: baseIsSelected ? C.primary : C.onSurface }}>{baseWeightLabel}</span>
+                            <div className="text-right">
+                              {product.salePrice && product.price && parseFloat(String(product.salePrice)) < parseFloat(String(product.price)) && (
+                                <span style={{ ...MONO, fontSize: 10, color: C.outline, textDecoration: "line-through", display: "block" }}>{formatCurrency(product.price)}</span>
+                              )}
+                              <span style={{ ...MONO, fontSize: 12, color: baseIsSelected ? C.primary : C.onSurfaceVariant }}>{formatCurrency(product.salePrice || product.price)}</span>
+                            </div>
+                          </button>
+                          {/* Additional variants (excluding any that duplicate the base weight) */}
+                          {filteredVariants.map((v: any) => {
+                            const isSelected = String(v.id) === selectedVariantId;
+                            const vPrice = v.salePrice || v.price || product.salePrice || product.price;
+                            const rawLabel = v.optionValue || v.name || v.option_value || "Option";
+                            const displayLabel = isWeightOpt ? `${rawLabel}g` : rawLabel;
+                            return (
+                              <button key={v.id} data-testid={`variant-${v.id}`}
+                                onClick={() => setSelectedVariantId(String(v.id))}
+                                className="p-4 text-left flex justify-between items-center transition-colors duration-200"
+                                style={{ border: isSelected ? `2px solid ${C.primary}` : `1px solid ${C.outlineVariant}`, backgroundColor: isSelected ? `${C.primary}08` : "transparent" }}>
+                                <span style={{ fontWeight: 700, color: isSelected ? C.primary : C.onSurface }}>{displayLabel}</span>
+                                <div className="text-right">
+                                  {v.salePrice && v.price && parseFloat(String(v.salePrice)) < parseFloat(String(v.price)) && (
+                                    <span style={{ ...MONO, fontSize: 10, color: C.outline, textDecoration: "line-through", display: "block" }}>{formatCurrency(v.price)}</span>
+                                  )}
+                                  <span style={{ ...MONO, fontSize: 12, color: isSelected ? C.primary : C.onSurfaceVariant }}>{formatCurrency(vPrice)}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })()}
