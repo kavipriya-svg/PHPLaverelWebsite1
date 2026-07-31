@@ -731,40 +731,38 @@ export default function DogTreatProductDetail() {
 
         {/* ════ FEEDING GUIDELINES & STORAGE ════ */}
         {((product as any).feedingGuidelines || (product as any).storageInstructions) && (
-          <section className="py-16" style={{ backgroundColor: C.surface }}>
-            <div className="px-5 md:px-16 max-w-7xl mx-auto">
-              <div className="mb-8">
-                <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>USAGE GUIDE</span>
-                <h2 style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>Feeding &amp; Storage</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                {(product as any).feedingGuidelines && (
-                  <div>
-                    <h3 className="pb-3 mb-5 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Feeding Guidelines</h3>
-                    <div className="space-y-3">
-                      {String((product as any).feedingGuidelines).split("\n").filter(Boolean).map((line: string, i: number) => (
-                        <div key={i} className="flex gap-3 items-start">
-                          <div className="mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: C.primary }} />
-                          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: C.onSurfaceVariant, lineHeight: 1.7 }}>{line}</p>
-                        </div>
-                      ))}
-                    </div>
+          <section className="py-20 px-5 md:px-16" style={{ backgroundColor: C.surface }}>
+            <div className="mb-10">
+              <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>USAGE GUIDE</span>
+              <h2 style={{ ...PLAYFAIR, fontSize: 48, lineHeight: "56px", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Feeding &amp; Storage</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+              {(product as any).feedingGuidelines && (
+                <div>
+                  <h3 className="pb-3 mb-6 border-b" style={{ ...LABEL_CAPS, fontSize: 13, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Feeding Guidelines</h3>
+                  <div className="space-y-5">
+                    {String((product as any).feedingGuidelines).split("\n").filter(Boolean).map((line: string, i: number) => (
+                      <div key={i} className="flex gap-4 items-start">
+                        <div className="mt-2 shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: C.primary }} />
+                        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, lineHeight: "28px", fontWeight: 300, color: C.onSurfaceVariant }}>{line}</p>
+                      </div>
+                    ))}
                   </div>
-                )}
-                {(product as any).storageInstructions && (
-                  <div>
-                    <h3 className="pb-3 mb-5 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Storage Instructions</h3>
-                    <div className="space-y-3">
-                      {String((product as any).storageInstructions).split("\n").filter(Boolean).map((line: string, i: number) => (
-                        <div key={i} className="flex gap-3 items-start">
-                          <div className="mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: C.secondary }} />
-                          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: C.onSurfaceVariant, lineHeight: 1.7 }}>{line}</p>
-                        </div>
-                      ))}
-                    </div>
+                </div>
+              )}
+              {(product as any).storageInstructions && (
+                <div>
+                  <h3 className="pb-3 mb-6 border-b" style={{ ...LABEL_CAPS, fontSize: 13, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Storage Instructions</h3>
+                  <div className="space-y-5">
+                    {String((product as any).storageInstructions).split("\n").filter(Boolean).map((line: string, i: number) => (
+                      <div key={i} className="flex gap-4 items-start">
+                        <div className="mt-2 shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: C.secondary }} />
+                        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, lineHeight: "28px", fontWeight: 300, color: C.onSurfaceVariant }}>{line}</p>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </section>
         )}
