@@ -539,10 +539,6 @@ export default function DogTreatProductDetail() {
 
               {/* Info rows */}
               <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center py-3 group border-b" style={{ borderColor: `${C.outlineVariant}4D` }}>
-                  <span style={{ ...LABEL_CAPS, color: C.primary }}>Ancestral Sourcing</span>
-                  <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" style={{ color: C.primary }} />
-                </div>
                 {/* Benefits */}
                 <div className="border-b py-3" style={{ borderColor: `${C.outlineVariant}4D` }}>
                   <span style={{ ...LABEL_CAPS, color: C.primary }}>Benefits</span>
