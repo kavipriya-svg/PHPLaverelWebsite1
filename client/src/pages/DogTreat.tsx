@@ -199,6 +199,8 @@ interface EditorialProduct {
   img: string;
   price: number;
   slug?: string;
+  isOnSale?: boolean;
+  discountPct?: number;
   nutrients: { k: string; v: string }[];
 }
 
@@ -215,6 +217,16 @@ function EditorialProductCard({ product, onAddToCart }: { product: EditorialProd
           style={{ backgroundColor: "rgba(255,255,255,0.9)", backdropFilter: "blur(4px)", ...LABEL_CAPS, fontSize: 10, color: C.primary }}>
           Class: {product.taxClass}
         </div>
+        {product.isOnSale && product.discountPct && product.discountPct > 0 && (
+          <div className="absolute top-4 right-4 flex flex-col items-center">
+            <div className="px-2 py-1" style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 10, color: C.white }}>
+              SALE
+            </div>
+            <div className="px-2 py-1" style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 10, color: C.white }}>
+              -{product.discountPct}%
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex flex-col justify-between py-4">
         <div>
@@ -353,14 +365,20 @@ export default function DogTreat() {
   const mapProduct = (p: any, idx: number): EditorialProduct => {
     const imgs = p.images ?? [];
     const img  = imgs.find((i: any) => i.isPrimary)?.url ?? imgs[0]?.url ?? FALLBACK_PRODUCTS[idx % 4].img;
+    const originalPrice = Number(p.price);
+    const salePrice = p.salePrice ? Number(p.salePrice) : null;
+    const isOnSale = !!(p.isOnSale && salePrice && salePrice < originalPrice);
+    const discountPct = isOnSale ? Math.round(((originalPrice - salePrice!) / originalPrice) * 100) : 0;
     return {
       id:        p.id,
       name:      p.title ?? p.name,
       tag:       p.shortDesc ?? p.category?.name ?? "Single-source protein",
       taxClass:  p.category?.name ?? "Specimen",
       img,
-      price:     Number(p.salePrice || p.price) * 100,
+      price:     (salePrice && isOnSale ? salePrice : originalPrice) * 100,
       slug:      p.slug,
+      isOnSale,
+      discountPct,
       nutrients: [
         { k: "PROTEIN",  v: p.protein  ? `${p.protein}g/100g`  : "High" },
         { k: "FAT",      v: p.fat      ? `${p.fat}g/100g`      : "Low"  },
