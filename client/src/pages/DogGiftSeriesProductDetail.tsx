@@ -462,8 +462,13 @@ export default function DogGiftSeriesProductDetail() {
                 style={{ height: 56, backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, letterSpacing: "0.18em" }}
                 onMouseOver={e => (e.currentTarget.style.backgroundColor = C.primaryContainer)}
                 onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  <ShoppingCart size={16} /> Add to Cart
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}><ShoppingCart size={16} /> Add to Cart</div>
+                  {qty > 1 && currentPrice && (
+                    <span style={{ fontSize: 11, letterSpacing: "0.05em", opacity: 0.85, fontWeight: 400, marginTop: 2 }}>
+                      {qty} × {formatCurrency(parseFloat(String(currentPrice)))} = {formatCurrency(qty * parseFloat(String(currentPrice)))}
+                    </span>
+                  )}
                 </div>
               </button>
               <button data-testid="wishlist-btn" onClick={handleWishlist} disabled={wishlistPending}

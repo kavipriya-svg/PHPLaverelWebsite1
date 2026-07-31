@@ -557,11 +557,16 @@ export default function DogParentClothingProductDetail() {
                     style={{ fontSize: 18, color: C.primary }}>+</button>
                 </div>
                 <button data-testid="add-to-cart" onClick={handleAddToCart}
-                  className="flex-grow font-bold uppercase transition-all active:scale-95"
+                  className="flex-grow font-bold uppercase transition-all active:scale-95 flex flex-col items-center justify-center"
                   style={{ height: 56, backgroundColor: C.primary, color: "#fff", letterSpacing: "0.18em", fontSize: 13 }}
                   onMouseOver={e => (e.currentTarget.style.backgroundColor = C.primaryContainer)}
                   onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}>
-                  Add to Cart
+                  <span>Add to Cart</span>
+                  {qty > 1 && currentPrice && (
+                    <span style={{ fontSize: 11, letterSpacing: "0.05em", opacity: 0.85, fontWeight: 400, marginTop: 2 }}>
+                      {qty} × {formatCurrency(parseFloat(String(currentPrice)))} = {formatCurrency(qty * parseFloat(String(currentPrice)))}
+                    </span>
+                  )}
                 </button>
                 <button data-testid="wishlist-btn" onClick={handleWishlist} disabled={wishlistPending}
                   className="flex items-center justify-center transition-colors"
