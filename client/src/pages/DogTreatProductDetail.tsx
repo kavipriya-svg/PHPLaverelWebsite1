@@ -359,8 +359,8 @@ export default function DogTreatProductDetail() {
                 {product.title}
               </h1>
               <div className="flex flex-wrap items-center gap-4 py-3 border-y" style={{ borderColor: `${C.outlineVariant}33` }}>
-                {product.sku && (
-                  <span style={{ ...MONO, fontSize: 14, color: C.onSurface }}>SKU: {product.sku}</span>
+                {(selectedVariant?.sku || product.sku) && (
+                  <span style={{ ...MONO, fontSize: 14, color: C.onSurface }}>SKU: {selectedVariant?.sku || product.sku}</span>
                 )}
                 <span className="w-px h-4 shrink-0" style={{ backgroundColor: C.outlineVariant }} />
                 <div className="flex flex-col">
@@ -468,10 +468,10 @@ export default function DogTreatProductDetail() {
                     <Truck className="w-4 h-4" style={{ color: C.primary }} />
                     <span>{deliveryDate ? `Delivery by ${deliveryDate}` : freeShipping ? (shippingText || "Free Shipping") : (shippingText || "Standard Shipping")}</span>
                   </div>
-                  {product.stock !== undefined && product.stock !== null && product.stock > 0 && (
-                    <div style={{ ...MONO, fontSize: 12, color: C.secondary }}>{product.stock} units available</div>
+                  {maxStock !== Infinity && maxStock > 0 && (
+                    <div style={{ ...MONO, fontSize: 12, color: C.secondary }}>{maxStock} units available</div>
                   )}
-                  {product.stock === 0 && <div style={{ ...MONO, fontSize: 12, color: "#ba1a1a" }}>Out of stock</div>}
+                  {maxStock === 0 && <div style={{ ...MONO, fontSize: 12, color: "#ba1a1a" }}>Out of stock</div>}
                 </div>
               </div>
 
