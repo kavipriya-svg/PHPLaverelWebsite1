@@ -201,10 +201,13 @@ interface EditorialProduct {
   id: string | number;
   name: string;
   tag: string;
+  shortDesc?: string;
   taxClass: string;
   img: string;
   price: number;
+  originalPrice?: number;
   slug?: string;
+  weight?: string | number;
   isOnSale?: boolean;
   discountPct?: number;
   nutrients: { k: string; v: string }[];
@@ -212,77 +215,119 @@ interface EditorialProduct {
   storageInstructions?: string;
 }
 
-function EditorialProductCard({ product, onAddToCart }: { product: EditorialProduct; onAddToCart: (id: string | number) => void }) {
+function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
+  product: EditorialProduct;
+  onAddToCart: (id: string | number) => void;
+  allCoupons?: any[];
+}) {
   const [, navigate] = useLocation();
+
+  const { data: variantsRaw = [] } = useQuery<any[]>({
+    queryKey: ["/api/products", product.slug, "variants"],
+    queryFn: () => product.slug
+      ? fetch(`/api/products/${product.slug}/variants`).then(r => r.json()).then(d => Array.isArray(d) ? d : (d.variants ?? []))
+      : Promise.resolve([]),
+    enabled: !!product.slug,
+  });
+
+  const baseWeightGrams = product.weight
+    ? (parseFloat(String(product.weight)) >= 10 ? parseFloat(String(product.weight)) : parseFloat(String(product.weight)) * 1000)
+    : null;
+  const weightPills: string[] = [];
+  if (baseWeightGrams) weightPills.push(`${baseWeightGrams}g`);
+  for (const v of variantsRaw) {
+    if (weightPills.length >= 4) break;
+    const val = v.optionValue || v.option_value;
+    if (val && !weightPills.includes(`${val}g`)) weightPills.push(`${val}g`);
+  }
+
+  const relevantCoupons = allCoupons
+    .filter(c => {
+      if (!c.isActive) return false;
+      if (c.applicableTo === "specific" && Array.isArray(c.productIds) && !c.productIds.includes(String(product.id))) return false;
+      return true;
+    })
+    .slice(0, 2);
+
+  const isReal = typeof product.id === "string" || (product.id as number) > 0;
+
   return (
-    <div className="grid items-stretch group" style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 24 }}>
-      <div className="overflow-hidden relative" style={{ aspectRatio: "4/5", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}>
-        <img src={product.img} alt={product.name} loading="lazy" className="w-full h-full object-cover"
+    <div style={{ backgroundColor: C.white, boxShadow: HARD_SHADOW, display: "flex", flexDirection: "column" }}>
+      {/* ── Image ── */}
+      <div className="overflow-hidden relative" style={{ aspectRatio: "3/2" }}>
+        <img
+          src={product.img}
+          alt={product.name}
+          loading="lazy"
+          className="w-full h-full object-cover"
           style={{ transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1)" }}
-          onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1.1)"}
-          onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"} />
+          onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1.07)"}
+          onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"}
+        />
         <div className="absolute top-4 left-4 px-3 py-1"
-          style={{ backgroundColor: "rgba(255,255,255,0.9)", backdropFilter: "blur(4px)", ...LABEL_CAPS, fontSize: 10, color: C.primary }}>
+          style={{ backgroundColor: "rgba(255,255,255,0.92)", backdropFilter: "blur(4px)", ...LABEL_CAPS, fontSize: 10, color: C.primary }}>
           Class: {product.taxClass}
         </div>
         {product.isOnSale && product.discountPct && product.discountPct > 0 && (
           <div className="absolute top-4 right-4 flex flex-col items-center">
-            <div className="px-2 py-1" style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 10, color: C.white }}>
-              SALE
-            </div>
-            <div className="px-2 py-1" style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 10, color: C.white }}>
-              -{product.discountPct}%
-            </div>
+            <div className="px-2 py-1" style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 10, color: C.white }}>SALE</div>
+            <div className="px-2 py-1" style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 10, color: C.white }}>-{product.discountPct}%</div>
           </div>
         )}
       </div>
-      <div className="flex flex-col justify-between py-4">
+
+      {/* ── Content (always below image, never behind it) ── */}
+      <div className="flex flex-col gap-4 p-6" style={{ flex: 1 }}>
+        {/* Name + subtitle */}
         <div>
-          <h3 style={{ ...PLAYFAIR, fontSize: 28, fontWeight: 600, color: C.onSurface, marginBottom: 8 }}>{product.name}</h3>
-          <p style={{ ...LABEL_CAPS, color: C.secondary, marginBottom: 16 }}>{product.tag}</p>
-          <div className="mb-4 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.primary}` }}>
-            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8 }}>Biological Profile</p>
-            <ul className="space-y-1">
-              {product.nutrients.map(n => (
-                <li key={n.k} className="flex justify-between" style={{ fontSize: 11, fontWeight: 700, ...INTER }}>
-                  <span style={{ color: C.onSurfaceVariant }}>{n.k}</span>
-                  <span style={{ color: C.onSurface }}>{n.v}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {product.feedingGuidelines && (
-            <div className="mb-4 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.secondary}` }}>
-              <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 6 }}>Feeding Guidelines</p>
-              {product.feedingGuidelines.split("\n").filter(Boolean).map((line, i) => (
-                <p key={i} style={{ fontSize: 11, color: C.onSurfaceVariant, lineHeight: 1.6, ...INTER }}>{line}</p>
-              ))}
-            </div>
-          )}
-          {product.storageInstructions && (
-            <div className="mb-4 p-4" style={{ backgroundColor: C.surfaceContainer, borderLeft: `2px solid ${C.outlineVariant}` }}>
-              <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 6 }}>Storage Instructions</p>
-              {product.storageInstructions.split("\n").filter(Boolean).map((line, i) => (
-                <p key={i} style={{ fontSize: 11, color: C.onSurfaceVariant, lineHeight: 1.6, ...INTER }}>{line}</p>
-              ))}
-            </div>
-          )}
+          <h3 style={{ ...PLAYFAIR, fontSize: 26, fontWeight: 600, color: C.onSurface, lineHeight: 1.2, marginBottom: 4 }}>{product.name}</h3>
+          <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.secondary }}>{product.tag}</p>
         </div>
-        <div className="space-y-3">
-          {typeof product.id === 'string' || (product.id as number) > 0 ? (
-            <button onClick={() => onAddToCart(product.id)}
-              className="w-full py-4 transition-all"
-              style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS }}
-              data-testid={`btn-add-to-cart-${product.id}`}>
-              <ShoppingCart className="inline-block w-4 h-4 mr-2" />
-              Add to Cart — {fmt(product.price)}
-            </button>
-          ) : (
-            <button className="w-full py-4 transition-all" style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS }}>
-              <ShoppingCart className="inline-block w-4 h-4 mr-2" />
-              Add to Cart — {fmt(product.price)}
-            </button>
-          )}
+
+        {/* Brief description */}
+        {product.shortDesc && (
+          <p style={{ ...INTER, fontSize: 14, color: C.onSurfaceVariant, lineHeight: 1.7 }}>
+            {product.shortDesc.length > 150 ? product.shortDesc.slice(0, 150) + "…" : product.shortDesc}
+          </p>
+        )}
+
+        {/* Available weight variants */}
+        {weightPills.length > 0 && (
+          <div>
+            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8 }}>Available Weights</p>
+            <div className="flex flex-wrap gap-2">
+              {weightPills.map(w => (
+                <span key={w} style={{ ...LABEL_CAPS, fontSize: 10, color: C.primary, border: `1px solid ${C.outlineVariant}`, padding: "4px 10px" }}>{w}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Discount coupons */}
+        {relevantCoupons.length > 0 && (
+          <div>
+            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8 }}>Discount Offers</p>
+            <div className="flex flex-wrap gap-2">
+              {relevantCoupons.map(c => (
+                <span key={c.id} style={{ ...MONO, fontSize: 11, color: C.secondary, backgroundColor: `${C.secondary}14`, padding: "4px 10px", border: `1px dashed ${C.secondary}` }}>
+                  {c.code} — {c.discountType === "percentage" ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Buttons pinned to bottom */}
+        <div className="flex flex-col gap-3 mt-auto pt-2">
+          <button
+            onClick={() => isReal && onAddToCart(product.id)}
+            className="w-full py-4 transition-all"
+            style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, opacity: isReal ? 1 : 0.6 }}
+            data-testid={`btn-add-to-cart-${product.id}`}
+          >
+            <ShoppingCart className="inline-block w-4 h-4 mr-2" />
+            Add to Cart — {fmt(product.price)}
+          </button>
           <button
             onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
             className="w-full py-4 transition-all"
@@ -394,13 +439,16 @@ export default function DogTreat() {
     const isOnSale = !!(p.isOnSale && salePrice && salePrice < originalPrice);
     const discountPct = isOnSale ? Math.round(((originalPrice - salePrice!) / originalPrice) * 100) : 0;
     return {
-      id:        p.id,
-      name:      p.title ?? p.name,
-      tag:       p.shortDesc ?? p.category?.name ?? "Single-source protein",
-      taxClass:  p.category?.name ?? "Specimen",
+      id:           p.id,
+      name:         p.title ?? p.name,
+      tag:          p.shortDesc ?? p.category?.name ?? "Single-source protein",
+      shortDesc:    p.shortDesc || undefined,
+      taxClass:     p.category?.name ?? "Specimen",
       img,
-      price:     (salePrice && isOnSale ? salePrice : originalPrice) * 100,
-      slug:      p.slug,
+      price:        (salePrice && isOnSale ? salePrice : originalPrice) * 100,
+      originalPrice: originalPrice * 100,
+      slug:         p.slug,
+      weight:       p.weight ?? undefined,
       isOnSale,
       discountPct,
       nutrients: [
@@ -414,6 +462,13 @@ export default function DogTreat() {
   };
 
   const displayProducts: EditorialProduct[] = apiProducts.map(mapProduct);
+
+  // ── Fetch active coupons for display on product cards ─────────────
+  const { data: couponsData } = useQuery<any>({
+    queryKey: ["/api/coupons"],
+    queryFn: () => fetch("/api/coupons").then(r => r.ok ? r.json() : { coupons: [] }),
+  });
+  const allCoupons: any[] = Array.isArray(couponsData) ? couponsData : (couponsData?.coupons ?? []);
 
   // ── Add to cart ───────────────────────────────────────────────────
   const handleAddToCart = (productId: string | number) => {
@@ -606,9 +661,9 @@ export default function DogTreat() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {displayProducts.map(product => (
-              <EditorialProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+              <EditorialProductCard key={product.id} product={product} onAddToCart={handleAddToCart} allCoupons={allCoupons} />
             ))}
           </div>
           <div className="mt-24 text-center">
