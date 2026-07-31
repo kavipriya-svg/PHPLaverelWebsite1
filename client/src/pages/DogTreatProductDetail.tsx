@@ -359,10 +359,9 @@ export default function DogTreatProductDetail() {
                 {product.title}
               </h1>
               <div className="flex flex-wrap items-center gap-4 py-3 border-y" style={{ borderColor: `${C.outlineVariant}33` }}>
-                <span style={{ ...MONO, fontSize: 14, color: C.onSurface }}>
-                  SPECIMEN NO. {specimenNo(product.id)}
-                  {product.sku ? ` | SKU: ${product.sku}` : ""}
-                </span>
+                {product.sku && (
+                  <span style={{ ...MONO, fontSize: 14, color: C.onSurface }}>SKU: {product.sku}</span>
+                )}
                 <span className="w-px h-4 shrink-0" style={{ backgroundColor: C.outlineVariant }} />
                 <div className="flex flex-col">
                   <div className="flex items-baseline gap-2">
