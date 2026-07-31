@@ -576,7 +576,7 @@ export default function DogTreatProductDetail() {
                   className="first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:leading-none">
                   {longDescText}
                 </p>
-                {weight && (
+                {false && weight && (
                   <p style={{ ...MONO, fontSize: 11, color: C.onSurfaceVariant, marginTop: 24 }}>
                     WEIGHT: {weight}g{dimensions ? `  ·  DIMENSIONS: ${dimensions}` : ""}
                   </p>
