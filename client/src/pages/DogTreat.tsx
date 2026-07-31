@@ -252,52 +252,52 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
   const isReal = typeof product.id === "string" || (product.id as number) > 0;
 
   return (
-    <div style={{ backgroundColor: C.white, boxShadow: HARD_SHADOW, display: "flex", flexDirection: "column" }}>
-      {/* ── Image ── */}
-      <div className="overflow-hidden relative" style={{ aspectRatio: "3/2" }}>
+    <div style={{ backgroundColor: C.white, boxShadow: HARD_SHADOW, display: "flex", flexDirection: "row" }}>
+      {/* ── Image — left, 4:5 ratio, drives card height ── */}
+      <div className="relative flex-shrink-0 overflow-hidden" style={{ width: "42%", aspectRatio: "4/5" }}>
         <img
           src={product.img}
           alt={product.name}
           loading="lazy"
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
           style={{ transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1)" }}
           onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1.07)"}
           onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"}
         />
-        <div className="absolute top-4 left-4 px-3 py-1"
-          style={{ backgroundColor: "rgba(255,255,255,0.92)", backdropFilter: "blur(4px)", ...LABEL_CAPS, fontSize: 10, color: C.primary }}>
+        <div className="absolute top-3 left-3 px-2 py-1"
+          style={{ backgroundColor: "rgba(255,255,255,0.92)", backdropFilter: "blur(4px)", ...LABEL_CAPS, fontSize: 9, color: C.primary }}>
           Class: {product.taxClass}
         </div>
         {product.isOnSale && product.discountPct && product.discountPct > 0 && (
-          <div className="absolute top-4 right-4 flex flex-col items-center">
-            <div className="px-2 py-1" style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 10, color: C.white }}>SALE</div>
-            <div className="px-2 py-1" style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 10, color: C.white }}>-{product.discountPct}%</div>
+          <div className="absolute top-3 right-3 flex flex-col items-center">
+            <div className="px-2 py-0.5" style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 9, color: C.white }}>SALE</div>
+            <div className="px-2 py-0.5" style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 9, color: C.white }}>-{product.discountPct}%</div>
           </div>
         )}
       </div>
 
-      {/* ── Content (always below image, never behind it) ── */}
-      <div className="flex flex-col gap-4 p-6" style={{ flex: 1 }}>
+      {/* ── Content — right side, never behind image ── */}
+      <div className="flex flex-col p-5 overflow-y-auto" style={{ flex: 1, gap: 12 }}>
         {/* Name + subtitle */}
         <div>
-          <h3 style={{ ...PLAYFAIR, fontSize: 26, fontWeight: 600, color: C.onSurface, lineHeight: 1.2, marginBottom: 4 }}>{product.name}</h3>
-          <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.secondary }}>{product.tag}</p>
+          <h3 style={{ ...PLAYFAIR, fontSize: 20, fontWeight: 600, color: C.onSurface, lineHeight: 1.2, marginBottom: 3 }}>{product.name}</h3>
+          <p style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary }}>{product.tag}</p>
         </div>
 
         {/* Brief description */}
         {product.shortDesc && (
-          <p style={{ ...INTER, fontSize: 14, color: C.onSurfaceVariant, lineHeight: 1.7 }}>
-            {product.shortDesc.length > 150 ? product.shortDesc.slice(0, 150) + "…" : product.shortDesc}
+          <p style={{ ...INTER, fontSize: 12, color: C.onSurfaceVariant, lineHeight: 1.65 }}>
+            {product.shortDesc.length > 120 ? product.shortDesc.slice(0, 120) + "…" : product.shortDesc}
           </p>
         )}
 
         {/* Available weight variants */}
         {weightPills.length > 0 && (
           <div>
-            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8 }}>Available Weights</p>
-            <div className="flex flex-wrap gap-2">
+            <p style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, marginBottom: 6 }}>Available Weights</p>
+            <div className="flex flex-wrap gap-1.5">
               {weightPills.map(w => (
-                <span key={w} style={{ ...LABEL_CAPS, fontSize: 10, color: C.primary, border: `1px solid ${C.outlineVariant}`, padding: "4px 10px" }}>{w}</span>
+                <span key={w} style={{ ...LABEL_CAPS, fontSize: 9, color: C.primary, border: `1px solid ${C.outlineVariant}`, padding: "3px 8px" }}>{w}</span>
               ))}
             </div>
           </div>
@@ -306,10 +306,10 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
         {/* Discount coupons */}
         {relevantCoupons.length > 0 && (
           <div>
-            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8 }}>Discount Offers</p>
-            <div className="flex flex-wrap gap-2">
+            <p style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, marginBottom: 6 }}>Discount Offers</p>
+            <div className="flex flex-col gap-1.5">
               {relevantCoupons.map(c => (
-                <span key={c.id} style={{ ...MONO, fontSize: 11, color: C.secondary, backgroundColor: `${C.secondary}14`, padding: "4px 10px", border: `1px dashed ${C.secondary}` }}>
+                <span key={c.id} style={{ ...MONO, fontSize: 10, color: C.secondary, backgroundColor: `${C.secondary}14`, padding: "3px 8px", border: `1px dashed ${C.secondary}`, display: "inline-block" }}>
                   {c.code} — {c.discountType === "percentage" ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                 </span>
               ))}
@@ -318,20 +318,20 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
         )}
 
         {/* Buttons pinned to bottom */}
-        <div className="flex flex-col gap-3 mt-auto pt-2">
+        <div className="flex flex-col gap-2 mt-auto pt-1">
           <button
             onClick={() => isReal && onAddToCart(product.id)}
-            className="w-full py-4 transition-all"
-            style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, opacity: isReal ? 1 : 0.6 }}
+            className="w-full py-3 transition-all"
+            style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, fontSize: 10, opacity: isReal ? 1 : 0.6 }}
             data-testid={`btn-add-to-cart-${product.id}`}
           >
-            <ShoppingCart className="inline-block w-4 h-4 mr-2" />
+            <ShoppingCart className="inline-block w-3 h-3 mr-1.5" />
             Add to Cart — {fmt(product.price)}
           </button>
           <button
             onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
-            className="w-full py-4 transition-all"
-            style={{ border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS, opacity: product.slug ? 1 : 0.5 }}
+            className="w-full py-3 transition-all"
+            style={{ border: `1px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS, fontSize: 10, opacity: product.slug ? 1 : 0.5 }}
             onMouseEnter={e => { if (product.slug) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; } }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
             data-testid={`btn-view-specimen-${product.id}`}
@@ -661,7 +661,7 @@ export default function DogTreat() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {displayProducts.map(product => (
               <EditorialProductCard key={product.id} product={product} onAddToCart={handleAddToCart} allCoupons={allCoupons} />
             ))}
