@@ -284,13 +284,6 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
           <p style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary }}>{product.tag}</p>
         </div>
 
-        {/* Brief description */}
-        {product.shortDesc && (
-          <p style={{ ...INTER, fontSize: 12, color: C.onSurfaceVariant, lineHeight: 1.65 }}>
-            {product.shortDesc.length > 120 ? product.shortDesc.slice(0, 120) + "…" : product.shortDesc}
-          </p>
-        )}
-
         {/* Available weight variants */}
         {weightPills.length > 0 && (
           <div>
