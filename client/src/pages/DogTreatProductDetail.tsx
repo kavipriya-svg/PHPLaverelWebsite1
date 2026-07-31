@@ -645,9 +645,12 @@ export default function DogTreatProductDetail() {
         {/* ════ TECHNICAL SPEC + DATA REPORT ════ */}
         {(() => {
           const nd = (product as any).nutritionData || {};
+          // showTechnicalSpec = master gate: entire section hidden when false
+          // showDataReport = sub-gate: numerical data (bars + micronutrients) hidden when false
           const showTechSpec = nd.showTechnicalSpec === true;
           const showDataRep = nd.showDataReport === true;
-          if (!showTechSpec && !showDataRep) return null;
+          // Technical Spec is the master switch — if off, hide entire section
+          if (!showTechSpec) return null;
           const macro = nd.macroProfile || {};
           const micro = nd.micronutrients || {};
           const reportLabel = nd.reportLabel || `DATA REPORT ${specimenNo(product.id)}-A`;
@@ -666,6 +669,7 @@ export default function DogTreatProductDetail() {
           return (
             <section className="py-20" style={{ backgroundColor: "#ffffff" }}>
               <div className="px-5 md:px-16 max-w-7xl mx-auto">
+                {/* Heading — only when Technical Spec toggle is active */}
                 {showTechSpec && (
                   <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
                     <div>
@@ -675,7 +679,8 @@ export default function DogTreatProductDetail() {
                     <p style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, borderBottom: `1px solid ${C.primary}`, paddingBottom: 4 }}>Verified Content</p>
                   </div>
                 )}
-                {showDataRep && (
+                {/* Numerical data — only when Data Report toggle is active AND Technical Spec is also active */}
+                {showTechSpec && showDataRep && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     {macroRows.length > 0 && (
                       <div className="space-y-6">
