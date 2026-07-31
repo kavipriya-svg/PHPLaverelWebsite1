@@ -642,52 +642,87 @@ export default function DogTreatProductDetail() {
           </section>
         )}
 
-        {/* ════ TECHNICAL SPEC ════ */}
-        <section className="py-20" style={{ backgroundColor: "#ffffff" }}>
-          <div className="px-5 md:px-16 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
-              <div>
-                <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>DATA REPORT {specimenNo(product.id)}-A</span>
-                <h2 style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>Technical Specification</h2>
-              </div>
-              <p style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, borderBottom: `1px solid ${C.primary}`, paddingBottom: 4 }}>Verified Content</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Macro Profile (%)</h3>
-                <div className="space-y-8">
-                  {[["PROTEIN (MIN)", 72], ["FAT (MAX)", 8], ["MOISTURE (MAX)", 10], ["CRUDE FIBRE (MAX)", 4]].map(([label, val]) => (
-                    <div key={String(label)}>
-                      <div className="flex justify-between mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>
-                        <span>{label}</span><span>{val}%</span>
-                      </div>
-                      <div className="w-full h-0.5" style={{ backgroundColor: `${C.outlineVariant}4D` }}>
-                        <div className="h-full transition-all duration-1000" style={{ width: `${val}%`, backgroundColor: "#fe9e71" }} />
-                      </div>
+        {/* ════ TECHNICAL SPEC + DATA REPORT ════ */}
+        {(() => {
+          const nd = (product as any).nutritionData || {};
+          const showTechSpec = nd.showTechnicalSpec === true;
+          const showDataRep = nd.showDataReport === true;
+          if (!showTechSpec && !showDataRep) return null;
+          const macro = nd.macroProfile || {};
+          const micro = nd.micronutrients || {};
+          const reportLabel = nd.reportLabel || `DATA REPORT ${specimenNo(product.id)}-A`;
+          const macroRows = [
+            ["PROTEIN (MIN)", macro.protein],
+            ["FAT (MAX)", macro.fat],
+            ["MOISTURE (MAX)", macro.moisture],
+            ["CRUDE FIBRE (MAX)", macro.crudeFibre],
+          ].filter(([, v]) => v) as [string, string][];
+          const microRows = [
+            ["TAURINE", micro.taurine],
+            ["IRON", micro.iron],
+            ["OMEGA-3", micro.omega3],
+            ["SELENIUM", micro.selenium],
+          ].filter(([, v]) => v) as [string, string][];
+          return (
+            <section className="py-20" style={{ backgroundColor: "#ffffff" }}>
+              <div className="px-5 md:px-16 max-w-7xl mx-auto">
+                {showTechSpec && (
+                  <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+                    <div>
+                      {showDataRep && <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>{reportLabel}</span>}
+                      <h2 style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>Technical Specification</h2>
                     </div>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-6">
-                <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Micronutrient Density (mg/kg)</h3>
-                <div className="grid grid-cols-2 gap-y-8 gap-x-12">
-                  {[["TAURINE", "High"], ["IRON", "24.1"], ["OMEGA-3", "1200"], ["SELENIUM", "0.9"]].map(([label, value]) => (
-                    <div key={label} className="pl-4" style={{ borderLeft: `2px solid ${C.primaryContainer}` }}>
-                      <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.onSurfaceVariant }}>{label}</p>
-                      <p style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>{value}</p>
-                    </div>
-                  ))}
-                </div>
-                {(weight || dimensions) && (
-                  <div className="pt-4 space-y-2 border-t" style={{ borderColor: `${C.outlineVariant}4D` }}>
-                    {weight && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>WEIGHT</span><span>{weight}g</span></div>}
-                    {dimensions && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>DIMENSIONS</span><span>{dimensions}</span></div>}
+                    <p style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, borderBottom: `1px solid ${C.primary}`, paddingBottom: 4 }}>Verified Content</p>
+                  </div>
+                )}
+                {showDataRep && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    {macroRows.length > 0 && (
+                      <div className="space-y-6">
+                        <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Macro Profile (%)</h3>
+                        <div className="space-y-8">
+                          {macroRows.map(([label, val]) => (
+                            <div key={label}>
+                              <div className="flex justify-between mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>
+                                <span>{label}</span><span>{val}%</span>
+                              </div>
+                              <div className="w-full h-0.5" style={{ backgroundColor: `${C.outlineVariant}4D` }}>
+                                <div className="h-full transition-all duration-1000" style={{ width: `${Math.min(parseFloat(val) || 0, 100)}%`, backgroundColor: "#fe9e71" }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {(microRows.length > 0 || weight || dimensions) && (
+                      <div className="space-y-6">
+                        {microRows.length > 0 && (
+                          <>
+                            <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Micronutrient Density (mg/kg)</h3>
+                            <div className="grid grid-cols-2 gap-y-8 gap-x-12">
+                              {microRows.map(([label, value]) => (
+                                <div key={label} className="pl-4" style={{ borderLeft: `2px solid ${C.primaryContainer}` }}>
+                                  <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.onSurfaceVariant }}>{label}</p>
+                                  <p style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>{value}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                        {(weight || dimensions) && (
+                          <div className="pt-4 space-y-2 border-t" style={{ borderColor: `${C.outlineVariant}4D` }}>
+                            {weight && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>WEIGHT</span><span>{weight}g</span></div>}
+                            {dimensions && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>DIMENSIONS</span><span>{dimensions}</span></div>}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          );
+        })()}
 
         {/* ════ FEEDING GUIDELINES & STORAGE ════ */}
         {((product as any).feedingGuidelines || (product as any).storageInstructions) && (

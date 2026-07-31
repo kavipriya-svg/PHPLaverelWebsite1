@@ -103,6 +103,8 @@ const productSchema = z.object({
   isOnSale: z.boolean().default(false),
   isActive: z.boolean().default(true),
   // Data Report / Technical Specification
+  showDataReport: z.boolean().default(false),
+  showTechnicalSpec: z.boolean().default(false),
   dataReportLabel: z.string().optional(),
   dataReportProtein: z.string().optional(),
   dataReportFat: z.string().optional(),
@@ -241,6 +243,8 @@ export default function ProductForm() {
       isNewArrival: false,
       isOnSale: false,
       isActive: true,
+      showDataReport: false,
+      showTechnicalSpec: false,
       dataReportLabel: "",
       dataReportProtein: "",
       dataReportFat: "",
@@ -325,6 +329,8 @@ export default function ProductForm() {
         isNewArrival: (p as any).isNewArrival || false,
         isOnSale: (p as any).isOnSale || false,
         isActive: p.isActive !== false,
+        showDataReport: (p as any).nutritionData?.showDataReport || false,
+        showTechnicalSpec: (p as any).nutritionData?.showTechnicalSpec || false,
         dataReportLabel: (p as any).nutritionData?.reportLabel || "",
         dataReportProtein: (p as any).nutritionData?.macroProfile?.protein || "",
         dataReportFat: (p as any).nutritionData?.macroProfile?.fat || "",
@@ -407,10 +413,9 @@ export default function ProductForm() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
-      const hasNutritionData = data.dataReportLabel || data.dataReportProtein || data.dataReportFat ||
-        data.dataReportMoisture || data.dataReportCrudeFibre || data.dataReportTaurine ||
-        data.dataReportIron || data.dataReportOmega3 || data.dataReportSelenium;
-      const nutritionData = hasNutritionData ? {
+      const nutritionData = {
+        showDataReport: data.showDataReport || false,
+        showTechnicalSpec: data.showTechnicalSpec || false,
         reportLabel: data.dataReportLabel || "",
         macroProfile: {
           protein: data.dataReportProtein || "",
@@ -424,9 +429,9 @@ export default function ProductForm() {
           omega3: data.dataReportOmega3 || "",
           selenium: data.dataReportSelenium || "",
         },
-      } : null;
-      const { dataReportLabel, dataReportProtein, dataReportFat, dataReportMoisture,
-        dataReportCrudeFibre, dataReportTaurine, dataReportIron, dataReportOmega3,
+      };
+      const { showDataReport, showTechnicalSpec, dataReportLabel, dataReportProtein, dataReportFat,
+        dataReportMoisture, dataReportCrudeFibre, dataReportTaurine, dataReportIron, dataReportOmega3,
         dataReportSelenium, ...rest } = data;
       const payload = { 
         ...rest,
@@ -962,10 +967,38 @@ export default function ProductForm() {
             {/* Data Report / Technical Specification */}
             <Card>
               <CardHeader>
-                <CardTitle>Data Report / Technical Specification</CardTitle>
-                <CardDescription>
-                  Laboratory-verified nutritional data shown on the product page (e.g., "DATA REPORT 730-A").
-                </CardDescription>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div>
+                    <CardTitle>Data Report / Technical Specification</CardTitle>
+                    <CardDescription className="mt-1">
+                      Laboratory-verified nutritional data shown on the product page (e.g., "DATA REPORT 730-A").
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-3 flex-wrap">
+                    <FormField control={form.control} name="showDataReport" render={({ field }) => (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-muted-foreground font-medium">Data Report</span>
+                        <button type="button"
+                          onClick={() => field.onChange(!field.value)}
+                          className="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                          style={{ backgroundColor: field.value ? "#16a34a" : "#e5e7eb", color: field.value ? "#fff" : "#374151" }}>
+                          {field.value ? "Active" : "Inactive"}
+                        </button>
+                      </div>
+                    )} />
+                    <FormField control={form.control} name="showTechnicalSpec" render={({ field }) => (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-muted-foreground font-medium">Technical Spec</span>
+                        <button type="button"
+                          onClick={() => field.onChange(!field.value)}
+                          className="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                          style={{ backgroundColor: field.value ? "#16a34a" : "#e5e7eb", color: field.value ? "#fff" : "#374151" }}>
+                          {field.value ? "Active" : "Inactive"}
+                        </button>
+                      </div>
+                    )} />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <FormField
