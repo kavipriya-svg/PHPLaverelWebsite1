@@ -255,7 +255,9 @@ export default function ProductForm() {
 
   // Watch categoryId to show page-specific image size hints
   const watchedCategoryId = form.watch("categoryId");
-  const allCategories = categoriesData?.categories || [];
+  const allCategories = categoriesData?.categories
+    ? flattenCategories(categoriesData.categories as CategoryWithChildren[])
+    : [];
 
   // Walk the ancestor chain to determine which editorial page family this category belongs to
   const getCategoryFamilySlug = (catId: string): string | null => {
