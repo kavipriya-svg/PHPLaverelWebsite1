@@ -213,6 +213,7 @@ interface EditorialProduct {
   nutrients: { k: string; v: string }[];
   feedingGuidelines?: string;
   storageInstructions?: string;
+  variants?: any[];
 }
 
 function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
@@ -222,13 +223,7 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
 }) {
   const [, navigate] = useLocation();
 
-  const { data: variantsRaw = [] } = useQuery<any[]>({
-    queryKey: ["/api/products", product.slug, "variants"],
-    queryFn: () => product.slug
-      ? fetch(`/api/products/${product.slug}/variants`).then(r => r.json()).then(d => Array.isArray(d) ? d : (d.variants ?? []))
-      : Promise.resolve([]),
-    enabled: !!product.slug,
-  });
+  const variantsRaw: any[] = product.variants ?? [];
 
   const baseWeightGrams = product.weight
     ? (parseFloat(String(product.weight)) >= 10 ? parseFloat(String(product.weight)) : parseFloat(String(product.weight)) * 1000)
@@ -442,6 +437,7 @@ export default function DogTreat() {
       originalPrice: originalPrice * 100,
       slug:         p.slug,
       weight:       p.weight ?? undefined,
+      variants:     p.variants ?? [],
       isOnSale,
       discountPct,
       nutrients: [
