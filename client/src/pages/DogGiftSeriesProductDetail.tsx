@@ -469,7 +469,7 @@ export default function DogGiftSeriesProductDetail() {
                     <span style={{ fontSize: 11, letterSpacing: "0.05em", opacity: 0.85, fontWeight: 400, marginTop: 2 }}>
                       {qty > 1 ? `${qty} × ${formatCurrency(parseFloat(String(currentPrice)))} = ${formatCurrency(qty * parseFloat(String(currentPrice)))}` : ""}
                       {qty > 1 && discountPct > 0 ? "  ·  " : ""}
-                      {discountPct > 0 ? `${discountPct}% off` : ""}
+                      {discountPct > 0 ? <span style={{ backgroundColor: "#FFD700", color: "#1a1a1a", fontWeight: 800, padding: "1px 6px", borderRadius: 2 }}>{discountPct}% OFF</span> : ""}
                     </span>
                   )}
                 </div>
