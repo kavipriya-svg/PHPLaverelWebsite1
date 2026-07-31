@@ -99,6 +99,16 @@ const productSchema = z.object({
   isNewArrival: z.boolean().default(false),
   isOnSale: z.boolean().default(false),
   isActive: z.boolean().default(true),
+  // Data Report / Technical Specification
+  dataReportLabel: z.string().optional(),
+  dataReportProtein: z.string().optional(),
+  dataReportFat: z.string().optional(),
+  dataReportMoisture: z.string().optional(),
+  dataReportCrudeFibre: z.string().optional(),
+  dataReportTaurine: z.string().optional(),
+  dataReportIron: z.string().optional(),
+  dataReportOmega3: z.string().optional(),
+  dataReportSelenium: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -225,6 +235,15 @@ export default function ProductForm() {
       isNewArrival: false,
       isOnSale: false,
       isActive: true,
+      dataReportLabel: "",
+      dataReportProtein: "",
+      dataReportFat: "",
+      dataReportMoisture: "",
+      dataReportCrudeFibre: "",
+      dataReportTaurine: "",
+      dataReportIron: "",
+      dataReportOmega3: "",
+      dataReportSelenium: "",
     },
   });
 
@@ -295,6 +314,15 @@ export default function ProductForm() {
         isNewArrival: (p as any).isNewArrival || false,
         isOnSale: (p as any).isOnSale || false,
         isActive: p.isActive !== false,
+        dataReportLabel: (p as any).nutritionData?.reportLabel || "",
+        dataReportProtein: (p as any).nutritionData?.macroProfile?.protein || "",
+        dataReportFat: (p as any).nutritionData?.macroProfile?.fat || "",
+        dataReportMoisture: (p as any).nutritionData?.macroProfile?.moisture || "",
+        dataReportCrudeFibre: (p as any).nutritionData?.macroProfile?.crudeFibre || "",
+        dataReportTaurine: (p as any).nutritionData?.micronutrients?.taurine || "",
+        dataReportIron: (p as any).nutritionData?.micronutrients?.iron || "",
+        dataReportOmega3: (p as any).nutritionData?.micronutrients?.omega3 || "",
+        dataReportSelenium: (p as any).nutritionData?.micronutrients?.selenium || "",
       });
       // Set media items from existing images
       setMediaItems(
@@ -368,8 +396,30 @@ export default function ProductForm() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
+      const hasNutritionData = data.dataReportLabel || data.dataReportProtein || data.dataReportFat ||
+        data.dataReportMoisture || data.dataReportCrudeFibre || data.dataReportTaurine ||
+        data.dataReportIron || data.dataReportOmega3 || data.dataReportSelenium;
+      const nutritionData = hasNutritionData ? {
+        reportLabel: data.dataReportLabel || "",
+        macroProfile: {
+          protein: data.dataReportProtein || "",
+          fat: data.dataReportFat || "",
+          moisture: data.dataReportMoisture || "",
+          crudeFibre: data.dataReportCrudeFibre || "",
+        },
+        micronutrients: {
+          taurine: data.dataReportTaurine || "",
+          iron: data.dataReportIron || "",
+          omega3: data.dataReportOmega3 || "",
+          selenium: data.dataReportSelenium || "",
+        },
+      } : null;
+      const { dataReportLabel, dataReportProtein, dataReportFat, dataReportMoisture,
+        dataReportCrudeFibre, dataReportTaurine, dataReportIron, dataReportOmega3,
+        dataReportSelenium, ...rest } = data;
       const payload = { 
-        ...data, 
+        ...rest,
+        nutritionData,
         images: mediaItems.map((m, i) => ({
           url: m.url,
           altText: m.altText,
@@ -849,6 +899,148 @@ export default function ProductForm() {
                       </FormItem>
                     )}
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Data Report / Technical Specification */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Data Report / Technical Specification</CardTitle>
+                <CardDescription>
+                  Laboratory-verified nutritional data shown on the product page (e.g., "DATA REPORT 730-A").
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="dataReportLabel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Report Label</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. DATA REPORT 730-A" {...field} />
+                      </FormControl>
+                      <FormDescription>Unique report identifier shown as a badge on the product</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div>
+                  <p className="text-sm font-medium mb-3">Macro Profile (%)</p>
+                  <div className="grid sm:grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="dataReportProtein"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Protein Min (%)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 72" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dataReportFat"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fat Max (%)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 8" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dataReportMoisture"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Moisture Max (%)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 10" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dataReportCrudeFibre"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Crude Fibre Max (%)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 4" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium mb-3">Micronutrient Density (mg/kg)</p>
+                  <div className="grid sm:grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="dataReportTaurine"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Taurine</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. High" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dataReportIron"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Iron</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 24.1" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dataReportOmega3"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Omega-3</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 1200" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dataReportSelenium"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Selenium</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. 0.9" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

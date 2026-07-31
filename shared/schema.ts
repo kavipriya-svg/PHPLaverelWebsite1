@@ -225,6 +225,7 @@ export const products = pgTable("products", {
   averageRating: decimal("average_rating", { precision: 2, scale: 1 }).default("0"),
   reviewCount: integer("review_count").default(0),
   gstRate: decimal("gst_rate", { precision: 5, scale: 2 }).default("18"), // GST percentage for this product
+  nutritionData: jsonb("nutrition_data"),
   metaTitle: varchar("meta_title"),
   metaDescription: text("meta_description"),
   metaKeywords: varchar("meta_keywords"),
