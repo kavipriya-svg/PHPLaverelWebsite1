@@ -912,9 +912,9 @@ export default function ProductForm() {
                     name="weight"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Weight (kg)</FormLabel>
+                        <FormLabel>{isTreatsFamily ? "Weight (g)" : "Weight (kg)"}</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" {...field} />
+                          <Input type="number" step={isTreatsFamily ? "1" : "0.01"} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
