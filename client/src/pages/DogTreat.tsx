@@ -228,12 +228,24 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
   const baseWeightGrams = product.weight
     ? (parseFloat(String(product.weight)) >= 10 ? parseFloat(String(product.weight)) : parseFloat(String(product.weight)) * 1000)
     : null;
-  const weightPills: string[] = [];
-  if (baseWeightGrams) weightPills.push(`${baseWeightGrams}g`);
+
+  // Build weight options with their respective prices
+  type WeightOption = { weight: string; price: number; isSale: boolean };
+  const weightOptions: WeightOption[] = [];
+  if (baseWeightGrams) {
+    weightOptions.push({ weight: `${baseWeightGrams}g`, price: product.price, isSale: product.isOnSale ?? false });
+  }
   for (const v of variantsRaw) {
-    if (weightPills.length >= 4) break;
+    if (weightOptions.length >= 4) break;
     const val = v.optionValue || v.option_value;
-    if (val && !weightPills.includes(`${val}g`)) weightPills.push(`${val}g`);
+    if (!val) continue;
+    const label = `${val}g`;
+    if (weightOptions.some(w => w.weight === label)) continue;
+    const rawSale = v.salePrice ? Number(v.salePrice) : null;
+    const rawPrice = Number(v.price);
+    const isSale = !!(rawSale && rawSale < rawPrice);
+    const effectivePrice = (isSale ? rawSale! : rawPrice) * 100;
+    weightOptions.push({ weight: label, price: effectivePrice, isSale });
   }
 
   const relevantCoupons = allCoupons
@@ -271,21 +283,24 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
         )}
       </div>
 
-      {/* ── Content — right side, never behind image ── */}
-      <div className="flex flex-col p-6 overflow-y-auto" style={{ flex: 1, gap: 16 }}>
+      {/* ── Content — right side ── */}
+      <div className="flex flex-col p-6 overflow-y-auto" style={{ flex: 1, gap: 14 }}>
         {/* Name + subtitle */}
         <div>
-          <h3 style={{ ...PLAYFAIR, fontSize: 26, fontWeight: 700, color: C.onSurface, lineHeight: 1.15, marginBottom: 5 }}>{product.name}</h3>
-          <p style={{ ...LABEL_CAPS, fontSize: 11, color: C.secondary, letterSpacing: "0.1em" }}>{product.tag}</p>
+          <h3 style={{ ...INTER, fontSize: 22, fontWeight: 700, color: C.onSurface, lineHeight: 1.2, marginBottom: 4, letterSpacing: "-0.02em" }}>{product.name}</h3>
+          <p style={{ ...INTER, fontSize: 12, color: C.secondary, fontWeight: 500, letterSpacing: "0.04em" }}>{product.tag}</p>
         </div>
 
-        {/* Available weight variants */}
-        {weightPills.length > 0 && (
+        {/* Weight + price options */}
+        {weightOptions.length > 0 && (
           <div>
-            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8, letterSpacing: "0.12em" }}>Available Weights</p>
+            <p style={{ ...INTER, fontSize: 11, color: C.outline, marginBottom: 8, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Available Weights</p>
             <div className="flex flex-wrap gap-2">
-              {weightPills.map(w => (
-                <span key={w} style={{ ...LABEL_CAPS, fontSize: 12, color: C.primary, border: `1.5px solid ${C.primary}`, padding: "5px 14px", letterSpacing: "0.08em" }}>{w}</span>
+              {weightOptions.map(opt => (
+                <div key={opt.weight} style={{ border: `1.5px solid ${C.primary}`, padding: "6px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 64 }}>
+                  <span style={{ ...INTER, fontSize: 13, fontWeight: 700, color: C.primary, letterSpacing: "0.02em" }}>{opt.weight}</span>
+                  <span style={{ ...INTER, fontSize: 12, fontWeight: 500, color: opt.isSale ? C.secondary : C.onSurfaceVariant }}>{fmt(opt.price)}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -294,10 +309,10 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
         {/* Discount coupons */}
         {relevantCoupons.length > 0 && (
           <div>
-            <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, marginBottom: 8, letterSpacing: "0.12em" }}>Discount Offers</p>
+            <p style={{ ...INTER, fontSize: 11, color: C.outline, marginBottom: 8, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Discount Offers</p>
             <div className="flex flex-col gap-2">
               {relevantCoupons.map(c => (
-                <span key={c.id} style={{ ...MONO, fontSize: 13, color: C.secondary, backgroundColor: `${C.secondary}14`, padding: "6px 12px", border: `1px dashed ${C.secondary}`, display: "inline-block" }}>
+                <span key={c.id} style={{ ...MONO, fontSize: 12, color: C.secondary, backgroundColor: `${C.secondary}12`, padding: "5px 10px", border: `1px dashed ${C.secondary}`, display: "inline-block" }}>
                   {c.code} — {c.discountType === "percentage" ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                 </span>
               ))}
@@ -310,7 +325,7 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
           <button
             onClick={() => isReal && onAddToCart(product.id)}
             className="w-full py-3.5 transition-all"
-            style={{ backgroundColor: C.primary, color: C.white, ...LABEL_CAPS, fontSize: 12, opacity: isReal ? 1 : 0.6, letterSpacing: "0.1em" }}
+            style={{ backgroundColor: C.primary, color: C.white, ...INTER, fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", opacity: isReal ? 1 : 0.6 }}
             data-testid={`btn-add-to-cart-${product.id}`}
           >
             <ShoppingCart className="inline-block w-3.5 h-3.5 mr-2" />
@@ -319,7 +334,7 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
           <button
             onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
             className="w-full py-3.5 transition-all"
-            style={{ border: `1.5px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...LABEL_CAPS, fontSize: 12, opacity: product.slug ? 1 : 0.5, letterSpacing: "0.1em" }}
+            style={{ border: `1.5px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...INTER, fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", opacity: product.slug ? 1 : 0.5 }}
             onMouseEnter={e => { if (product.slug) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; } }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
             data-testid={`btn-view-specimen-${product.id}`}
