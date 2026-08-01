@@ -261,7 +261,7 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
   return (
     <div style={{ backgroundColor: C.white, boxShadow: HARD_SHADOW, display: "flex", flexDirection: "row" }}>
       {/* ── Image — left, 4:5 ratio, drives card height ── */}
-      <div className="relative flex-shrink-0 overflow-hidden" style={{ width: "65%", aspectRatio: "4/5" }}>
+      <div className="relative flex-shrink-0 overflow-hidden" style={{ width: "75%", aspectRatio: "4/5" }}>
         <img
           src={product.img}
           alt={product.name}
