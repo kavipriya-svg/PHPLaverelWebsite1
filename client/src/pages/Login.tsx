@@ -251,7 +251,7 @@ export default function Login() {
                       type="button"
                       data-testid="button-toggle-password"
                       onClick={() => setShowPassword(v => !v)}
-                      style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.onSurfaceVariant, padding: 4 }}
+                      style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.onSurfaceVariant, padding: "0 12px", minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                       <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                         {showPassword ? "visibility_off" : "visibility"}
@@ -298,7 +298,7 @@ export default function Login() {
               </div>
 
               {/* Persona bento cards */}
-              <div style={{ marginTop: 64, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div style={{ marginTop: 64, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 12 }}>
                 {[
                   { icon: "person",           label: "CUSTOMERS", sub: "SHOP & TRACK",    testid: "card-feature-customers"  },
                   { icon: "medical_services", label: "PROVIDERS", sub: "MANAGE SERVICES", testid: "card-feature-providers"  },

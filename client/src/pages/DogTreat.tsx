@@ -259,9 +259,9 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
   const isReal = typeof product.id === "string" || (product.id as number) > 0;
 
   return (
-    <div style={{ backgroundColor: C.white, boxShadow: HARD_SHADOW, display: "flex", flexDirection: "row" }}>
-      {/* ── Image — left, 4:5 ratio, drives card height ── */}
-      <div className="relative flex-shrink-0 overflow-hidden" style={{ width: "75%", aspectRatio: "4/5" }}>
+    <div className="flex flex-col md:flex-row" style={{ backgroundColor: C.white, boxShadow: HARD_SHADOW }}>
+      {/* ── Image — top on mobile, left on md+, 4:5 ratio ── */}
+      <div className="relative flex-shrink-0 overflow-hidden w-full md:w-[75%]" style={{ aspectRatio: "4/5" }}>
         <img
           src={product.img}
           alt={product.name}
@@ -283,8 +283,8 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
         )}
       </div>
 
-      {/* ── Content — right side ── */}
-      <div className="flex flex-col p-6 overflow-y-auto" style={{ flex: 1, gap: 14 }}>
+      {/* ── Content — bottom on mobile, right on md+ ── */}
+      <div className="flex flex-col p-4 md:p-6 overflow-y-auto" style={{ flex: 1, gap: 14 }}>
         {/* Name + subtitle */}
         <div>
           <h3 style={{ ...INTER, fontSize: 22, fontWeight: 700, color: C.onSurface, lineHeight: 1.2, marginBottom: 4, letterSpacing: "-0.02em" }}>{product.name}</h3>
@@ -576,7 +576,7 @@ export default function DogTreat() {
               </span>
               <button
                 onClick={() => setSelectedCategoryId(null)}
-                style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                style={{ ...LABEL_CAPS, fontSize: 11, color: C.outline, textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: "10px 8px", minHeight: 44, display: "inline-flex", alignItems: "center" }}
                 data-testid="btn-clear-filter"
               >
                 CLEAR
@@ -614,7 +614,7 @@ export default function DogTreat() {
                 <img src={dt.wolfPrinciple.imageUrl} alt="Species-appropriate nutrition" className="w-full h-full object-cover" loading="lazy"
                   style={{ filter: "grayscale(100%)", transition: "all 0.7s cubic-bezier(0.16,1,0.3,1)" }} />
               </div>
-              <div className="absolute p-8 max-w-xs" style={{ bottom: -32, right: -32, backgroundColor: C.primary, color: C.white }}>
+              <div className="absolute p-6 max-w-xs hidden md:block" style={{ bottom: -32, right: -32, backgroundColor: C.primary, color: C.white }}>
                 <p style={{ ...LABEL_CAPS, opacity: 0.6, marginBottom: 8 }}>{dt.wolfPrinciple.quoteSpecimenNo}</p>
                 <p style={{ ...INTER, fontStyle: "italic", fontSize: 14 }}>"{dt.wolfPrinciple.quoteText}"</p>
               </div>

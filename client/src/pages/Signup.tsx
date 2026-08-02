@@ -275,8 +275,8 @@ export default function Signup() {
 
                 <form onSubmit={handleSendOtp} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
 
-                  {/* Name: first + last side by side */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                  {/* Name: first + last side by side on sm+, stacked on mobile */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 20 }}>
                     <div>
                       <label htmlFor="firstName" style={{ ...capLabel, display: "block", marginBottom: 4 }}>FIRST_NAME</label>
                       <input
@@ -350,7 +350,7 @@ export default function Signup() {
                         type="button"
                         data-testid="button-toggle-password"
                         onClick={() => setShowPassword(v => !v)}
-                        style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.onSurfaceVariant, padding: 4 }}
+                        style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.onSurfaceVariant, padding: "0 12px", minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
                       >
                         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                           {showPassword ? "visibility_off" : "visibility"}
@@ -402,7 +402,7 @@ export default function Signup() {
                   {/* Role selection (visual, customer is the signup role) */}
                   <div style={{ paddingTop: 12 }}>
                     <label style={{ ...capLabel, display: "block", marginBottom: 12 }}>PROTOCOL_ROLE_SELECTION</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 8 }}>
                       {["CUSTOMER", "PROVIDER", "ADMIN"].map(role => (
                         <div key={role} className={`role-btn${role === "CUSTOMER" ? " active" : ""}`} style={{ pointerEvents: role !== "CUSTOMER" ? "none" : "auto", opacity: role !== "CUSTOMER" ? 0.45 : 1 }}>
                           <span style={{ ...capLabel, color: role === "CUSTOMER" ? T.onPrimaryContainer : T.onSurfaceVariant }}>{role}</span>

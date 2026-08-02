@@ -774,7 +774,7 @@ function TreatsSection({
                   className="absolute top-3 left-3 px-3 py-1"
                   style={{ backgroundColor: C.secondary }}
                 >
-                  <p className="font-inter text-label-caps" style={{ color: C.white, fontSize: 9 }}>
+                  <p className="font-inter text-label-caps" style={{ color: C.white, fontSize: 11 }}>
                     {p.label || p.category?.name || fallbacks[i % fallbacks.length].label}
                   </p>
                 </div>
@@ -834,7 +834,7 @@ function AncestralPhilosophySection({
             />
           </div>
           <div
-            className="absolute p-10 border shadow-xl max-w-sm"
+            className="hidden md:block absolute p-8 border shadow-xl max-w-sm"
             style={{
               bottom: -40, right: -40,
               backgroundColor: C.surface,

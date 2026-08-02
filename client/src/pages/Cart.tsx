@@ -489,8 +489,9 @@ export default function Cart() {
                         </div>
                         <button
                           onClick={() => removeFromCart(item.id)}
-                          className="text-[#c1c8c2] hover:text-red-500 transition-colors p-1"
+                          className="text-[#c1c8c2] hover:text-red-500 transition-colors p-2.5 -mr-1"
                           data-testid={`button-remove-${item.id}`}
+                          aria-label="Remove item"
                         >
                           <X className="w-5 h-5" />
                         </button>
@@ -565,22 +566,24 @@ export default function Cart() {
                       <div className="mt-auto grid grid-cols-2 md:grid-cols-3 gap-4 border-t border-[#c1c8c2] pt-6">
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#717973] mb-2">Quantity</p>
-                          <div className="flex items-center gap-4 border border-[#c1c8c2] w-fit px-3 py-1.5">
+                          <div className="flex items-center border border-[#c1c8c2] w-fit">
                             <button
                               onClick={() => updateCartItem(item.id, Math.max(1, item.quantity - 1))}
                               disabled={item.quantity <= 1}
-                              className="hover:text-[#944923] transition-colors disabled:opacity-30"
+                              className="hover:text-[#944923] transition-colors disabled:opacity-30 w-11 h-11 flex items-center justify-center"
                               data-testid={`button-decrease-${item.id}`}
+                              aria-label="Decrease quantity"
                             >
                               <Minus className="w-3.5 h-3.5" />
                             </button>
-                            <span className="font-mono text-sm font-bold min-w-[20px] text-center">
+                            <span className="font-mono text-sm font-bold min-w-[28px] text-center">
                               {String(item.quantity).padStart(2, "0")}
                             </span>
                             <button
                               onClick={() => updateCartItem(item.id, item.quantity + 1)}
-                              className="hover:text-[#944923] transition-colors"
+                              className="hover:text-[#944923] transition-colors w-11 h-11 flex items-center justify-center"
                               data-testid={`button-increase-${item.id}`}
+                              aria-label="Increase quantity"
                             >
                               <Plus className="w-3.5 h-3.5" />
                             </button>

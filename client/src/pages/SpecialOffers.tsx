@@ -100,7 +100,7 @@ export default function SpecialOffers() {
           </div>
         )}
 
-        <div className="flex gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           <ProductFilters
             filters={filters}
             onFiltersChange={(newFilters) => {
