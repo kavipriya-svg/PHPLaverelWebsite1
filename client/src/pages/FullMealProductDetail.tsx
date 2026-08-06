@@ -57,6 +57,60 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
   );
 }
 
+// ─── Ad Banner Strip ─────────────────────────────────────────────────────────
+function AdBannerStrip({ banners }: { banners: any[] }) {
+  if (!banners.length) return null;
+  return (
+    <div className="w-full">
+      {banners.map((b: any) => {
+        const isYT = b.mediaType === "youtube" || (b.mediaType === "video" && b.mediaUrl?.includes("youtube"));
+        const ytId = isYT
+          ? (b.mediaUrl?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/) || [])[1]
+          : null;
+        return (
+          <div key={b.id} className="relative w-full overflow-hidden" style={{ backgroundColor: C.primary }}>
+            {ytId ? (
+              <div className="relative w-full" style={{ aspectRatio: "16/6" }}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytId}?autoplay=0&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1`}
+                  className="w-full h-full border-0 absolute inset-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={b.title || "Ad Banner"}
+                />
+                {(b.title || b.ctaText) && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 pointer-events-none" style={{ background: "rgba(1,45,29,0.45)" }}>
+                    {b.title && <p style={{ ...PLAYFAIR, fontSize: "clamp(24px,4vw,48px)", color: "#fff", marginBottom: 8 }}>{b.title}</p>}
+                    {b.subtitle && <p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", marginBottom: 16 }}>{b.subtitle}</p>}
+                    {b.ctaText && b.ctaUrl && (
+                      <a href={b.ctaUrl} className="pointer-events-auto">
+                        <span className="inline-block px-10 py-4" style={{ backgroundColor: "#fff", color: C.primary, ...LABEL_CAPS }}>{b.ctaText}</span>
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative w-full" style={{ minHeight: 200 }}>
+                <img src={b.mediaUrl} alt={b.title || "Banner"} className="w-full object-cover" style={{ maxHeight: 480 }} />
+                {(b.title || b.ctaText) && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8" style={{ background: "rgba(1,45,29,0.4)" }}>
+                    {b.title && <p style={{ ...PLAYFAIR, fontSize: "clamp(24px,4vw,48px)", color: "#fff", marginBottom: 8 }}>{b.title}</p>}
+                    {b.subtitle && <p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", marginBottom: 16 }}>{b.subtitle}</p>}
+                    {b.ctaText && b.ctaUrl && (
+                      <a href={b.ctaUrl}><span className="inline-block px-10 py-4" style={{ backgroundColor: "#fff", color: C.primary, ...LABEL_CAPS }}>{b.ctaText}</span></a>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function FullMealProductDetail() {
   const [, params] = useRoute("/full-meals/product/:slug");
