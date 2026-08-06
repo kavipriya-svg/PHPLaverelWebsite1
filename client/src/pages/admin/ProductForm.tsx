@@ -1146,7 +1146,8 @@ export default function ProductForm() {
                   {mediaItems.map((media, index) => (
                     <div 
                       key={index} 
-                      className={`relative aspect-square group cursor-pointer ${media.isPrimary ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                      className={`relative group cursor-pointer ${media.isPrimary ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                      style={{ aspectRatio: isFullMealFamily || isClothingFamily ? "4/5" : "1/1" }}
                       onClick={() => setPrimaryMedia(index)}
                     >
                       {media.mediaType === "video" ? (
@@ -1187,14 +1188,19 @@ export default function ProductForm() {
                   ))}
                   
                   {/* Upload Image Button */}
-                  <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors p-2">
+                  <label
+                    className="border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors p-2"
+                    style={{ aspectRatio: isFullMealFamily || isClothingFamily ? "4/5" : "1/1" }}
+                  >
                     {isUploading ? (
                       <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
                     ) : (
                       <>
                         <Image className="h-8 w-8 text-muted-foreground mb-2" />
                         <span className="text-sm text-muted-foreground text-center">Add Image</span>
-                        <span className="text-xs text-muted-foreground/70 text-center mt-1">800x800px or larger</span>
+                        <span className="text-xs text-muted-foreground/70 text-center mt-1">
+                          {isFullMealFamily || isClothingFamily ? "800×1000px (4:5)" : "800×800px or larger"}
+                        </span>
                       </>
                     )}
                     <input

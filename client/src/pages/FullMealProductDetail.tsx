@@ -211,6 +211,14 @@ export default function FullMealProductDetail() {
   const longDescText = longDesc ? stripHtml(longDesc) : "";
   const weight = (product as any).weight;
   const dimensions = (product as any).dimensions;
+  const nutritionData = (product as any).nutritionData as {
+    showDataReport?: boolean;
+    showTechnicalSpec?: boolean;
+    reportLabel?: string;
+    macroProfile?: { protein?: string; fat?: string; moisture?: string; crudeFibre?: string };
+    micronutrients?: { taurine?: string; iron?: string; omega3?: string; selenium?: string };
+  } | undefined | null;
+  const couponBoxBgColor = (product as any).couponBoxBgColor as string | undefined;
   const returnDays = (product as any).returnDays as number | undefined;
   const returnText = (product as any).returnText as string | undefined;
   const shippingText = (product as any).shippingText as string | undefined;
@@ -407,7 +415,7 @@ export default function FullMealProductDetail() {
                     <div className="p-4 flex justify-between items-center"
                       style={{ border: `2px solid ${C.primary}` }}>
                       <span style={{ fontWeight: 700, color: C.primary }}>
-                        {weight ? `${weight}g` : "Standard"}
+                        {weight ? `${weight} kg` : "Standard"}
                       </span>
                       <span style={{ ...MONO, fontSize: 12, color: C.primaryContainer }}>
                         {formatCurrency(currentPrice!)}
@@ -498,7 +506,8 @@ export default function FullMealProductDetail() {
 
               {/* Coupons */}
               {visibleCoupons.length > 0 && (
-                <div className="space-y-3 pb-2" data-testid="card-coupons">
+                <div className="space-y-3 pb-2" data-testid="card-coupons"
+                  style={couponBoxBgColor ? { backgroundColor: couponBoxBgColor, padding: "12px 16px", borderRadius: 6 } : {}}>
                   <p style={{ ...LABEL_CAPS, color: C.onSurfaceVariant }}>Available Coupons</p>
                   <div className="flex flex-wrap gap-2">
                     {visibleCoupons.map((c) => (
@@ -506,7 +515,7 @@ export default function FullMealProductDetail() {
                         onClick={() => copyCode(c.code)}
                         title="Click to copy"
                         className="flex flex-col text-left transition-opacity hover:opacity-80 active:scale-95"
-                        style={{ border: `1px dashed ${C.primary}`, padding: "4px 12px", borderRadius: 4, backgroundColor: `${C.primaryContainer}0D` }}>
+                        style={{ border: `1px dashed ${C.primary}`, padding: "4px 12px", borderRadius: 4, backgroundColor: "rgba(255,255,255,0.6)" }}>
                         <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: copiedCode === c.code ? "#2d6a4f" : C.onSurface }}>
                           {copiedCode === c.code ? "COPIED!" : c.code}
                         </span>
@@ -606,7 +615,7 @@ export default function FullMealProductDetail() {
                 </p>
                 {weight && (
                   <p style={{ ...MONO, fontSize: 11, color: C.onSurfaceVariant, marginTop: 24 }}>
-                    WEIGHT: {weight}g{dimensions ? `  ·  DIMENSIONS: ${dimensions}` : ""}
+                    WEIGHT: {weight} kg{dimensions ? `  ·  DIMENSIONS: ${dimensions}` : ""}
                   </p>
                 )}
               </div>
@@ -627,65 +636,101 @@ export default function FullMealProductDetail() {
         )}
 
         {/* ════ TECHNICAL SPEC SHEET ════ */}
-        <section className="py-20" style={{ backgroundColor: "#ffffff", marginLeft: 0, marginRight: 0 }}>
-          <div className="px-5 md:px-16 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
-              <div>
-                <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>
-                  DATA REPORT {specimenNo(product.id)}-A
-                </span>
-                <h2 style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>Technical Specification</h2>
-              </div>
-              <p style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, borderBottom: `1px solid ${C.primary}`, paddingBottom: 4 }}>
-                Laboratory Verified Content
-              </p>
-            </div>
+        {(() => {
+          // Use admin-entered nutritionData when available, otherwise fall back to display defaults
+          const showSection = !nutritionData || nutritionData.showDataReport !== false || nutritionData.showTechnicalSpec !== false;
+          if (!showSection) return null;
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {/* Macro Profile */}
-              <div className="space-y-6">
-                <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>
-                  Macro Profile (%)
-                </h3>
-                <div className="space-y-8">
-                  {[["PROTEIN (MIN)", 68.5], ["FAT (MAX)", 12.2], ["MOISTURE (MAX)", 8.2], ["CRUDE FIBRE (MAX)", 3.5]].map(([label, val]) => (
-                    <div key={String(label)}>
-                      <div className="flex justify-between mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>
-                        <span>{label}</span><span>{val}%</span>
-                      </div>
-                      <div className="w-full h-0.5" style={{ backgroundColor: `${C.outlineVariant}4D` }}>
-                        <div className="h-full transition-all duration-1000" style={{ width: `${val}%`, backgroundColor: "#fe9e71" }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          const reportLabel = nutritionData?.reportLabel || `DATA REPORT ${specimenNo(product.id)}-A`;
 
-              {/* Micronutrient Density */}
-              <div className="space-y-6">
-                <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>
-                  Micronutrient Density (mg/kg)
-                </h3>
-                <div className="grid grid-cols-2 gap-y-8 gap-x-12">
-                  {[["IRON", "24.1"], ["COPPER", "4.8"], ["OMEGA-3", "1200"], ["SELENIUM", "0.9"]].map(([label, value]) => (
-                    <div key={label} className="pl-4" style={{ borderLeft: `2px solid ${C.primaryContainer}` }}>
-                      <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.onSurfaceVariant }}>{label}</p>
-                      <p style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>{value}</p>
-                    </div>
-                  ))}
-                </div>
+          // Macro profile: use admin values if set, otherwise show placeholder defaults
+          const protein = nutritionData?.macroProfile?.protein ? parseFloat(nutritionData.macroProfile.protein) : 68.5;
+          const fat = nutritionData?.macroProfile?.fat ? parseFloat(nutritionData.macroProfile.fat) : 12.2;
+          const moisture = nutritionData?.macroProfile?.moisture ? parseFloat(nutritionData.macroProfile.moisture) : 8.2;
+          const crudeFibre = nutritionData?.macroProfile?.crudeFibre ? parseFloat(nutritionData.macroProfile.crudeFibre) : 3.5;
 
-                {/* Admin product metadata */}
-                {(weight || dimensions) && (
-                  <div className="pt-4 space-y-2 border-t" style={{ borderColor: `${C.outlineVariant}4D` }}>
-                    {weight && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>WEIGHT</span><span>{weight}g</span></div>}
-                    {dimensions && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>DIMENSIONS</span><span>{dimensions}</span></div>}
+          // Micronutrients: use admin values if set, otherwise show placeholder defaults
+          const iron = nutritionData?.micronutrients?.iron || "24.1";
+          const taurine = nutritionData?.micronutrients?.taurine || "High";
+          const omega3 = nutritionData?.micronutrients?.omega3 || "1200";
+          const selenium = nutritionData?.micronutrients?.selenium || "0.9";
+
+          const macroRows: [string, number][] = [
+            ["PROTEIN (MIN)", protein],
+            ["FAT (MAX)", fat],
+            ["MOISTURE (MAX)", moisture],
+            ["CRUDE FIBRE (MAX)", crudeFibre],
+          ];
+
+          const microRows: [string, string][] = [
+            ["IRON", iron],
+            ["TAURINE", taurine],
+            ["OMEGA-3", omega3],
+            ["SELENIUM", selenium],
+          ];
+
+          return (
+            <section className="py-20" style={{ backgroundColor: "#ffffff", marginLeft: 0, marginRight: 0 }}>
+              <div className="px-5 md:px-16 max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+                  <div>
+                    <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>
+                      {reportLabel}
+                    </span>
+                    <h2 style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>Technical Specification</h2>
                   </div>
-                )}
+                  <p style={{ ...LABEL_CAPS, color: C.onSurfaceVariant, borderBottom: `1px solid ${C.primary}`, paddingBottom: 4 }}>
+                    Laboratory Verified Content
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  {/* Macro Profile */}
+                  <div className="space-y-6">
+                    <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>
+                      Macro Profile (%)
+                    </h3>
+                    <div className="space-y-8">
+                      {macroRows.map(([label, val]) => (
+                        <div key={label}>
+                          <div className="flex justify-between mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>
+                            <span>{label}</span><span>{val}%</span>
+                          </div>
+                          <div className="w-full h-0.5" style={{ backgroundColor: `${C.outlineVariant}4D` }}>
+                            <div className="h-full transition-all duration-1000" style={{ width: `${Math.min(val, 100)}%`, backgroundColor: "#fe9e71" }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Micronutrient Density */}
+                  <div className="space-y-6">
+                    <h3 className="pb-2 border-b" style={{ ...LABEL_CAPS, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>
+                      Micronutrient Density (mg/kg)
+                    </h3>
+                    <div className="grid grid-cols-2 gap-y-8 gap-x-12">
+                      {microRows.map(([label, value]) => (
+                        <div key={label} className="pl-4" style={{ borderLeft: `2px solid ${C.primaryContainer}` }}>
+                          <p style={{ ...LABEL_CAPS, fontSize: 10, color: C.onSurfaceVariant }}>{label}</p>
+                          <p style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", color: C.primary }}>{value}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Admin product metadata */}
+                    {(weight || dimensions) && (
+                      <div className="pt-4 space-y-2 border-t" style={{ borderColor: `${C.outlineVariant}4D` }}>
+                        {weight && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>WEIGHT</span><span>{weight} kg</span></div>}
+                        {dimensions && <div className="flex justify-between" style={{ ...MONO, fontSize: 12, color: C.onSurfaceVariant }}><span>DIMENSIONS</span><span>{dimensions}</span></div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          );
+        })()}
 
         {/* ── Ads: product-hero bottom (After Product Details) ── */}
         <AdBannerStrip banners={bs("product-hero", "bottom")} />
