@@ -222,6 +222,7 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
   allCoupons?: any[];
 }) {
   const [, navigate] = useLocation();
+  const [hovered, setHovered] = useState(false);
 
   const variantsRaw: any[] = product.variants ?? [];
 
@@ -259,84 +260,112 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
   const isReal = typeof product.id === "string" || (product.id as number) > 0;
 
   return (
-    <div className="flex flex-col md:flex-row" style={{ backgroundColor: C.white, boxShadow: HARD_SHADOW }}>
-      {/* ── Image — top on mobile, left on md+, 4:5 ratio ── */}
-      <div className="relative flex-shrink-0 overflow-hidden w-full md:w-[75%]" style={{ aspectRatio: "4/5" }}>
-        <img
-          src={product.img}
-          alt={product.name}
-          loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1)" }}
-          onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1.07)"}
-          onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"}
-        />
-        <div className="absolute top-3 left-3 px-2 py-1"
-          style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 10, color: C.white, letterSpacing: "0.12em" }}>
-          Class: {product.taxClass}
-        </div>
-        {product.isOnSale && product.discountPct && product.discountPct > 0 && (
-          <div className="absolute top-3 right-3 px-2 py-1"
-            style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 11, color: C.white, letterSpacing: "0.1em" }}>
-            Sale &minus;{product.discountPct}%
-          </div>
-        )}
+    /* Full 4:5 card — image fills everything, info overlaid at bottom */
+    <div
+      className="relative overflow-hidden"
+      style={{ aspectRatio: "4/5", boxShadow: HARD_SHADOW, cursor: "default" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* ── Full-bleed image ── */}
+      <img
+        src={product.img}
+        alt={product.name}
+        loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{
+          transform: hovered ? "scale(1.06)" : "scale(1)",
+          transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      />
+
+      {/* ── Top badges ── */}
+      <div className="absolute top-4 left-4 px-2 py-1 z-10"
+        style={{ backgroundColor: C.primary, ...LABEL_CAPS, fontSize: 10, color: C.white, letterSpacing: "0.12em" }}>
+        Class: {product.taxClass}
       </div>
+      {product.isOnSale && product.discountPct && product.discountPct > 0 && (
+        <div className="absolute top-4 right-4 px-2 py-1 z-10"
+          style={{ backgroundColor: C.secondary, ...LABEL_CAPS, fontSize: 11, color: C.white, letterSpacing: "0.1em" }}>
+          Sale &minus;{product.discountPct}%
+        </div>
+      )}
 
-      {/* ── Content — bottom on mobile, right on md+ ── */}
-      <div className="flex flex-col p-4 md:p-6 overflow-y-auto" style={{ flex: 1, gap: 14 }}>
-        {/* Name + subtitle */}
-        <div>
-          <h3 style={{ ...INTER, fontSize: 22, fontWeight: 700, color: C.onSurface, lineHeight: 1.2, marginBottom: 4, letterSpacing: "-0.02em" }}>{product.name}</h3>
-          <p style={{ ...INTER, fontSize: 12, color: C.secondary, fontWeight: 500, letterSpacing: "0.04em" }}>{product.tag}</p>
+      {/* ── Bottom overlay panel ── */}
+      <div
+        className="absolute bottom-0 left-0 right-0 z-10 flex flex-col"
+        style={{
+          background: "linear-gradient(to top, rgba(1,45,29,0.97) 0%, rgba(1,45,29,0.88) 60%, rgba(1,45,29,0.0) 100%)",
+          padding: "48px 20px 20px",
+          gap: 10,
+          transform: hovered ? "translateY(0)" : "translateY(0)",
+        }}
+      >
+        {/* Product name + tag */}
+        <div style={{ marginBottom: 2 }}>
+          <h3 style={{ ...INTER, fontSize: 20, fontWeight: 700, color: C.white, lineHeight: 1.2, marginBottom: 3, letterSpacing: "-0.01em" }}>
+            {product.name}
+          </h3>
+          <p style={{ ...INTER, fontSize: 11, color: C.mint, fontWeight: 500, letterSpacing: "0.06em" }}>{product.tag}</p>
         </div>
 
-        {/* Weight + price options */}
-        {weightOptions.length > 0 && (
-          <div>
-            <p style={{ ...INTER, fontSize: 11, color: C.outline, marginBottom: 8, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Available Weights</p>
-            <div className="flex flex-wrap gap-2">
-              {weightOptions.map(opt => (
-                <div key={opt.weight} style={{ border: `1.5px solid ${C.primary}`, padding: "6px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 64 }}>
-                  <span style={{ ...INTER, fontSize: 13, fontWeight: 700, color: C.primary, letterSpacing: "0.02em" }}>{opt.weight}</span>
-                  <span style={{ ...INTER, fontSize: 12, fontWeight: 500, color: opt.isSale ? C.secondary : C.onSurfaceVariant }}>{fmt(opt.price)}</span>
-                </div>
-              ))}
-            </div>
+        {/* Price + weight chips */}
+        {weightOptions.length > 0 ? (
+          <div className="flex flex-wrap gap-2" style={{ marginBottom: 2 }}>
+            {weightOptions.slice(0, 3).map(opt => (
+              <div key={opt.weight}
+                style={{ border: `1px solid rgba(255,255,255,0.3)`, padding: "4px 10px", display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,255,255,0.08)" }}>
+                <span style={{ ...INTER, fontSize: 12, fontWeight: 700, color: C.white }}>{opt.weight}</span>
+                <span style={{ ...INTER, fontSize: 12, fontWeight: 500, color: opt.isSale ? C.mint : "rgba(255,255,255,0.7)" }}>{fmt(opt.price)}</span>
+              </div>
+            ))}
           </div>
+        ) : (
+          <p style={{ ...INTER, fontSize: 16, fontWeight: 700, color: C.mint, marginBottom: 2 }}>{fmt(product.price)}</p>
         )}
 
-        {/* Discount coupons */}
+        {/* Coupons */}
         {relevantCoupons.length > 0 && (
-          <div>
-            <p style={{ ...INTER, fontSize: 11, color: C.outline, marginBottom: 8, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Discount Offers</p>
-            <div className="flex flex-col gap-2">
-              {relevantCoupons.map(c => (
-                <span key={c.id} style={{ ...MONO, fontSize: 12, color: C.secondary, backgroundColor: `${C.secondary}12`, padding: "5px 10px", border: `1px dashed ${C.secondary}`, display: "inline-block" }}>
-                  {c.code} — {c.discountType === "percentage" ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
-                </span>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-2" style={{ marginBottom: 2 }}>
+            {relevantCoupons.map(c => (
+              <span key={c.id} style={{ ...MONO, fontSize: 11, color: C.mint, border: `1px dashed ${C.mint}`, padding: "3px 8px" }}>
+                {c.code} — {c.discountType === "percentage" ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
+              </span>
+            ))}
           </div>
         )}
 
-        {/* Buttons pinned to bottom */}
-        <div className="flex flex-col gap-2 mt-auto pt-1">
+        {/* Action buttons */}
+        <div className="flex gap-2 mt-1">
           <button
             onClick={() => isReal && onAddToCart(product.id)}
-            className="w-full py-3.5 transition-all"
-            style={{ backgroundColor: C.primary, color: C.white, ...INTER, fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", opacity: isReal ? 1 : 0.6 }}
+            className="flex-1 py-3 transition-all"
+            style={{
+              backgroundColor: C.white,
+              color: C.primary,
+              ...INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+              opacity: isReal ? 1 : 0.6,
+              border: "none",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primaryFixed; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.white; }}
             data-testid={`btn-add-to-cart-${product.id}`}
           >
-            <ShoppingCart className="inline-block w-3.5 h-3.5 mr-2" />
-            Add to Cart — {fmt(product.price)}
+            <ShoppingCart className="inline-block w-3.5 h-3.5 mr-1.5" />
+            Add to Cart
           </button>
           <button
             onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
-            className="w-full py-3.5 transition-all"
-            style={{ border: `1.5px solid ${C.primary}`, color: C.primary, backgroundColor: "transparent", ...INTER, fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", opacity: product.slug ? 1 : 0.5 }}
-            onMouseEnter={e => { if (product.slug) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; } }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+            className="flex-1 py-3 transition-all"
+            style={{
+              border: `1.5px solid rgba(255,255,255,0.6)`,
+              color: C.white,
+              backgroundColor: "transparent",
+              ...INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+              opacity: product.slug ? 1 : 0.5,
+            }}
+            onMouseEnter={e => { if (product.slug) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.15)"; (e.currentTarget as HTMLButtonElement).style.borderColor = C.white; } }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.6)"; }}
             data-testid={`btn-view-specimen-${product.id}`}
           >
             View Specimen
