@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, getUserInfo, getOidcConfig, client } from "./replitAuth";
 import { emailService } from "./email";
-import { randomUUID, createHmac } from "crypto";
+import { randomUUID, randomInt, createHmac } from "crypto";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -631,13 +631,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // Generate OTP code
   function generateOtpCode(length: number = 6): string {
-    const digits = '0123456789';
-    let otp = '';
-    for (let i = 0; i < length; i++) {
-      otp += digits[Math.floor(Math.random() * digits.length)];
-    }
-    return otp;
+    const digits = "0123456789";
+    return Array.from({ length }, () => digits[randomInt(0, digits.length)]).join("");
   }
+
+  // Best-effort per-process throttle for reset requests. OTP records still
+  // enforce expiry and attempt limits, while this prevents repeated email
+  // sends from a single app instance.
+  const passwordResetRequests = new Map<string, { count: number; windowStartedAt: number }>();
+  const RESET_REQUEST_LIMIT = 3;
+  const RESET_REQUEST_WINDOW_MS = 15 * 60 * 1000;
 
   // Send OTP for email verification (signup)
   app.post("/api/auth/send-otp", async (req, res) => {
@@ -918,7 +921,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Forgot password - request OTP
   app.post("/api/auth/forgot-password", async (req, res) => {
     try {
-      const { email } = req.body;
+      const email = String(req.body?.email || "").toLowerCase().trim();
       
       if (!email) {
         return res.status(400).json({ error: "Email is required" });
@@ -928,6 +931,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return res.status(400).json({ error: "Invalid email format" });
+      }
+
+      const throttleKey = `${req.ip}:${email}`;
+      const now = Date.now();
+      const previous = passwordResetRequests.get(throttleKey);
+      if (!previous || now - previous.windowStartedAt >= RESET_REQUEST_WINDOW_MS) {
+        passwordResetRequests.set(throttleKey, { count: 1, windowStartedAt: now });
+      } else if (previous.count >= RESET_REQUEST_LIMIT) {
+        // Keep the response generic so the endpoint cannot be used to probe
+        // account state, while still stopping OTP/email abuse.
+        return res.json({
+          success: true,
+          message: "If an account exists, you will receive a password reset OTP",
+        });
+      } else {
+        previous.count += 1;
       }
       
       // Check if user exists
@@ -963,7 +982,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         expiresAt,
       });
       
-      // Try to send email via MSG91
+      // Try the configured communication provider first.
       const msg91AuthKey = commSettings?.authKey;
       const emailSettings = commSettings?.email || {};
       let emailSent = false;
@@ -1006,6 +1025,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           console.error("Error sending password reset email:", error);
         }
       }
+
+      // Resend is the application-level fallback when MSG91 is not configured
+      // or is unavailable. Never expose the code in production.
+      if (!emailSent) {
+        emailSent = await emailService.sendPasswordResetCode({
+          customerEmail: email,
+          customerName: user.firstName || undefined,
+          code,
+          expiresInMinutes: otpExpiry,
+        });
+      }
       
       const isDev = process.env.NODE_ENV !== 'production';
       
@@ -1025,22 +1055,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Reset password with OTP
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
-      const { email, otpCode, newPassword } = req.body;
+      const email = String(req.body?.email || "").toLowerCase().trim();
+      const otpCode = String(req.body?.otpCode || "").trim();
+      const newPassword = String(req.body?.newPassword || "");
       
       if (!email || !otpCode || !newPassword) {
         return res.status(400).json({ error: "Email, OTP code, and new password are required" });
-      }
-      
-      // Verify OTP
-      const isValidOtp = await storage.verifyOtpCode(email, otpCode, 'forgot_password');
-      if (!isValidOtp) {
-        return res.status(400).json({ error: "Invalid or expired OTP" });
-      }
-      
-      // Get user
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
       }
       
       // Validate password strength
@@ -1048,10 +1068,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!validation.valid) {
         return res.status(400).json({ error: validation.message });
       }
+
+      if (!/^\d{6,8}$/.test(otpCode)) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
+
+      // Verify only after password validation so a user does not lose a valid
+      // code because they initially submitted a weak password.
+      const isValidOtp = await storage.verifyOtpCode(email, otpCode, "forgot_password");
+      if (!isValidOtp) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
+
+      // Get user after the generic OTP check to avoid account enumeration.
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
       
       // Hash and update password
       const passwordHash = await hashPassword(newPassword);
       await storage.updateUserPassword(user.id, passwordHash);
+      await storage.invalidateUserSessions(user.id);
       
       // Clean up OTP
       await storage.deleteOtpCodes(email, 'forgot_password');

@@ -278,6 +278,7 @@ export default function ForgotPassword() {
                           value={otpCode}
                           onChange={(value) => setOtpCode(value)}
                           disabled={resetPasswordMutation.isPending}
+                           autoComplete="one-time-code"
                           data-testid="input-otp"
                         >
                           <InputOTPGroup>
@@ -319,6 +320,7 @@ export default function ForgotPassword() {
                           onChange={(e) => setNewPassword(e.target.value)}
                           disabled={resetPasswordMutation.isPending}
                           required
+                           autoComplete="new-password"
                           data-testid="input-new-password"
                         />
                         <Button
@@ -361,6 +363,7 @@ export default function ForgotPassword() {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         disabled={resetPasswordMutation.isPending}
                         required
+                         autoComplete="new-password"
                         data-testid="input-confirm-password"
                       />
                       {confirmPassword.length > 0 && (

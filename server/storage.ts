@@ -1,5 +1,6 @@
 import { eq, and, or, like, desc, asc, sql, isNull, inArray, gte, lte, lt, gt, ne } from "drizzle-orm";
 import { db } from "./db";
+import { hashOtpCode, verifyOtpCodeHash } from "./password";
 import {
   users,
   categories,
@@ -72,6 +73,7 @@ import {
   dogGiftSeriesAdBanners,
   type DogGiftSeriesAdBanner,
   type InsertDogGiftSeriesAdBanner,
+  sessions,
   type User,
   type UpsertUser,
   type Category,
@@ -200,6 +202,7 @@ export interface IStorage {
   updateUser(id: string, data: Partial<UpsertUser>): Promise<User | undefined>;
   updateUserRole(id: string, role: string): Promise<User | undefined>;
   updateUserPassword(id: string, passwordHash: string): Promise<User | undefined>;
+  invalidateUserSessions(userId: string): Promise<void>;
   getUsers(search?: string): Promise<{ users: User[]; total: number }>;
   getAdminUsers(search?: string): Promise<{ users: User[]; total: number }>;
   getCustomerUsers(search?: string, customerType?: string): Promise<{ users: any[]; total: number; typeCounts: Record<string, number> }>;
@@ -662,6 +665,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  async invalidateUserSessions(userId: string): Promise<void> {
+    await db.execute(sql`
+      DELETE FROM ${sessions}
+      WHERE
+        sess->'passport'->'user'->'claims'->>'sub' = ${userId}
+        OR sess->'passport'->'user'->'dbUser'->>'id' = ${userId}
+    `);
   }
 
   async createSubscriptionCustomer(userData: {
@@ -2230,7 +2242,7 @@ export class DatabaseStorage implements IStorage {
     const [created] = await db.insert(otpCodes).values({
       email: otp.email.toLowerCase().trim(),
       phone: otp.phone || null,
-      code: otp.code,
+      code: hashOtpCode(otp.code),
       purpose: otp.purpose,
       expiresAt: otp.expiresAt,
       verified: false,
@@ -2266,7 +2278,14 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
     
-    if (otp.code !== code) {
+    // New records contain a SHA-256 digest. The plaintext comparison keeps
+    // already-issued codes usable during a rolling deployment only; new
+    // codes are never stored in plaintext.
+    const isMatch = otp.code.length === 64
+      ? verifyOtpCodeHash(code, otp.code)
+      : otp.code === code;
+
+    if (!isMatch) {
       await this.incrementOtpAttempts(otp.id);
       return false;
     }

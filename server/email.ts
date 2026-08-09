@@ -467,6 +467,45 @@ export const emailService = {
     }
   },
 
+  async sendPasswordResetCode(data: {
+    customerEmail: string;
+    customerName?: string;
+    code: string;
+    expiresInMinutes: number;
+  }): Promise<boolean> {
+    if (!resend) {
+      console.log("[Email] Resend not configured, skipping password reset email");
+      return false;
+    }
+
+    const name = data.customerName || data.customerEmail.split("@")[0];
+    const safeName = name.replace(/[<>&"']/g, "");
+    const safeCode = data.code.replace(/[^\dA-Z]/gi, "");
+
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: data.customerEmail,
+        subject: `Password reset code - ${STORE_NAME}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a1c1a">
+            <h2>Password reset request</h2>
+            <p>Hi ${safeName},</p>
+            <p>Use this one-time code to reset your password:</p>
+            <div style="padding:18px;text-align:center;background:#f3f4f0;font-size:30px;font-weight:700;letter-spacing:8px">${safeCode}</div>
+            <p>This code expires in ${data.expiresInMinutes} minutes and can be used only once.</p>
+            <p style="color:#666;font-size:12px">If you did not request this, you can safely ignore this email.</p>
+          </div>
+        `,
+      });
+      console.log(`[Email] Password reset code sent to ${data.customerEmail}`);
+      return true;
+    } catch (error) {
+      console.error("[Email] Failed to send password reset email:", error);
+      return false;
+    }
+  },
+
   isConfigured(): boolean {
     return resend !== null;
   },
