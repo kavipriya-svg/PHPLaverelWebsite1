@@ -278,6 +278,11 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
             transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1)",
           }}
         />
+        {/* Specimen badge top-left — class name only */}
+        <div className="absolute top-6 left-6 z-10 font-mono text-[11px] px-4 py-2"
+          style={{ backgroundColor: C.primary, color: C.white, letterSpacing: "0.1em" }}>
+          {product.taxClass}
+        </div>
         {/* Sale badge top-right */}
         {product.isOnSale && product.discountPct && product.discountPct > 0 && (
           <div className="absolute top-6 right-6 z-10 font-mono text-[11px] px-3 py-2"
