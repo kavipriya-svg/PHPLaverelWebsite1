@@ -292,40 +292,59 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
         )}
       </div>
 
-      {/* ── Details below image (full-meals style) ── */}
-      <div className="border-l-4 pl-6 pt-6 pb-4 mt-1" style={{ borderColor: C.secondary }}>
-        {/* Product name — Playfair like full-meals */}
-        <h3 className="font-playfair mb-2"
-          style={{ fontSize: "clamp(22px,2.8vw,36px)", fontWeight: 600, color: C.primary, lineHeight: 1.2 }}>
-          {product.name}
-        </h3>
+      {/* ── Details below image — exact full-meals card style ── */}
+      <div className="space-y-6 pt-6">
 
-        {/* Tag / subtitle */}
-        <p className="font-inter uppercase mb-4"
-          style={{ fontSize: 11, color: C.secondary, fontWeight: 700, letterSpacing: "0.15em" }}>
-          {product.tag}
-        </p>
+        {/* Name + price + italic quote — bordered like full-meals */}
+        <div className="border-l-4 pl-8" style={{ borderColor: C.secondary }}>
+          <h3 className="font-playfair mb-4"
+            style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 600, color: C.primary, lineHeight: 1.2 }}>
+            {product.name}
+          </h3>
 
-        {/* Weight + price chips */}
-        {weightOptions.length > 0 ? (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {weightOptions.slice(0, 3).map(opt => (
-              <div key={opt.weight}
-                style={{ border: `1px solid ${C.outlineVariant}`, padding: "4px 12px", display: "flex", alignItems: "center", gap: 6, backgroundColor: C.surfaceContainerLow }}>
-                <span className="font-inter" style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>{opt.weight}</span>
-                <span className="font-mono" style={{ fontSize: 12, color: opt.isSale ? C.secondary : C.onSurfaceVariant }}>{fmt(opt.price)}</span>
+          {/* Price line */}
+          {weightOptions.length > 0 ? (
+            <p className="font-inter text-base mb-3"
+              style={{ color: C.secondary, fontWeight: 600, letterSpacing: "0.05em" }}>
+              {weightOptions.slice(0, 2).map(o => `${o.weight} — ${fmt(o.price)}`).join("  ·  ")}
+            </p>
+          ) : (
+            <p className="font-inter text-base mb-3"
+              style={{ color: C.secondary, fontWeight: 600, letterSpacing: "0.05em" }}>
+              {fmt(product.price)}
+            </p>
+          )}
+
+          {/* Italic quote/description */}
+          <p className="font-playfair text-xl italic leading-relaxed"
+            style={{ color: C.onSurfaceVariant }}>
+            {product.shortDesc
+              ? `"${product.shortDesc}"`
+              : `"${product.tag}"`}
+          </p>
+        </div>
+
+        {/* Biometric / nutrition panel — matches full-meals data table */}
+        {product.nutrients && product.nutrients.length > 0 && (
+          <div className="p-8 border" style={{ backgroundColor: C.surfaceContainerLow, borderColor: C.outlineVariant }}>
+            <p className="font-inter mb-4"
+              style={{ fontSize: "10px", letterSpacing: "0.3em", color: `${C.primary}80`, textTransform: "uppercase", fontWeight: 700 }}>
+              Nutritional Profile
+            </p>
+            {product.nutrients.slice(0, 2).map((n, i) => (
+              <div key={n.k}
+                className={`flex justify-between py-2 ${i < product.nutrients.slice(0, 2).length - 1 ? "border-b" : ""}`}
+                style={{ borderColor: C.outlineVariant }}>
+                <span className="font-inter text-xs uppercase tracking-widest" style={{ color: C.onSurface }}>{n.k}</span>
+                <span className="font-mono text-xs" style={{ color: C.primary }}>{n.v}</span>
               </div>
             ))}
           </div>
-        ) : (
-          <p className="font-inter mb-4" style={{ fontSize: 16, fontWeight: 600, color: C.secondary, letterSpacing: "0.05em" }}>
-            {fmt(product.price)}
-          </p>
         )}
 
         {/* Coupon codes */}
         {relevantCoupons.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2">
             {relevantCoupons.map(c => (
               <span key={c.id} className="font-mono"
                 style={{ fontSize: 11, color: C.primary, border: `1px dashed ${C.primary}70`, padding: "3px 8px" }}>
@@ -335,30 +354,30 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
           </div>
         )}
 
-        {/* Action buttons — full-meals style */}
-        <div className="flex flex-wrap gap-3 mt-2">
+        {/* Buttons — exact full-meals order and style */}
+        <div className="flex flex-wrap gap-4">
           <button
-            className="font-inter text-xs uppercase tracking-widest px-8 py-3 transition-all duration-300 cursor-pointer"
-            style={{ backgroundColor: C.primary, color: C.white, letterSpacing: "0.1em", opacity: isReal ? 1 : 0.6, border: "none" }}
-            onClick={() => isReal && onAddToCart(product.id)}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.secondary; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; }}
-            data-testid={`btn-add-to-cart-${product.id}`}
-          >
-            <ShoppingCart className="inline-block w-3.5 h-3.5 mr-2" />
-            Add to Cart
-          </button>
-          <button
-            className="font-inter text-xs uppercase tracking-widest px-8 py-3 border transition-all duration-300 cursor-pointer"
-            style={{ borderColor: C.primary, color: C.primary, backgroundColor: "transparent", letterSpacing: "0.1em", opacity: product.slug ? 1 : 0.5 }}
+            className="font-inter text-xs uppercase tracking-widest px-12 py-4 transition-all duration-300 cursor-pointer"
+            style={{ backgroundColor: C.primary, color: C.white, opacity: product.slug ? 1 : 0.5 }}
             onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
-            onMouseEnter={e => { if (product.slug) { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; } }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+            onMouseOver={e => (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.secondary}
+            onMouseOut={e => (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary}
             data-testid={`btn-view-specimen-${product.id}`}
           >
             View Specimen
           </button>
+          <button
+            className="font-inter text-xs uppercase tracking-widest px-12 py-4 border transition-all duration-300 cursor-pointer flex items-center gap-2"
+            style={{ borderColor: C.primary, color: C.primary, backgroundColor: "transparent", opacity: isReal ? 1 : 0.6 }}
+            onClick={() => isReal && onAddToCart(product.id)}
+            onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.white; }}
+            onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = C.primary; }}
+            data-testid={`btn-add-to-cart-${product.id}`}
+          >
+            <ShoppingCart className="w-4 h-4" /> Add to Cart
+          </button>
         </div>
+
       </div>
     </div>
   );
