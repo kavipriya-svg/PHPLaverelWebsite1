@@ -665,7 +665,7 @@ export default function DogTreatProductDetail() {
               <div className="md:col-start-7 md:col-span-6 relative h-[500px]">
                 <div className="absolute inset-0 z-0 rounded-full blur-3xl" style={{ backgroundColor: `${C.primaryContainer}0D` }} />
                 <img
-                  src={allImgs.length > 1 ? allImgs[1] : allImgs[0]}
+                  src={(product as any).narrativeImageUrl || (allImgs.length > 1 ? allImgs[1] : allImgs[0])}
                   alt={product.title}
                   className="w-full h-full object-cover z-10 shadow-2xl"
                   style={{ filter: "grayscale(100%)", transition: "filter 0.5s ease", position: "relative" }}

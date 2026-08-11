@@ -74,6 +74,7 @@ const productSchema = z.object({
   feedingGuidelines: z.string().optional(),
   storageInstructions: z.string().optional(),
   longDesc: z.string().optional(),
+  narrativeImageUrl: z.string().optional(),
   price: z.string().min(1, "Price is required"),
   salePrice: z.string().optional(),
   salePriceStart: z.string().optional(),
@@ -225,6 +226,7 @@ export default function ProductForm() {
       feedingGuidelines: "",
       storageInstructions: "",
       longDesc: "",
+      narrativeImageUrl: "",
       price: "",
       salePrice: "",
       salePriceStart: "",
@@ -312,6 +314,7 @@ export default function ProductForm() {
         feedingGuidelines: (p as any).feedingGuidelines || "",
         storageInstructions: (p as any).storageInstructions || "",
         longDesc: p.longDesc || "",
+        narrativeImageUrl: (p as any).narrativeImageUrl || "",
         price: p.price as string,
         salePrice: p.salePrice as string || "",
         salePriceStart: (p as any).salePriceStart ? formatDateTimeLocal(new Date((p as any).salePriceStart)) : "",
@@ -915,6 +918,45 @@ export default function ProductForm() {
                     </FormItem>
                   )}
                 />
+
+                {/* ── Wild Sourced Profile image ── */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Wild Sourced Profile Image</p>
+                  <p className="text-xs text-muted-foreground">Shown beside the long description on the product page. Recommended: portrait or square, high quality.</p>
+                  {form.watch("narrativeImageUrl") ? (
+                    <div className="relative inline-block">
+                      <img src={form.watch("narrativeImageUrl")} alt="Narrative" className="h-40 w-auto object-cover rounded border" />
+                      <Button type="button" variant="ghost" size="sm"
+                        className="absolute top-1 right-1 h-6 w-6 p-0 bg-white/80"
+                        onClick={() => form.setValue("narrativeImageUrl", "")}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer hover:bg-muted/30 transition-colors h-28 max-w-xs">
+                      <Upload className="h-6 w-6 mb-1 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Upload profile image</span>
+                      <input type="file" accept="image/*" className="hidden"
+                        data-testid="input-narrative-image"
+                        onChange={async e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            const fd = new FormData();
+                            fd.append("file", file);
+                            const res = await fetch("/api/upload/file", { method: "POST", body: fd, credentials: "include" });
+                            if (!res.ok) throw new Error("Upload failed");
+                            const data = await res.json();
+                            form.setValue("narrativeImageUrl", data.url);
+                            toast({ title: "Image uploaded" });
+                          } catch {
+                            toast({ title: "Upload failed", variant: "destructive" });
+                          }
+                          e.target.value = "";
+                        }} />
+                    </label>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
