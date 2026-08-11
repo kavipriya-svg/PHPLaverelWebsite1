@@ -639,7 +639,7 @@ export default function DogTreatProductDetail() {
                         <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: C.secondary, letterSpacing: "0.15em" }}>
                           {String(i + 1).padStart(2, "0")}
                         </span>
-                        <p style={{ fontSize: 14, color: C.onSurface, lineHeight: 1.6, fontWeight: 400 }}>{item.text}</p>
+                        <p style={{ ...PLAYFAIR, fontSize: 14, color: C.onSurface, lineHeight: 1.6, fontWeight: 400 }}>{item.text}</p>
                       </div>
                     </div>
                   );
