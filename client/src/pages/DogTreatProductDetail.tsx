@@ -657,7 +657,7 @@ export default function DogTreatProductDetail() {
                 <h2 style={{ ...PLAYFAIR, fontSize: 28, lineHeight: "36px", fontWeight: 600, fontStyle: "italic", color: C.primary, marginBottom: 20 }}>
                   Wild Sourced Profile
                 </h2>
-                <p style={{ ...PLAYFAIR, fontSize: 18, lineHeight: "32px", fontWeight: 400, color: C.onSurfaceVariant, textAlign: "justify" }}
+                <p style={{ ...PLAYFAIR, fontSize: 14, lineHeight: "24px", fontWeight: 400, color: C.onSurfaceVariant, textAlign: "justify" }}
                   className="first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:leading-none">
                   {longDescText}
                 </p>
