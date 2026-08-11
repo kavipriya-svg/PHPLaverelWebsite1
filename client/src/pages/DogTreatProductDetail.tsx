@@ -309,9 +309,9 @@ export default function DogTreatProductDetail() {
         <section className="grid grid-cols-1 md:grid-cols-12 gap-6 py-20 min-h-screen px-5 md:px-16">
 
           {/* Left — gallery */}
-          <div className="md:col-span-7 flex flex-col md:flex-row gap-6 relative">
+          <div className="md:col-span-8 flex flex-col md:flex-row gap-6 relative">
             {allImgs.length > 1 && (
-              <div className="hidden md:flex flex-col gap-4 w-32 shrink-0">
+              <div className="hidden md:flex flex-col gap-4 w-24 shrink-0">
                 {allImgs.map((src, i) => (
                   <button key={i} onClick={() => setActiveImg(i)} data-testid={`thumb-${i}`}
                     className="w-full transition-opacity duration-200"
@@ -352,7 +352,7 @@ export default function DogTreatProductDetail() {
           </div>
 
           {/* Right — commerce block */}
-          <div className="md:col-span-5 flex flex-col justify-start pt-8 md:pt-24 space-y-8">
+          <div className="md:col-span-4 flex flex-col justify-start pt-8 md:pt-24 space-y-8">
             <div className="space-y-2">
               <p style={{ ...LABEL_CAPS, color: C.secondary }}>Wild Treats Collection / Dehydrated</p>
               <h1 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", fontWeight: 600, lineHeight: "1.15", color: C.primary }}>
