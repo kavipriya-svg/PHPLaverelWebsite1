@@ -729,7 +729,7 @@ export default function DogTreatProductDetail() {
                         <div className="space-y-8">
                           {macroRows.map(([label, val]) => (
                             <div key={label}>
-                              <div className="flex justify-between mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>
+                              <div className="flex justify-between mb-2" style={{ fontFamily: "'Inter', sans-serif", fontSize: 14 }}>
                                 <span>{label}</span><span>{val}%</span>
                               </div>
                               <div className="w-full h-0.5" style={{ backgroundColor: `${C.outlineVariant}4D` }}>
