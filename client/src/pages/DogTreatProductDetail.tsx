@@ -322,7 +322,7 @@ export default function DogTreatProductDetail() {
               </div>
             )}
             <div className="flex-grow">
-              <div className="relative overflow-hidden group" style={{ aspectRatio: "4/5", ...HARD_SHADOW }}>
+              <div className="relative overflow-hidden group" style={{ aspectRatio: "4/5" }}>
                 <img src={allImgs[activeImg] || ""} alt={product.title} className="w-full h-full object-cover" loading="lazy" />
                 {/* New Arrival badge — top left */}
                 {(product as any).isNewArrival && (
