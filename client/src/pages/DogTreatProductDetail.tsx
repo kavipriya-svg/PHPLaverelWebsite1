@@ -16,7 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ProductWithDetails, Coupon, ReviewWithUser } from "@shared/schema";
 
 // ─── Shared typography constants ─────────────────────────────────────────────
-const MONO: React.CSSProperties = { fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: "0.05em" };
+const MONO: React.CSSProperties = { fontFamily: "'Inter', sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" };
 const PLAYFAIR: React.CSSProperties = { fontFamily: "'Playfair Display', serif" };
 const HARD_SHADOW: React.CSSProperties = { boxShadow: "40px 40px 0px 0px rgba(1,45,29,0.15)" };
 const LABEL_CAPS: React.CSSProperties = { fontFamily: "'Inter', sans-serif", fontSize: 11, lineHeight: "16px", letterSpacing: "0.15em", fontWeight: 700, textTransform: "uppercase" };
