@@ -598,39 +598,51 @@ export default function DogTreatProductDetail() {
           </div>
         </section>
 
-        {/* ════ BENEFITS — compact two-colour rows ════ */}
-        {benefitItems.length > 0 && (
-          <section className="border-t" style={{ borderColor: `${C.outlineVariant}33` }}>
-            {/* Header */}
-            <div className="px-5 md:px-16 pt-10 pb-6 flex items-baseline gap-4">
-              <span style={{ ...MONO, fontSize: 10, color: `${C.primary}60`, letterSpacing: "0.35em" }}>WHY IT WORKS</span>
-              <h2 style={{ ...PLAYFAIR, fontSize: "clamp(24px,3vw,36px)", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</h2>
-            </div>
-            {/* Rows */}
-            <div>
-              {benefitItems.map((item, i) => (
-                <div key={i}
-                  className="flex items-center gap-6 px-5 md:px-16 py-5 border-t"
-                  style={{
-                    borderColor: `${C.outlineVariant}33`,
-                    backgroundColor: i % 2 === 0 ? C.surfaceContainerLow : C.surface,
-                  }}>
-                  {/* Small image */}
-                  {item.imageUrl && (
-                    <div className="shrink-0 overflow-hidden rounded" style={{ width: 72, height: 72 }}>
-                      <img src={item.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+        {/* ════ BENEFITS — two-column cards ════ */}
+        {benefitItems.length > 0 && (() => {
+          // Fallback dummy images (relevant to pet nutrition) shown when no image is uploaded
+          const DUMMY_IMGS = [
+            "https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400&q=80", // dog eating
+            "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=400&q=80", // golden retriever
+            "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&q=80", // dog outdoors
+            "https://images.unsplash.com/photo-1583511655826-05700442b31b?w=400&q=80", // dog portrait
+            "https://images.unsplash.com/photo-1534361960057-19f4434a4d43?w=400&q=80", // dog healthy
+            "https://images.unsplash.com/photo-1560743641-3914f2c45636?w=400&q=80", // dog playing
+          ];
+          return (
+            <section className="border-t px-5 md:px-16 py-12" style={{ borderColor: `${C.outlineVariant}33` }}>
+              {/* Header */}
+              <div className="flex items-baseline gap-4 mb-8">
+                <span style={{ ...MONO, fontSize: 10, color: `${C.primary}60`, letterSpacing: "0.35em" }}>WHY IT WORKS</span>
+                <h2 style={{ ...PLAYFAIR, fontSize: "clamp(24px,3vw,36px)", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</h2>
+              </div>
+              {/* Two-column grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {benefitItems.map((item, i) => {
+                  const imgSrc = item.imageUrl || DUMMY_IMGS[i % DUMMY_IMGS.length];
+                  const isDark = i % 2 === 0;
+                  return (
+                    <div key={i}
+                      className="flex items-center gap-4 p-4"
+                      style={{ backgroundColor: isDark ? C.surfaceContainerLow : C.surface, border: `1px solid ${C.outlineVariant}55` }}>
+                      {/* Small square image */}
+                      <div className="shrink-0 overflow-hidden" style={{ width: 80, height: 80 }}>
+                        <img src={imgSrc} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                      {/* Index + text */}
+                      <div className="flex flex-col gap-1">
+                        <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: C.secondary, letterSpacing: "0.15em" }}>
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <p style={{ fontSize: 14, color: C.onSurface, lineHeight: 1.6, fontWeight: 400 }}>{item.text}</p>
+                      </div>
                     </div>
-                  )}
-                  {/* Index + text */}
-                  <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: C.secondary, minWidth: 24, letterSpacing: "0.1em" }}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <p style={{ fontSize: 15, color: C.onSurface, lineHeight: 1.6, fontWeight: 400 }}>{item.text}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* ════ PRODUCT NARRATIVE ════ */}
         {longDescText && (
