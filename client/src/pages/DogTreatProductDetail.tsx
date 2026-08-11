@@ -604,7 +604,7 @@ export default function DogTreatProductDetail() {
         </section>
 
         {/* ════ BENEFITS — two-column cards ════ */}
-        {benefitItems.length > 0 && (() => {
+        {(product as any).showBenefits !== false && benefitItems.length > 0 && (() => {
           // Fallback dummy images (relevant to pet nutrition) shown when no image is uploaded
           const DUMMY_IMGS = [
             "https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400&q=80", // dog eating
@@ -650,7 +650,7 @@ export default function DogTreatProductDetail() {
         })()}
 
         {/* ════ PRODUCT NARRATIVE ════ */}
-        {longDescText && (
+        {(product as any).showLongDesc !== false && longDescText && (
           <section className="py-10 border-t px-5 md:px-16" style={{ borderColor: `${C.outlineVariant}33` }}>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
               <div className="md:col-span-5">
@@ -769,14 +769,17 @@ export default function DogTreatProductDetail() {
         })()}
 
         {/* ════ FEEDING GUIDELINES & STORAGE ════ */}
-        {((product as any).feedingGuidelines || (product as any).storageInstructions) && (
+        {(
+          ((product as any).showFeedingGuidelines !== false && (product as any).feedingGuidelines) ||
+          ((product as any).showStorageInstructions !== false && (product as any).storageInstructions)
+        ) && (
           <section className="py-10 px-5 md:px-16" style={{ backgroundColor: C.surface }}>
             <div className="mb-10">
               <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>USAGE GUIDE</span>
               <h2 style={{ ...PLAYFAIR, fontSize: "clamp(28px,5vw,48px)", lineHeight: 1.2, fontWeight: 600, fontStyle: "italic", color: C.primary }}>Feeding &amp; Storage</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
-              {(product as any).feedingGuidelines && (
+              {(product as any).showFeedingGuidelines !== false && (product as any).feedingGuidelines && (
                 <div>
                   <h3 className="pb-3 mb-6 border-b" style={{ ...LABEL_CAPS, fontSize: 13, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Feeding Guidelines</h3>
                   <div className="space-y-5">
@@ -789,7 +792,7 @@ export default function DogTreatProductDetail() {
                   </div>
                 </div>
               )}
-              {(product as any).storageInstructions && (
+              {(product as any).showStorageInstructions !== false && (product as any).storageInstructions && (
                 <div>
                   <h3 className="pb-3 mb-6 border-b" style={{ ...LABEL_CAPS, fontSize: 13, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Storage Instructions</h3>
                   <div className="space-y-5">

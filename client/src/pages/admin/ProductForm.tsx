@@ -75,6 +75,10 @@ const productSchema = z.object({
   storageInstructions: z.string().optional(),
   longDesc: z.string().optional(),
   narrativeImageUrl: z.string().optional(),
+  showBenefits: z.boolean().default(true),
+  showFeedingGuidelines: z.boolean().default(true),
+  showStorageInstructions: z.boolean().default(true),
+  showLongDesc: z.boolean().default(true),
   price: z.string().min(1, "Price is required"),
   salePrice: z.string().optional(),
   salePriceStart: z.string().optional(),
@@ -227,6 +231,10 @@ export default function ProductForm() {
       storageInstructions: "",
       longDesc: "",
       narrativeImageUrl: "",
+      showBenefits: true,
+      showFeedingGuidelines: true,
+      showStorageInstructions: true,
+      showLongDesc: true,
       price: "",
       salePrice: "",
       salePriceStart: "",
@@ -315,6 +323,10 @@ export default function ProductForm() {
         storageInstructions: (p as any).storageInstructions || "",
         longDesc: p.longDesc || "",
         narrativeImageUrl: (p as any).narrativeImageUrl || "",
+        showBenefits: (p as any).showBenefits !== false,
+        showFeedingGuidelines: (p as any).showFeedingGuidelines !== false,
+        showStorageInstructions: (p as any).showStorageInstructions !== false,
+        showLongDesc: (p as any).showLongDesc !== false,
         price: p.price as string,
         salePrice: p.salePrice as string || "",
         salePriceStart: (p as any).salePriceStart ? formatDateTimeLocal(new Date((p as any).salePriceStart)) : "",
@@ -796,13 +808,25 @@ export default function ProductForm() {
                       <p className="text-sm font-medium">Benefits</p>
                       <p className="text-xs text-muted-foreground">Each benefit can have a description and an optional full-width image shown on the product page.</p>
                     </div>
-                    <Button type="button" variant="outline" size="sm"
-                      onClick={() => syncBenefits([...benefitItems, { text: "", imageUrl: "" }])}>
-                      <Plus className="h-4 w-4 mr-1" /> Add Benefit
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <FormField control={form.control} name="showBenefits" render={({ field }) => (
+                        <button type="button" onClick={() => field.onChange(!field.value)}
+                          className="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                          style={{ backgroundColor: field.value ? "#16a34a" : "#e5e7eb", color: field.value ? "#fff" : "#374151" }}>
+                          {field.value ? "Active" : "Inactive"}
+                        </button>
+                      )} />
+                      <Button type="button" variant="outline" size="sm"
+                        onClick={() => syncBenefits([...benefitItems, { text: "", imageUrl: "" }])}>
+                        <Plus className="h-4 w-4 mr-1" /> Add Benefit
+                      </Button>
+                    </div>
                   </div>
-                  {benefitItems.length === 0 && (
+                  {form.watch("showBenefits") && benefitItems.length === 0 && (
                     <p className="text-xs text-muted-foreground italic py-2">No benefits added yet.</p>
+                  )}
+                  {!form.watch("showBenefits") && (
+                    <p className="text-xs text-muted-foreground italic py-2 text-orange-500">Section inactive — will not appear on the product page.</p>
                   )}
                   {benefitItems.map((item, i) => (
                     <Card key={i} className="p-4 space-y-3">
@@ -868,56 +892,98 @@ export default function ProductForm() {
                   ))}
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="feedingGuidelines"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Feeding Guidelines</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={4} placeholder={"e.g.\nPuppies (up to 6 months): 10g per kg body weight\nAdults: 5–8g per kg body weight\nSeniors: Adjust as per vet advice"} data-testid="input-product-feeding-guidelines" />
-                      </FormControl>
-                      <FormDescription>Enter feeding instructions. These appear on the product listing page.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Feeding Guidelines</p>
+                    <FormField control={form.control} name="showFeedingGuidelines" render={({ field }) => (
+                      <button type="button" onClick={() => field.onChange(!field.value)}
+                        className="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                        style={{ backgroundColor: field.value ? "#16a34a" : "#e5e7eb", color: field.value ? "#fff" : "#374151" }}>
+                        {field.value ? "Active" : "Inactive"}
+                      </button>
+                    )} />
+                  </div>
+                  {!form.watch("showFeedingGuidelines") && (
+                    <p className="text-xs text-orange-500 italic">Section inactive — will not appear on the product page.</p>
                   )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="feedingGuidelines"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea {...field} rows={4} placeholder={"e.g.\nPuppies (up to 6 months): 10g per kg body weight\nAdults: 5–8g per kg body weight\nSeniors: Adjust as per vet advice"} data-testid="input-product-feeding-guidelines" />
+                        </FormControl>
+                        <FormDescription>Enter feeding instructions. These appear on the product listing page.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="storageInstructions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Storage Instructions</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={3} placeholder={"e.g.\nStore in a cool, dry place\nKeep away from direct sunlight\nReseal after opening"} data-testid="input-product-storage-instructions" />
-                      </FormControl>
-                      <FormDescription>Enter storage instructions. These appear on the product listing page.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Storage Instructions</p>
+                    <FormField control={form.control} name="showStorageInstructions" render={({ field }) => (
+                      <button type="button" onClick={() => field.onChange(!field.value)}
+                        className="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                        style={{ backgroundColor: field.value ? "#16a34a" : "#e5e7eb", color: field.value ? "#fff" : "#374151" }}>
+                        {field.value ? "Active" : "Inactive"}
+                      </button>
+                    )} />
+                  </div>
+                  {!form.watch("showStorageInstructions") && (
+                    <p className="text-xs text-orange-500 italic">Section inactive — will not appear on the product page.</p>
                   )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="storageInstructions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea {...field} rows={3} placeholder={"e.g.\nStore in a cool, dry place\nKeep away from direct sunlight\nReseal after opening"} data-testid="input-product-storage-instructions" />
+                        </FormControl>
+                        <FormDescription>Enter storage instructions. These appear on the product listing page.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="longDesc"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Long Description</FormLabel>
-                      <FormDescription>
-                        Use the toolbar to format text with bold, italic, headings, lists, and more.
-                      </FormDescription>
-                      <FormControl>
-                        <RichTextEditor 
-                          value={field.value || ""} 
-                          onChange={field.onChange}
-                          placeholder="Enter detailed product description..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Long Description</p>
+                    <FormField control={form.control} name="showLongDesc" render={({ field }) => (
+                      <button type="button" onClick={() => field.onChange(!field.value)}
+                        className="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                        style={{ backgroundColor: field.value ? "#16a34a" : "#e5e7eb", color: field.value ? "#fff" : "#374151" }}>
+                        {field.value ? "Active" : "Inactive"}
+                      </button>
+                    )} />
+                  </div>
+                  {!form.watch("showLongDesc") && (
+                    <p className="text-xs text-orange-500 italic">Section inactive — will not appear on the product page.</p>
                   )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="longDesc"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormDescription>
+                          Use the toolbar to format text with bold, italic, headings, lists, and more.
+                        </FormDescription>
+                        <FormControl>
+                          <RichTextEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            placeholder="Enter detailed product description..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* ── Wild Sourced Profile image ── */}
                 <div className="space-y-2">
