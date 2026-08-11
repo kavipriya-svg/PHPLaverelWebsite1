@@ -155,7 +155,15 @@ export default function ProductForm() {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [variants, setVariants] = useState<VariantItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  
+  const [benefitItems, setBenefitItems] = useState<{ text: string; imageUrl: string }[]>([]);
+  const [benefitUploading, setBenefitUploading] = useState<number | null>(null);
+
+  // Sync benefitItems → form field as JSON
+  const syncBenefits = (items: { text: string; imageUrl: string }[]) => {
+    setBenefitItems(items);
+    form.setValue("benefits", JSON.stringify(items));
+  };
+
   // Category hierarchy state
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
@@ -300,6 +308,7 @@ export default function ProductForm() {
         categoryId: p.categoryId || "",
         shortDesc: p.shortDesc || "",
         benefits: (p as any).benefits || "",
+        // benefitItems parsed separately below
         feedingGuidelines: (p as any).feedingGuidelines || "",
         storageInstructions: (p as any).storageInstructions || "",
         longDesc: p.longDesc || "",
@@ -364,6 +373,15 @@ export default function ProductForm() {
           stock: v.stock || 0,
         })) || []
       );
+      // Parse benefit items (JSON array or plain text)
+      const rawBenefits = (p as any).benefits || "";
+      try {
+        const parsed = JSON.parse(rawBenefits);
+        setBenefitItems(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        const lines = rawBenefits.split("\n").map((t: string) => t.trim()).filter(Boolean);
+        setBenefitItems(lines.map((t: string) => ({ text: t, imageUrl: "" })));
+      }
     }
   }, [productData, form]);
 
@@ -768,20 +786,84 @@ export default function ProductForm() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="benefits"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Benefits</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={4} placeholder={"e.g.\nSupports joint health\nBoosts immunity\nHigh protein, grain-free"} data-testid="input-product-benefits" />
-                      </FormControl>
-                      <FormDescription>Enter one benefit per line. These appear on the product page.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
+                {/* ── Benefits builder (text + image per item) ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Benefits</p>
+                      <p className="text-xs text-muted-foreground">Each benefit can have a description and an optional full-width image shown on the product page.</p>
+                    </div>
+                    <Button type="button" variant="outline" size="sm"
+                      onClick={() => syncBenefits([...benefitItems, { text: "", imageUrl: "" }])}>
+                      <Plus className="h-4 w-4 mr-1" /> Add Benefit
+                    </Button>
+                  </div>
+                  {benefitItems.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-2">No benefits added yet.</p>
                   )}
-                />
+                  {benefitItems.map((item, i) => (
+                    <Card key={i} className="p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-muted-foreground w-6">{String(i + 1).padStart(2, "0")}</span>
+                        <Input
+                          value={item.text}
+                          onChange={e => {
+                            const updated = benefitItems.map((b, idx) => idx === i ? { ...b, text: e.target.value } : b);
+                            syncBenefits(updated);
+                          }}
+                          placeholder="e.g. Supports joint health"
+                          className="flex-1"
+                          data-testid={`input-benefit-text-${i}`}
+                        />
+                        <Button type="button" variant="ghost" size="sm"
+                          onClick={() => syncBenefits(benefitItems.filter((_, idx) => idx !== i))}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                      {/* Image upload */}
+                      <div className="ml-8">
+                        {item.imageUrl ? (
+                          <div className="relative inline-block">
+                            <img src={item.imageUrl} alt="" className="h-28 w-full object-cover rounded" style={{ maxWidth: 320 }} />
+                            <Button type="button" variant="ghost" size="sm"
+                              className="absolute top-1 right-1 h-6 w-6 p-0 bg-white/80"
+                              onClick={() => syncBenefits(benefitItems.map((b, idx) => idx === i ? { ...b, imageUrl: "" } : b))}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer hover:bg-muted/30 transition-colors"
+                            style={{ maxWidth: 320, height: 80 }}>
+                            {benefitUploading === i
+                              ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                              : <><Upload className="h-5 w-5 mb-1 text-muted-foreground" /><span className="text-xs text-muted-foreground">Upload benefit image</span></>}
+                            <input type="file" accept="image/*" className="hidden"
+                              data-testid={`input-benefit-image-${i}`}
+                              onChange={async e => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setBenefitUploading(i);
+                                try {
+                                  const fd = new FormData();
+                                  fd.append("file", file);
+                                  const res = await fetch("/api/upload/file", { method: "POST", body: fd, credentials: "include" });
+                                  if (!res.ok) throw new Error("Upload failed");
+                                  const data = await res.json();
+                                  syncBenefits(benefitItems.map((b, idx) => idx === i ? { ...b, imageUrl: data.url } : b));
+                                  toast({ title: "Image uploaded" });
+                                } catch {
+                                  toast({ title: "Upload failed", variant: "destructive" });
+                                } finally {
+                                  setBenefitUploading(null);
+                                  e.target.value = "";
+                                }
+                              }} />
+                          </label>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
 
                 <FormField
                   control={form.control}

@@ -254,7 +254,15 @@ export default function DogTreatProductDetail() {
 
   const shortDesc = (product as any).shortDesc as string | undefined;
   const benefits = (product as any).benefits as string | undefined;
-  const benefitLines = benefits ? benefits.split("\n").map(l => l.trim()).filter(Boolean) : [];
+  type BenefitItem = { text: string; imageUrl: string };
+  let benefitItems: BenefitItem[] = [];
+  try {
+    const parsed = JSON.parse(benefits || "[]");
+    if (Array.isArray(parsed)) benefitItems = parsed;
+  } catch {
+    benefitItems = (benefits || "").split("\n").map(l => l.trim()).filter(Boolean).map(t => ({ text: t, imageUrl: "" }));
+  }
+  const benefitLines = benefitItems.map(b => b.text);
   const longDesc = (product as any).longDesc || product.description;
   const longDescText = longDesc ? stripHtml(longDesc) : "";
   const weight = (product as any).weight;
@@ -585,34 +593,58 @@ export default function DogTreatProductDetail() {
                 </div>
               </div>
 
-              {/* Benefits */}
-              {(benefitLines.length > 0) && (
-                <div className="pt-2">
-                  {/* Header row */}
-                  <div className="flex items-baseline gap-4 mb-6 pb-4 border-b" style={{ borderColor: C.outlineVariant }}>
-                    <span style={{ ...MONO, fontSize: 10, color: `${C.primary}60`, letterSpacing: "0.35em" }}>WHY IT WORKS</span>
-                    <span style={{ ...PLAYFAIR, fontSize: 26, fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</span>
-                  </div>
-                  {/* Numbered benefit rows */}
-                  <div className="flex flex-col">
-                    {benefitLines.map((line, i) => (
-                      <div key={i}
-                        className="flex items-start gap-5 py-4 border-b"
-                        style={{ borderColor: `${C.outlineVariant}55` }}>
-                        {/* Index number */}
-                        <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: C.secondary, minWidth: 28, paddingTop: 2, letterSpacing: "0.05em" }}>
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        {/* Benefit text */}
-                        <p style={{ fontSize: 14, color: C.onSurface, lineHeight: 1.65, fontWeight: 400 }}>{line}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Benefits — moved to full-width section below */}
             </div>
           </div>
         </section>
+
+        {/* ════ BENEFITS — full-width image panels ════ */}
+        {benefitItems.length > 0 && (
+          <section className="border-t" style={{ borderColor: `${C.outlineVariant}33` }}>
+            {/* Section header */}
+            <div className="px-5 md:px-16 pt-16 pb-10 flex items-baseline gap-6">
+              <span style={{ ...MONO, fontSize: 10, color: `${C.primary}60`, letterSpacing: "0.35em" }}>WHY IT WORKS</span>
+              <h2 style={{ ...PLAYFAIR, fontSize: "clamp(32px,5vw,56px)", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</h2>
+            </div>
+            {benefitItems.map((item, i) => {
+              const isReversed = i % 2 === 1;
+              const hasImage = !!item.imageUrl;
+              return (
+                <div key={i}
+                  className={`flex flex-col ${hasImage ? (isReversed ? "md:flex-row-reverse" : "md:flex-row") : "md:flex-row"} w-full border-t`}
+                  style={{ borderColor: `${C.outlineVariant}33`, minHeight: hasImage ? 340 : undefined }}>
+                  {/* Image panel */}
+                  {hasImage && (
+                    <div className="w-full md:w-3/5 relative overflow-hidden" style={{ minHeight: 300 }}>
+                      <img src={item.imageUrl} alt={item.text}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy" />
+                      {/* Subtle index watermark */}
+                      <span className="absolute top-6 left-6 z-10"
+                        style={{ ...MONO, fontSize: 11, color: "rgba(255,255,255,0.5)", letterSpacing: "0.2em" }}>
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                    </div>
+                  )}
+                  {/* Text panel */}
+                  <div className={`w-full ${hasImage ? "md:w-2/5" : ""} flex flex-col justify-center px-8 md:px-16 py-12`}
+                    style={{ backgroundColor: i % 2 === 0 ? C.surfaceContainerLow : C.surface }}>
+                    {!hasImage && (
+                      <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: C.secondary, marginBottom: 12, letterSpacing: "0.2em" }}>
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                    )}
+                    <div className="border-l-4 pl-6" style={{ borderColor: C.secondary }}>
+                      <p style={{ fontSize: "clamp(16px,2vw,22px)", color: C.onSurface, lineHeight: 1.7, fontWeight: 400 }}>
+                        {item.text}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        )}
 
         {/* ════ PRODUCT NARRATIVE ════ */}
         {longDescText && (
