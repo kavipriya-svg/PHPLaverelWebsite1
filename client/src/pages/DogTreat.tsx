@@ -266,8 +266,12 @@ function EditorialProductCard({ product, onAddToCart, allCoupons = [] }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* ── 4:5 Image ── */}
-      <div className="relative overflow-hidden" style={{ aspectRatio: "4/5" }}>
+      {/* ── 4:5 Image — click navigates to product page ── */}
+      <div
+        className="relative overflow-hidden"
+        style={{ aspectRatio: "4/5", cursor: product.slug ? "pointer" : "default" }}
+        onClick={() => product.slug && navigate(`/dogtreat/product/${product.slug}`)}
+      >
         <img
           src={product.img}
           alt={product.name}
