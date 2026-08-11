@@ -332,11 +332,6 @@ export default function DogTreatProductDetail() {
                     )}
                   </div>
                 )}
-                {(product as any).isNewArrival ? (
-                  <div className="absolute bottom-6 left-6 px-4 py-1" style={{ backgroundColor: C.primary, color: "#fff", ...LABEL_CAPS, letterSpacing: "0.2em" }}>NEW ARRIVAL</div>
-                ) : (
-                  <div className="absolute bottom-6 left-6 px-4 py-1" style={{ backgroundColor: C.primary, color: "#fff", ...LABEL_CAPS, letterSpacing: "0.2em" }}>Wild Sourced</div>
-                )}
               </div>
               {allImgs.length > 1 && (
                 <div className="flex md:hidden gap-3 mt-4 overflow-x-auto">
