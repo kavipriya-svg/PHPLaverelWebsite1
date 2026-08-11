@@ -314,7 +314,7 @@ export default function DogTreatProductDetail() {
       <main style={{ marginTop: 96, backgroundColor: "#f9faf6", color: "#1a1c1a", fontFamily: "Inter, sans-serif", overflowX: "hidden" }}>
 
         {/* ════ HERO SECTION ════ */}
-        <section className="grid grid-cols-1 md:grid-cols-12 gap-6 py-20 min-h-screen px-5 md:px-16">
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-6 py-8 px-5 md:px-16">
 
           {/* Left — gallery */}
           <div className="md:col-span-8 flex flex-col md:flex-row gap-6 relative">
@@ -360,7 +360,7 @@ export default function DogTreatProductDetail() {
           </div>
 
           {/* Right — commerce block */}
-          <div className="md:col-span-4 flex flex-col justify-start pt-8 md:pt-24 space-y-8">
+          <div className="md:col-span-4 flex flex-col justify-start pt-4 md:pt-8 space-y-8">
             <div className="space-y-2">
               <p style={{ ...LABEL_CAPS, color: C.secondary }}>Wild Treats Collection / Dehydrated</p>
               <h1 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", fontWeight: 600, lineHeight: "1.15", color: C.primary }}>
@@ -615,7 +615,7 @@ export default function DogTreatProductDetail() {
             "https://images.unsplash.com/photo-1560743641-3914f2c45636?w=400&q=80", // dog playing
           ];
           return (
-            <section className="border-t px-5 md:px-16 py-12" style={{ borderColor: `${C.outlineVariant}33` }}>
+            <section className="border-t px-5 md:px-16 py-8" style={{ borderColor: `${C.outlineVariant}33` }}>
               {/* Header */}
               <div className="flex items-baseline gap-4 mb-8">
                 <span style={{ ...MONO, fontSize: 10, color: `${C.primary}60`, letterSpacing: "0.35em" }}>WHY IT WORKS</span>
@@ -651,7 +651,7 @@ export default function DogTreatProductDetail() {
 
         {/* ════ PRODUCT NARRATIVE ════ */}
         {longDescText && (
-          <section className="py-20 border-t px-5 md:px-16" style={{ borderColor: `${C.outlineVariant}33` }}>
+          <section className="py-10 border-t px-5 md:px-16" style={{ borderColor: `${C.outlineVariant}33` }}>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
               <div className="md:col-span-5">
                 <h2 style={{ ...PLAYFAIR, fontSize: 48, lineHeight: "56px", fontWeight: 600, fontStyle: "italic", color: C.primary, marginBottom: 32 }}>
@@ -706,7 +706,7 @@ export default function DogTreatProductDetail() {
             ["SELENIUM", micro.selenium],
           ].filter(([, v]) => v) as [string, string][];
           return (
-            <section className="py-20" style={{ backgroundColor: "#ffffff" }}>
+            <section className="py-10" style={{ backgroundColor: "#ffffff" }}>
               <div className="px-5 md:px-16 max-w-7xl mx-auto">
                 {/* Heading — only when Technical Spec toggle is active */}
                 {showTechSpec && (
@@ -770,7 +770,7 @@ export default function DogTreatProductDetail() {
 
         {/* ════ FEEDING GUIDELINES & STORAGE ════ */}
         {((product as any).feedingGuidelines || (product as any).storageInstructions) && (
-          <section className="py-20 px-5 md:px-16" style={{ backgroundColor: C.surface }}>
+          <section className="py-10 px-5 md:px-16" style={{ backgroundColor: C.surface }}>
             <div className="mb-10">
               <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>USAGE GUIDE</span>
               <h2 style={{ ...PLAYFAIR, fontSize: 48, lineHeight: "56px", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Feeding &amp; Storage</h2>
