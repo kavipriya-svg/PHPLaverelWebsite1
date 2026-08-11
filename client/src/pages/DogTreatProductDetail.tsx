@@ -314,7 +314,7 @@ export default function DogTreatProductDetail() {
       <main style={{ marginTop: 96, backgroundColor: "#f9faf6", color: "#1a1c1a", fontFamily: "Inter, sans-serif", overflowX: "hidden" }}>
 
         {/* ════ HERO SECTION ════ */}
-        <section className="grid grid-cols-1 md:grid-cols-12 gap-6 py-8 px-5 md:px-16">
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 py-4 md:py-8 px-4 md:px-16">
 
           {/* Left — gallery */}
           <div className="md:col-span-8 flex flex-col md:flex-row gap-6 relative">
@@ -360,7 +360,7 @@ export default function DogTreatProductDetail() {
           </div>
 
           {/* Right — commerce block */}
-          <div className="md:col-span-4 flex flex-col justify-start pt-4 md:pt-8 space-y-8">
+          <div className="md:col-span-4 flex flex-col justify-start pt-2 md:pt-8 space-y-5 md:space-y-8">
             <div className="space-y-2">
               <p style={{ ...LABEL_CAPS, color: C.secondary }}>Wild Treats Collection / Dehydrated</p>
               <h1 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", fontWeight: 600, lineHeight: "1.15", color: C.primary }}>
@@ -667,7 +667,7 @@ export default function DogTreatProductDetail() {
                   </p>
                 )}
               </div>
-              <div className="md:col-start-7 md:col-span-6 relative h-[500px]">
+              <div className="md:col-start-7 md:col-span-6 relative h-[260px] md:h-[500px]">
                 <div className="absolute inset-0 z-0 rounded-full blur-3xl" style={{ backgroundColor: `${C.primaryContainer}0D` }} />
                 <img
                   src={(product as any).narrativeImageUrl || (allImgs.length > 1 ? allImgs[1] : allImgs[0])}
@@ -773,9 +773,9 @@ export default function DogTreatProductDetail() {
           <section className="py-10 px-5 md:px-16" style={{ backgroundColor: C.surface }}>
             <div className="mb-10">
               <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>USAGE GUIDE</span>
-              <h2 style={{ ...PLAYFAIR, fontSize: 48, lineHeight: "56px", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Feeding &amp; Storage</h2>
+              <h2 style={{ ...PLAYFAIR, fontSize: "clamp(28px,5vw,48px)", lineHeight: 1.2, fontWeight: 600, fontStyle: "italic", color: C.primary }}>Feeding &amp; Storage</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
               {(product as any).feedingGuidelines && (
                 <div>
                   <h3 className="pb-3 mb-6 border-b" style={{ ...LABEL_CAPS, fontSize: 13, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>Feeding Guidelines</h3>
