@@ -598,51 +598,37 @@ export default function DogTreatProductDetail() {
           </div>
         </section>
 
-        {/* ════ BENEFITS — full-width image panels ════ */}
+        {/* ════ BENEFITS — compact two-colour rows ════ */}
         {benefitItems.length > 0 && (
           <section className="border-t" style={{ borderColor: `${C.outlineVariant}33` }}>
-            {/* Section header */}
-            <div className="px-5 md:px-16 pt-16 pb-10 flex items-baseline gap-6">
+            {/* Header */}
+            <div className="px-5 md:px-16 pt-10 pb-6 flex items-baseline gap-4">
               <span style={{ ...MONO, fontSize: 10, color: `${C.primary}60`, letterSpacing: "0.35em" }}>WHY IT WORKS</span>
-              <h2 style={{ ...PLAYFAIR, fontSize: "clamp(32px,5vw,56px)", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</h2>
+              <h2 style={{ ...PLAYFAIR, fontSize: "clamp(24px,3vw,36px)", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</h2>
             </div>
-            {benefitItems.map((item, i) => {
-              const isReversed = i % 2 === 1;
-              const hasImage = !!item.imageUrl;
-              return (
+            {/* Rows */}
+            <div>
+              {benefitItems.map((item, i) => (
                 <div key={i}
-                  className={`flex flex-col ${hasImage ? (isReversed ? "md:flex-row-reverse" : "md:flex-row") : "md:flex-row"} w-full border-t`}
-                  style={{ borderColor: `${C.outlineVariant}33`, minHeight: hasImage ? 340 : undefined }}>
-                  {/* Image panel */}
-                  {hasImage && (
-                    <div className="w-full md:w-3/5 relative overflow-hidden" style={{ minHeight: 300 }}>
-                      <img src={item.imageUrl} alt={item.text}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy" />
-                      {/* Subtle index watermark */}
-                      <span className="absolute top-6 left-6 z-10"
-                        style={{ ...MONO, fontSize: 11, color: "rgba(255,255,255,0.5)", letterSpacing: "0.2em" }}>
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
+                  className="flex items-center gap-6 px-5 md:px-16 py-5 border-t"
+                  style={{
+                    borderColor: `${C.outlineVariant}33`,
+                    backgroundColor: i % 2 === 0 ? C.surfaceContainerLow : C.surface,
+                  }}>
+                  {/* Small image */}
+                  {item.imageUrl && (
+                    <div className="shrink-0 overflow-hidden rounded" style={{ width: 72, height: 72 }}>
+                      <img src={item.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   )}
-                  {/* Text panel */}
-                  <div className={`w-full ${hasImage ? "md:w-2/5" : ""} flex flex-col justify-center px-8 md:px-16 py-12`}
-                    style={{ backgroundColor: i % 2 === 0 ? C.surfaceContainerLow : C.surface }}>
-                    {!hasImage && (
-                      <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: C.secondary, marginBottom: 12, letterSpacing: "0.2em" }}>
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                    )}
-                    <div className="border-l-4 pl-6" style={{ borderColor: C.secondary }}>
-                      <p style={{ fontSize: "clamp(16px,2vw,22px)", color: C.onSurface, lineHeight: 1.7, fontWeight: 400 }}>
-                        {item.text}
-                      </p>
-                    </div>
-                  </div>
+                  {/* Index + text */}
+                  <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: C.secondary, minWidth: 24, letterSpacing: "0.1em" }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <p style={{ fontSize: 15, color: C.onSurface, lineHeight: 1.6, fontWeight: 400 }}>{item.text}</p>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </section>
         )}
 
