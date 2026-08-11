@@ -654,7 +654,7 @@ export default function DogTreatProductDetail() {
           <section className="py-10 border-t px-5 md:px-16" style={{ borderColor: `${C.outlineVariant}33` }}>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
               <div className="md:col-span-5">
-                <h2 style={{ ...PLAYFAIR, fontSize: 28, lineHeight: "36px", fontWeight: 600, fontStyle: "italic", color: C.primary, marginBottom: 20 }}>
+                <h2 style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", fontWeight: 600, fontStyle: "italic", color: C.primary, marginBottom: 20 }}>
                   Wild Sourced Profile
                 </h2>
                 <p style={{ ...PLAYFAIR, fontSize: 14, lineHeight: "24px", fontWeight: 400, color: C.onSurfaceVariant, textAlign: "justify" }}
