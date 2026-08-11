@@ -673,9 +673,7 @@ export default function DogTreatProductDetail() {
                   src={(product as any).narrativeImageUrl || (allImgs.length > 1 ? allImgs[1] : allImgs[0])}
                   alt={product.title}
                   className="w-full h-full object-cover z-10 shadow-2xl"
-                  style={{ filter: "grayscale(100%)", transition: "filter 0.5s ease", position: "relative" }}
-                  onMouseOver={(e) => (e.currentTarget.style.filter = "grayscale(0%)")}
-                  onMouseOut={(e) => (e.currentTarget.style.filter = "grayscale(100%)")}
+                  style={{ position: "relative" }}
                   loading="lazy"
                 />
               </div>
