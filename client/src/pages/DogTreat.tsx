@@ -513,7 +513,7 @@ export default function DogTreat() {
           <h1 style={{ ...PLAYFAIR, fontSize: "clamp(56px,9vw,84px)", fontWeight: 700, color: C.surface, lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: 24 }}>
             {dt.hero.headline}
           </h1>
-          <p style={{ ...INTER, fontSize: 18, fontWeight: 300, color: "rgba(249,250,246,0.9)", marginBottom: 40, maxWidth: 560, lineHeight: 1.6 }}>
+          <p style={{ ...PLAYFAIR, fontStyle: "italic", fontSize: "clamp(18px,3vw,30px)", fontWeight: 300, color: "rgba(249,250,246,0.9)", marginBottom: 40, maxWidth: 600, lineHeight: 1.5 }}>
             {dt.hero.subtitle}
           </p>
           <div className="flex gap-6 flex-wrap">
@@ -550,10 +550,10 @@ export default function DogTreat() {
       {dt.proteinLibrary.visible && (
         <section className="border-b" style={{ backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div style={{ marginBottom: 48 }}>
-            <h2 style={{ ...PLAYFAIR, fontSize: "clamp(36px,5vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 16 }}>
+            <h2 className="font-playfair" style={{ fontSize: "clamp(40px,6vw,72px)", fontWeight: 700, color: C.primary, marginBottom: 16 }}>
               {dt.proteinLibrary.title}
             </h2>
-            <p style={{ ...INTER, fontSize: 16, color: C.onSurfaceVariant, maxWidth: 480 }}>
+            <p style={{ ...INTER, fontSize: "clamp(16px,2vw,20px)", fontWeight: 300, color: C.onSurfaceVariant, maxWidth: 560, lineHeight: 1.7 }}>
               {dt.proteinLibrary.subtitle}
             </p>
           </div>
@@ -608,10 +608,10 @@ export default function DogTreat() {
         <section className="grid grid-cols-12 gap-6 items-center" style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div className="col-span-12 lg:col-span-5">
             <span style={{ ...LABEL_CAPS, color: C.secondary, display: "block", marginBottom: 16 }}>{dt.wolfPrinciple.label}</span>
-            <h2 style={{ ...PLAYFAIR, fontSize: "clamp(36px,5vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 32, lineHeight: 1.2 }}>
+            <h2 className="font-playfair" style={{ fontSize: "clamp(40px,6vw,72px)", fontWeight: 700, color: C.primary, marginBottom: 32, lineHeight: 1.15 }}>
               {dt.wolfPrinciple.title}
             </h2>
-            <p style={{ ...INTER, fontSize: 18, fontWeight: 300, color: C.onSurfaceVariant, marginBottom: 24, lineHeight: 1.7 }}>
+            <p style={{ ...INTER, fontSize: "clamp(16px,2vw,20px)", fontWeight: 300, color: C.onSurfaceVariant, marginBottom: 24, lineHeight: 1.7 }}>
               {dt.wolfPrinciple.body}
             </p>
             <div className="space-y-4">
@@ -645,10 +645,10 @@ export default function DogTreat() {
         <section style={{ backgroundColor: C.surfaceContainerHigh, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div className="flex justify-between items-end mb-16 flex-wrap gap-6">
             <div>
-              <h2 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 16 }}>
+              <h2 className="font-playfair" style={{ fontSize: "clamp(40px,6vw,72px)", fontWeight: 700, color: C.primary, marginBottom: 16 }}>
                 {dt.features.title}
               </h2>
-              <p style={{ ...INTER, fontSize: 16, color: C.onSurfaceVariant, maxWidth: 480 }}>{dt.features.subtitle}</p>
+              <p style={{ ...INTER, fontSize: "clamp(16px,2vw,20px)", fontWeight: 300, color: C.onSurfaceVariant, maxWidth: 560, lineHeight: 1.7 }}>{dt.features.subtitle}</p>
             </div>
             <div className="hidden lg:block" style={{ height: 1, width: "33%", backgroundColor: C.outlineVariant, marginBottom: 24 }} />
           </div>
@@ -663,10 +663,10 @@ export default function DogTreat() {
         <section id="products" style={{ padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-20 flex-wrap">
             <div style={{ maxWidth: 560 }}>
-              <h2 style={{ ...PLAYFAIR, fontSize: "clamp(32px,4vw,48px)", fontWeight: 600, color: C.onSurface, marginBottom: 16 }}>
+              <h2 className="font-playfair" style={{ fontSize: "clamp(40px,6vw,72px)", fontWeight: 700, color: C.primary, marginBottom: 16 }}>
                 {dt.productSection.title}
               </h2>
-              <p style={{ ...INTER, fontSize: 18, fontWeight: 300, color: C.onSurfaceVariant }}>{dt.productSection.subtitle}</p>
+              <p style={{ ...INTER, fontSize: "clamp(16px,2vw,20px)", fontWeight: 300, color: C.onSurfaceVariant, lineHeight: 1.7 }}>{dt.productSection.subtitle}</p>
             </div>
             <div className="flex gap-4">
               <button className="transition-all"
@@ -715,7 +715,7 @@ export default function DogTreat() {
       {/* ══════════════ 7. CTA ══════════════ */}
       <section className="flex flex-col items-center text-center" style={{ backgroundColor: C.surface, padding: "clamp(40px,8vw,80px) clamp(20px,5vw,64px)" }}>
         <span style={{ ...LABEL_CAPS, color: C.secondary, marginBottom: 24 }}>{dt.cta.label}</span>
-        <h2 style={{ ...PLAYFAIR, fontSize: "clamp(40px,7vw,84px)", fontWeight: 700, color: C.onSurface, marginBottom: 48, maxWidth: 800, lineHeight: 1.1 }}>
+        <h2 className="font-playfair" style={{ fontSize: "clamp(48px,7vw,84px)", fontWeight: 700, color: C.primary, marginBottom: 48, maxWidth: 800, lineHeight: 1.1 }}>
           {dt.cta.headline}
         </h2>
         <p style={{ ...INTER, fontSize: 18, fontWeight: 300, color: C.onSurfaceVariant, marginBottom: 64, maxWidth: 520, lineHeight: 1.7 }}>
