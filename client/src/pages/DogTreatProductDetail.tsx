@@ -324,6 +324,11 @@ export default function DogTreatProductDetail() {
             <div className="flex-grow">
               <div className="relative overflow-hidden group" style={{ aspectRatio: "4/5", ...HARD_SHADOW }}>
                 <img src={allImgs[activeImg] || ""} alt={product.title} className="w-full h-full object-cover" loading="lazy" />
+                {/* New Arrival badge — top left */}
+                {(product as any).isNewArrival && (
+                  <div className="absolute top-5 left-5 px-4 py-1" style={{ backgroundColor: C.primary, color: "#fff", ...LABEL_CAPS, letterSpacing: "0.2em" }}>NEW ARRIVAL</div>
+                )}
+                {/* Sale badge — top right */}
                 {hasDiscount && (
                   <div className="absolute top-5 right-5 flex flex-col items-center">
                     <div className="px-3 py-1" style={{ backgroundColor: C.secondary, color: "#fff", ...LABEL_CAPS }}>SALE</div>
