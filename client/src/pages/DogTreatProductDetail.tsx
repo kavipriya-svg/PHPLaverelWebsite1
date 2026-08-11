@@ -585,25 +585,31 @@ export default function DogTreatProductDetail() {
                 </div>
               </div>
 
-              {/* Info rows */}
-              <div className="flex flex-col gap-2">
-                {/* Benefits */}
-                <div className="border-b py-3" style={{ borderColor: `${C.outlineVariant}4D` }}>
-                  <span style={{ ...PLAYFAIR, fontSize: 28, fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</span>
-                  {benefitLines.length > 0 ? (
-                    <ul className="mt-2 flex flex-col gap-1">
-                      {benefitLines.map((line, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span style={{ color: C.secondary, fontWeight: 700, fontSize: 14 }}>—</span>
-                          <span style={{ fontSize: 13, color: C.onSurfaceVariant, lineHeight: 1.5 }}>{line}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p style={{ fontSize: 13, color: C.onSurfaceVariant, marginTop: 6 }}>Formulated with nutritional scientists</p>
-                  )}
+              {/* Benefits */}
+              {(benefitLines.length > 0) && (
+                <div className="pt-2">
+                  {/* Header row */}
+                  <div className="flex items-baseline gap-4 mb-6 pb-4 border-b" style={{ borderColor: C.outlineVariant }}>
+                    <span style={{ ...MONO, fontSize: 10, color: `${C.primary}60`, letterSpacing: "0.35em" }}>WHY IT WORKS</span>
+                    <span style={{ ...PLAYFAIR, fontSize: 26, fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</span>
+                  </div>
+                  {/* Numbered benefit rows */}
+                  <div className="flex flex-col">
+                    {benefitLines.map((line, i) => (
+                      <div key={i}
+                        className="flex items-start gap-5 py-4 border-b"
+                        style={{ borderColor: `${C.outlineVariant}55` }}>
+                        {/* Index number */}
+                        <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: C.secondary, minWidth: 28, paddingTop: 2, letterSpacing: "0.05em" }}>
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        {/* Benefit text */}
+                        <p style={{ fontSize: 14, color: C.onSurface, lineHeight: 1.65, fontWeight: 400 }}>{line}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
