@@ -785,7 +785,7 @@ export default function DogTreatProductDetail() {
                     {String((product as any).feedingGuidelines).split("\n").filter(Boolean).map((line: string, i: number) => (
                       <div key={i} className="flex gap-4 items-start">
                         <div className="mt-2 shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: C.primary }} />
-                        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, lineHeight: "28px", fontWeight: 300, color: C.onSurfaceVariant }}>{line}</p>
+                        <p style={{ ...PLAYFAIR, fontSize: 18, lineHeight: "28px", fontWeight: 400, color: C.onSurfaceVariant }}>{line}</p>
                       </div>
                     ))}
                   </div>
@@ -798,7 +798,7 @@ export default function DogTreatProductDetail() {
                     {String((product as any).storageInstructions).split("\n").filter(Boolean).map((line: string, i: number) => (
                       <div key={i} className="flex gap-4 items-start">
                         <div className="mt-2 shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: C.secondary }} />
-                        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, lineHeight: "28px", fontWeight: 300, color: C.onSurfaceVariant }}>{line}</p>
+                        <p style={{ ...PLAYFAIR, fontSize: 18, lineHeight: "28px", fontWeight: 400, color: C.onSurfaceVariant }}>{line}</p>
                       </div>
                     ))}
                   </div>
