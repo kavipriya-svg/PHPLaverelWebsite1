@@ -374,11 +374,11 @@ export default function DogTreatProductDetail() {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-3 flex-wrap">
                     {hasDiscount && (
-                      <span className="line-through" style={{ color: C.onSurfaceVariant, fontSize: 16 }}>
+                      <span className="line-through font-inter" style={{ color: C.onSurfaceVariant, fontSize: 15 }}>
                         {formatCurrency(originalPrice!)}
                       </span>
                     )}
-                    <span style={{ ...PLAYFAIR, fontSize: 32, lineHeight: "40px", fontWeight: 400, color: C.primary }}>
+                    <span className="font-inter" style={{ fontSize: 22, fontWeight: 600, color: C.secondary, letterSpacing: "0.03em" }}>
                       {formatCurrency(currentPrice!)}
                     </span>
                     {discountPct > 0 && (
@@ -394,7 +394,12 @@ export default function DogTreatProductDetail() {
               </div>
             </div>
 
-            {shortDesc && <p style={{ fontSize: 14, color: C.onSurfaceVariant, lineHeight: 1.6 }}>{shortDesc}</p>}
+            {shortDesc && (
+              <p className="font-playfair italic leading-relaxed"
+                style={{ fontSize: "clamp(15px,1.6vw,18px)", color: C.onSurfaceVariant }}>
+                "{shortDesc}"
+              </p>
+            )}
 
             <div className="space-y-8">
               {/* Variant selector */}
@@ -555,9 +560,9 @@ export default function DogTreatProductDetail() {
                     style={{ fontSize: 18, color: C.primary }}>+</button>
                 </div>
                 <button data-testid="add-to-cart" onClick={handleAddToCart}
-                  className="flex-grow font-bold uppercase transition-all active:scale-95 flex flex-col items-center justify-center"
-                  style={{ height: 56, backgroundColor: C.primary, color: "#fff", letterSpacing: "0.18em", fontSize: 13 }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = C.primaryContainer)}
+                  className="flex-grow font-inter uppercase tracking-widest transition-all active:scale-95 flex flex-col items-center justify-center"
+                  style={{ height: 56, backgroundColor: C.primary, color: "#fff", letterSpacing: "0.15em", fontSize: 12, fontWeight: 700 }}
+                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = C.secondary)}
                   onMouseOut={(e) => (e.currentTarget.style.backgroundColor = C.primary)}>
                   <span>Add to Cart</span>
                   {currentPrice && (qty > 1 || discountPct > 0) && (
