@@ -575,7 +575,101 @@ const CATEGORY_FALLBACK_IMAGES = [
 
 
 // ─── Subcategory Panel ────────────────────────────────────────────
-function SubcategoryPanel({ category, panelRef }: { category: any; panelRef: React.RefObject<HTMLElement> }) {
+// ─── Shared category card grid ────────────────────────────────────
+function CategoryCardGrid({
+  items,
+  selectedId,
+  onSelect,
+}: {
+  items: any[];
+  selectedId?: string | null;
+  onSelect?: (item: any) => void;
+}) {
+  return (
+    <div
+      className="px-margin-desktop gap-5"
+      style={{
+        display: "grid",
+        gridTemplateColumns: items.length === 2 ? "1fr 1fr" : "repeat(3, 1fr)",
+      }}
+    >
+      {items.map((item: any, i: number) => {
+        const hasChildren = (item.children || []).filter((c: any) => c.isActive !== false).length > 0;
+        const isSelected = selectedId === item.id;
+        const imgHeight = items.length === 2 ? 500 : undefined;
+        const imgStyle: React.CSSProperties = imgHeight
+          ? { height: imgHeight, backgroundColor: C.surfaceContainerHigh }
+          : { aspectRatio: "4/3", backgroundColor: C.surfaceContainerHigh };
+
+        const inner = (
+          <div
+            className="group cursor-pointer relative overflow-hidden hard-shadow"
+            style={isSelected ? { outline: `3px solid ${C.primary}` } : {}}
+          >
+            <div className="relative overflow-hidden" style={imgStyle}>
+              {getCategoryImage(item) ? (
+                <img
+                  src={getCategoryImage(item)}
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                    const fb = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement | null;
+                    if (fb) fb.style.display = "flex";
+                  }}
+                />
+              ) : null}
+              <div
+                className="absolute inset-0 items-center justify-center"
+                style={{ display: getCategoryImage(item) ? "none" : "flex", backgroundColor: C.surfaceContainerHigh }}
+              >
+                <span className="font-playfair text-5xl italic" style={{ color: C.primary }}>{item.name[0]}</span>
+              </div>
+              <div
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)" }}
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <p className="font-playfair text-2xl font-semibold leading-tight" style={{ color: "#fff" }}>
+                  {item.name}
+                </p>
+                <span
+                  className="inline-block mt-2 font-inter text-label-caps border-b pb-0.5 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
+                  style={{ color: "#fff", borderColor: "#fff" }}
+                >
+                  {hasChildren ? "EXPLORE" : "SHOP NOW"}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+
+        return (
+          <Reveal key={item.id} delay={i * 60}>
+            {hasChildren && onSelect ? (
+              <div onClick={() => onSelect(isSelected ? null : item)}>{inner}</div>
+            ) : (
+              <Link href={item.slug ? `/category/${item.slug}` : "/shop"}>{inner}</Link>
+            )}
+          </Reveal>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Subcategory Panel ────────────────────────────────────────────
+function SubcategoryPanel({
+  category,
+  panelRef,
+  selectedSubId,
+  onSelectSub,
+}: {
+  category: any;
+  panelRef: React.RefObject<HTMLElement>;
+  selectedSubId: string | null;
+  onSelectSub: (sub: any) => void;
+}) {
   const subs = (category.children || []).filter((c: any) => c.isActive !== false);
   if (!subs.length) return null;
 
@@ -583,78 +677,35 @@ function SubcategoryPanel({ category, panelRef }: { category: any; panelRef: Rea
     <section ref={panelRef as React.RefObject<HTMLElement>} className="py-12" style={{ backgroundColor: C.surfaceContainer }}>
       <div className="px-margin-desktop mb-8">
         <Reveal>
-          <p className="font-inter text-label-caps mb-1" style={{ color: C.secondary }}>
-            BROWSE BY TYPE
-          </p>
-          <h3 className="font-playfair text-headline-md" style={{ color: C.primary }}>
-            {category.name}
-          </h3>
+          <p className="font-inter text-label-caps mb-1" style={{ color: C.secondary }}>BROWSE BY TYPE</p>
+          <h3 className="font-playfair text-headline-md" style={{ color: C.primary }}>{category.name}</h3>
         </Reveal>
       </div>
+      <CategoryCardGrid items={subs} selectedId={selectedSubId} onSelect={onSelectSub} />
+    </section>
+  );
+}
 
-      <div
-        className="px-margin-desktop gap-5"
-        style={{
-          display: "grid",
-          gridTemplateColumns: subs.length === 2 ? "1fr 1fr" : "repeat(3, 1fr)",
-        }}
-      >
-        {subs.map((sub: any, i: number) => {
-          const imgHeight = subs.length === 2 ? 500 : undefined;
-          const imgStyle: React.CSSProperties = imgHeight
-            ? { height: imgHeight, backgroundColor: C.surfaceContainerHigh }
-            : { aspectRatio: "4/3", backgroundColor: C.surfaceContainerHigh };
-          return (
-            <Reveal key={sub.id} delay={i * 60}>
-              <Link href={sub.slug ? `/category/${sub.slug}` : "/shop"}>
-                <div className="group cursor-pointer relative overflow-hidden hard-shadow">
-                  {/* Image */}
-                  <div className="relative overflow-hidden" style={imgStyle}>
-                    {getCategoryImage(sub) ? (
-                      <img
-                        src={getCategoryImage(sub)}
-                        alt={sub.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
-                          const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement | null;
-                          if (fallback) fallback.style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    {/* Fallback initial */}
-                    <div
-                      className="absolute inset-0 items-center justify-center"
-                      style={{ display: getCategoryImage(sub) ? "none" : "flex", backgroundColor: C.surfaceContainerHigh }}
-                    >
-                      <span className="font-playfair text-5xl italic" style={{ color: C.primary }}>{sub.name[0]}</span>
-                    </div>
-                    {/* Dark gradient overlay */}
-                    <div
-                      className="absolute inset-0 transition-opacity duration-500"
-                      style={{
-                        background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)",
-                      }}
-                    />
-                    {/* Name overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <p className="font-playfair text-2xl font-semibold leading-tight" style={{ color: "#fff" }}>
-                        {sub.name}
-                      </p>
-                      <span
-                        className="inline-block mt-2 font-inter text-label-caps border-b pb-0.5 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
-                        style={{ color: "#fff", borderColor: "#fff" }}
-                      >
-                        SHOP NOW
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </Reveal>
-          );
-        })}
+// ─── Child Category Panel ─────────────────────────────────────────
+function ChildCategoryPanel({
+  category,
+  panelRef,
+}: {
+  category: any;
+  panelRef: React.RefObject<HTMLElement>;
+}) {
+  const children = (category.children || []).filter((c: any) => c.isActive !== false);
+  if (!children.length) return null;
+
+  return (
+    <section ref={panelRef as React.RefObject<HTMLElement>} className="py-12" style={{ backgroundColor: C.surfaceContainerLow }}>
+      <div className="px-margin-desktop mb-8">
+        <Reveal>
+          <p className="font-inter text-label-caps mb-1" style={{ color: C.secondary }}>BROWSE WITHIN</p>
+          <h3 className="font-playfair text-headline-md" style={{ color: C.primary }}>{category.name}</h3>
+        </Reveal>
       </div>
+      <CategoryCardGrid items={children} />
     </section>
   );
 }
@@ -1744,7 +1795,9 @@ export default function Home() {
     .sort((a, b) => (a.position || 0) - (b.position || 0));
 
   const [selectedCat, setSelectedCat] = useState<any>(null);
+  const [selectedSub, setSelectedSub] = useState<any>(null);
   const panelRef = useRef<HTMLElement>(null);
+  const childPanelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (selectedCat && panelRef.current) {
@@ -1752,7 +1805,17 @@ export default function Home() {
         panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 50);
     }
+    // reset child selection when top category changes
+    setSelectedSub(null);
   }, [selectedCat]);
+
+  useEffect(() => {
+    if (selectedSub && childPanelRef.current) {
+      setTimeout(() => {
+        childPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [selectedSub]);
 
   return (
     <div
@@ -1770,7 +1833,15 @@ export default function Home() {
         />
       )}
       {selectedCat && (
-        <SubcategoryPanel category={selectedCat} panelRef={panelRef} />
+        <SubcategoryPanel
+          category={selectedCat}
+          panelRef={panelRef}
+          selectedSubId={selectedSub?.id ?? null}
+          onSelectSub={setSelectedSub}
+        />
+      )}
+      {selectedSub && (
+        <ChildCategoryPanel category={selectedSub} panelRef={childPanelRef} />
       )}
       {s.bestSellers.visible !== false && (
         <BestSellersSection products={treatsData?.products || []} bestSellers={s.bestSellers} />
