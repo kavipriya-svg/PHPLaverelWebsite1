@@ -578,6 +578,7 @@ const CATEGORY_FALLBACK_IMAGES = [
 // Mapping: subcategory slug → dedicated page route
 const CATEGORY_DEDICATED_PAGE: Record<string, string> = {
   "wild-treats": "/treat",
+  "clothing": "/category/clothing",
 };
 
 // ─── Shared category card grid ────────────────────────────────────

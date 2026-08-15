@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useRoute, Link } from "wouter";
+import { useState, useEffect } from "react";
+import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import {
   Breadcrumb,
@@ -18,23 +18,51 @@ import type { Category, ProductWithDetails } from "@shared/schema";
 
 export default function CategoryPage() {
   const [, params] = useRoute("/category/:slug");
+  const [location] = useLocation();
   const slug = params?.slug;
+
+  // Read ?category=childSlug from URL
+  const childSlugFromUrl = new URLSearchParams(window.location.search).get("category");
 
   const [filters, setFilters] = useState<ProductFiltersState>({
     sort: "newest",
     brandIds: [],
   });
   const [page, setPage] = useState(1);
+  const [activeChildSlug, setActiveChildSlug] = useState<string | null>(childSlugFromUrl);
   const limit = 12;
 
-  const { data: categoryData, isLoading: categoryLoading } = useQuery<{ category: Category & { parent?: Category; children?: Category[] } }>({
+  // Sync active child when URL changes (e.g. browser back/forward)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setActiveChildSlug(params.get("category"));
+    setPage(1);
+  }, [location]);
+
+  const { data: categoryData, isLoading: categoryLoading } = useQuery<{
+    category: Category & { parent?: Category; children?: Category[] };
+  }>({
     queryKey: ["/api/categories/" + slug],
     enabled: !!slug,
   });
 
-  const categoryId = categoryData?.category?.id;
+  // Fetch the active child category to get its ID for filtering
+  const { data: childCategoryData } = useQuery<{
+    category: Category & { parent?: Category };
+  }>({
+    queryKey: ["/api/categories/" + activeChildSlug],
+    enabled: !!activeChildSlug,
+  });
+
+  const category = categoryData?.category;
+
+  // Use child category ID when a child is selected, otherwise use parent ID
+  const effectiveCategoryId = activeChildSlug
+    ? childCategoryData?.category?.id
+    : category?.id;
+
   const productsQueryParams = new URLSearchParams();
-  if (categoryId) productsQueryParams.set("categoryId", categoryId);
+  if (effectiveCategoryId) productsQueryParams.set("categoryId", effectiveCategoryId);
   if (filters.minPrice) productsQueryParams.set("minPrice", filters.minPrice.toString());
   if (filters.maxPrice) productsQueryParams.set("maxPrice", filters.maxPrice.toString());
   if (filters.brandIds && filters.brandIds.length > 0) {
@@ -57,18 +85,28 @@ export default function CategoryPage() {
   productsQueryParams.set("offset", ((page - 1) * limit).toString());
 
   const queryString = productsQueryParams.toString();
-  const { data: productsData, isLoading: productsLoading } = useQuery<{ 
-    products: ProductWithDetails[]; 
+  const { data: productsData, isLoading: productsLoading } = useQuery<{
+    products: ProductWithDetails[];
     total: number;
   }>({
     queryKey: ["/api/products?" + queryString],
-    enabled: !!categoryId,
+    enabled: !!effectiveCategoryId,
   });
 
-  const category = categoryData?.category;
   const products = productsData?.products || [];
   const totalItems = productsData?.total || 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+
+  // Handle child category pill click — update URL param and filter state
+  const handleChildClick = (childSlug: string) => {
+    const next = activeChildSlug === childSlug ? null : childSlug;
+    setActiveChildSlug(next);
+    setPage(1);
+    const url = new URL(window.location.href);
+    if (next) url.searchParams.set("category", next);
+    else url.searchParams.delete("category");
+    window.history.replaceState(null, "", url.toString());
+  };
 
   if (categoryLoading) {
     return (
@@ -105,12 +143,17 @@ export default function CategoryPage() {
     );
   }
 
+  const activeChild = activeChildSlug
+    ? category.children?.find((c) => c.slug === activeChildSlug)
+    : null;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <SEOHead
-        title={category.metaTitle || category.name}
+        title={activeChild ? `${activeChild.name} — ${category.name}` : (category.metaTitle || category.name)}
         description={category.metaDescription || category.description || `Shop ${category.name} products`}
       />
+
       {category.bannerUrl && (
         <div className="relative w-full aspect-[3/1] min-h-[240px] mb-6 -mx-4 md:-mx-6 lg:-mx-8">
           <img
@@ -120,8 +163,10 @@ export default function CategoryPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 lg:p-8">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 md:mb-2">{category.name}</h1>
-            {category.description && (
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 md:mb-2">
+              {activeChild ? activeChild.name : category.name}
+            </h1>
+            {category.description && !activeChild && (
               <p className="text-white/80 max-w-2xl text-sm md:text-base">{category.description}</p>
             )}
           </div>
@@ -144,16 +189,32 @@ export default function CategoryPage() {
               <BreadcrumbSeparator />
             </>
           )}
-          <BreadcrumbItem>
-            <BreadcrumbPage>{category.name}</BreadcrumbPage>
-          </BreadcrumbItem>
+          {activeChild ? (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={`/category/${category.slug}`}>
+                  {category.name}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{activeChild.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          ) : (
+            <BreadcrumbItem>
+              <BreadcrumbPage>{category.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          )}
         </BreadcrumbList>
       </Breadcrumb>
 
       {!category.bannerUrl && (
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
-          {category.description && (
+          <h1 className="text-3xl font-bold mb-2">
+            {activeChild ? activeChild.name : category.name}
+          </h1>
+          {category.description && !activeChild && (
             <p className="text-muted-foreground">{category.description}</p>
           )}
         </div>
@@ -161,15 +222,38 @@ export default function CategoryPage() {
 
       {category.children && category.children.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Subcategories</h2>
+          <h2 className="text-lg font-semibold mb-4">Filter by type</h2>
           <div className="flex flex-wrap gap-2">
-            {category.children.map((child) => (
-              <Link key={child.id} href={`/category/${child.slug}`}>
-                <Button variant="outline" size="sm">
-                  {child.name}
-                </Button>
-              </Link>
-            ))}
+            {category.children.map((child) => {
+              const isActive = activeChildSlug === child.slug;
+              return (
+                <button
+                  key={child.id}
+                  onClick={() => handleChildClick(child.slug)}
+                  className="cursor-pointer transition-colors"
+                  style={{ background: "none", border: "none", padding: 0 }}
+                >
+                  <span
+                    className={`inline-block px-4 py-2 text-sm font-medium border rounded-full transition-colors ${
+                      isActive
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-background text-foreground border-border hover:border-foreground"
+                    }`}
+                  >
+                    {child.name}
+                  </span>
+                </button>
+              );
+            })}
+            {activeChildSlug && (
+              <button
+                onClick={() => handleChildClick(activeChildSlug)}
+                className="cursor-pointer text-sm text-muted-foreground underline self-center"
+                style={{ background: "none", border: "none" }}
+              >
+                Clear filter
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -188,6 +272,7 @@ export default function CategoryPage() {
           <div className="hidden lg:flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground">
               {productsData?.total || 0} products
+              {activeChild ? ` in ${activeChild.name}` : ""}
             </p>
             <SortSelect
               value={filters.sort || "newest"}
@@ -198,7 +283,7 @@ export default function CategoryPage() {
           <ProductGrid
             products={products}
             isLoading={productsLoading}
-            emptyMessage={`No products found in ${category.name}`}
+            emptyMessage={`No products found in ${activeChild?.name || category.name}`}
           />
 
           {totalPages > 1 && (
@@ -214,12 +299,8 @@ export default function CategoryPage() {
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   let pageNum = i + 1;
                   if (totalPages > 5) {
-                    if (page > 3) {
-                      pageNum = page - 2 + i;
-                    }
-                    if (page > totalPages - 3) {
-                      pageNum = totalPages - 4 + i;
-                    }
+                    if (page > 3) pageNum = page - 2 + i;
+                    if (page > totalPages - 3) pageNum = totalPages - 4 + i;
                   }
                   return (
                     <Button
