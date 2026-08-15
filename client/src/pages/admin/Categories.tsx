@@ -466,14 +466,15 @@ function CategoryDialog({
       if (!slug.trim()) {
         throw new Error("Category slug is required");
       }
-      const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-      if (!slugRegex.test(slug)) {
-        throw new Error("Slug must contain only lowercase letters, numbers, and hyphens");
+      // Auto-sanitize slug before validating (handles legacy slugs with spaces/caps)
+      const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      if (!cleanSlug) {
+        throw new Error("Category slug is required");
       }
-      
+
       const payload = {
         name: name.trim(),
-        slug: slug.trim(),
+        slug: cleanSlug,
         parentId: parentId === "none" ? null : parentId,
         description: description.trim(),
         isActive,
