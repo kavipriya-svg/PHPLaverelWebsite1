@@ -609,7 +609,25 @@ function CategoryHub({
             <div className="absolute bottom-10 left-10 p-8 max-w-sm" style={{ backgroundColor: C.primary, color: C.white }}>
               <h3 className="font-playfair text-headline-md mb-2">{cats[0]?.name || "Biological Food"}</h3>
               {(cats[0]?.description || categoryHub.cards[0]?.description) && (
-                <p className="font-inter text-body-md mb-4">{cats[0]?.description || categoryHub.cards[0].description}</p>
+                <p
+                  className="font-inter text-body-md mb-4 overflow-hidden transition-all duration-500"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 2,
+                    overflow: "hidden",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.webkitLineClamp = "unset";
+                    (e.currentTarget as HTMLElement).style.overflow = "visible";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.webkitLineClamp = "2";
+                    (e.currentTarget as HTMLElement).style.overflow = "hidden";
+                  }}
+                >
+                  {cats[0]?.description || categoryHub.cards[0].description}
+                </p>
               )}
               <Link href={cats[0]?.slug ? `/category/${cats[0].slug}` : "/shop"}>
                 <span className="font-inter text-label-caps border-b border-white pb-1 cursor-pointer">
