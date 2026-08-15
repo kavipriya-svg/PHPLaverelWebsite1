@@ -608,8 +608,8 @@ function CategoryHub({
             />
             <div className="absolute bottom-10 left-10 p-8 max-w-sm" style={{ backgroundColor: C.primary, color: C.white }}>
               <h3 className="font-playfair text-headline-md mb-2">{cats[0]?.name || "Biological Food"}</h3>
-              {categoryHub.cards[0]?.description && (
-                <p className="font-inter text-body-md mb-4">{categoryHub.cards[0].description}</p>
+              {(cats[0]?.description || categoryHub.cards[0]?.description) && (
+                <p className="font-inter text-body-md mb-4">{cats[0]?.description || categoryHub.cards[0].description}</p>
               )}
               <Link href={cats[0]?.slug ? `/category/${cats[0].slug}` : "/shop"}>
                 <span className="font-inter text-label-caps border-b border-white pb-1 cursor-pointer">
