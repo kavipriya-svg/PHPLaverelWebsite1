@@ -592,56 +592,68 @@ function SubcategoryPanel({ category, panelRef }: { category: any; panelRef: Rea
         </Reveal>
       </div>
 
-      <div className="px-margin-desktop grid grid-cols-3 gap-5">
-        {subs.map((sub: any, i: number) => (
-          <Reveal key={sub.id} delay={i * 60}>
-            <Link href={sub.slug ? `/category/${sub.slug}` : "/shop"}>
-              <div className="group cursor-pointer relative overflow-hidden" style={{ borderRadius: 2 }}>
-                {/* Image */}
-                <div className="relative overflow-hidden" style={{ aspectRatio: "4/3", backgroundColor: C.surfaceContainerHigh }}>
-                  {getCategoryImage(sub) ? (
-                    <img
-                      src={getCategoryImage(sub)}
-                      alt={sub.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                        const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement | null;
-                        if (fallback) fallback.style.display = "flex";
+      <div
+        className="px-margin-desktop gap-5"
+        style={{
+          display: "grid",
+          gridTemplateColumns: subs.length === 2 ? "1fr 1fr" : "repeat(3, 1fr)",
+        }}
+      >
+        {subs.map((sub: any, i: number) => {
+          const imgHeight = subs.length === 2 ? 500 : undefined;
+          const imgStyle: React.CSSProperties = imgHeight
+            ? { height: imgHeight, backgroundColor: C.surfaceContainerHigh }
+            : { aspectRatio: "4/3", backgroundColor: C.surfaceContainerHigh };
+          return (
+            <Reveal key={sub.id} delay={i * 60}>
+              <Link href={sub.slug ? `/category/${sub.slug}` : "/shop"}>
+                <div className="group cursor-pointer relative overflow-hidden hard-shadow">
+                  {/* Image */}
+                  <div className="relative overflow-hidden" style={imgStyle}>
+                    {getCategoryImage(sub) ? (
+                      <img
+                        src={getCategoryImage(sub)}
+                        alt={sub.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                          const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    {/* Fallback initial */}
+                    <div
+                      className="absolute inset-0 items-center justify-center"
+                      style={{ display: getCategoryImage(sub) ? "none" : "flex", backgroundColor: C.surfaceContainerHigh }}
+                    >
+                      <span className="font-playfair text-5xl italic" style={{ color: C.primary }}>{sub.name[0]}</span>
+                    </div>
+                    {/* Dark gradient overlay */}
+                    <div
+                      className="absolute inset-0 transition-opacity duration-500"
+                      style={{
+                        background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)",
                       }}
                     />
-                  ) : null}
-                  {/* Fallback initial */}
-                  <div
-                    className="absolute inset-0 items-center justify-center"
-                    style={{ display: getCategoryImage(sub) ? "none" : "flex", backgroundColor: C.surfaceContainerHigh }}
-                  >
-                    <span className="font-playfair text-5xl italic" style={{ color: C.primary }}>{sub.name[0]}</span>
-                  </div>
-                  {/* Dark gradient overlay */}
-                  <div
-                    className="absolute inset-0 transition-opacity duration-500"
-                    style={{
-                      background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)",
-                    }}
-                  />
-                  {/* Name overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <p className="font-playfair text-xl font-semibold leading-tight" style={{ color: "#fff" }}>
-                      {sub.name}
-                    </p>
-                    <span
-                      className="inline-block mt-2 font-inter text-label-caps border-b pb-0.5 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
-                      style={{ color: "#fff", borderColor: "#fff" }}
-                    >
-                      SHOP NOW
-                    </span>
+                    {/* Name overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <p className="font-playfair text-2xl font-semibold leading-tight" style={{ color: "#fff" }}>
+                        {sub.name}
+                      </p>
+                      <span
+                        className="inline-block mt-2 font-inter text-label-caps border-b pb-0.5 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
+                        style={{ color: "#fff", borderColor: "#fff" }}
+                      >
+                        SHOP NOW
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          </Reveal>
-        ))}
+              </Link>
+            </Reveal>
+          );
+        })}
       </div>
     </section>
   );
