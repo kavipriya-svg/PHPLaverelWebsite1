@@ -575,12 +575,12 @@ const CATEGORY_FALLBACK_IMAGES = [
 
 
 // ─── Subcategory Panel ────────────────────────────────────────────
-function SubcategoryPanel({ category }: { category: any }) {
+function SubcategoryPanel({ category, panelRef }: { category: any; panelRef: React.RefObject<HTMLElement> }) {
   const subs = (category.children || []).filter((c: any) => c.isActive !== false);
   if (!subs.length) return null;
 
   return (
-    <section className="px-margin-desktop py-10" style={{ backgroundColor: C.surfaceContainer }}>
+    <section ref={panelRef as React.RefObject<HTMLElement>} className="px-margin-desktop py-10" style={{ backgroundColor: C.surfaceContainer }}>
       <Reveal>
         <p className="font-inter text-label-caps mb-1" style={{ color: C.secondary }}>
           BROWSE BY TYPE
@@ -1708,6 +1708,15 @@ export default function Home() {
     .sort((a, b) => (a.position || 0) - (b.position || 0));
 
   const [selectedCat, setSelectedCat] = useState<any>(null);
+  const panelRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (selectedCat && panelRef.current) {
+      setTimeout(() => {
+        panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [selectedCat]);
 
   return (
     <div
@@ -1725,7 +1734,7 @@ export default function Home() {
         />
       )}
       {selectedCat && (
-        <SubcategoryPanel category={selectedCat} />
+        <SubcategoryPanel category={selectedCat} panelRef={panelRef} />
       )}
       {s.bestSellers.visible !== false && (
         <BestSellersSection products={treatsData?.products || []} bestSellers={s.bestSellers} />
