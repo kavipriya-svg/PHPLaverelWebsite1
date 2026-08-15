@@ -579,6 +579,7 @@ const CATEGORY_FALLBACK_IMAGES = [
 const CATEGORY_DEDICATED_PAGE: Record<string, string> = {
   "wild-treats": "/treat",
   "dogclothing": "/category/clothing",
+  "full-meals": "/full-meals",
 };
 
 // ─── Shared category card grid ────────────────────────────────────

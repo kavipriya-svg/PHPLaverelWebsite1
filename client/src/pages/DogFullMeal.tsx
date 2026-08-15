@@ -276,6 +276,9 @@ export default function DogFullMeal() {
   const [s, setS] = useState<FullMealSettings>(DEFAULTS);
   const [sortBy, setSortBy] = useState("featured");
   const [priceFilter, setPriceFilter] = useState("all");
+  const [activeCategory, setActiveCategory] = useState<string>(
+    () => new URLSearchParams(window.location.search).get("category") ?? ""
+  );
 
   // Load page settings
   const { data: settingsData } = useQuery<{ settings: Partial<FullMealSettings> }>({
@@ -293,10 +296,39 @@ export default function DogFullMeal() {
     if (settingsData?.settings) setS(deepMerge(DEFAULTS, settingsData.settings));
   }, [settingsData]);
 
-  // Load Full Meals products
+  // Fetch child categories of full-meals for the filter bar
+  const { data: allCatsData } = useQuery<{ categories: any[] }>({ queryKey: ["/api/categories"] });
+  const fullMealChildCats: any[] = (() => {
+    const flat = (ns: any[]): any[] => ns.flatMap((n: any) => [n, ...flat(n.children || [])]);
+    const all = flat(allCatsData?.categories ?? []);
+    const parent = all.find((c: any) => c.slug === "full-meals");
+    return parent ? all.filter((c: any) => c.parentId === parent.id && c.isActive !== false) : [];
+  })();
+
+  // Scroll to products section if a category was pre-selected via URL param
+  useEffect(() => {
+    if (activeCategory) {
+      setTimeout(() => {
+        document.getElementById("dfm-meals")?.scrollIntoView({ behavior: "smooth" });
+      }, 600);
+    }
+  }, []); // only on mount
+
+  // Load Full Meals products — re-fetch when activeCategory changes
   const { data: productsData, isLoading } = useQuery<{ products: any[] }>({
-    queryKey: ["/api/products?categorySlug=full-meals&limit=50"],
+    queryKey: ["/api/products", { categorySlug: activeCategory || "full-meals" }],
+    queryFn: () =>
+      fetch(`/api/products?categorySlug=${activeCategory || "full-meals"}&limit=50`)
+        .then(r => r.json()),
   });
+
+  const handleCategoryChange = (slug: string) => {
+    setActiveCategory(slug);
+    const url = new URL(window.location.href);
+    if (slug) url.searchParams.set("category", slug);
+    else url.searchParams.delete("category");
+    window.history.replaceState(null, "", url.toString());
+  };
 
   // Load Biryani products (child category)
   const { data: biryaniData } = useQuery<{ products: any[] }>({
@@ -537,6 +569,46 @@ export default function DogFullMeal() {
           className="px-5 md:px-[64px] mb-[64px] border-y py-6 flex flex-wrap items-center gap-8"
           style={{ borderColor: C.outlineVariant }}
         >
+          {/* Category */}
+          {fullMealChildCats.length > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: `${C.primary}80` }}>
+                Category
+              </span>
+              <div className="flex gap-2 flex-wrap items-center">
+                <button
+                  onClick={() => handleCategoryChange("")}
+                  className="font-inter text-[10px] uppercase tracking-widest px-4 py-2 transition-all duration-200 cursor-pointer"
+                  style={{
+                    backgroundColor: !activeCategory ? C.primary : "transparent",
+                    color: !activeCategory ? C.white : C.onSurfaceVariant,
+                    border: `1px solid ${!activeCategory ? C.primary : C.outlineVariant}`,
+                    letterSpacing: "0.12em",
+                  }}
+                >
+                  All
+                </button>
+                {fullMealChildCats.map((cat: any) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategoryChange(cat.slug)}
+                    className="font-inter text-[10px] uppercase tracking-widest px-4 py-2 transition-all duration-200 cursor-pointer"
+                    style={{
+                      backgroundColor: activeCategory === cat.slug ? C.primary : "transparent",
+                      color: activeCategory === cat.slug ? C.white : C.onSurfaceVariant,
+                      border: `1px solid ${activeCategory === cat.slug ? C.primary : C.outlineVariant}`,
+                      letterSpacing: "0.12em",
+                    }}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {fullMealChildCats.length > 0 && <div className="hidden md:block w-px h-8" style={{ backgroundColor: C.outlineVariant }} />}
+
           {/* Sort */}
           <div className="flex items-center gap-4">
             <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: `${C.primary}80` }}>
