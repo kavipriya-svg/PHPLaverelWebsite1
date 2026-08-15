@@ -683,9 +683,8 @@ function CategoryDialog({
             />
           </div>
 
-          <>
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-4">Category Images</h4>
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-4">Category Images</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Icon Image (for menu)</Label>
@@ -773,7 +772,7 @@ function CategoryDialog({
                     </div>
                   </div>
                 </div>
-              </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
