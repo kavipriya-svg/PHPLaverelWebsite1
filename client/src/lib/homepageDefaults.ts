@@ -1,3 +1,18 @@
+export interface HeroSlide {
+  id: string;
+  bgImageUrl: string;
+  label: string;
+  headline: string;
+  subheadline: string;
+  cta1Text: string;
+  cta1Href: string;
+  cta2Text: string;
+  cta2Href: string;
+  showText: boolean;
+  showCta: boolean;
+  isActive: boolean;
+}
+
 export interface HomepageSettings {
   nav: {
     links: Array<{ label: string; href: string }>;
@@ -6,6 +21,8 @@ export interface HomepageSettings {
   };
   hero: {
     visible: boolean;
+    slides: HeroSlide[];
+    /** legacy single-banner fields — used as fallback when slides is empty */
     label: string;
     headline: string;
     subheadline: string;
@@ -117,6 +134,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
   },
   hero: {
     visible: true,
+    slides: [],
     label: "BIOLOGICAL EXCELLENCE",
     headline: "The Modern\nWolf Manual.",
     subheadline: "Issue No. 01 — Biological Wellness",
@@ -291,7 +309,7 @@ export function mergeHomepageSettings(
   const d = DEFAULT_HOMEPAGE_SETTINGS;
   return {
     nav: { ...d.nav, ...saved.nav },
-    hero: { ...d.hero, ...saved.hero },
+    hero: { ...d.hero, ...saved.hero, slides: saved.hero?.slides ?? d.hero.slides },
     categoryHub: {
       ...d.categoryHub,
       ...saved.categoryHub,

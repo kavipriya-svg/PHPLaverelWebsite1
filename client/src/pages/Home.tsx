@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ShoppingBag, Plus, ShieldCheck, FlaskConical, Leaf, Droplets,
   PawPrint, Globe, Camera, PlayCircle, Quote, Menu, X, Search, PackageSearch,
-  UserPlus, LogIn, LogOut, User, Heart, ChevronDown,
+  UserPlus, LogIn, LogOut, User, Heart, ChevronDown, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +15,7 @@ import {
   DEFAULT_HOMEPAGE_SETTINGS,
   mergeHomepageSettings,
   HomepageSettings,
+  HeroSlide,
 } from "@/lib/homepageDefaults";
 import type { HomeBlock } from "@shared/schema";
 
@@ -432,66 +433,134 @@ function EditorialHeader({ nav }: { nav: HomepageSettings["nav"] }) {
   );
 }
 
-// ─── 2. Hero Section ───────────────────────────────────────────────
-function HeroSection({ hero }: { hero: HomepageSettings["hero"] }) {
-  const headlineLines = hero.headline.split("\n");
+// ─── 2. Hero Section (auto-scroll carousel) ────────────────────────
+function HeroSlideView({ slide }: { slide: HeroSlide }) {
+  const headlineLines = (slide.headline || "").split("\n");
   return (
-    <section className="relative h-screen w-full flex items-center justify-start overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <img
-          className="w-full h-full object-cover"
-          src={hero.bgImageUrl}
-          alt="19 Dogs editorial hero"
-          loading="eager"
-          fetchpriority="high"
-          decoding="async"
-        />
-        <div className="absolute inset-0" style={{ backgroundColor: `${C.primary}1A` }} />
-      </div>
-      <div className="relative z-10 px-margin-desktop mt-20 max-w-4xl">
-        <p
-          className="font-inter text-label-caps uppercase mb-4"
-          style={{ color: C.onPrimaryContainer }}
-        >
-          {hero.label}
-        </p>
-        <h1
-          className="font-playfair italic leading-tight mb-6"
-          style={{ fontSize: "clamp(48px,8vw,84px)", lineHeight: "1.05", letterSpacing: "-0.02em", fontWeight: 700, color: C.primary }}
-        >
-          {headlineLines.map((line, i) => (
-            <span key={i}>{line}{i < headlineLines.length - 1 && <br />}</span>
-          ))}
-        </h1>
-        <p
-          className="font-playfair text-headline-md italic mb-10"
-          style={{ color: C.primaryContainer }}
-        >
-          {hero.subheadline}
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <Link href={hero.cta1Href}>
-            <button
-              className="font-inter text-label-caps uppercase tracking-widest px-10 py-4 transition-all duration-200 cursor-pointer"
-              style={{ backgroundColor: C.primary, color: C.white }}
-              onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
-              onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
-            >
-              {hero.cta1Text}
-            </button>
-          </Link>
-          <Link href={hero.cta2Href}>
-            <button
-              className="font-inter text-label-caps uppercase tracking-widest px-10 py-4 border transition-all duration-200 cursor-pointer"
-              style={{ borderColor: C.secondary, color: C.secondary, backgroundColor: "transparent" }}
-              onMouseOver={e => { e.currentTarget.style.backgroundColor = C.secondary; e.currentTarget.style.color = C.white; }}
-              onMouseOut={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = C.secondary; }}
-            >
-              {hero.cta2Text}
-            </button>
-          </Link>
+    <div className="absolute inset-0">
+      {/* background */}
+      <img className="w-full h-full object-cover" src={slide.bgImageUrl} alt={slide.headline || "Hero"} loading="eager" fetchpriority="high" decoding="async" />
+      <div className="absolute inset-0" style={{ backgroundColor: `${C.primary}1A` }} />
+      {/* content */}
+      {slide.showText !== false && (
+        <div className="absolute inset-0 flex items-center justify-start px-6 md:px-margin-desktop mt-20">
+          <div className="max-w-4xl">
+            {slide.label && (
+              <p className="font-inter text-label-caps uppercase mb-4" style={{ color: C.onPrimaryContainer }}>
+                {slide.label}
+              </p>
+            )}
+            {slide.headline && (
+              <h1 className="font-playfair italic leading-tight mb-6"
+                style={{ fontSize: "clamp(40px,8vw,84px)", lineHeight: "1.05", letterSpacing: "-0.02em", fontWeight: 700, color: C.primary }}>
+                {headlineLines.map((line, i) => (
+                  <span key={i}>{line}{i < headlineLines.length - 1 && <br />}</span>
+                ))}
+              </h1>
+            )}
+            {slide.subheadline && (
+              <p className="font-playfair text-headline-md italic mb-10" style={{ color: C.primaryContainer }}>
+                {slide.subheadline}
+              </p>
+            )}
+            {slide.showCta !== false && (
+              <div className="flex flex-wrap gap-4">
+                {slide.cta1Text && (
+                  <Link href={slide.cta1Href || "#"}>
+                    <button className="font-inter text-label-caps uppercase tracking-widest px-10 py-4 transition-all duration-200 cursor-pointer"
+                      style={{ backgroundColor: C.primary, color: "#fff" }}
+                      onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
+                      onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}>
+                      {slide.cta1Text}
+                    </button>
+                  </Link>
+                )}
+                {slide.cta2Text && (
+                  <Link href={slide.cta2Href || "#"}>
+                    <button className="font-inter text-label-caps uppercase tracking-widest px-10 py-4 border transition-all duration-200 cursor-pointer"
+                      style={{ borderColor: C.secondary, color: C.secondary, backgroundColor: "transparent" }}
+                      onMouseOver={e => { e.currentTarget.style.backgroundColor = C.secondary; e.currentTarget.style.color = "#fff"; }}
+                      onMouseOut={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = C.secondary; }}>
+                      {slide.cta2Text}
+                    </button>
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+    </div>
+  );
+}
+
+function HeroSection({ hero }: { hero: HomepageSettings["hero"] }) {
+  const activeSlides = (hero.slides || []).filter(s => s.isActive !== false);
+
+  // Fall back to legacy single-banner when no slides are configured
+  const legacySlide: HeroSlide = {
+    id: "legacy",
+    bgImageUrl: hero.bgImageUrl,
+    label: hero.label,
+    headline: hero.headline,
+    subheadline: hero.subheadline,
+    cta1Text: hero.cta1Text,
+    cta1Href: hero.cta1Href,
+    cta2Text: hero.cta2Text,
+    cta2Href: hero.cta2Href,
+    showText: true,
+    showCta: true,
+    isActive: true,
+  };
+  const slides = activeSlides.length > 0 ? activeSlides : [legacySlide];
+
+  const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const goTo = (idx: number) => setCurrent((idx + slides.length) % slides.length);
+
+  useEffect(() => {
+    if (slides.length <= 1 || paused) return;
+    timerRef.current = setInterval(() => setCurrent(c => (c + 1) % slides.length), 5000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [slides.length, paused]);
+
+  return (
+    <section className="relative h-screen w-full overflow-hidden"
+      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {/* slides */}
+      {slides.map((slide, i) => (
+        <div key={slide.id} className="absolute inset-0 transition-opacity duration-700"
+          style={{ opacity: i === current ? 1 : 0, pointerEvents: i === current ? "auto" : "none" }}>
+          <HeroSlideView slide={slide} />
+        </div>
+      ))}
+
+      {/* prev / next arrows — only when multiple slides */}
+      {slides.length > 1 && (
+        <>
+          <button onClick={() => goTo(current - 1)}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+            style={{ backgroundColor: `${C.primary}CC`, color: "#fff" }}>
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button onClick={() => goTo(current + 1)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+            style={{ backgroundColor: `${C.primary}CC`, color: "#fff" }}>
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* dot indicators */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {slides.map((_, i) => (
+              <button key={i} onClick={() => goTo(i)}
+                className="transition-all duration-300 rounded-full"
+                style={{ width: i === current ? 24 : 8, height: 8, backgroundColor: i === current ? C.secondary : `${C.secondary}66` }} />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 }

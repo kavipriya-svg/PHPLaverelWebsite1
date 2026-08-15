@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Save, Loader2, Upload, Plus, Trash2, GripVertical } from "lucide-react";
+import { Save, Loader2, Upload, Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,7 @@ import {
   DEFAULT_HOMEPAGE_SETTINGS,
   mergeHomepageSettings,
   HomepageSettings,
+  HeroSlide,
 } from "@/lib/homepageDefaults";
 
 function FieldRow({
@@ -170,6 +171,105 @@ function ImageUploadField({
         />
       )}
     </div>
+  );
+}
+
+// ─── Hero Slide Card ───────────────────────────────────────────────
+function HeroSlideCard({
+  slide, index, total, onChange, onDelete, onMove,
+}: {
+  slide: HeroSlide;
+  index: number;
+  total: number;
+  onChange: (s: HeroSlide) => void;
+  onDelete: () => void;
+  onMove: (dir: number) => void;
+}) {
+  const [open, setOpen] = useState(index === 0);
+  const set = (patch: Partial<HeroSlide>) => onChange({ ...slide, ...patch });
+
+  return (
+    <Card className={slide.isActive ? "" : "opacity-60"}>
+      <CardHeader className="pb-2 pt-3 px-4">
+        <div className="flex items-center gap-2">
+          {/* order arrows */}
+          <div className="flex flex-col shrink-0">
+            <button type="button" onClick={() => onMove(-1)} disabled={index === 0} className="p-0.5 disabled:opacity-30"><ChevronUp className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} className="p-0.5 disabled:opacity-30"><ChevronDown className="h-3.5 w-3.5" /></button>
+          </div>
+          {/* thumbnail */}
+          {slide.bgImageUrl && <img src={slide.bgImageUrl} alt="" className="h-10 w-16 object-cover rounded shrink-0" />}
+          {/* title */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{slide.headline || `Slide ${index + 1}`}</p>
+            <p className="text-xs text-muted-foreground">{slide.isActive ? "Active" : "Inactive"}</p>
+          </div>
+          {/* controls */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* active toggle */}
+            <button type="button" onClick={() => set({ isActive: !slide.isActive })}
+              className="px-2 py-1 rounded text-xs font-semibold transition-colors"
+              style={{ backgroundColor: slide.isActive ? "#16a34a" : "#e5e7eb", color: slide.isActive ? "#fff" : "#374151" }}>
+              {slide.isActive ? "Active" : "Inactive"}
+            </button>
+            <button type="button" onClick={() => setOpen(o => !o)} className="p-1 rounded hover:bg-muted">
+              {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+            <button type="button" onClick={onDelete} className="p-1 rounded hover:bg-destructive/10 text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </CardHeader>
+
+      {open && (
+        <CardContent className="space-y-4 pt-0">
+          <Separator />
+          {/* Text / CTA visibility toggles */}
+          <div className="flex gap-3 flex-wrap">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs text-muted-foreground font-medium">Text Content</span>
+              <button type="button" onClick={() => set({ showText: !slide.showText })}
+                className="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                style={{ backgroundColor: slide.showText ? "#16a34a" : "#e5e7eb", color: slide.showText ? "#fff" : "#374151" }}>
+                {slide.showText ? "Visible" : "Hidden"}
+              </button>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs text-muted-foreground font-medium">CTA Buttons</span>
+              <button type="button" onClick={() => set({ showCta: !slide.showCta })}
+                className="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                style={{ backgroundColor: slide.showCta ? "#16a34a" : "#e5e7eb", color: slide.showCta ? "#fff" : "#374151" }}>
+                {slide.showCta ? "Visible" : "Hidden"}
+              </button>
+            </div>
+          </div>
+          <Separator />
+          <ImageUploadField label="Background Image" value={slide.bgImageUrl} onChange={(url) => set({ bgImageUrl: url })} hint="Full-screen background image for this slide." />
+          {slide.showText && (
+            <>
+              <FieldRow label="Eyebrow Label" hint="Small caps text above the headline.">
+                <Input value={slide.label} onChange={e => set({ label: e.target.value })} placeholder="BIOLOGICAL EXCELLENCE" />
+              </FieldRow>
+              <FieldRow label="Headline" hint="Use \n for a line break.">
+                <Textarea value={slide.headline} onChange={e => set({ headline: e.target.value })} rows={2} placeholder="The Modern\nWolf Manual." />
+              </FieldRow>
+              <FieldRow label="Sub-headline">
+                <Input value={slide.subheadline} onChange={e => set({ subheadline: e.target.value })} placeholder="Issue No. 01 — Biological Wellness" />
+              </FieldRow>
+            </>
+          )}
+          {slide.showCta && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FieldRow label="Primary CTA Text"><Input value={slide.cta1Text} onChange={e => set({ cta1Text: e.target.value })} placeholder="SHOP NUTRITION" /></FieldRow>
+              <FieldRow label="Primary CTA Link"><Input value={slide.cta1Href} onChange={e => set({ cta1Href: e.target.value })} placeholder="/shop" /></FieldRow>
+              <FieldRow label="Secondary CTA Text"><Input value={slide.cta2Text} onChange={e => set({ cta2Text: e.target.value })} placeholder="THE COLLECTION" /></FieldRow>
+              <FieldRow label="Secondary CTA Link"><Input value={slide.cta2Href} onChange={e => set({ cta2Href: e.target.value })} placeholder="/category/clothing" /></FieldRow>
+            </div>
+          )}
+        </CardContent>
+      )}
+    </Card>
   );
 }
 
@@ -414,73 +514,71 @@ export default function HomepageSettingsPage() {
 
           {/* ── HERO TAB ── */}
           <TabsContent value="hero" className="space-y-4">
-            <SectionCard
-              title="Hero Section"
-              description="The full-screen hero banner at the top of the homepage."
-              visible={settings.hero.visible}
-              onToggle={(v) => update("hero", { visible: v })}
-            >
-              <FieldRow label="Eyebrow Label" hint="Small caps text above the headline.">
-                <Input
-                  value={settings.hero.label}
-                  onChange={(e) => update("hero", { label: e.target.value })}
-                  placeholder="BIOLOGICAL EXCELLENCE"
+            {/* Global visibility */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">Hero Banner</CardTitle>
+                    <CardDescription>Full-screen carousel at the top of the homepage. Add multiple slides — they auto-scroll every 5 seconds.</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Label className="text-sm text-muted-foreground">{settings.hero.visible ? "Visible" : "Hidden"}</Label>
+                    <Switch checked={settings.hero.visible ?? true} onCheckedChange={(v) => update("hero", { visible: v })} />
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+
+            {/* Slide list */}
+            <div className="space-y-3">
+              {(settings.hero.slides || []).map((slide, idx) => (
+                <HeroSlideCard
+                  key={slide.id}
+                  slide={slide}
+                  index={idx}
+                  total={(settings.hero.slides || []).length}
+                  onChange={(updated) => {
+                    const slides = [...(settings.hero.slides || [])];
+                    slides[idx] = updated;
+                    update("hero", { slides });
+                  }}
+                  onDelete={() => {
+                    const slides = (settings.hero.slides || []).filter((_, i) => i !== idx);
+                    update("hero", { slides });
+                  }}
+                  onMove={(dir) => {
+                    const slides = [...(settings.hero.slides || [])];
+                    const to = idx + dir;
+                    if (to < 0 || to >= slides.length) return;
+                    [slides[idx], slides[to]] = [slides[to], slides[idx]];
+                    update("hero", { slides });
+                  }}
                 />
-              </FieldRow>
-              <FieldRow label="Headline" hint="Main heading. Use \n for a line break.">
-                <Textarea
-                  value={settings.hero.headline}
-                  onChange={(e) => update("hero", { headline: e.target.value })}
-                  rows={3}
-                  placeholder="The Modern\nWolf Manual."
-                />
-              </FieldRow>
-              <FieldRow label="Sub-headline">
-                <Input
-                  value={settings.hero.subheadline}
-                  onChange={(e) => update("hero", { subheadline: e.target.value })}
-                  placeholder="Issue No. 01 — Biological Wellness"
-                />
-              </FieldRow>
-              <Separator />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FieldRow label="Primary CTA Text">
-                  <Input
-                    value={settings.hero.cta1Text}
-                    onChange={(e) => update("hero", { cta1Text: e.target.value })}
-                    placeholder="SHOP NUTRITION"
-                  />
-                </FieldRow>
-                <FieldRow label="Primary CTA Link">
-                  <Input
-                    value={settings.hero.cta1Href}
-                    onChange={(e) => update("hero", { cta1Href: e.target.value })}
-                    placeholder="/shop"
-                  />
-                </FieldRow>
-                <FieldRow label="Secondary CTA Text">
-                  <Input
-                    value={settings.hero.cta2Text}
-                    onChange={(e) => update("hero", { cta2Text: e.target.value })}
-                    placeholder="THE COLLECTION"
-                  />
-                </FieldRow>
-                <FieldRow label="Secondary CTA Link">
-                  <Input
-                    value={settings.hero.cta2Href}
-                    onChange={(e) => update("hero", { cta2Href: e.target.value })}
-                    placeholder="/category/clothing"
-                  />
-                </FieldRow>
-              </div>
-              <Separator />
-              <ImageUploadField
-                label="Background Image"
-                value={settings.hero.bgImageUrl}
-                onChange={(url) => update("hero", { bgImageUrl: url })}
-                hint="Full-screen background image for the hero section."
-              />
-            </SectionCard>
+              ))}
+              {(settings.hero.slides || []).length === 0 && (
+                <p className="text-sm text-muted-foreground italic text-center py-4">No slides yet. Add your first banner below.</p>
+              )}
+              <Button type="button" variant="outline" className="w-full" onClick={() => {
+                const newSlide: HeroSlide = {
+                  id: Math.random().toString(36).slice(2),
+                  bgImageUrl: "",
+                  label: "",
+                  headline: "",
+                  subheadline: "",
+                  cta1Text: "SHOP NOW",
+                  cta1Href: "/shop",
+                  cta2Text: "",
+                  cta2Href: "",
+                  showText: true,
+                  showCta: true,
+                  isActive: true,
+                };
+                update("hero", { slides: [...(settings.hero.slides || []), newSlide] });
+              }}>
+                <Plus className="h-4 w-4 mr-2" /> Add Banner Slide
+              </Button>
+            </div>
           </TabsContent>
 
           {/* ── NAVIGATION TAB ── */}
