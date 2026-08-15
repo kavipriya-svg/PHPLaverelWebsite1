@@ -268,6 +268,47 @@ function VideoSection({ imgSrc, label, title, dark = false }: { imgSrc: string; 
   );
 }
 
+// ─── Filter Dropdown ──────────────────────────────────────────────
+function FilterDropdown({ label, options, value, onChange }: {
+  label: string;
+  options: { label: string; value: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const current = options.find(o => o.value === value) ?? options[0];
+  return (
+    <div className="relative cursor-pointer select-none" onClick={() => setOpen(o => !o)}>
+      <span className="font-inter block mb-1" style={{ fontSize: 9, letterSpacing: "0.3em", fontWeight: 700, textTransform: "uppercase", color: `${C.primary}80` }}>{label}</span>
+      <div className="flex items-center gap-2">
+        <span className="font-inter" style={{ fontSize: 14, fontWeight: 600, color: C.primary }}>{current.label}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          style={{ color: C.primary, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </div>
+      {open && (
+        <div className="absolute top-full left-0 z-50 min-w-[200px] mt-2"
+          style={{ backgroundColor: C.surface, border: `1px solid ${C.outlineVariant}`, boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}
+          onClick={e => e.stopPropagation()}>
+          {options.map(opt => (
+            <div key={opt.value}
+              className="px-4 py-3 cursor-pointer transition-colors"
+              style={{ fontFamily: "Inter, sans-serif", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600,
+                color: value === opt.value ? C.primary : C.onSurfaceVariant,
+                backgroundColor: value === opt.value ? `${C.primary}12` : "transparent" }}
+              onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLDivElement).style.backgroundColor = `${C.primary}08`; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = value === opt.value ? `${C.primary}12` : "transparent"; }}
+              onClick={() => { onChange(opt.value); setOpen(false); }}>
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────
 export default function DogFullMeal() {
   const { addToCart } = useStore();
@@ -566,112 +607,59 @@ export default function DogFullMeal() {
 
         {/* ── Filter Bar ─────────────────────────────────── */}
         <div
-          className="px-5 md:px-[64px] mb-[64px] border-y py-6 flex flex-wrap items-center gap-8"
+          className="px-5 md:px-[64px] mb-[64px] border-y py-5 flex flex-wrap items-start gap-10"
           style={{ borderColor: C.outlineVariant }}
         >
-          {/* Category */}
+          {/* Category dropdown */}
           {fullMealChildCats.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: `${C.primary}80` }}>
-                Category
-              </span>
-              <div className="flex gap-2 flex-wrap items-center">
-                <button
-                  onClick={() => handleCategoryChange("")}
-                  className="font-inter text-[10px] uppercase tracking-widest px-4 py-2 transition-all duration-200 cursor-pointer"
-                  style={{
-                    backgroundColor: !activeCategory ? C.primary : "transparent",
-                    color: !activeCategory ? C.white : C.onSurfaceVariant,
-                    border: `1px solid ${!activeCategory ? C.primary : C.outlineVariant}`,
-                    letterSpacing: "0.12em",
-                  }}
-                >
-                  All
+            <div className="flex flex-col gap-1">
+              <FilterDropdown
+                label="Category"
+                options={[
+                  { label: "All Categories", value: "" },
+                  ...fullMealChildCats.map((c: any) => ({ label: c.name, value: c.slug })),
+                ]}
+                value={activeCategory}
+                onChange={handleCategoryChange}
+              />
+              {activeCategory && (
+                <button onClick={() => handleCategoryChange("")}
+                  className="font-inter text-left"
+                  style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.secondary, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                  × Clear
                 </button>
-                {fullMealChildCats.map((cat: any) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleCategoryChange(cat.slug)}
-                    className="font-inter text-[10px] uppercase tracking-widest px-4 py-2 transition-all duration-200 cursor-pointer"
-                    style={{
-                      backgroundColor: activeCategory === cat.slug ? C.primary : "transparent",
-                      color: activeCategory === cat.slug ? C.white : C.onSurfaceVariant,
-                      border: `1px solid ${activeCategory === cat.slug ? C.primary : C.outlineVariant}`,
-                      letterSpacing: "0.12em",
-                    }}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
+              )}
             </div>
           )}
 
-          {fullMealChildCats.length > 0 && <div className="hidden md:block w-px h-8" style={{ backgroundColor: C.outlineVariant }} />}
+          {/* Sort dropdown */}
+          <FilterDropdown
+            label="Sort By"
+            options={[
+              { label: "Featured", value: "featured" },
+              { label: "Price: Low → High", value: "price_asc" },
+              { label: "Price: High → Low", value: "price_desc" },
+              { label: "Name A → Z", value: "name_az" },
+            ]}
+            value={sortBy}
+            onChange={setSortBy}
+          />
 
-          {/* Sort */}
-          <div className="flex items-center gap-4">
-            <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: `${C.primary}80` }}>
-              Sort
-            </span>
-            <div className="flex gap-2 flex-wrap">
-              {[
-                { label: "Featured", value: "featured" },
-                { label: "Price ↑", value: "price_asc" },
-                { label: "Price ↓", value: "price_desc" },
-                { label: "A → Z", value: "name_az" },
-              ].map(({ label, value }) => (
-                <button
-                  key={value}
-                  onClick={() => setSortBy(value)}
-                  className="font-inter text-[10px] uppercase tracking-widest px-4 py-2 transition-all duration-200 cursor-pointer"
-                  style={{
-                    backgroundColor: sortBy === value ? C.primary : "transparent",
-                    color: sortBy === value ? C.white : C.onSurfaceVariant,
-                    border: `1px solid ${sortBy === value ? C.primary : C.outlineVariant}`,
-                    letterSpacing: "0.12em",
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="hidden md:block w-px h-8" style={{ backgroundColor: C.outlineVariant }} />
-
-          {/* Price */}
-          <div className="flex items-center gap-4">
-            <span className="font-inter text-[10px] uppercase tracking-[0.3em] font-bold" style={{ color: `${C.primary}80` }}>
-              Price
-            </span>
-            <div className="flex gap-2 flex-wrap">
-              {[
-                { label: "All", value: "all" },
-                { label: "Under ₹500", value: "under500" },
-                { label: "₹500 – ₹800", value: "500to800" },
-                { label: "₹800+", value: "above800" },
-              ].map(({ label, value }) => (
-                <button
-                  key={value}
-                  onClick={() => setPriceFilter(value)}
-                  className="font-inter text-[10px] uppercase tracking-widest px-4 py-2 transition-all duration-200 cursor-pointer"
-                  style={{
-                    backgroundColor: priceFilter === value ? C.secondary : "transparent",
-                    color: priceFilter === value ? C.white : C.onSurfaceVariant,
-                    border: `1px solid ${priceFilter === value ? C.secondary : C.outlineVariant}`,
-                    letterSpacing: "0.12em",
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Price dropdown */}
+          <FilterDropdown
+            label="Price Range"
+            options={[
+              { label: "All Prices", value: "all" },
+              { label: "Under ₹500", value: "under500" },
+              { label: "₹500 – ₹800", value: "500to800" },
+              { label: "Above ₹800", value: "above800" },
+            ]}
+            value={priceFilter}
+            onChange={setPriceFilter}
+          />
 
           {/* Results count */}
-          <div className="ml-auto font-mono text-[11px]" style={{ color: C.outline }}>
+          <div className="ml-auto self-center font-mono text-[11px]" style={{ color: C.outline }}>
             {isLoading ? "—" : `${filteredProducts.length} specimen${filteredProducts.length !== 1 ? "s" : ""}`}
           </div>
         </div>
