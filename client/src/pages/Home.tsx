@@ -575,15 +575,22 @@ const CATEGORY_FALLBACK_IMAGES = [
 
 
 // ─── Subcategory Panel ────────────────────────────────────────────
+// Mapping: subcategory slug → dedicated page route
+const CATEGORY_DEDICATED_PAGE: Record<string, string> = {
+  "wild-treats": "/treat",
+};
+
 // ─── Shared category card grid ────────────────────────────────────
 function CategoryCardGrid({
   items,
   selectedId,
   onSelect,
+  getHref,
 }: {
   items: any[];
   selectedId?: string | null;
   onSelect?: (item: any) => void;
+  getHref?: (item: any) => string;
 }) {
   return (
     <div
@@ -644,12 +651,14 @@ function CategoryCardGrid({
           </div>
         );
 
+        const href = getHref ? getHref(item) : (item.slug ? `/category/${item.slug}` : "/shop");
+
         return (
           <Reveal key={item.id} delay={i * 60}>
             {hasChildren && onSelect ? (
               <div onClick={() => onSelect(isSelected ? null : item)}>{inner}</div>
             ) : (
-              <Link href={item.slug ? `/category/${item.slug}` : "/shop"}>{inner}</Link>
+              <Link href={href}>{inner}</Link>
             )}
           </Reveal>
         );
@@ -697,6 +706,13 @@ function ChildCategoryPanel({
   const children = (category.children || []).filter((c: any) => c.isActive !== false);
   if (!children.length) return null;
 
+  // If this subcategory maps to a dedicated page (e.g. wild-treats → /treat),
+  // link child cards there with ?category=slug so the page auto-filters.
+  const dedicatedPage = CATEGORY_DEDICATED_PAGE[category.slug];
+  const getHref = dedicatedPage
+    ? (child: any) => `${dedicatedPage}?category=${child.slug}`
+    : (child: any) => child.slug ? `/category/${child.slug}` : "/shop";
+
   return (
     <section ref={panelRef as React.RefObject<HTMLElement>} className="py-12" style={{ backgroundColor: C.surfaceContainerLow }}>
       <div className="px-margin-desktop mb-8">
@@ -705,7 +721,7 @@ function ChildCategoryPanel({
           <h3 className="font-playfair text-headline-md" style={{ color: C.primary }}>{category.name}</h3>
         </Reveal>
       </div>
-      <CategoryCardGrid items={children} />
+      <CategoryCardGrid items={children} getHref={getHref} />
     </section>
   );
 }

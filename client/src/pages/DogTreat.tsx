@@ -439,6 +439,22 @@ export default function DogTreat() {
     setSelectedCategoryId(prev => prev === catId ? null : catId);
   }, []);
 
+  // ── Auto-select from ?category=slug query param ────────────────────
+  useEffect(() => {
+    if (!specimenCats.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("category");
+    if (!slug) return;
+    const cat = specimenCats.find((c) => c.slug === slug);
+    if (cat && cat.id !== selectedCategoryId) {
+      setSelectedCategoryId(cat.id);
+      setTimeout(() => {
+        document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [specimenCats.length]);
+
   // ── Fetch products (filtered by selected category if any) ──────────
   const categorySlug = dt.productSection.categorySlug || "wild-treats";
   const { data: categoryProducts = [] } = useQuery<any[]>({
