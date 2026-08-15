@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "@/contexts/StoreContext";
@@ -264,50 +264,38 @@ function ProductCard({ product, onAddToCart }: { product: EditorialProduct; onAd
   );
 }
 
-// ─── Filter types ─────────────────────────────────────────────────────────────
-type FilterOption = { label: string; value: string };
-const FILTER_TYPES: FilterOption[] = [
-  { label: "ALL ARCHIVES", value: "" }, { label: "PARKAS", value: "parka" },
-  { label: "VESTS", value: "vest" },    { label: "KNITS", value: "knit" },
-  { label: "ACCESSORIES", value: "accessory" },
-];
-const FILTER_SHIELDS: FilterOption[] = [
-  { label: "ALL CONDITIONS", value: "" }, { label: "WATERPROOF & THERMAL", value: "waterproof" },
-  { label: "WIND RESISTANT", value: "wind" }, { label: "POLAR GRADE", value: "polar" },
-];
-const FILTER_PATTERNS: FilterOption[] = [
-  { label: "ALL PATTERNS", value: "" }, { label: "MONOCHROME", value: "mono" },
-  { label: "TECHNICAL CAMO", value: "camo" }, { label: "GEOMETRIC", value: "geo" },
-];
+// ─── Clothing filter constants ────────────────────────────────────────────────
+const CLOTHING_SIZES     = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+const CLOTHING_MATERIALS = ["Cotton", "Polyester", "Linen", "Denim", "Fleece", "Wool", "Silk"];
 
-function FilterDropdown({ label, options, value, onChange }: { label: string; options: FilterOption[]; value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const current = options.find(o => o.value === value) ?? options[0];
+// ─── Filter pill ──────────────────────────────────────────────────────────────
+function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <div className="relative cursor-pointer" onClick={() => setOpen(o => !o)}>
-      <span style={{ ...LABEL_CAPS, color: C.outline, display: "block", marginBottom: 4 }}>{label}</span>
-      <div className="flex items-center gap-2">
-        <span style={{ ...INTER, fontSize: 16, fontWeight: 600, color: C.onSurface }}>{current.label}</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-          style={{ color: C.onSurface, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </div>
-      {open && (
-        <div className="absolute top-full left-0 z-50 min-w-[180px] mt-2"
-          style={{ backgroundColor: C.surface, border: `1px solid ${C.outlineVariant}`, boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}
-          onClick={e => e.stopPropagation()}>
-          {options.map(opt => (
-            <div key={opt.value} className="px-4 py-3 cursor-pointer transition-colors"
-              style={{ ...LABEL_CAPS, fontSize: 10, color: value === opt.value ? C.primary : C.onSurfaceVariant, backgroundColor: value === opt.value ? C.primaryFixed : "transparent" }}
-              onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLDivElement).style.backgroundColor = C.surfaceContainer; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = value === opt.value ? C.primaryFixed : "transparent"; }}
-              onClick={() => { onChange(opt.value); setOpen(false); }}>
-              {opt.label}
-            </div>
-          ))}
-        </div>
-      )}
+    <button onClick={onClick} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+      <span
+        className="inline-block px-4 py-1.5 text-xs font-semibold border transition-all duration-200"
+        style={{
+          ...INTER,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          backgroundColor: active ? C.primary : "transparent",
+          color: active ? C.white : C.onSurface,
+          borderColor: active ? C.primary : C.outlineVariant,
+          borderRadius: 2,
+        }}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
+// ─── Filter row ───────────────────────────────────────────────────────────────
+function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-4 py-3 border-b" style={{ borderColor: C.outlineVariant }}>
+      <span style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, minWidth: 80, flexShrink: 0 }}>{label}</span>
+      <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
 }
@@ -317,9 +305,11 @@ export default function DogClothing() {
   const { toast } = useToast();
   const { addToCart } = useStore();
   const [email, setEmail] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterShield, setFilterShield] = useState("");
-  const [filterPattern, setFilterPattern] = useState("");
+  const [activeChildSlug, setActiveChildSlug] = useState<string | null>(
+    () => new URLSearchParams(window.location.search).get("category")
+  );
+  const [activeSizes, setActiveSizes] = useState<string[]>([]);
+  const [activeMaterials, setActiveMaterials] = useState<string[]>([]);
   const heroRef = useRef<HTMLDivElement>(null);
 
   // ── Nav/footer settings ──────────────────────────────────────────────────
@@ -342,21 +332,42 @@ export default function DogClothing() {
     queryKey: ["/api/dog-clothing-ad-banners"],
   });
 
-  // ── Fetch clothing products using slug from settings ─────────────────────
+  // ── Fetch child categories for the filter row ────────────────────────────
+  const { data: allCatsData } = useQuery<{ categories: any[] }>({
+    queryKey: ["/api/categories"],
+  });
+  const flatCats = useMemo(() => {
+    const flatten = (nodes: any[]): any[] =>
+      nodes.flatMap((n: any) => [n, ...flatten(n.children || [])]);
+    return flatten(allCatsData?.categories ?? []);
+  }, [allCatsData]);
+  const dogClothingCat = flatCats.find((c: any) => c.slug === "dogclothing");
+  const childCategories: any[] = dogClothingCat
+    ? flatCats.filter((c: any) => c.parentId === dogClothingCat.id && c.isActive !== false)
+    : [];
+
+  // ── Fetch child category ID when one is selected ──────────────────────────
+  const activeChildCat = activeChildSlug
+    ? childCategories.find((c: any) => c.slug === activeChildSlug)
+    : null;
+
+  // ── Fetch clothing products ───────────────────────────────────────────────
   const categorySlug = pageSettings.productSection.categorySlug || "clothing";
   const productsPerGrid = pageSettings.productSection.productsPerGrid || 3;
   const { data: productsData } = useQuery<any>({
-    queryKey: ["/api/products", { categorySlug, limit: productsPerGrid * 2 + 6 }],
-    queryFn: () =>
-      fetch(`/api/products?categorySlug=${categorySlug}&limit=${productsPerGrid * 2 + 6}`)
-        .then(r => r.json())
-        .then(d => Array.isArray(d) ? d : (d.products ?? [])),
+    queryKey: ["/api/products", { categorySlug, categoryId: activeChildCat?.id, limit: 50 }],
+    queryFn: () => {
+      const url = activeChildCat
+        ? `/api/products?categoryId=${activeChildCat.id}&limit=50`
+        : `/api/products?categorySlug=${categorySlug}&limit=50`;
+      return fetch(url).then(r => r.json()).then(d => Array.isArray(d) ? d : (d.products ?? []));
+    },
   });
 
   const apiProducts: any[] = Array.isArray(productsData) ? productsData : [];
 
   // ── Build editorial products ─────────────────────────────────────────────
-  const allEditorial: EditorialProduct[] = apiProducts.length > 0
+  const allEditorialRaw: EditorialProduct[] = apiProducts.length > 0
     ? apiProducts.map(mapProduct)
     : FALLBACK_IMGS.map((img, idx) => ({
         id: idx + 1,
@@ -369,8 +380,40 @@ export default function DogClothing() {
         specs: TECH[idx],
       }));
 
+  // Client-side size/material filtering
+  const allEditorial = useMemo(() => {
+    let result = allEditorialRaw;
+    if (activeSizes.length > 0) {
+      result = result.filter(p =>
+        (apiProducts.find((ap: any) => ap.id === p.id)?.variants || []).some((v: any) =>
+          v.optionName?.toLowerCase() === "size" && activeSizes.includes(v.optionValue)
+        )
+      );
+    }
+    if (activeMaterials.length > 0) {
+      result = result.filter(p =>
+        activeMaterials.some(m => p.name?.toLowerCase().includes(m.toLowerCase()))
+      );
+    }
+    return result;
+  }, [allEditorialRaw, activeSizes, activeMaterials]);
+
   const grid1 = allEditorial.slice(0, productsPerGrid);
   const grid2 = allEditorial.slice(productsPerGrid, productsPerGrid * 2);
+
+  // Pill toggle helpers
+  const toggleSize = (s: string) =>
+    setActiveSizes(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  const toggleMaterial = (m: string) =>
+    setActiveMaterials(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
+  const handleChildClick = (slug: string) => {
+    const next = activeChildSlug === slug ? null : slug;
+    setActiveChildSlug(next);
+    const url = new URL(window.location.href);
+    if (next) url.searchParams.set("category", next);
+    else url.searchParams.delete("category");
+    window.history.replaceState(null, "", url.toString());
+  };
 
   // ── Parallax hero ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -464,22 +507,45 @@ export default function DogClothing() {
       <AdBannerSlot banners={adBanners} placement="hero" position="bottom" />
 
       {/* ════════════════════════════════════════════════════════════════
-          2. STICKY FILTER BAR
+          2. FILTER ROWS
           ════════════════════════════════════════════════════════════════ */}
-      <section className="sticky z-40 border-b" style={{ top: 72, backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "16px clamp(20px,5vw,64px)" }}>
-        <div className="flex flex-wrap justify-between items-center gap-6">
-          <div className="flex gap-12 flex-wrap">
-            <FilterDropdown label="SPECIMEN TYPE" options={FILTER_TYPES} value={filterType} onChange={setFilterType} />
-            <FilterDropdown label="ENVIRONMENTAL SHIELD" options={FILTER_SHIELDS} value={filterShield} onChange={setFilterShield} />
-            <FilterDropdown label="PATTERN ARCHIVE" options={FILTER_PATTERNS} value={filterPattern} onChange={setFilterPattern} />
-          </div>
-          <div className="flex items-center gap-4">
-            <span style={{ ...LABEL_CAPS, color: C.outline }}>RESULTS: {allEditorial.length} ITEMS</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.onSurface }}>
-              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
-            </svg>
-          </div>
+      <section className="sticky z-40 border-b" style={{ top: 72, backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "0 clamp(20px,5vw,64px)" }}>
+        {/* Row 1 — Category */}
+        <FilterRow label="CATEGORY">
+          <FilterPill label="All" active={!activeChildSlug} onClick={() => activeChildSlug && handleChildClick(activeChildSlug)} />
+          {childCategories.map((cat: any) => (
+            <FilterPill
+              key={cat.id}
+              label={cat.name}
+              active={activeChildSlug === cat.slug}
+              onClick={() => handleChildClick(cat.slug)}
+            />
+          ))}
+        </FilterRow>
+
+        {/* Row 2 — Size */}
+        <FilterRow label="SIZE">
+          {CLOTHING_SIZES.map(s => (
+            <FilterPill key={s} label={s} active={activeSizes.includes(s)} onClick={() => toggleSize(s)} />
+          ))}
+          {activeSizes.length > 0 && (
+            <button onClick={() => setActiveSizes([])} style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Clear</button>
+          )}
+        </FilterRow>
+
+        {/* Row 3 — Material */}
+        <FilterRow label="MATERIAL">
+          {CLOTHING_MATERIALS.map(m => (
+            <FilterPill key={m} label={m} active={activeMaterials.includes(m)} onClick={() => toggleMaterial(m)} />
+          ))}
+          {activeMaterials.length > 0 && (
+            <button onClick={() => setActiveMaterials([])} style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Clear</button>
+          )}
+        </FilterRow>
+
+        {/* Result count */}
+        <div className="py-2 flex justify-end">
+          <span style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline }}>RESULTS: {allEditorial.length} ITEMS</span>
         </div>
       </section>
 
