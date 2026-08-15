@@ -631,7 +631,7 @@ function CategoryHub({
               )}
               <Link href={cats[0]?.slug ? `/category/${cats[0].slug}` : "/shop"}>
                 <span className="font-inter text-label-caps border-b border-white pb-1 cursor-pointer">
-                  {categoryHub.cards[0]?.ctaText || "EXPLORE"}
+                  EXPLORE {cats[0]?.name?.toUpperCase() || ""}
                 </span>
               </Link>
             </div>
