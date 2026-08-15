@@ -346,18 +346,24 @@ export default function DogClothing() {
       nodes.flatMap((n: any) => [n, ...flatten(n.children || [])]);
     return flatten(allCatsData?.categories ?? []);
   }, [allCatsData]);
-  const dogClothingCat = flatCats.find((c: any) => c.slug === "dogclothing");
+  // Products live under root "clothing"; child filter options come from dogclothing's children
+  const categorySlug = pageSettings.productSection.categorySlug || "clothing";
+  const rootClothingCat = flatCats.find((c: any) => c.slug === categorySlug);
+  const dogClothingCat  = flatCats.find((c: any) => c.slug === "dogclothing");
   const childCategories: any[] = dogClothingCat
     ? flatCats.filter((c: any) => c.parentId === dogClothingCat.id && c.isActive !== false)
     : [];
 
-  // ── Fetch child category ID when one is selected ──────────────────────────
+  // Active child cat — look in both the root's direct children and dogclothing's children
+  const allFilterableCats = [
+    ...(rootClothingCat ? flatCats.filter((c: any) => c.parentId === rootClothingCat.id) : []),
+    ...childCategories,
+  ];
   const activeChildCat = activeChildSlug
-    ? childCategories.find((c: any) => c.slug === activeChildSlug)
+    ? allFilterableCats.find((c: any) => c.slug === activeChildSlug) ?? null
     : null;
 
   // ── Fetch clothing products ───────────────────────────────────────────────
-  const categorySlug = pageSettings.productSection.categorySlug || "clothing";
   const productsPerGrid = pageSettings.productSection.productsPerGrid || 3;
   const { data: productsData } = useQuery<any>({
     queryKey: ["/api/products", { categorySlug, categoryId: activeChildCat?.id, limit: 50 }],
@@ -510,29 +516,68 @@ export default function DogClothing() {
           ════════════════════════════════════════════════════════════════ */}
       <section className="sticky z-40 border-b" style={{ top: 72, backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "16px clamp(20px,5vw,64px)" }}>
         <div className="flex flex-wrap justify-between items-center gap-6">
-          <div className="flex gap-12 flex-wrap">
-            <FilterDropdown
-              label="CATEGORY"
-              options={[
-                { label: "ALL CATEGORIES", value: "" },
-                ...childCategories.map((c: any) => ({ label: c.name.toUpperCase(), value: c.slug })),
-              ]}
-              value={activeChildSlug}
-              onChange={handleCategoryChange}
-            />
-            <FilterDropdown
-              label="SIZE"
-              options={[{ label: "ALL SIZES", value: "" }, ...CLOTHING_SIZES.map(s => ({ label: s, value: s }))]}
-              value={activeSize}
-              onChange={setActiveSize}
-            />
-            <FilterDropdown
-              label="MATERIAL"
-              options={[{ label: "ALL MATERIALS", value: "" }, ...CLOTHING_MATERIALS.map(m => ({ label: m.toUpperCase(), value: m }))]}
-              value={activeMaterial}
-              onChange={setActiveMaterial}
-            />
+          <div className="flex gap-10 flex-wrap items-end">
+            {/* Category dropdown + per-filter clear */}
+            <div className="flex flex-col gap-1">
+              <FilterDropdown
+                label="CATEGORY"
+                options={[
+                  { label: "ALL CATEGORIES", value: "" },
+                  ...childCategories.map((c: any) => ({ label: c.name.toUpperCase(), value: c.slug })),
+                ]}
+                value={activeChildSlug}
+                onChange={handleCategoryChange}
+              />
+              {activeChildSlug && (
+                <button onClick={() => handleCategoryChange("")}
+                  style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>
+                  × Clear
+                </button>
+              )}
+            </div>
+
+            {/* Size dropdown + per-filter clear */}
+            <div className="flex flex-col gap-1">
+              <FilterDropdown
+                label="SIZE"
+                options={[{ label: "ALL SIZES", value: "" }, ...CLOTHING_SIZES.map(s => ({ label: s, value: s }))]}
+                value={activeSize}
+                onChange={setActiveSize}
+              />
+              {activeSize && (
+                <button onClick={() => setActiveSize("")}
+                  style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>
+                  × Clear
+                </button>
+              )}
+            </div>
+
+            {/* Material dropdown + per-filter clear */}
+            <div className="flex flex-col gap-1">
+              <FilterDropdown
+                label="MATERIAL"
+                options={[{ label: "ALL MATERIALS", value: "" }, ...CLOTHING_MATERIALS.map(m => ({ label: m.toUpperCase(), value: m }))]}
+                value={activeMaterial}
+                onChange={setActiveMaterial}
+              />
+              {activeMaterial && (
+                <button onClick={() => setActiveMaterial("")}
+                  style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>
+                  × Clear
+                </button>
+              )}
+            </div>
+
+            {/* Global clear all */}
+            {(activeChildSlug || activeSize || activeMaterial) && (
+              <button
+                onClick={() => { handleCategoryChange(""); setActiveSize(""); setActiveMaterial(""); }}
+                style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, background: "none", border: `1px solid ${C.outlineVariant}`, cursor: "pointer", padding: "4px 10px", marginBottom: 2 }}>
+                CLEAR ALL
+              </button>
+            )}
           </div>
+
           <div className="flex items-center gap-4">
             <span style={{ ...LABEL_CAPS, color: C.outline }}>RESULTS: {allEditorial.length} ITEMS</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.onSurface }}>
