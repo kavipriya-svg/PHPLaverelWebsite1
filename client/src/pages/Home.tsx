@@ -810,7 +810,7 @@ function CategoryHub({
             />
             <div className="absolute inset-0 flex flex-col justify-end p-8" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)" }}>
               <h3 className="font-playfair text-headline-md" style={{ color: C.white }}>{cats[1]?.name || "Modern Apparel"}</h3>
-              <button onClick={() => handleSelect(cats[1])} className="font-inter text-label-caps mt-2 cursor-pointer bg-transparent border-0" style={{ color: C.white }}>
+              <button onClick={() => handleSelect(cats[1])} className="font-inter text-label-caps mt-2 cursor-pointer bg-transparent border-0 text-left self-start" style={{ color: C.white }}>
                 EXPLORE {cats[1]?.name?.toUpperCase() || ""}
               </button>
             </div>
