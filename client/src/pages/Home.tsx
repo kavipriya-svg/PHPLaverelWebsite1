@@ -574,14 +574,75 @@ const CATEGORY_FALLBACK_IMAGES = [
 ];
 
 
+// ─── Subcategory Panel ────────────────────────────────────────────
+function SubcategoryPanel({ category, allCategories }: { category: any; allCategories: any[] }) {
+  const subs = allCategories.filter((c: any) => c.parentId === category.id && c.isActive !== false);
+  if (!subs.length) return null;
+
+  return (
+    <section className="px-margin-desktop py-10" style={{ backgroundColor: C.surfaceContainer }}>
+      <Reveal>
+        <p className="font-inter text-label-caps mb-1" style={{ color: C.secondary }}>
+          BROWSE BY TYPE
+        </p>
+        <h3 className="font-playfair text-headline-md mb-8" style={{ color: C.primary }}>
+          {category.name}
+        </h3>
+      </Reveal>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {subs.map((sub: any, i: number) => (
+          <Reveal key={sub.id} delay={i * 60}>
+            <Link href={sub.slug ? `/category/${sub.slug}` : "/shop"}>
+              <div className="group cursor-pointer">
+                <div
+                  className="overflow-hidden hard-shadow mb-3"
+                  style={{ height: 160, backgroundColor: C.surfaceContainerHigh }}
+                >
+                  {getCategoryImage(sub) ? (
+                    <img
+                      src={getCategoryImage(sub)}
+                      alt={sub.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => { e.currentTarget.style.display = "none"; }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: C.surfaceContainer }}>
+                      <span className="font-playfair text-2xl italic" style={{ color: C.primary }}>{sub.name[0]}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="font-inter text-label-caps text-center group-hover:underline" style={{ color: C.primary }}>
+                  {sub.name}
+                </p>
+              </div>
+            </Link>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function CategoryHub({
   categories,
+  allCategories,
   categoryHub,
+  selectedCatId,
+  onSelect,
 }: {
   categories: any[];
+  allCategories: any[];
   categoryHub: HomepageSettings["categoryHub"];
+  selectedCatId: string | null;
+  onSelect: (cat: any) => void;
 }) {
   const cats = categories.slice(0, 4);
+
+  const handleSelect = (cat: any) => {
+    const subs = allCategories.filter((c: any) => c.parentId === cat?.id && c.isActive !== false);
+    if (subs.length) onSelect(selectedCatId === cat?.id ? null : cat);
+    else if (cat?.slug) window.location.href = `/category/${cat.slug}`;
+  };
 
   return (
     <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surface }}>
@@ -629,11 +690,9 @@ function CategoryHub({
                   {cats[0]?.description || categoryHub.cards[0].description}
                 </p>
               )}
-              <Link href={cats[0]?.slug ? `/category/${cats[0].slug}` : "/shop"}>
-                <span className="font-inter text-label-caps border-b border-white pb-1 cursor-pointer">
-                  EXPLORE {cats[0]?.name?.toUpperCase() || ""}
-                </span>
-              </Link>
+              <button onClick={() => handleSelect(cats[0])} className="font-inter text-label-caps border-b border-white pb-1 cursor-pointer bg-transparent" style={{ color: C.white }}>
+                EXPLORE {cats[0]?.name?.toUpperCase() || ""}
+              </button>
             </div>
           </div>
         </Reveal>
@@ -650,11 +709,9 @@ function CategoryHub({
             />
             <div className="absolute inset-0 flex flex-col justify-end p-8" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)" }}>
               <h3 className="font-playfair text-headline-md" style={{ color: C.white }}>{cats[1]?.name || "Modern Apparel"}</h3>
-              <Link href={cats[1]?.slug ? `/category/${cats[1].slug}` : "/category/clothing"}>
-                <span className="font-inter text-label-caps mt-2 cursor-pointer" style={{ color: C.white }}>
-                  {categoryHub.cards[1]?.ctaText || "VIEW"}
-                </span>
-              </Link>
+              <button onClick={() => handleSelect(cats[1])} className="font-inter text-label-caps mt-2 cursor-pointer bg-transparent border-0" style={{ color: C.white }}>
+                EXPLORE {cats[1]?.name?.toUpperCase() || ""}
+              </button>
             </div>
           </div>
         </Reveal>
@@ -674,11 +731,9 @@ function CategoryHub({
               style={{ backgroundColor: `${C.primary}33` }}
             >
               <h3 className="font-playfair text-headline-md" style={{ color: C.white }}>{cats[2]?.name || "High Protein Treats"}</h3>
-              <Link href={cats[2]?.slug ? `/category/${cats[2].slug}` : "/shop"}>
-                <button className="mt-4 font-inter text-label-caps px-6 py-2 cursor-pointer" style={{ backgroundColor: C.white, color: C.primary }}>
-                  {categoryHub.cards[2]?.ctaText || "SHOP"}
-                </button>
-              </Link>
+              <button onClick={() => handleSelect(cats[2])} className="mt-4 font-inter text-label-caps px-6 py-2 cursor-pointer" style={{ backgroundColor: C.white, color: C.primary }}>
+                EXPLORE {cats[2]?.name?.toUpperCase() || ""}
+              </button>
             </div>
           </div>
         </Reveal>
@@ -698,6 +753,9 @@ function CategoryHub({
                 <p className="font-inter text-label-caps" style={{ color: C.primary }}>{categoryHub.cards[3].badge}</p>
               )}
               <h3 className="font-playfair text-headline-md" style={{ color: C.primary }}>{cats[3]?.name || "Twinning"}</h3>
+              <button onClick={() => handleSelect(cats[3])} className="font-inter text-label-caps mt-2 border-b border-current pb-0.5 cursor-pointer bg-transparent block" style={{ color: C.primary }}>
+                EXPLORE {cats[3]?.name?.toUpperCase() || ""}
+              </button>
             </div>
           </div>
         </Reveal>
@@ -1645,10 +1703,13 @@ export default function Home() {
     queryKey: ["/api/home-blocks"],
   });
 
-  const topCategories = (categoriesData?.categories || []).filter((c: any) => !c.parentId).slice(0, 4);
+  const allCategories = categoriesData?.categories || [];
+  const topCategories = allCategories.filter((c: any) => !c.parentId).slice(0, 4);
   const activeHomeBlocks = (homeBlocksData?.blocks || [])
     .filter((b) => b.isActive)
     .sort((a, b) => (a.position || 0) - (b.position || 0));
+
+  const [selectedCat, setSelectedCat] = useState<any>(null);
 
   return (
     <div
@@ -1658,7 +1719,16 @@ export default function Home() {
       <EditorialHeader nav={s.nav} />
       {s.hero.visible !== false && <HeroSection hero={s.hero} />}
       {s.categoryHub.visible !== false && (
-        <CategoryHub categories={topCategories} categoryHub={s.categoryHub} />
+        <CategoryHub
+          categories={topCategories}
+          allCategories={allCategories}
+          categoryHub={s.categoryHub}
+          selectedCatId={selectedCat?.id ?? null}
+          onSelect={setSelectedCat}
+        />
+      )}
+      {selectedCat && (
+        <SubcategoryPanel category={selectedCat} allCategories={allCategories} />
       )}
       {s.bestSellers.visible !== false && (
         <BestSellersSection products={treatsData?.products || []} bestSellers={s.bestSellers} />
