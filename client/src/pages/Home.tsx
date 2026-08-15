@@ -580,40 +580,64 @@ function SubcategoryPanel({ category, panelRef }: { category: any; panelRef: Rea
   if (!subs.length) return null;
 
   return (
-    <section ref={panelRef as React.RefObject<HTMLElement>} className="px-margin-desktop py-10" style={{ backgroundColor: C.surfaceContainer }}>
-      <Reveal>
-        <p className="font-inter text-label-caps mb-1" style={{ color: C.secondary }}>
-          BROWSE BY TYPE
-        </p>
-        <h3 className="font-playfair text-headline-md mb-8" style={{ color: C.primary }}>
-          {category.name}
-        </h3>
-      </Reveal>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    <section ref={panelRef as React.RefObject<HTMLElement>} className="py-12" style={{ backgroundColor: C.surfaceContainer }}>
+      <div className="px-margin-desktop mb-8">
+        <Reveal>
+          <p className="font-inter text-label-caps mb-1" style={{ color: C.secondary }}>
+            BROWSE BY TYPE
+          </p>
+          <h3 className="font-playfair text-headline-md" style={{ color: C.primary }}>
+            {category.name}
+          </h3>
+        </Reveal>
+      </div>
+
+      <div className="px-margin-desktop grid grid-cols-3 gap-5">
         {subs.map((sub: any, i: number) => (
           <Reveal key={sub.id} delay={i * 60}>
             <Link href={sub.slug ? `/category/${sub.slug}` : "/shop"}>
-              <div className="group cursor-pointer">
-                <div
-                  className="overflow-hidden hard-shadow mb-3"
-                  style={{ height: 160, backgroundColor: C.surfaceContainerHigh }}
-                >
+              <div className="group cursor-pointer relative overflow-hidden" style={{ borderRadius: 2 }}>
+                {/* Image */}
+                <div className="relative overflow-hidden" style={{ aspectRatio: "4/3", backgroundColor: C.surfaceContainerHigh }}>
                   {getCategoryImage(sub) ? (
                     <img
                       src={getCategoryImage(sub)}
                       alt={sub.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                        const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement | null;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: C.surfaceContainer }}>
-                      <span className="font-playfair text-2xl italic" style={{ color: C.primary }}>{sub.name[0]}</span>
-                    </div>
-                  )}
+                  ) : null}
+                  {/* Fallback initial */}
+                  <div
+                    className="absolute inset-0 items-center justify-center"
+                    style={{ display: getCategoryImage(sub) ? "none" : "flex", backgroundColor: C.surfaceContainerHigh }}
+                  >
+                    <span className="font-playfair text-5xl italic" style={{ color: C.primary }}>{sub.name[0]}</span>
+                  </div>
+                  {/* Dark gradient overlay */}
+                  <div
+                    className="absolute inset-0 transition-opacity duration-500"
+                    style={{
+                      background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)",
+                    }}
+                  />
+                  {/* Name overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <p className="font-playfair text-xl font-semibold leading-tight" style={{ color: "#fff" }}>
+                      {sub.name}
+                    </p>
+                    <span
+                      className="inline-block mt-2 font-inter text-label-caps border-b pb-0.5 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
+                      style={{ color: "#fff", borderColor: "#fff" }}
+                    >
+                      SHOP NOW
+                    </span>
+                  </div>
                 </div>
-                <p className="font-inter text-label-caps text-center group-hover:underline" style={{ color: C.primary }}>
-                  {sub.name}
-                </p>
               </div>
             </Link>
           </Reveal>
