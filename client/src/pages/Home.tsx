@@ -575,8 +575,8 @@ const CATEGORY_FALLBACK_IMAGES = [
 
 
 // ─── Subcategory Panel ────────────────────────────────────────────
-function SubcategoryPanel({ category, allCategories }: { category: any; allCategories: any[] }) {
-  const subs = allCategories.filter((c: any) => c.parentId === category.id && c.isActive !== false);
+function SubcategoryPanel({ category }: { category: any }) {
+  const subs = (category.children || []).filter((c: any) => c.isActive !== false);
   if (!subs.length) return null;
 
   return (
@@ -625,13 +625,11 @@ function SubcategoryPanel({ category, allCategories }: { category: any; allCateg
 
 function CategoryHub({
   categories,
-  allCategories,
   categoryHub,
   selectedCatId,
   onSelect,
 }: {
   categories: any[];
-  allCategories: any[];
   categoryHub: HomepageSettings["categoryHub"];
   selectedCatId: string | null;
   onSelect: (cat: any) => void;
@@ -639,7 +637,7 @@ function CategoryHub({
   const cats = categories.slice(0, 4);
 
   const handleSelect = (cat: any) => {
-    const subs = allCategories.filter((c: any) => c.parentId === cat?.id && c.isActive !== false);
+    const subs = (cat?.children || []).filter((c: any) => c.isActive !== false);
     if (subs.length) onSelect(selectedCatId === cat?.id ? null : cat);
     else if (cat?.slug) window.location.href = `/category/${cat.slug}`;
   };
@@ -1721,14 +1719,13 @@ export default function Home() {
       {s.categoryHub.visible !== false && (
         <CategoryHub
           categories={topCategories}
-          allCategories={allCategories}
           categoryHub={s.categoryHub}
           selectedCatId={selectedCat?.id ?? null}
           onSelect={setSelectedCat}
         />
       )}
       {selectedCat && (
-        <SubcategoryPanel category={selectedCat} allCategories={allCategories} />
+        <SubcategoryPanel category={selectedCat} />
       )}
       {s.bestSellers.visible !== false && (
         <BestSellersSection products={treatsData?.products || []} bestSellers={s.bestSellers} />
