@@ -38,6 +38,27 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { CategoryWithChildren } from "@shared/schema";
 
+// Maps a top-level category slug to its dedicated store page.
+// Child categories of these parents should navigate to the dedicated page with ?category=<slug>.
+const CATEGORY_DEDICATED_PAGE: Record<string, string> = {
+  "wild-treats": "/treat",
+  "dogclothing": "/category/clothing",
+  "full-meals": "/full-meals",
+  "dogparentclothing": "/category/twinning",
+  "gift-services": "/giftseries",
+};
+
+/** Given a category and its parent's slug, compute the correct link href. */
+function getCategoryHref(categorySlug: string, parentSlug?: string): string {
+  if (!parentSlug) {
+    // Top-level — check if it has a dedicated page, else generic category page
+    return CATEGORY_DEDICATED_PAGE[categorySlug] ?? `/category/${categorySlug}`;
+  }
+  // Child — navigate to parent's dedicated page (or /category/<parentSlug>) with ?category filter
+  const parentPage = CATEGORY_DEDICATED_PAGE[parentSlug] ?? `/category/${parentSlug}`;
+  return `${parentPage}?category=${categorySlug}`;
+}
+
 interface BrandingSettings {
   logoUrl: string;
   storeName: string;
@@ -434,7 +455,7 @@ function MegaMenu({
           {category.children?.map((subCategory) => (
             <div key={subCategory.id}>
               <Link
-                href={`/category/${subCategory.slug}`}
+                href={getCategoryHref(subCategory.slug, category.slug)}
                 className="font-semibold text-sm hover:text-primary mb-2 flex items-center gap-2 group"
                 onClick={onClose}
                 data-testid={`link-subcategory-${subCategory.slug}`}
@@ -453,7 +474,7 @@ function MegaMenu({
                   {subCategory.children.map((childCategory) => (
                     <li key={childCategory.id}>
                       <Link
-                        href={`/category/${childCategory.slug}`}
+                        href={getCategoryHref(childCategory.slug, subCategory.slug)}
                         className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 group"
                         onClick={onClose}
                         data-testid={`link-childcategory-${childCategory.slug}`}
@@ -491,14 +512,17 @@ function MegaMenu({
 function MobileCategoryItem({ 
   category, 
   onNavigate,
-  depth = 0 
+  depth = 0,
+  parentSlug,
 }: { 
   category: CategoryWithChildren; 
   onNavigate: () => void;
   depth?: number;
+  parentSlug?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = category.children && category.children.length > 0;
+  const href = getCategoryHref(category.slug, parentSlug);
 
   return (
     <div className="flex flex-col">
@@ -507,7 +531,7 @@ function MobileCategoryItem({
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
       >
         <Link
-          href={`/category/${category.slug}`}
+          href={href}
           className="flex-1 text-sm font-medium flex items-center gap-2 group"
           onClick={onNavigate}
         >
@@ -539,6 +563,7 @@ function MobileCategoryItem({
               category={child}
               onNavigate={onNavigate}
               depth={depth + 1}
+              parentSlug={category.slug}
             />
           ))}
         </div>
