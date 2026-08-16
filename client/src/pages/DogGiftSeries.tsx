@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ShoppingCart, ArrowRight } from "lucide-react";
@@ -424,11 +424,42 @@ export default function DogGiftSeries() {
   const { data: rawPage } = useQuery({ queryKey: ["/api/settings/gift-services-page"] });
   const page = deepMerge(PAGE_DEFAULTS, rawPage && typeof rawPage === "object" ? rawPage : {});
 
-  // Products from Gift Services category
+  // ?category= URL param for sub-category filtering
+  const [activeSlug, setActiveSlug] = useState<string>(
+    () => new URLSearchParams(window.location.search).get("category") ?? ""
+  );
+
+  // All categories — filter client-side to get children of Gift Services
+  const { data: allCatsData } = useQuery<{ categories: any[] }>({
+    queryKey: ["/api/categories"],
+  });
+  const childCategories = useMemo(
+    () => (allCatsData?.categories || []).filter(
+      (c: any) => c.parentId === GIFT_SERVICES_CATEGORY_ID && c.isActive !== false
+    ),
+    [allCatsData]
+  );
+
+  // Resolve the active child category ID from the slug
+  const activeCategoryId = useMemo(() => {
+    if (!activeSlug) return null;
+    return childCategories.find((c: any) => c.slug === activeSlug)?.id ?? null;
+  }, [activeSlug, childCategories]);
+
+  // Sync URL when filter changes
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (activeSlug) url.searchParams.set("category", activeSlug);
+    else url.searchParams.delete("category");
+    window.history.replaceState({}, "", url.toString());
+  }, [activeSlug]);
+
+  // Products — filter by child category if selected, otherwise whole Gift Services category
+  const fetchCategoryId = activeCategoryId ?? GIFT_SERVICES_CATEGORY_ID;
   const { data: productsData, isLoading: productsLoading } = useQuery<{ products: any[] }>({
-    queryKey: ["/api/products", `categoryId=${GIFT_SERVICES_CATEGORY_ID}&limit=20`],
+    queryKey: ["/api/products", `categoryId=${fetchCategoryId}&limit=20`],
     queryFn: async () => {
-      const r = await fetch(`/api/products?categoryId=${GIFT_SERVICES_CATEGORY_ID}&limit=20`);
+      const r = await fetch(`/api/products?categoryId=${fetchCategoryId}&limit=20`);
       return r.json();
     },
   });
@@ -534,6 +565,51 @@ export default function DogGiftSeries() {
         </div>
       </section>
       <AdBannerStrip banners={heroBanners} position="bottom" />
+
+      {/* ─── Category Filter Tabs ─── */}
+      {childCategories.length > 0 && (
+        <div style={{ backgroundColor: C.surfaceContainerLow, borderBottom: `1px solid ${C.outlineVariant}` }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 clamp(20px,5vw,64px)", display: "flex", gap: 0, overflowX: "auto", scrollbarWidth: "none" }}>
+            <button
+              onClick={() => setActiveSlug("")}
+              style={{
+                ...LABEL_CAPS,
+                fontSize: 11,
+                padding: "16px 20px",
+                cursor: "pointer",
+                background: "none",
+                border: "none",
+                borderBottom: !activeSlug ? `2px solid ${C.primary}` : "2px solid transparent",
+                color: !activeSlug ? C.primary : C.onSurfaceVariant,
+                whiteSpace: "nowrap",
+                transition: "color 0.2s, border-color 0.2s",
+              }}
+            >
+              All
+            </button>
+            {childCategories.map((cat: any) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveSlug(cat.slug)}
+                style={{
+                  ...LABEL_CAPS,
+                  fontSize: 11,
+                  padding: "16px 20px",
+                  cursor: "pointer",
+                  background: "none",
+                  border: "none",
+                  borderBottom: activeSlug === cat.slug ? `2px solid ${C.primary}` : "2px solid transparent",
+                  color: activeSlug === cat.slug ? C.primary : C.onSurfaceVariant,
+                  whiteSpace: "nowrap",
+                  transition: "color 0.2s, border-color 0.2s",
+                }}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ─── Product Dossiers ─── */}
       {page.dossiers.visible && (

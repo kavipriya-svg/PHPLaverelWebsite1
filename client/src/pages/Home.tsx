@@ -581,6 +581,7 @@ const CATEGORY_DEDICATED_PAGE: Record<string, string> = {
   "dogclothing": "/category/clothing",
   "full-meals": "/full-meals",
   "dogparentclothing": "/category/twinning",
+  "gift-services": "/giftseries",
 };
 
 // ─── Shared category card grid ────────────────────────────────────
