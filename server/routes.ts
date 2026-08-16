@@ -3638,10 +3638,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         });
       }
       
-      // Check for duplicate slug
-      const existing = await storage.getCategoryBySlug(slug);
+      // Check for duplicate slug within the same parent
+      const parentId = req.body.parentId || null;
+      const existing = await storage.getCategoryBySlugAndParent(slug, parentId);
       if (existing) {
-        return res.status(400).json({ error: "A category with this slug already exists" });
+        return res.status(400).json({ error: "A category with this slug already exists under the same parent" });
       }
       
       const parsed = insertCategorySchema.parse(req.body);
@@ -3674,10 +3675,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           });
         }
         
-        // Check for duplicate slug (excluding current category)
-        const existing = await storage.getCategoryBySlug(slug);
+        // Check for duplicate slug within the same parent (excluding current category)
+        const parentId = req.body.parentId !== undefined ? (req.body.parentId || null) : null;
+        const existing = await storage.getCategoryBySlugAndParent(slug, parentId);
         if (existing && existing.id !== req.params.id) {
-          return res.status(400).json({ error: "A category with this slug already exists" });
+          return res.status(400).json({ error: "A category with this slug already exists under the same parent" });
         }
       }
       
