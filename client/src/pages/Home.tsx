@@ -910,7 +910,7 @@ function BestSellersSection({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter">
         {items.slice(0, bestSellers.limit).map((p: any, i: number) => (
           <Reveal key={p.id || i} delay={i * 100}>
-            <Link href={p.slug ? `/product/${p.slug}` : "#"} className="block group cursor-pointer">
+            <Link href={p.slug ? `/full-meals/product/${p.slug}` : "#"} className="block group cursor-pointer">
               <div className="relative overflow-hidden mb-4" style={{ aspectRatio: "4/5", backgroundColor: C.white }}>
                 <img
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -1002,7 +1002,7 @@ function TreatsSection({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
         {items.slice(0, treats.limit).map((p: any, i: number) => (
           <Reveal key={p.id || i} delay={i * 80}>
-            <Link href={p.slug ? `/product/${p.slug}` : "#"} className="block group cursor-pointer">
+            <Link href={p.slug ? `/dogtreat/product/${p.slug}` : "#"} className="block group cursor-pointer">
               <div
                 className="relative overflow-hidden mb-4"
                 style={{ aspectRatio: "4/5", backgroundColor: C.surfaceContainerLow }}
@@ -1152,7 +1152,7 @@ function TrendingApparelSection({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
         {items.map((item: any, i: number) => (
           <Reveal key={item.id || i} delay={i * 100}>
-            <Link href={item.slug ? `/product/${item.slug}` : "/category/clothing"}>
+            <Link href={item.slug ? `/clothing/product/${item.slug}` : "/category/clothing"}>
               <div className="cursor-pointer group">
                 <div className="relative overflow-hidden mb-4" style={{ aspectRatio: "3/4" }}>
                   <img
