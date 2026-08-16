@@ -1103,7 +1103,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Admin password setup/change (for existing admins)
-  app.post("/api/admin/set-password", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/set-password", isAdmin, async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
       const userInfo = getUserInfo(req);
@@ -1147,7 +1147,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Create admin user with password (super admin only)
-  app.post("/api/admin/create-admin", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/create-admin", isAdmin, async (req, res) => {
     try {
       const { email, password, firstName, lastName, role } = req.body;
       
@@ -3082,7 +3082,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/dashboard", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/dashboard", isAdmin, async (req, res) => {
     try {
       const [products, orders, users] = await Promise.all([
         storage.getProducts({ limit: 1000 }),
@@ -3116,7 +3116,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
   
-  app.get("/api/admin/analytics", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/analytics", isAdmin, async (req, res) => {
     try {
       const period = (req.query.period as string) || "30days";
       const orders = await storage.getOrders({ limit: 10000 });
@@ -3215,7 +3215,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/inventory/low-stock", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/inventory/low-stock", isAdmin, async (req, res) => {
     try {
       const threshold = req.query.threshold ? parseInt(req.query.threshold as string) : undefined;
       const products = await storage.getLowStockProducts(threshold);
@@ -3226,7 +3226,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/inventory/notifications", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/inventory/notifications", isAdmin, async (req, res) => {
     try {
       const productId = req.query.productId as string | undefined;
       const notifications = await storage.getStockNotifications(productId);
@@ -3236,7 +3236,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/inventory/send-low-stock-alerts", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/inventory/send-low-stock-alerts", isAdmin, async (req, res) => {
     try {
       const { productIds } = req.body;
       const productsToAlert = productIds 
@@ -3293,7 +3293,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/inventory/process-restock-notifications", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/inventory/process-restock-notifications", isAdmin, async (req, res) => {
     try {
       const { productId } = req.body;
       
@@ -3383,7 +3383,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/upload", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/upload", isAdmin, async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
@@ -3394,7 +3394,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/upload/finalize", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/upload/finalize", isAdmin, async (req, res) => {
     try {
       console.log("[Upload Finalize] Request body:", req.body);
       if (!req.body.uploadURL) {
@@ -3458,7 +3458,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/products", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/products", isAdmin, async (req, res) => {
     try {
       const filters = {
         search: req.query.search as string,
@@ -3473,7 +3473,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/products/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/products/:id", isAdmin, async (req, res) => {
     try {
       const product = await storage.getProductById(req.params.id);
       if (!product) {
@@ -3485,7 +3485,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/products", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/products", isAdmin, async (req, res) => {
     try {
       // Convert empty strings to null for date fields
       const body = { ...req.body };
@@ -3537,7 +3537,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/products/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
     try {
       const { images, variants, ...productData } = req.body;
       
@@ -3603,7 +3603,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/products/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/products/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteProduct(req.params.id);
       res.json({ success: true });
@@ -3612,7 +3612,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/categories", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/categories", isAdmin, async (req, res) => {
     try {
       const categories = await storage.getCategories();
       res.json({ categories });
@@ -3621,7 +3621,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/categories", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/categories", isAdmin, async (req, res) => {
     try {
       const { name, slug } = req.body;
       
@@ -3658,7 +3658,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/categories/:id", isAdmin, async (req, res) => {
     try {
       const { name, slug } = req.body;
       
@@ -3699,7 +3699,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/categories/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteCategory(req.params.id);
       cacheInvalidate("categories", "categories_menu");
@@ -3709,7 +3709,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/categories/reorder", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/categories/reorder", isAdmin, async (req, res) => {
     try {
       const { updates } = req.body;
       if (!Array.isArray(updates)) {
@@ -3737,7 +3737,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/brands", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/brands", isAdmin, async (req, res) => {
     try {
       const brands = await storage.getBrands();
       res.json({ brands });
@@ -3746,7 +3746,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/brands", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/brands", isAdmin, async (req, res) => {
     try {
       const parsed = insertBrandSchema.parse(req.body);
       const brand = await storage.createBrand(parsed);
@@ -3757,7 +3757,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/brands/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/brands/:id", isAdmin, async (req, res) => {
     try {
       const brand = await storage.updateBrand(req.params.id, req.body);
       cacheInvalidate("brands");
@@ -3767,7 +3767,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/brands/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/brands/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteBrand(req.params.id);
       cacheInvalidate("brands");
@@ -3777,7 +3777,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/orders", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/orders", isAdmin, async (req, res) => {
     try {
       const filters = {
         search: req.query.search as string,
@@ -3794,7 +3794,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // POS Routes
-  app.get("/api/admin/pos/products", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/pos/products", isAdmin, async (req, res) => {
     try {
       const search = req.query.search as string;
       const result = await storage.getProducts({
@@ -3808,7 +3808,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/pos/orders", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/pos/orders", isAdmin, async (req, res) => {
     try {
       const { items, posPaymentType, posCustomerName, posCustomerPhone, notes } = req.body;
       
@@ -3898,7 +3898,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Create POS customer (walk-in customer registration)
-  app.post("/api/admin/pos/customers", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/pos/customers", isAdmin, async (req, res) => {
     try {
       const { firstName, lastName, email, phone } = req.body;
       
@@ -3948,7 +3948,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Search POS customers by name or phone
-  app.get("/api/admin/pos/customers", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/pos/customers", isAdmin, async (req, res) => {
     try {
       const search = (req.query.search as string)?.toLowerCase().trim() || "";
       
@@ -4002,7 +4002,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/orders/:id/status", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/orders/:id/status", isAdmin, async (req, res) => {
     try {
       const { status, trackingNumber } = req.body;
       
@@ -4041,7 +4041,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/coupons", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/coupons", isAdmin, async (req, res) => {
     try {
       const coupons = await storage.getCoupons();
       res.json({ coupons });
@@ -4050,7 +4050,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/coupons", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/coupons", isAdmin, async (req, res) => {
     try {
       console.log("[Coupon] Creating coupon with data:", JSON.stringify(req.body, null, 2));
       
@@ -4081,7 +4081,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/coupons/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/coupons/:id", isAdmin, async (req, res) => {
     try {
       const coupon = await storage.updateCoupon(req.params.id, req.body);
       res.json({ coupon });
@@ -4090,7 +4090,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/coupons/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/coupons/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteCoupon(req.params.id);
       res.json({ success: true });
@@ -4099,7 +4099,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/reviews", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/reviews", isAdmin, async (req, res) => {
     try {
       const filters = {
         isApproved: req.query.approved === "true" ? true : req.query.approved === "false" ? false : undefined,
@@ -4113,7 +4113,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/reviews/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/reviews/:id", isAdmin, async (req, res) => {
     try {
       const review = await storage.getReviewById(req.params.id);
       if (!review) {
@@ -4125,7 +4125,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/reviews/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/reviews/:id", isAdmin, async (req, res) => {
     try {
       const review = await storage.updateReview(req.params.id, req.body);
       if (review && req.body.isApproved !== undefined) {
@@ -4137,7 +4137,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/reviews/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/reviews/:id", isAdmin, async (req, res) => {
     try {
       const review = await storage.getReviewById(req.params.id);
       if (review) {
@@ -4150,7 +4150,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/banners", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/banners", isAdmin, async (req, res) => {
     try {
       const banners = await storage.getBanners();
       res.json({ banners });
@@ -4159,7 +4159,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/banners", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/banners", isAdmin, async (req, res) => {
     try {
       const parsed = insertBannerSchema.parse(req.body);
       const banner = await storage.createBanner(parsed);
@@ -4170,7 +4170,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/banners/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/banners/:id", isAdmin, async (req, res) => {
     try {
       const banner = await storage.updateBanner(req.params.id, req.body);
       cacheInvalidate("banners");
@@ -4180,7 +4180,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/banners/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/banners/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteBanner(req.params.id);
       cacheInvalidate("banners");
@@ -4190,7 +4190,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/home-blocks", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/home-blocks", isAdmin, async (req, res) => {
     try {
       const blocks = await storage.getHomeBlocks();
       res.json({ blocks });
@@ -4199,7 +4199,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/home-blocks", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/home-blocks", isAdmin, async (req, res) => {
     try {
       const parsed = insertHomeBlockSchema.parse(req.body);
       const block = await storage.createHomeBlock(parsed);
@@ -4210,7 +4210,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/home-blocks/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/home-blocks/:id", isAdmin, async (req, res) => {
     try {
       const block = await storage.updateHomeBlock(req.params.id, req.body);
       res.json({ block });
@@ -4219,7 +4219,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/home-blocks/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/home-blocks/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteHomeBlock(req.params.id);
       res.json({ success: true });
@@ -4229,7 +4229,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Combo Offers - Admin endpoints
-  app.get("/api/admin/combo-offers", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/combo-offers", isAdmin, async (req, res) => {
     try {
       const offers = await storage.getComboOffers(false);
       res.json({ offers });
@@ -4238,7 +4238,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/combo-offers/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/combo-offers/:id", isAdmin, async (req, res) => {
     try {
       const offer = await storage.getComboOfferById(req.params.id);
       if (!offer) {
@@ -4250,7 +4250,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/combo-offers", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/combo-offers", isAdmin, async (req, res) => {
     try {
       const { name, description, imageUrl, mediaUrls, productIds, originalPrice, comboPrice, startDate, endDate, isActive, isFeatured, position } = req.body;
       
@@ -4288,7 +4288,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/combo-offers/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/combo-offers/:id", isAdmin, async (req, res) => {
     try {
       const { name, description, imageUrl, mediaUrls, productIds, originalPrice, comboPrice, startDate, endDate, isActive, isFeatured, position } = req.body;
       
@@ -4330,7 +4330,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/combo-offers/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/combo-offers/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteComboOffer(req.params.id);
       res.json({ success: true });
@@ -4340,7 +4340,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Quick Pages (Dynamic CMS Pages) - Admin Routes
-  app.get("/api/admin/quick-pages", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/quick-pages", isAdmin, async (req, res) => {
     try {
       const pages = await storage.getQuickPages(false); // Get all pages including drafts
       res.json({ pages });
@@ -4350,7 +4350,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/quick-pages/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/quick-pages/:id", isAdmin, async (req, res) => {
     try {
       const page = await storage.getQuickPageById(req.params.id);
       if (!page) {
@@ -4363,7 +4363,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/quick-pages", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/quick-pages", isAdmin, async (req, res) => {
     try {
       const { title, slug, content, excerpt, status, showInFooter, footerSection, position, metaTitle, metaDescription, metaKeywords } = req.body;
       
@@ -4398,7 +4398,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/quick-pages/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/quick-pages/:id", isAdmin, async (req, res) => {
     try {
       const { title, slug, content, excerpt, status, showInFooter, footerSection, position, metaTitle, metaDescription, metaKeywords } = req.body;
       
@@ -4435,7 +4435,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/quick-pages/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/quick-pages/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteQuickPage(req.params.id);
       res.json({ success: true });
@@ -4445,7 +4445,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/settings", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/settings", isAdmin, async (req, res) => {
     try {
       const settings = await storage.getSettings();
       res.json({ settings });
@@ -4454,7 +4454,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/settings", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/settings", isAdmin, async (req, res) => {
     try {
       const { settings: settingsMap } = req.body;
       await storage.upsertSettings(settingsMap);
@@ -4465,7 +4465,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Subscription Delivery Tiers Management
-  app.get("/api/admin/subscription-delivery-tiers", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/subscription-delivery-tiers", isAdmin, async (req, res) => {
     try {
       const tiers = await storage.getSubscriptionDeliveryTiers();
       res.json({ tiers });
@@ -4475,7 +4475,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/subscription-delivery-tiers", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/subscription-delivery-tiers", isAdmin, async (req, res) => {
     try {
       const { label, upToWeightKg, chennaiFee, panIndiaFee, sortOrder, isActive } = req.body;
       if (!label || upToWeightKg === undefined || chennaiFee === undefined || panIndiaFee === undefined) {
@@ -4496,7 +4496,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/subscription-delivery-tiers/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/subscription-delivery-tiers/:id", isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const { label, upToWeightKg, chennaiFee, panIndiaFee, sortOrder, isActive } = req.body;
@@ -4519,7 +4519,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/subscription-delivery-tiers/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/subscription-delivery-tiers/:id", isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       await storage.deleteSubscriptionDeliveryTier(id);
@@ -4541,7 +4541,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
     try {
       const search = req.query.search as string;
       const result = await storage.getUsers(search);
@@ -4551,7 +4551,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/users/admins", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/users/admins", isAdmin, async (req, res) => {
     try {
       const search = req.query.search as string || "";
       const result = await storage.getAdminUsers(search);
@@ -4562,7 +4562,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/users/customers", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/users/customers", isAdmin, async (req, res) => {
     try {
       const search = req.query.search as string || "";
       const customerType = req.query.customerType as string || "";
@@ -4574,7 +4574,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/users/customers/:id/details", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/users/customers/:id/details", isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const customer = await storage.getUser(id);
@@ -4595,7 +4595,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Marketing - Customer Segments
-  app.get("/api/admin/marketing/segments", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/marketing/segments", isAdmin, async (req, res) => {
     try {
       const segment = req.query.segment as string || "all";
       const search = req.query.search as string || "";
@@ -4607,7 +4607,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/users/create-admin", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/users/create-admin", isAdmin, async (req, res) => {
     try {
       const { email, password, firstName, lastName, role } = req.body;
       
@@ -4658,7 +4658,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/users/:id/role", isAdmin, async (req, res) => {
     try {
       const { role } = req.body;
       const user = await storage.updateUserRole(req.params.id, role);
@@ -4669,7 +4669,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Update customer type
-  app.patch("/api/admin/users/:id/customer-type", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/users/:id/customer-type", isAdmin, async (req, res) => {
     try {
       const { customerType } = req.body;
       const validTypes = ["regular", "subscription", "retailer", "distributor", "self_employed"];
@@ -4693,7 +4693,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Get available customer types
-  app.get("/api/admin/customer-types", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/customer-types", isAdmin, async (req, res) => {
     res.json({
       types: [
         { value: "regular", label: "Regular Customer" },
@@ -4773,7 +4773,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   };
 
   // Create subscription customer
-  app.post("/api/admin/users/subscription", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/users/subscription", isAdmin, async (req, res) => {
     try {
       // Validate input
       try {
@@ -4839,7 +4839,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Update subscription customer
-  app.patch("/api/admin/users/subscription/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/users/subscription/:id", isAdmin, async (req, res) => {
     try {
       // Validate input
       try {
@@ -4898,7 +4898,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Get subscription customer by ID
-  app.get("/api/admin/users/subscription/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/users/subscription/:id", isAdmin, async (req, res) => {
     try {
       const user = await storage.getUser(req.params.id);
       if (!user) {
@@ -4912,7 +4912,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Subscription Category Discounts API
-  app.get("/api/admin/subscription-customers/:customerId/category-discounts", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/subscription-customers/:customerId/category-discounts", isAdmin, async (req, res) => {
     try {
       const discounts = await storage.getSubscriptionCategoryDiscounts(req.params.customerId);
       res.json({ discounts });
@@ -4922,7 +4922,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/subscription-customers/:customerId/category-discounts", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/subscription-customers/:customerId/category-discounts", isAdmin, async (req, res) => {
     try {
       const { categoryId, discountType, discountValue, saleDiscountType, saleDiscountValue } = req.body;
       
@@ -4958,7 +4958,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/subscription-customers/:customerId/category-discounts/:discountId", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/subscription-customers/:customerId/category-discounts/:discountId", isAdmin, async (req, res) => {
     try {
       const { discountType, discountValue, saleDiscountType, saleDiscountValue } = req.body;
       
@@ -4980,7 +4980,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/subscription-customers/:customerId/category-discounts/:discountId", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/subscription-customers/:customerId/category-discounts/:discountId", isAdmin, async (req, res) => {
     try {
       await storage.deleteSubscriptionCategoryDiscount(req.params.discountId);
       res.json({ success: true });
@@ -4991,7 +4991,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Admin Roles Management API
-  app.get("/api/admin/roles", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/roles", isAdmin, async (req, res) => {
     try {
       const roles = await storage.getAdminRoles();
       res.json({ roles });
@@ -5001,7 +5001,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/roles/:id", isAdmin, async (req, res) => {
     try {
       const data = await storage.getAdminRoleWithPermissions(req.params.id);
       if (!data) {
@@ -5014,7 +5014,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/roles", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/roles", isAdmin, async (req, res) => {
     try {
       const { name, description, permissions } = req.body;
       
@@ -5046,7 +5046,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/roles/:id", isAdmin, async (req, res) => {
     try {
       const { name, description, isActive, permissions } = req.body;
       
@@ -5081,7 +5081,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/admin/roles/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/roles/:id", isAdmin, async (req, res) => {
     try {
       const role = await storage.getAdminRoleById(req.params.id);
       if (!role) {
@@ -5105,12 +5105,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Get available modules for permission assignment
-  app.get("/api/admin/modules", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/modules", isAdmin, async (req, res) => {
     res.json({ modules: ADMIN_MODULES });
   });
 
   // Assign role to user
-  app.patch("/api/admin/users/:id/assign-role", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/users/:id/assign-role", isAdmin, async (req, res) => {
     try {
       const { adminRoleId } = req.body;
       
@@ -5136,14 +5136,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/admin/email/status", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/email/status", isAdmin, async (req, res) => {
     res.json({
       configured: emailService.isConfigured(),
       provider: "resend",
     });
   });
 
-  app.post("/api/admin/email/test", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/email/test", isAdmin, async (req, res) => {
     const { email } = req.body;
     const user = (req as any).user;
     
@@ -5184,7 +5184,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Communication Settings API (MSG91 - Email, SMS, WhatsApp, OTP)
-  app.get("/api/admin/communication-settings", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/communication-settings", isAdmin, async (req, res) => {
     try {
       const setting = await storage.getSetting("communication_settings");
       if (setting?.value) {
@@ -5210,7 +5210,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/communication-settings", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/communication-settings", isAdmin, async (req, res) => {
     try {
       const { msg91, email, sms, whatsapp, otp } = req.body;
       
@@ -5245,7 +5245,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Test Email (MSG91)
-  app.post("/api/admin/communication-settings/test-email", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/communication-settings/test-email", isAdmin, async (req, res) => {
     try {
       const { toEmail } = req.body;
       
@@ -5324,7 +5324,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Test SMS (MSG91)
-  app.post("/api/admin/communication-settings/test-sms", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/communication-settings/test-sms", isAdmin, async (req, res) => {
     try {
       const { toPhone } = req.body;
       
@@ -5386,7 +5386,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Test WhatsApp (MSG91)
-  app.post("/api/admin/communication-settings/test-whatsapp", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/communication-settings/test-whatsapp", isAdmin, async (req, res) => {
     try {
       const { toPhone } = req.body;
       
@@ -5458,7 +5458,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Test OTP (MSG91)
-  app.post("/api/admin/communication-settings/test-otp", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/communication-settings/test-otp", isAdmin, async (req, res) => {
     try {
       const { toPhone } = req.body;
       
@@ -5512,7 +5512,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/admin/inventory/check-low-stock", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/inventory/check-low-stock", isAdmin, async (req, res) => {
     try {
       const threshold = parseInt(req.body.threshold) || 10;
       const { products } = await storage.getProducts({ limit: 1000 });
@@ -5664,7 +5664,7 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
-  app.patch("/api/admin/products/:id/seo", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/products/:id/seo", isAdmin, async (req, res) => {
     try {
       const { metaTitle, metaDescription, metaKeywords, slug } = req.body;
       
@@ -5699,7 +5699,7 @@ Sitemap: ${baseUrl}/sitemap.xml`;
     }
   });
 
-  app.patch("/api/admin/categories/:id/seo", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/categories/:id/seo", isAdmin, async (req, res) => {
     try {
       const { metaTitle, metaDescription, metaKeywords, slug } = req.body;
       
