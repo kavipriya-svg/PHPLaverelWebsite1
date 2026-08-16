@@ -141,7 +141,7 @@ export const categories = pgTable("categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   parentId: varchar("parent_id"),
   name: varchar("name").notNull(),
-  slug: varchar("slug").notNull().unique(),
+  slug: varchar("slug").notNull(),
   description: text("description"),
   imageUrl: varchar("image_url"),
   iconUrl: varchar("icon_url"), // Icon image for menu display
