@@ -114,7 +114,7 @@ export default function DogClothingTestimonials() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const res = await fetch("/api/upload/file", { method: "POST", body: fd, credentials: "include" });
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
       const url = data.url || data.imageUrl || data.path;

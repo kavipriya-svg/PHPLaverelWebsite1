@@ -139,7 +139,7 @@ export default function DogClothingAdBanners() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload/file", { method: "POST", body: fd });
+      const res = await fetch("/api/upload/file", { method: "POST", body: fd, credentials: "include" });
       const data = await res.json();
       const url = data.url || data.fileUrl;
       if (!url) throw new Error("No URL");

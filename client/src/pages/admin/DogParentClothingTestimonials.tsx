@@ -116,7 +116,7 @@ export default function DogParentClothingTestimonials() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const res = await fetch("/api/upload/file", { method: "POST", body: fd, credentials: "include" });
       const data = await res.json();
       if (data.url) setForm(f => ({ ...f, mediaUrl: data.url, mediaType: "image" }));
     } catch {

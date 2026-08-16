@@ -79,8 +79,8 @@ export default function OrderThanksSettingsPage() {
     if (field === "heroImageUrl") setIsUploadingHeroImage(true);
     try {
       const formData = new FormData();
-      formData.append("image", file);
-      const response = await fetch("/api/upload", { method: "POST", body: formData });
+      formData.append("file", file);
+      const response = await fetch("/api/upload/file", { method: "POST", body: formData, credentials: "include" });
       if (!response.ok) throw new Error("Upload failed");
       const result = await response.json();
       setSettings((prev) => ({ ...prev, [field]: result.url }));
