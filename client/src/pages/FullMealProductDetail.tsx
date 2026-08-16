@@ -649,20 +649,6 @@ export default function FullMealProductDetail() {
                 </div>
               </div>
 
-              {/* Info rows */}
-              <div className="flex flex-col gap-2">
-                {[
-                  ["Ancestral Sourcing", returnText || "100% traceable, ethically harvested"],
-                  ["Veterinary Approval", secureCheckoutText || "Formulated with nutritional scientists"],
-                ].map(([label]) => (
-                  <div key={label}
-                    className="flex justify-between items-center py-3 cursor-pointer group border-b"
-                    style={{ borderColor: `${C.outlineVariant}4D` }}>
-                    <span style={{ ...LABEL_CAPS, color: C.primary }}>{label}</span>
-                    <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" style={{ color: C.primary }} />
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </section>
