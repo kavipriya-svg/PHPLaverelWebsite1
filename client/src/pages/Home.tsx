@@ -910,7 +910,7 @@ function BestSellersSection({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter">
         {items.slice(0, bestSellers.limit).map((p: any, i: number) => (
           <Reveal key={p.id || i} delay={i * 100}>
-            <div className="group cursor-pointer">
+            <Link href={p.slug ? `/product/${p.slug}` : "#"} className="block group cursor-pointer">
               <div className="relative overflow-hidden mb-4" style={{ aspectRatio: "4/5", backgroundColor: C.white }}>
                 <img
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -925,7 +925,8 @@ function BestSellersSection({
                     style={{ backgroundColor: C.primary, color: C.white }}
                     onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
                     onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       addToCart(p.id);
                       toast({ title: "Added to cart", description: p.title });
                     }}
@@ -948,7 +949,7 @@ function BestSellersSection({
               <p className="font-inter font-bold" style={{ color: C.secondary }}>
                 {p.price ? `₹${parseFloat(p.salePrice || p.price).toFixed(2)}` : `$${p.price}`}
               </p>
-            </div>
+            </Link>
           </Reveal>
         ))}
       </div>
@@ -1001,7 +1002,7 @@ function TreatsSection({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
         {items.slice(0, treats.limit).map((p: any, i: number) => (
           <Reveal key={p.id || i} delay={i * 80}>
-            <div className="group cursor-pointer">
+            <Link href={p.slug ? `/product/${p.slug}` : "#"} className="block group cursor-pointer">
               <div
                 className="relative overflow-hidden mb-4"
                 style={{ aspectRatio: "4/5", backgroundColor: C.surfaceContainerLow }}
@@ -1031,7 +1032,8 @@ function TreatsSection({
                     style={{ backgroundColor: C.primary, color: C.white }}
                     onMouseOver={e => (e.currentTarget.style.backgroundColor = C.secondary)}
                     onMouseOut={e => (e.currentTarget.style.backgroundColor = C.primary)}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       addToCart(p.id);
                       toast({ title: "Added to cart", description: p.title });
                     }}
@@ -1053,7 +1055,7 @@ function TreatsSection({
                   ? `₹${parseFloat(p.salePrice || p.price).toFixed(2)}`
                   : `$${fallbacks[i % fallbacks.length].price}`}
               </p>
-            </div>
+            </Link>
           </Reveal>
         ))}
       </div>
