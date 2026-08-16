@@ -658,9 +658,20 @@ export default function DogFullMeal() {
             onChange={setPriceFilter}
           />
 
-          {/* Results count */}
-          <div className="ml-auto self-center font-mono text-[11px]" style={{ color: C.outline }}>
-            {isLoading ? "—" : `${filteredProducts.length} specimen${filteredProducts.length !== 1 ? "s" : ""}`}
+          {/* Clear All + Results count */}
+          <div className="ml-auto self-center flex items-center gap-5">
+            {(activeCategory || sortBy !== "featured" || priceFilter !== "all") && (
+              <button
+                onClick={() => { handleCategoryChange(""); setSortBy("featured"); setPriceFilter("all"); }}
+                className="font-inter uppercase"
+                style={{ fontSize: 9, letterSpacing: "0.12em", color: C.secondary, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                × Clear All
+              </button>
+            )}
+            <span className="font-mono text-[11px]" style={{ color: C.outline }}>
+              {isLoading ? "—" : `${filteredProducts.length} specimen${filteredProducts.length !== 1 ? "s" : ""}`}
+            </span>
           </div>
         </div>
 
