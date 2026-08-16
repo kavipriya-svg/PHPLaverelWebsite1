@@ -830,12 +830,9 @@ function CategoryHub({
               loading="lazy"
               onError={(e) => { e.currentTarget.src = CATEGORY_FALLBACK_IMAGES[2]; }}
             />
-            <div
-              className="absolute inset-0 flex flex-col justify-center items-center text-center p-8 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ backgroundColor: `${C.primary}33` }}
-            >
+            <div className="absolute inset-0 flex flex-col justify-end p-8" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.5), transparent)" }}>
               <h3 className="font-playfair text-headline-md" style={{ color: C.white }}>{cats[2]?.name || "High Protein Treats"}</h3>
-              <button onClick={() => handleSelect(cats[2])} className="mt-4 font-inter text-label-caps px-6 py-2 cursor-pointer" style={{ backgroundColor: C.white, color: C.primary }}>
+              <button onClick={() => handleSelect(cats[2])} className="font-inter text-label-caps mt-2 cursor-pointer bg-transparent border-0 text-left self-start" style={{ color: C.white }}>
                 EXPLORE {cats[2]?.name?.toUpperCase() || ""}
               </button>
             </div>
