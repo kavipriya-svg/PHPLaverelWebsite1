@@ -4464,6 +4464,98 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ── Integrations ──────────────────────────────────────────────────────────
+
+  // GET all integration configs (admin only — returns full config including secrets)
+  app.get("/api/admin/integrations", isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      const configs: Record<string, Record<string, string>> = {};
+      for (const row of settings) {
+        if (row.key.startsWith("integration_")) {
+          const id = row.key.replace("integration_", "");
+          try { configs[id] = JSON.parse(row.value ?? "{}"); } catch { configs[id] = {}; }
+        }
+      }
+      res.json({ configs });
+    } catch (error) {
+      console.error("Failed to fetch integrations:", error);
+      res.status(500).json({ error: "Failed to fetch integrations" });
+    }
+  });
+
+  // PUT — save an integration config
+  app.put("/api/admin/integrations/:id", isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { config } = req.body;
+      if (!config || typeof config !== "object") {
+        return res.status(400).json({ error: "config object required" });
+      }
+      await storage.upsertSettings({ [`integration_${id}`]: JSON.stringify(config) });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to save integration:", error);
+      res.status(500).json({ error: "Failed to save integration" });
+    }
+  });
+
+  // DELETE — disconnect/clear an integration
+  app.delete("/api/admin/integrations/:id", isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.upsertSettings({ [`integration_${id}`]: JSON.stringify({}) });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to disconnect integration:", error);
+      res.status(500).json({ error: "Failed to disconnect integration" });
+    }
+  });
+
+  // GET public script config — only non-sensitive IDs needed for client-side injection
+  // Accessible to all visitors (used by IntegrationScripts component)
+  app.get("/api/integrations/public", async (req, res) => {
+    try {
+      const SCRIPT_INJECTABLE = [
+        "google_analytics", "meta_pixel", "hotjar", "ms_clarity",
+        "google_tag_manager", "google_search_console",
+        "tawkto", "crisp", "tidio", "intercom", "freshchat",
+      ];
+      const SAFE_FIELDS: Record<string, string[]> = {
+        google_analytics:      ["measurementId"],
+        meta_pixel:            ["pixelId"],
+        hotjar:                ["siteId"],
+        ms_clarity:            ["projectId"],
+        google_tag_manager:    ["containerId"],
+        google_search_console: ["verificationCode"],
+        tawkto:                ["propertyId", "widgetId"],
+        crisp:                 ["websiteId"],
+        tidio:                 ["publicKey"],
+        intercom:              ["appId"],
+        freshchat:             ["token", "host"],
+      };
+      const settings = await storage.getSettings();
+      const configs: Record<string, Record<string, string>> = {};
+      for (const row of settings) {
+        if (!row.key.startsWith("integration_")) continue;
+        const id = row.key.replace("integration_", "");
+        if (!SCRIPT_INJECTABLE.includes(id)) continue;
+        let full: Record<string, string> = {};
+        try { full = JSON.parse(row.value ?? "{}"); } catch { /* skip */ }
+        const safe: Record<string, string> = {};
+        for (const f of SAFE_FIELDS[id] ?? []) {
+          if (full[f]) safe[f] = full[f];
+        }
+        if (Object.keys(safe).length > 0) configs[id] = safe;
+      }
+      res.set("Cache-Control", "public, max-age=300");
+      res.json({ configs });
+    } catch (error) {
+      console.error("Failed to fetch public integrations:", error);
+      res.status(500).json({ error: "Failed to fetch integrations" });
+    }
+  });
+
   // Subscription Delivery Tiers Management
   app.get("/api/admin/subscription-delivery-tiers", isAdmin, async (req, res) => {
     try {

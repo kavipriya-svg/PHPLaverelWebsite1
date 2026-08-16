@@ -40,6 +40,7 @@ import {
   Building2,
   Calendar,
   CreditCard,
+  Plug,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -127,6 +128,7 @@ const marketingItems = [
 ];
 
 const configItems = [
+  { href: "/admin/integrations", icon: Plug, label: "Integrations" },
   { href: "/admin/branding", icon: Paintbrush, label: "Branding" },
   { href: "/admin/invoice", icon: FileText, label: "Invoice" },
   { href: "/admin/footer", icon: PanelBottom, label: "Footer" },

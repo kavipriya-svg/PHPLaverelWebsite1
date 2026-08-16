@@ -9,6 +9,7 @@ import { StoreProvider } from "@/contexts/StoreContext";
 import { Header } from "@/components/store/Header";
 import { Footer } from "@/components/store/Footer";
 import { Loader2 } from "lucide-react";
+import { IntegrationScripts } from "@/components/IntegrationScripts";
 
 const Home = lazy(() => import("@/pages/Home"));
 const ProductDetail = lazy(() => import("@/pages/ProductDetail"));
@@ -114,6 +115,7 @@ const ProviderDashboard = lazy(() => import("@/pages/provider/ProviderDashboard"
 const ProviderBookings = lazy(() => import("@/pages/provider/ProviderBookings"));
 const ProviderSlots = lazy(() => import("@/pages/provider/ProviderSlots"));
 const ProviderProfile = lazy(() => import("@/pages/provider/ProviderProfile"));
+const AdminIntegrations = lazy(() => import("@/pages/admin/Integrations"));
 
 function PageLoader() {
   return (
@@ -540,6 +542,13 @@ function Router() {
           <AdminFooterSettings />
         </AdminLayout>
       </Route>
+      <Route path="/admin/integrations">
+        <AdminLayout>
+          <Suspense fallback={<PageLoader />}>
+            <AdminIntegrations />
+          </Suspense>
+        </AdminLayout>
+      </Route>
       <Route path="/admin/branding">
         <AdminLayout>
           <AdminBrandingSettings />
@@ -793,6 +802,7 @@ function App() {
         <StoreProvider>
           <TooltipProvider>
             <DynamicFavicon />
+            <IntegrationScripts />
             <Router />
             <Toaster />
           </TooltipProvider>
