@@ -1286,7 +1286,7 @@ function GiftSetsSection({
   const hasCombos = featuredCombos.length > 0;
 
   return (
-    <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surfaceContainerLow }}>
+    <section id="gift-sets" className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surfaceContainerLow }}>
       <div className="flex justify-between items-end mb-stack-md flex-wrap gap-4">
         <Reveal>
           <p className="font-inter text-label-caps mb-2" style={{ color: C.secondary }}>
