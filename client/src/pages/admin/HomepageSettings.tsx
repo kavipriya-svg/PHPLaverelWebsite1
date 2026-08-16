@@ -1231,13 +1231,46 @@ export default function HomepageSettingsPage() {
               visible={settings.giftSets.visible}
               onToggle={(v) => update("giftSets", { visible: v })}
             >
-              <FieldRow label="Section Title">
-                <Input
-                  value={settings.giftSets.sectionTitle}
-                  onChange={(e) => update("giftSets", { sectionTitle: e.target.value })}
-                  placeholder="The Editorial Gift Series"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FieldRow label="Eyebrow Label" hint="Small caps text above the title.">
+                  <Input
+                    value={settings.giftSets.label}
+                    onChange={(e) => update("giftSets", { label: e.target.value })}
+                    placeholder="CURATED COLLECTIONS"
+                  />
+                </FieldRow>
+                <FieldRow label="Section Title">
+                  <Input
+                    value={settings.giftSets.sectionTitle}
+                    onChange={(e) => update("giftSets", { sectionTitle: e.target.value })}
+                    placeholder="The Editorial Gift Series"
+                  />
+                </FieldRow>
+              </div>
+              <FieldRow label="Description" hint="Subtitle text below the section title.">
+                <Textarea
+                  value={settings.giftSets.description}
+                  onChange={(e) => update("giftSets", { description: e.target.value })}
+                  placeholder="Thoughtfully assembled sets for every stage of your dog's life."
+                  rows={2}
                 />
               </FieldRow>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FieldRow label="CTA Button Text">
+                  <Input
+                    value={settings.giftSets.ctaText}
+                    onChange={(e) => update("giftSets", { ctaText: e.target.value })}
+                    placeholder="EXPLORE GIFT SERIES"
+                  />
+                </FieldRow>
+                <FieldRow label="CTA Button Link">
+                  <Input
+                    value={settings.giftSets.ctaHref}
+                    onChange={(e) => update("giftSets", { ctaHref: e.target.value })}
+                    placeholder="/gift-series"
+                  />
+                </FieldRow>
+              </div>
               <Separator />
               {settings.giftSets.items.map((item, i) => (
                 <div key={i} className="space-y-3 p-4 border rounded-md">
