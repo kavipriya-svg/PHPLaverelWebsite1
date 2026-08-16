@@ -267,6 +267,7 @@ export default function DogTreatsAdBanners() {
                   </Button>
                   <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                 </div>
+                <p className="text-xs text-muted-foreground">Recommended: 1200×400px, JPG/PNG/WebP, max 10MB</p>
                 <div className="flex gap-2">
                   <Input value={ytInput} onChange={e => setYtInput(e.target.value)} placeholder="YouTube URL…" className="flex-1" data-testid="input-youtube" />
                   <Button type="button" size="sm" variant="outline" onClick={handleYouTube} data-testid="btn-use-youtube">Use YouTube</Button>

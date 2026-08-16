@@ -356,6 +356,7 @@ export default function DogTreatsFeedback() {
                         {uploading ? "Uploading…" : "Choose file"}
                       </Button>
                       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                      <p className="text-xs text-muted-foreground">Recommended: 400×400px, JPG/PNG/WebP, max 5MB</p>
                     </div>
                   )}
 

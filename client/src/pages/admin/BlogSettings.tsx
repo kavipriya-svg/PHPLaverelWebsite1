@@ -560,6 +560,7 @@ export default function BlogSettingsPage() {
                       onChange={handleImageUpload}
                       disabled={isUploadingImage}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Recommended: 1200×630px, JPG/PNG/WebP, max 5MB</p>
                   </Label>
                   {postForm.imageUrl && (
                     <Button

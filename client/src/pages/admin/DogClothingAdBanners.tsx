@@ -232,7 +232,7 @@ export default function DogClothingAdBanners() {
             <div className="space-y-3">
               <Label>Banner Media</Label>
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Upload image (JPG / PNG / WEBP)</p>
+                <p className="text-xs text-muted-foreground mb-2">Recommended: 1200×400px — JPG/PNG/WebP, max 10MB</p>
                 <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading} data-testid="btn-upload-image">
                   <Upload className="w-3 h-3 mr-1" />{uploading ? "Uploading…" : "Choose Image"}
                 </Button>

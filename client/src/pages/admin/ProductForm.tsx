@@ -863,7 +863,7 @@ export default function ProductForm() {
                             style={{ maxWidth: 320, height: 80 }}>
                             {benefitUploading === i
                               ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                              : <><Upload className="h-5 w-5 mb-1 text-muted-foreground" /><span className="text-xs text-muted-foreground">Upload benefit image</span></>}
+                              : <><Upload className="h-5 w-5 mb-1 text-muted-foreground" /><span className="text-xs text-muted-foreground">Upload benefit image</span><span className="text-xs text-muted-foreground/60 mt-0.5">800×800px, PNG/WebP</span></>}
                             <input type="file" accept="image/*" className="hidden"
                               data-testid={`input-benefit-image-${i}`}
                               onChange={async e => {

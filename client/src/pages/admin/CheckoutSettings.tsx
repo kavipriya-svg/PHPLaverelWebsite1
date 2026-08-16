@@ -196,6 +196,7 @@ export default function CheckoutSettingsPage() {
                 </Button>
                 <input ref={heroFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
               </div>
+              <p className="text-xs text-muted-foreground">Recommended: 1920×600px, JPG/PNG/WebP, max 10MB</p>
             </>
           )}
         </CardContent>

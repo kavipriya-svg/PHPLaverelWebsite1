@@ -476,6 +476,7 @@ export default function CategorySectionSettingsPage() {
                                   onChange={(e) => handleImageUpload(e, itemId)}
                                   disabled={uploadingId === itemId}
                                 />
+                                <p className="text-xs text-muted-foreground">800×600px, JPG/PNG</p>
                               </Label>
                               {item.imageUrl && (
                                 <Button

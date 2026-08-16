@@ -269,6 +269,7 @@ export default function DogParentClothingAdBanners() {
                   </Button>
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                <p className="text-xs text-muted-foreground">Recommended: 1200×400px, JPG/PNG/WebP, max 10MB</p>
                 {form.mediaUrl && (
                   <div className="relative w-full h-28 rounded-md overflow-hidden bg-muted">
                     <img src={form.mediaUrl} alt="preview" className="w-full h-full object-cover" />

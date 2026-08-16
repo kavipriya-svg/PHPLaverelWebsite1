@@ -245,7 +245,7 @@ function HeroSlideCard({
             </div>
           </div>
           <Separator />
-          <ImageUploadField label="Background Image" value={slide.bgImageUrl} onChange={(url) => set({ bgImageUrl: url })} hint="Full-screen background image for this slide." />
+          <ImageUploadField label="Background Image" value={slide.bgImageUrl} onChange={(url) => set({ bgImageUrl: url })} hint="Recommended: 1920×600px, JPG/PNG/WebP, max 10MB." />
           {slide.showText && (
             <>
               <FieldRow label="Eyebrow Label" hint="Small caps text above the headline.">

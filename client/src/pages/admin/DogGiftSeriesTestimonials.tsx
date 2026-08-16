@@ -238,6 +238,7 @@ export default function DogGiftSeriesTestimonials() {
                   </Button>
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                <p className="text-xs text-muted-foreground">Recommended: 800×600px, JPG/PNG/WebP, max 5MB</p>
                 {form.mediaUrl && (
                   <div className="relative w-full h-32 rounded-md overflow-hidden bg-muted">
                     <img src={form.mediaUrl} alt="preview" className="w-full h-full object-cover" />

@@ -292,6 +292,7 @@ export default function FooterSettingsPage() {
                           Upload Logo
                         </label>
                       </Button>
+                      <p className="text-xs text-muted-foreground mt-1">Recommended: 200×80px, PNG/SVG with transparent background</p>
                     </div>
                   </div>
                 </div>

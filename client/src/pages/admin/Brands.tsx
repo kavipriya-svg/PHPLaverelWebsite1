@@ -350,6 +350,7 @@ function BrandDialog({
                 )}
               </Button>
             )}
+            <p className="text-xs text-muted-foreground mt-1">Recommended: 400×200px, PNG/SVG with transparent background</p>
           </div>
           <div className="space-y-2">
             <Label>Description</Label>

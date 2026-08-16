@@ -240,6 +240,7 @@ export default function ShoppingCartSettingsPage() {
                     }}
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">Recommended: 1920×600px, JPG/PNG/WebP, max 10MB</p>
               </>
             )}
           </CardContent>

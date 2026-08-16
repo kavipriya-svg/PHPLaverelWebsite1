@@ -221,6 +221,7 @@ export default function OrderThanksSettingsPage() {
                   }}
                 />
               </div>
+              <p className="text-xs text-muted-foreground">Recommended: 1920×600px, JPG/PNG/WebP, max 10MB</p>
             </div>
           </CardContent>
         </Card>

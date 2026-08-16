@@ -302,6 +302,7 @@ export default function DogClothingTestimonials() {
                     data-testid="input-file"
                     onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }}
                   />
+                  <p className="text-xs text-muted-foreground">Recommended: 800×600px, JPG/PNG/WebP, max 5MB</p>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
