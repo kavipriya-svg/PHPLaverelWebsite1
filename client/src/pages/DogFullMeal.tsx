@@ -685,13 +685,13 @@ export default function DogFullMeal() {
               <EditorialProductCard key={product.id} product={product} index={i} onAddToCart={handleAddToCart} />
             ))}
           </div>
-        ) : products.length > 0 ? (
+        ) : (products.length > 0 || activeCategory || sortBy !== "featured" || priceFilter !== "all") ? (
           <div className="px-5 md:px-[64px] py-24 text-center">
             <p className="font-inter text-sm uppercase tracking-widest mb-4" style={{ color: C.outline, letterSpacing: "0.25em" }}>
               No specimens match
             </p>
             <button
-              onClick={() => { setSortBy("featured"); setPriceFilter("all"); }}
+              onClick={() => { handleCategoryChange(""); setSortBy("featured"); setPriceFilter("all"); }}
               className="font-inter text-xs uppercase tracking-widest px-8 py-3 border transition-all duration-200 cursor-pointer"
               style={{ borderColor: C.primary, color: C.primary }}
             >
