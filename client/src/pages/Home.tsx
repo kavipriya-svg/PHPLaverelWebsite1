@@ -715,7 +715,7 @@ function ChildCategoryPanel({
   const dedicatedPage = CATEGORY_DEDICATED_PAGE[category.slug];
   const getHref = dedicatedPage
     ? (child: any) => `${dedicatedPage}?category=${child.slug}`
-    : (child: any) => child.slug ? `/category/${child.slug}` : "/shop";
+    : (child: any) => child.slug ? `/category/${category.slug}?category=${child.slug}` : "/shop";
 
   return (
     <section ref={panelRef as React.RefObject<HTMLElement>} className="py-12" style={{ backgroundColor: C.surfaceContainerLow }}>
