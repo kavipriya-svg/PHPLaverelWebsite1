@@ -92,7 +92,11 @@ export interface HomepageSettings {
   };
   giftSets: {
     visible: boolean;
+    label: string;
     sectionTitle: string;
+    description: string;
+    ctaText: string;
+    ctaHref: string;
     items: Array<{ title: string; desc: string; price: string; imageUrl: string }>;
   };
   trustBadges: {
@@ -230,7 +234,11 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
   },
   giftSets: {
     visible: true,
+    label: "CURATED COLLECTIONS",
     sectionTitle: "The Editorial Gift Series",
+    description: "Thoughtfully assembled sets for every stage of your dog's life. Each kit is curated by our biological wellness team.",
+    ctaText: "EXPLORE GIFT SERIES",
+    ctaHref: "/gift-series",
     items: [
       {
         title: "The Puppy Foundation",

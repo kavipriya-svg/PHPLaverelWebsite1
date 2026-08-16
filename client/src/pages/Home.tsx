@@ -1287,11 +1287,29 @@ function GiftSetsSection({
 
   return (
     <section className="px-margin-desktop py-stack-lg" style={{ backgroundColor: C.surfaceContainerLow }}>
-      <Reveal>
-        <h2 className="font-playfair text-headline-lg text-center mb-stack-md" style={{ color: C.primary }}>
-          {giftSets.sectionTitle}
-        </h2>
-      </Reveal>
+      <div className="flex justify-between items-end mb-stack-md flex-wrap gap-4">
+        <Reveal>
+          <p className="font-inter text-label-caps mb-2" style={{ color: C.secondary }}>
+            {giftSets.label || "CURATED COLLECTIONS"}
+          </p>
+          <h2 className="font-playfair text-headline-lg" style={{ color: C.primary }}>
+            {giftSets.sectionTitle}
+          </h2>
+          {giftSets.description && (
+            <p className="font-inter mt-3 max-w-xl" style={{ color: C.onSurfaceVariant, fontSize: 16, lineHeight: 1.6 }}>
+              {giftSets.description}
+            </p>
+          )}
+        </Reveal>
+        <Link href={giftSets.ctaHref || "/gift-series"}>
+          <span
+            className="font-inter text-label-caps cursor-pointer hover:underline"
+            style={{ color: C.secondary }}
+          >
+            {giftSets.ctaText || "EXPLORE GIFT SERIES"}
+          </span>
+        </Link>
+      </div>
 
       {hasCombos ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
