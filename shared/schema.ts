@@ -148,6 +148,7 @@ export const categories = pgTable("categories", {
   bannerUrl: varchar("banner_url"), // Banner image for category page header
   position: integer("position").default(0),
   isActive: boolean("is_active").default(true),
+  showInHub: boolean("show_in_hub").default(false), // Show in CURATED SELECTIONS on home page
   metaTitle: varchar("meta_title"),
   metaDescription: text("meta_description"),
   metaKeywords: varchar("meta_keywords"),

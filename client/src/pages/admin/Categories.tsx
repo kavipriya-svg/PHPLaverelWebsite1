@@ -431,6 +431,7 @@ function CategoryDialog({
   const [parentId, setParentId] = useState("none");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [showInHub, setShowInHub] = useState(false);
   const [iconUrl, setIconUrl] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
@@ -444,6 +445,7 @@ function CategoryDialog({
       setParentId(category.parentId || "none");
       setDescription(category.description || "");
       setIsActive(category.isActive !== false);
+      setShowInHub(!!(category as any).showInHub);
       setIconUrl((category as any).iconUrl || "");
       setBannerUrl((category as any).bannerUrl || "");
     } else {
@@ -452,6 +454,7 @@ function CategoryDialog({
       setParentId("none");
       setDescription("");
       setIsActive(true);
+      setShowInHub(false);
       setIconUrl("");
       setBannerUrl("");
     }
@@ -478,6 +481,7 @@ function CategoryDialog({
         parentId: parentId === "none" ? null : parentId,
         description: description.trim(),
         isActive,
+        showInHub: parentId === "none" ? showInHub : false,
         iconUrl: iconUrl || null,
         bannerUrl: bannerUrl || null,
       };
@@ -517,6 +521,7 @@ function CategoryDialog({
     setParentId("none");
     setDescription("");
     setIsActive(true);
+    setShowInHub(false);
     setIconUrl("");
     setBannerUrl("");
   };
@@ -683,6 +688,25 @@ function CategoryDialog({
               data-testid="switch-category-active"
             />
           </div>
+
+          {parentId === "none" && (
+            <div className="flex items-center justify-between border rounded-lg p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="category-show-in-hub">Show in Curated Selections</Label>
+                <p className="text-sm text-muted-foreground">
+                  {showInHub
+                    ? "Displayed in the CURATED SELECTIONS section on the home page"
+                    : "Not shown in the CURATED SELECTIONS section on the home page"}
+                </p>
+              </div>
+              <Switch
+                id="category-show-in-hub"
+                checked={showInHub}
+                onCheckedChange={setShowInHub}
+                data-testid="switch-category-show-in-hub"
+              />
+            </div>
+          )}
 
           <div className="border-t pt-4">
             <h4 className="font-medium mb-4">Category Images</h4>

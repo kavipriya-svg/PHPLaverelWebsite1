@@ -1824,7 +1824,11 @@ export default function Home() {
   });
 
   const allCategories = categoriesData?.categories || [];
-  const topCategories = allCategories.filter((c: any) => !c.parentId).slice(0, 4);
+  // Prefer categories explicitly marked for the hub; fall back to first 4 top-level ones
+  const hubMarked = allCategories.filter((c: any) => !c.parentId && c.showInHub);
+  const topCategories = hubMarked.length > 0
+    ? hubMarked.slice(0, 4)
+    : allCategories.filter((c: any) => !c.parentId).slice(0, 4);
   const activeHomeBlocks = (homeBlocksData?.blocks || [])
     .filter((b) => b.isActive)
     .sort((a, b) => (a.position || 0) - (b.position || 0));
