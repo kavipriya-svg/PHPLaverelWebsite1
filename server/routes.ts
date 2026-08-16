@@ -223,7 +223,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.use("/uploads", express.static(uploadsDir));
 
   // Direct file upload endpoint (admin)
-  app.post("/api/upload/file", isAuthenticated, isAdmin, upload.single("file"), (req, res) => {
+  app.post("/api/upload/file", isAdmin, upload.single("file"), (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -3362,7 +3362,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Presigned URL endpoint for direct uploads from frontend (admin only)
-  app.post("/api/upload/presigned-url", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/upload/presigned-url", isAdmin, async (req, res) => {
     try {
       console.log("[Upload] Getting presigned URL for:", req.body);
       const objectStorageService = new ObjectStorageService();
