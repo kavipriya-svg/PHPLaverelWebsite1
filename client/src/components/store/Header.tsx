@@ -474,7 +474,7 @@ function MegaMenu({
                   {subCategory.children.map((childCategory) => (
                     <li key={childCategory.id}>
                       <Link
-                        href={getCategoryHref(childCategory.slug, subCategory.slug)}
+                        href={getCategoryHref(childCategory.slug, category.slug)}
                         className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 group"
                         onClick={onClose}
                         data-testid={`link-childcategory-${childCategory.slug}`}
@@ -514,15 +514,19 @@ function MobileCategoryItem({
   onNavigate,
   depth = 0,
   parentSlug,
+  rootParentSlug,
 }: { 
   category: CategoryWithChildren; 
   onNavigate: () => void;
   depth?: number;
   parentSlug?: string;
+  rootParentSlug?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = category.children && category.children.length > 0;
-  const href = getCategoryHref(category.slug, parentSlug);
+  // Always route relative to the top-level ancestor so dedicated pages are respected at any depth
+  const effectiveParent = rootParentSlug ?? parentSlug;
+  const href = getCategoryHref(category.slug, effectiveParent);
 
   return (
     <div className="flex flex-col">
@@ -564,6 +568,7 @@ function MobileCategoryItem({
               onNavigate={onNavigate}
               depth={depth + 1}
               parentSlug={category.slug}
+              rootParentSlug={rootParentSlug ?? parentSlug}
             />
           ))}
         </div>
