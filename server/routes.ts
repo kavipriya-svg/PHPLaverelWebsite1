@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { cacheMw, cacheInvalidate } from "./cache";
 import { setupAuth, isAuthenticated, getUserInfo, getOidcConfig, client } from "./replitAuth";
 import { emailService } from "./email";
 import { randomUUID, randomInt, createHmac } from "crypto";
@@ -1418,7 +1419,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/categories", async (req, res) => {
+  app.get("/api/categories", cacheMw("categories", 300), async (req, res) => {
     try {
       const categories = await storage.getCategories();
       res.json({ categories });
@@ -1427,7 +1428,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/categories/menu", async (req, res) => {
+  app.get("/api/categories/menu", cacheMw("categories_menu", 300), async (req, res) => {
     try {
       const categories = await storage.getCategories();
       const activeCategories = categories.filter((c) => c.isActive !== false);
@@ -1449,7 +1450,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/brands", async (req, res) => {
+  app.get("/api/brands", cacheMw("brands", 600), async (req, res) => {
     try {
       const brands = await storage.getBrands();
       res.json({ brands });
@@ -1554,7 +1555,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/banners", async (req, res) => {
+  app.get("/api/banners", cacheMw("banners", 300), async (req, res) => {
     try {
       const type = req.query.type as string;
       const banners = await storage.getActiveBanners(type);
@@ -1564,7 +1565,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/home-blocks", async (req, res) => {
+  app.get("/api/home-blocks", cacheMw("home_blocks", 300), async (req, res) => {
     try {
       const blocks = await storage.getActiveHomeBlocks();
       res.json({ blocks });
@@ -1574,7 +1575,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Combo Offers - Public endpoints
-  app.get("/api/combo-offers", async (req, res) => {
+  app.get("/api/combo-offers", cacheMw("combo_offers", 300), async (req, res) => {
     try {
       const activeOnly = req.query.active === 'true';
       const featuredOnly = req.query.featured === 'true';
@@ -1651,7 +1652,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Public approved reviews for testimonials
-  app.get("/api/reviews/approved", async (req, res) => {
+  app.get("/api/reviews/approved", cacheMw("reviews_approved", 300), async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
       const result = await storage.getAllReviews({ isApproved: true, limit, offset: 0 });
@@ -1804,7 +1805,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/settings/branding", async (req, res) => {
+  app.get("/api/settings/branding", cacheMw("settings_branding", 600), async (req, res) => {
     try {
       const setting = await storage.getSetting("branding_settings");
       const defaultBranding = {
@@ -1837,6 +1838,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       await storage.upsertSettings({
         branding_settings: JSON.stringify(req.body),
       });
+      cacheInvalidate("settings_branding");
       res.json({ success: true, settings: req.body });
     } catch (error) {
       res.status(500).json({ error: "Failed to update branding settings" });
@@ -1844,7 +1846,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Homepage Settings - GET (public)
-  app.get("/api/settings/homepage", async (req, res) => {
+  app.get("/api/settings/homepage", cacheMw("settings_homepage", 120), async (req, res) => {
     try {
       const setting = await storage.getSetting("homepage_settings");
       if (setting?.value) {
@@ -1867,6 +1869,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       await storage.upsertSettings({
         homepage_settings: JSON.stringify(req.body),
       });
+      cacheInvalidate("settings_homepage");
       res.json({ success: true, settings: req.body });
     } catch (error) {
       res.status(500).json({ error: "Failed to update homepage settings" });
@@ -3647,6 +3650,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const parsed = insertCategorySchema.parse(req.body);
       const category = await storage.createCategory(parsed);
+      cacheInvalidate("categories", "categories_menu");
       res.json({ category });
     } catch (error) {
       console.error("Create category error:", error);
@@ -3687,6 +3691,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!category) {
         return res.status(404).json({ error: "Category not found" });
       }
+      cacheInvalidate("categories", "categories_menu");
       res.json({ category });
     } catch (error) {
       console.error("Update category error:", error);
@@ -3697,6 +3702,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.delete("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       await storage.deleteCategory(req.params.id);
+      cacheInvalidate("categories", "categories_menu");
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete category" });
@@ -3744,6 +3750,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const parsed = insertBrandSchema.parse(req.body);
       const brand = await storage.createBrand(parsed);
+      cacheInvalidate("brands");
       res.json({ brand });
     } catch (error) {
       res.status(500).json({ error: "Failed to create brand" });
@@ -3753,6 +3760,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/admin/brands/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const brand = await storage.updateBrand(req.params.id, req.body);
+      cacheInvalidate("brands");
       res.json({ brand });
     } catch (error) {
       res.status(500).json({ error: "Failed to update brand" });
@@ -3762,6 +3770,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.delete("/api/admin/brands/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       await storage.deleteBrand(req.params.id);
+      cacheInvalidate("brands");
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete brand" });
@@ -4154,6 +4163,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const parsed = insertBannerSchema.parse(req.body);
       const banner = await storage.createBanner(parsed);
+      cacheInvalidate("banners");
       res.json({ banner });
     } catch (error) {
       res.status(500).json({ error: "Failed to create banner" });
@@ -4163,6 +4173,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/admin/banners/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const banner = await storage.updateBanner(req.params.id, req.body);
+      cacheInvalidate("banners");
       res.json({ banner });
     } catch (error) {
       res.status(500).json({ error: "Failed to update banner" });
@@ -4172,6 +4183,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.delete("/api/admin/banners/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       await storage.deleteBanner(req.params.id);
+      cacheInvalidate("banners");
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete banner" });
@@ -4191,6 +4203,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const parsed = insertHomeBlockSchema.parse(req.body);
       const block = await storage.createHomeBlock(parsed);
+      cacheInvalidate("home_blocks");
       res.json({ block });
     } catch (error) {
       res.status(500).json({ error: "Failed to create home block" });
