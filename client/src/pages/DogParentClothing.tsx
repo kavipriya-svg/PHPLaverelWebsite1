@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useStore } from "@/contexts/StoreContext";
@@ -260,6 +260,11 @@ export default function DogParentClothing() {
   const [collageHover, setCollageHover] = useState(false);
   const [email, setEmail] = useState("");
 
+  // ── Category filter from URL ──────────────────────────────────────────────
+  const [activeChildSlug, setActiveChildSlug] = useState<string>(
+    () => new URLSearchParams(window.location.search).get("category") ?? ""
+  );
+
   // ── Nav/footer settings ───────────────────────────────────────────────────
   const { data: rawSettings } = useQuery<any>({ queryKey: ["/api/settings/homepage"] });
   const navSettings = rawSettings ? mergeHomepageSettings(rawSettings.settings || {}) : DEFAULT_HOMEPAGE_SETTINGS;
@@ -270,13 +275,49 @@ export default function DogParentClothing() {
     ? deepMerge(DEFAULT_SETTINGS, pageSettingsRaw)
     : DEFAULT_SETTINGS;
 
-  // ── Products from API ─────────────────────────────────────────────────────
-  const categorySlug = S.productSection.categorySlug || "dog-parent-clothing";
-  const { data: productsData } = useQuery<any>({
-    queryKey: ["/api/products", { categorySlug }],
-    queryFn: () => fetch(`/api/products?categorySlug=${encodeURIComponent(categorySlug)}&limit=16`).then(r => r.json()),
+  // ── Fetch child categories of dogparentclothing ───────────────────────────
+  const { data: allCatsData } = useQuery<{ categories: any[] }>({ queryKey: ["/api/categories"] });
+  const childCats: any[] = (() => {
+    const flat = (ns: any[]): any[] => ns.flatMap((n: any) => [n, ...flat(n.children || [])]);
+    const all = flat(allCatsData?.categories ?? []);
+    const parent = all.find((c: any) => c.slug === "dogparentclothing");
+    return parent ? all.filter((c: any) => c.parentId === parent.id && c.isActive !== false) : [];
+  })();
+
+  const activeChildCat = activeChildSlug
+    ? childCats.find((c: any) => c.slug === activeChildSlug) ?? null
+    : null;
+
+  // ── Products from API — re-fetch when category changes ───────────────────
+  const parentSlug = S.productSection.categorySlug || "dogparentclothing";
+  const { data: productsData, isLoading: productsLoading } = useQuery<any>({
+    queryKey: ["/api/products", { parentSlug, categoryId: activeChildCat?.id }],
+    queryFn: () => {
+      const url = activeChildCat
+        ? `/api/products?categoryId=${activeChildCat.id}&limit=50`
+        : `/api/products?categorySlug=${encodeURIComponent(parentSlug)}&limit=50`;
+      return fetch(url).then(r => r.json());
+    },
   });
   const apiProducts: any[] = productsData?.products || [];
+
+  // ── Sync URL when filter changes ──────────────────────────────────────────
+  const handleCategoryChange = (slug: string) => {
+    setActiveChildSlug(slug);
+    const url = new URL(window.location.href);
+    if (slug) url.searchParams.set("category", slug);
+    else url.searchParams.delete("category");
+    window.history.replaceState(null, "", url.toString());
+  };
+
+  // ── Auto-scroll to products on mount if param present ────────────────────
+  useEffect(() => {
+    if (activeChildSlug) {
+      setTimeout(() => {
+        document.getElementById("dpc-products")?.scrollIntoView({ behavior: "smooth" });
+      }, 600);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Testimonials from admin ───────────────────────────────────────────────
   const { data: testimonialsData = [] } = useQuery<any[]>({
@@ -314,7 +355,7 @@ export default function DogParentClothing() {
   const grid1 = S.productSection.visible ? buildGrid(allApiProducts.slice(0, perGrid), 0) : [];
   const grid2 = S.productSection.visible ? buildGrid(allApiProducts.slice(perGrid, perGrid * 2), perGrid) : [];
 
-  const totalCount = allApiProducts.length > 0 ? allApiProducts.length : FALLBACK_PRODUCTS.length;
+  const totalCount = allApiProducts.length > 0 ? allApiProducts.length : (activeChildSlug ? 0 : FALLBACK_PRODUCTS.length);
 
   function handleAddToCart(product: any) {
     if (product.productId) {
@@ -382,6 +423,7 @@ export default function DogParentClothing() {
 
       {/* ══ 2. FILTER BAR ═══════════════════════════════════════════════════════ */}
       <section
+        id="dpc-products"
         className="sticky z-40 flex flex-wrap items-center gap-6"
         style={{ top: 72, backgroundColor: C.surfaceContainer, borderBottom: `1px solid ${C.outlineVariant}`, padding: "16px clamp(20px,5vw,64px)" }}
       >
@@ -390,6 +432,31 @@ export default function DogParentClothing() {
           <span style={{ ...LABEL_CAPS, color: C.onSurface }}>FILTERS</span>
         </div>
         <div className="flex flex-1 gap-8 overflow-x-auto py-1 flex-wrap">
+          {/* Category filter — only shown when children exist */}
+          {childCats.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <p style={{ ...MONO, fontSize: 10, letterSpacing: "0.12em", color: C.onSurfaceVariant, marginBottom: 4 }}>CATEGORY</p>
+              <select
+                value={activeChildSlug}
+                onChange={e => handleCategoryChange(e.target.value)}
+                style={selectStyle}
+                data-testid="select-category"
+              >
+                <option value="">ALL CATEGORIES</option>
+                {childCats.map((c: any) => (
+                  <option key={c.id} value={c.slug}>{c.name.toUpperCase()}</option>
+                ))}
+              </select>
+              {activeChildSlug && (
+                <button
+                  onClick={() => handleCategoryChange("")}
+                  style={{ ...MONO, fontSize: 9, letterSpacing: "0.12em", color: C.secondary, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
+                >
+                  × Clear
+                </button>
+              )}
+            </div>
+          )}
           <div className="group cursor-pointer">
             <p style={{ ...MONO, fontSize: 10, letterSpacing: "0.12em", color: C.onSurfaceVariant, marginBottom: 4 }}>SPECIMEN TYPE</p>
             <select value={specimenType} onChange={e => setSpecimenType(e.target.value)} style={selectStyle} data-testid="select-specimen-type">
@@ -416,7 +483,7 @@ export default function DogParentClothing() {
           </div>
         </div>
         <span style={{ ...MONO, fontSize: 11, letterSpacing: "0.12em", color: C.onSurfaceVariant }}>
-          SHOWING {totalCount} SETS
+          {productsLoading ? "—" : `SHOWING ${totalCount} SETS`}
         </span>
       </section>
 
