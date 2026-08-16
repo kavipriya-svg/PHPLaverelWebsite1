@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useStore } from "@/contexts/StoreContext";
@@ -250,13 +250,52 @@ function ProductCard({
   );
 }
 
+// ─── Filter constants ─────────────────────────────────────────────────────────
+const CLOTHING_SIZES     = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+const CLOTHING_MATERIALS = ["Cotton", "Polyester", "Linen", "Denim", "Fleece", "Wool", "Silk"];
+
+type FilterOption = { label: string; value: string };
+function FilterDropdown({ label, options, value, onChange }: {
+  label: string; options: FilterOption[]; value: string; onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const current = options.find(o => o.value === value) ?? options[0];
+  return (
+    <div className="relative" style={{ cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
+      <span style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, display: "block", marginBottom: 4 }}>{label}</span>
+      <div className="flex items-center gap-2">
+        <span style={{ ...INTER, fontSize: 14, fontWeight: 600, color: C.onSurface }}>{current.label}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          style={{ color: C.onSurface, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </div>
+      {open && (
+        <div className="absolute top-full left-0 z-50 min-w-[180px] mt-2"
+          style={{ backgroundColor: C.surface, border: `1px solid ${C.outlineVariant}`, boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}
+          onClick={e => e.stopPropagation()}>
+          {options.map(opt => (
+            <div key={opt.value}
+              className="px-4 py-3 cursor-pointer"
+              style={{ ...LABEL_CAPS, fontSize: 10, color: value === opt.value ? C.primary : C.onSurfaceVariant, backgroundColor: value === opt.value ? C.primaryFixed : "transparent" }}
+              onMouseEnter={e => { if (value !== opt.value) (e.currentTarget as HTMLDivElement).style.backgroundColor = C.surfaceContainer; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = value === opt.value ? C.primaryFixed : "transparent"; }}
+              onClick={() => { onChange(opt.value); setOpen(false); }}>
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function DogParentClothing() {
   const { toast } = useToast();
 
-  const [specimenType, setSpecimenType] = useState("ALL GENOTYPES");
-  const [syncLevel, setSyncLevel] = useState("LEVEL 01: THERMAL");
-  const [environment, setEnvironment] = useState("ARCTIC GRADE");
+  const [activeSize, setActiveSize] = useState("");
+  const [activeMaterial, setActiveMaterial] = useState("");
   const [collageHover, setCollageHover] = useState(false);
   const [email, setEmail] = useState("");
 
@@ -351,11 +390,36 @@ export default function DogParentClothing() {
     return FALLBACK_PRODUCTS.slice(fallbackStart, fallbackStart + perGrid);
   };
 
-  const allApiProducts = apiProducts;
-  const grid1 = S.productSection.visible ? buildGrid(allApiProducts.slice(0, perGrid), 0) : [];
-  const grid2 = S.productSection.visible ? buildGrid(allApiProducts.slice(perGrid, perGrid * 2), perGrid) : [];
+  // Client-side size/material filtering
+  const allApiProductsMapped = useMemo(() => buildGrid(apiProducts, 0), [apiProducts, perGrid]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const totalCount = allApiProducts.length > 0 ? allApiProducts.length : (activeChildSlug ? 0 : FALLBACK_PRODUCTS.length);
+  const filteredProducts = useMemo(() => {
+    let list = [...allApiProductsMapped];
+    if (activeSize) {
+      list = list.filter(p =>
+        (apiProducts.find((ap: any) => ap.id === p.productId)?.variants || []).some((v: any) =>
+          v.optionName?.toLowerCase() === "size" && v.optionValue === activeSize
+        )
+      );
+    }
+    if (activeMaterial) {
+      list = list.filter(p =>
+        p.name?.toLowerCase().includes(activeMaterial.toLowerCase())
+      );
+    }
+    return list;
+  }, [allApiProductsMapped, activeSize, activeMaterial, apiProducts]);
+
+  const grid1 = S.productSection.visible
+    ? (filteredProducts.length > 0 ? filteredProducts.slice(0, perGrid) : (activeChildSlug || activeSize || activeMaterial ? [] : buildGrid([], 0)))
+    : [];
+  const grid2 = S.productSection.visible && filteredProducts.length > perGrid
+    ? filteredProducts.slice(perGrid, perGrid * 2)
+    : [];
+
+  const totalCount = filteredProducts.length > 0
+    ? filteredProducts.length
+    : (activeChildSlug || activeSize || activeMaterial ? 0 : FALLBACK_PRODUCTS.length);
 
   function handleAddToCart(product: any) {
     if (product.productId) {
@@ -363,11 +427,6 @@ export default function DogParentClothing() {
     }
     toast({ title: `${product.name} added to cart` });
   }
-
-  const selectStyle: React.CSSProperties = {
-    background: "transparent", border: "none", padding: 0,
-    ...INTER, fontSize: 14, fontWeight: 600, color: C.onSurface, cursor: "pointer", outline: "none",
-  };
 
   const heroImg = S.hero.bgImageUrl || DEFAULT_HERO_IMG;
   const molecularImg = S.molecularSection.imageUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuCaPf5QPY87EewytkqmAZ2opXXpZQP2_Iz-owwWoUFxeAGSvN9OM-XPNGqVsImCDjAkouCInfrjgy0K0VT2OOWfdhCTmfkgJ9wMU3YZHMl1p7DAfGZCqexjUNcNd6zKpRcLOgq5VD8GG87B1SNk63Ki1cMMMT-wt8374ZWx4C0zJY63QSckTI2EYTyP4pUmbo8rXse5JRM8RK-anaPIO1D6CxrPMTI17084wdbM7iZFG6-s8SBhtSfAzrXCuSEfequ4-89RGsss3LIe";
@@ -424,67 +483,76 @@ export default function DogParentClothing() {
       {/* ══ 2. FILTER BAR ═══════════════════════════════════════════════════════ */}
       <section
         id="dpc-products"
-        className="sticky z-40 flex flex-wrap items-center gap-6"
-        style={{ top: 72, backgroundColor: C.surfaceContainer, borderBottom: `1px solid ${C.outlineVariant}`, padding: "16px clamp(20px,5vw,64px)" }}
+        className="sticky z-40 border-b"
+        style={{ top: 72, backgroundColor: C.surface, borderColor: C.outlineVariant, padding: "16px clamp(20px,5vw,64px)" }}
       >
-        <div className="flex items-center gap-2 pr-8" style={{ borderRight: `1px solid ${C.outlineVariant}` }}>
-          <SlidersHorizontal size={18} style={{ color: C.primary }} />
-          <span style={{ ...LABEL_CAPS, color: C.onSurface }}>FILTERS</span>
-        </div>
-        <div className="flex flex-1 gap-8 overflow-x-auto py-1 flex-wrap">
-          {/* Category filter — only shown when children exist */}
-          {childCats.length > 0 && (
+        <div className="flex flex-wrap justify-between items-center gap-6">
+          <div className="flex gap-10 flex-wrap items-end">
+            {/* Category dropdown */}
             <div className="flex flex-col gap-1">
-              <p style={{ ...MONO, fontSize: 10, letterSpacing: "0.12em", color: C.onSurfaceVariant, marginBottom: 4 }}>CATEGORY</p>
-              <select
+              <FilterDropdown
+                label="CATEGORY"
+                options={[
+                  { label: "ALL CATEGORIES", value: "" },
+                  ...childCats.map((c: any) => ({ label: c.name.toUpperCase(), value: c.slug })),
+                ]}
                 value={activeChildSlug}
-                onChange={e => handleCategoryChange(e.target.value)}
-                style={selectStyle}
-                data-testid="select-category"
-              >
-                <option value="">ALL CATEGORIES</option>
-                {childCats.map((c: any) => (
-                  <option key={c.id} value={c.slug}>{c.name.toUpperCase()}</option>
-                ))}
-              </select>
+                onChange={handleCategoryChange}
+              />
               {activeChildSlug && (
-                <button
-                  onClick={() => handleCategoryChange("")}
-                  style={{ ...MONO, fontSize: 9, letterSpacing: "0.12em", color: C.secondary, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
-                >
+                <button onClick={() => handleCategoryChange("")}
+                  style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>
                   × Clear
                 </button>
               )}
             </div>
-          )}
-          <div className="group cursor-pointer">
-            <p style={{ ...MONO, fontSize: 10, letterSpacing: "0.12em", color: C.onSurfaceVariant, marginBottom: 4 }}>SPECIMEN TYPE</p>
-            <select value={specimenType} onChange={e => setSpecimenType(e.target.value)} style={selectStyle} data-testid="select-specimen-type">
-              <option>ALL GENOTYPES</option>
-              <option>WORKING GROUP</option>
-              <option>SPORTING GROUP</option>
-            </select>
+
+            {/* Size dropdown */}
+            <div className="flex flex-col gap-1">
+              <FilterDropdown
+                label="SIZE"
+                options={[{ label: "ALL SIZES", value: "" }, ...CLOTHING_SIZES.map(s => ({ label: s, value: s }))]}
+                value={activeSize}
+                onChange={setActiveSize}
+              />
+              {activeSize && (
+                <button onClick={() => setActiveSize("")}
+                  style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>
+                  × Clear
+                </button>
+              )}
+            </div>
+
+            {/* Material dropdown */}
+            <div className="flex flex-col gap-1">
+              <FilterDropdown
+                label="MATERIAL"
+                options={[{ label: "ALL MATERIALS", value: "" }, ...CLOTHING_MATERIALS.map(m => ({ label: m.toUpperCase(), value: m }))]}
+                value={activeMaterial}
+                onChange={setActiveMaterial}
+              />
+              {activeMaterial && (
+                <button onClick={() => setActiveMaterial("")}
+                  style={{ ...LABEL_CAPS, fontSize: 9, color: C.secondary, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>
+                  × Clear
+                </button>
+              )}
+            </div>
+
+            {/* Clear All */}
+            {(activeChildSlug || activeSize || activeMaterial) && (
+              <button
+                onClick={() => { handleCategoryChange(""); setActiveSize(""); setActiveMaterial(""); }}
+                style={{ ...LABEL_CAPS, fontSize: 9, color: C.outline, background: "none", border: `1px solid ${C.outlineVariant}`, cursor: "pointer", padding: "4px 10px", marginBottom: 2 }}>
+                CLEAR ALL
+              </button>
+            )}
           </div>
-          <div className="cursor-pointer">
-            <p style={{ ...MONO, fontSize: 10, letterSpacing: "0.12em", color: C.onSurfaceVariant, marginBottom: 4 }}>SYNC LEVEL</p>
-            <select value={syncLevel} onChange={e => setSyncLevel(e.target.value)} style={selectStyle} data-testid="select-sync-level">
-              <option>LEVEL 01: THERMAL</option>
-              <option>LEVEL 02: BIOMETRIC</option>
-              <option>LEVEL 03: FULL NEURAL</option>
-            </select>
-          </div>
-          <div className="cursor-pointer">
-            <p style={{ ...MONO, fontSize: 10, letterSpacing: "0.12em", color: C.onSurfaceVariant, marginBottom: 4 }}>ENVIRONMENT SHIELD</p>
-            <select value={environment} onChange={e => setEnvironment(e.target.value)} style={selectStyle} data-testid="select-environment">
-              <option>ARCTIC GRADE</option>
-              <option>URBAN ARMOR</option>
-              <option>AMPHIBIOUS</option>
-            </select>
-          </div>
+
+          <span style={{ ...LABEL_CAPS, color: C.outline }}>
+            {productsLoading ? "—" : `RESULTS: ${totalCount} ITEMS`}
+          </span>
         </div>
-        <span style={{ ...MONO, fontSize: 11, letterSpacing: "0.12em", color: C.onSurfaceVariant }}>
-          {productsLoading ? "—" : `SHOWING ${totalCount} SETS`}
-        </span>
       </section>
 
       {/* ══ 3. SERIES 02 PRODUCT GRID ═══════════════════════════════════════════ */}
