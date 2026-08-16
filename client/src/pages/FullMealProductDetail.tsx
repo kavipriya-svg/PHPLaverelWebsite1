@@ -263,6 +263,18 @@ export default function FullMealProductDetail() {
   const shortDesc = (product as any).shortDesc as string | undefined;
   const longDesc = (product as any).longDesc || product.description;
   const longDescText = longDesc ? stripHtml(longDesc) : "";
+
+  // Benefits — stored as JSON array of {text, imageUrl} or newline-delimited plain text
+  const rawBenefits = (product as any).benefits as string | undefined;
+  let benefitItems: { text: string; imageUrl: string }[] = [];
+  if (rawBenefits) {
+    try {
+      const parsed = JSON.parse(rawBenefits || "[]");
+      benefitItems = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      benefitItems = (rawBenefits || "").split("\n").map((l: string) => l.trim()).filter(Boolean).map((t: string) => ({ text: t, imageUrl: "" }));
+    }
+  }
   const weight = (product as any).weight;
   const dimensions = (product as any).dimensions;
   const nutritionData = (product as any).nutritionData as {
@@ -655,6 +667,46 @@ export default function FullMealProductDetail() {
           </div>
         </section>
 
+        {/* ════ BENEFITS ════ */}
+        {(product as any).showBenefits !== false && benefitItems.length > 0 && (() => {
+          const DUMMY_IMGS = [
+            "https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400&q=80",
+            "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=400&q=80",
+            "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&q=80",
+            "https://images.unsplash.com/photo-1583511655826-05700442b31b?w=400&q=80",
+            "https://images.unsplash.com/photo-1534361960057-19f4434a4d43?w=400&q=80",
+            "https://images.unsplash.com/photo-1560743641-3914f2c45636?w=400&q=80",
+          ];
+          return (
+            <section className="border-t px-5 md:px-16 py-8" style={{ borderColor: `${C.outlineVariant}33` }}>
+              <div className="flex items-baseline gap-4 mb-8">
+                <span style={{ ...MONO, fontSize: 10, color: `${C.primary}60`, letterSpacing: "0.35em" }}>WHY IT WORKS</span>
+                <h2 style={{ ...PLAYFAIR, fontSize: "clamp(24px,3vw,36px)", fontWeight: 600, fontStyle: "italic", color: C.primary }}>Benefits</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {benefitItems.map((item, i) => {
+                  const imgSrc = item.imageUrl || DUMMY_IMGS[i % DUMMY_IMGS.length];
+                  const isDark = i % 2 === 0;
+                  return (
+                    <div key={i} className="flex items-center gap-4 p-4"
+                      style={{ backgroundColor: isDark ? C.surfaceContainerLow : C.surface, border: `1px solid ${C.outlineVariant}55` }}>
+                      <div className="shrink-0 overflow-hidden" style={{ width: 80, height: 80 }}>
+                        <img src={imgSrc} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: C.secondary, letterSpacing: "0.15em" }}>
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <p style={{ ...PLAYFAIR, fontSize: 14, color: C.onSurface, lineHeight: 1.6, fontWeight: 400 }}>{item.text}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })()}
+
         {/* ════ PRODUCT NARRATIVE ════ */}
         {longDescText && (
           <section className="py-20 border-t px-5 md:px-16" style={{ borderColor: `${C.outlineVariant}33` }}>
@@ -785,6 +837,53 @@ export default function FullMealProductDetail() {
             </section>
           );
         })()}
+
+        {/* ════ FEEDING GUIDELINES & STORAGE ════ */}
+        {(
+          ((product as any).showFeedingGuidelines !== false && (product as any).feedingGuidelines) ||
+          ((product as any).showStorageInstructions !== false && (product as any).storageInstructions)
+        ) && (
+          <section className="py-10 px-5 md:px-16" style={{ backgroundColor: C.surface }}>
+            <div className="mb-10">
+              <span style={{ ...MONO, fontSize: 12, color: C.secondary, display: "block", marginBottom: 4 }}>USAGE GUIDE</span>
+              <h2 style={{ ...PLAYFAIR, fontSize: "clamp(28px,5vw,48px)", lineHeight: 1.2, fontWeight: 600, fontStyle: "italic", color: C.primary }}>
+                Feeding &amp; Storage
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+              {(product as any).showFeedingGuidelines !== false && (product as any).feedingGuidelines && (
+                <div>
+                  <h3 className="pb-3 mb-6 border-b" style={{ ...LABEL_CAPS, fontSize: 13, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>
+                    Feeding Guidelines
+                  </h3>
+                  <div className="space-y-5">
+                    {String((product as any).feedingGuidelines).split("\n").filter(Boolean).map((line: string, i: number) => (
+                      <div key={i} className="flex gap-4 items-start">
+                        <div className="mt-2 shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: C.primary }} />
+                        <p style={{ ...PLAYFAIR, fontSize: 18, lineHeight: "28px", fontWeight: 400, color: C.onSurfaceVariant }}>{line}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(product as any).showStorageInstructions !== false && (product as any).storageInstructions && (
+                <div>
+                  <h3 className="pb-3 mb-6 border-b" style={{ ...LABEL_CAPS, fontSize: 13, color: C.onSurface, borderColor: `${C.outlineVariant}4D` }}>
+                    Storage Instructions
+                  </h3>
+                  <div className="space-y-5">
+                    {String((product as any).storageInstructions).split("\n").filter(Boolean).map((line: string, i: number) => (
+                      <div key={i} className="flex gap-4 items-start">
+                        <div className="mt-2 shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: C.secondary }} />
+                        <p style={{ ...PLAYFAIR, fontSize: 18, lineHeight: "28px", fontWeight: 400, color: C.onSurfaceVariant }}>{line}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ── Ads: product-hero bottom (After Product Details) ── */}
         <AdBannerStrip banners={bs("product-hero", "bottom")} />
