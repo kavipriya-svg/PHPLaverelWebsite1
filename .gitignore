@@ -6,8 +6,8 @@ vite.config.ts.*
 *.tar.gz
 full_backup.zip
 
-# uploads folder (keep folder, ignore files)
-!uploads/*
+# uploads folder — ignore all files, keep the folder via .gitkeep
+uploads/*
 !uploads/.gitkeep
 
 *.zip
