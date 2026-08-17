@@ -1,1 +1,3 @@
 - [Editorial Homepage Architecture](editorial-homepage.md) — Home page uses HomeLayout (no existing header/footer) to render its own editorial header/footer matching 19 DOGS design.
+- [Hostinger Production Setup](hostinger-production.md) — 19dogs.com is on Hostinger VPS (nginx/Ubuntu), NOT Replit. Publish has no effect. Uploads must use local disk, not Object Storage.
+- [Admin Upload — Production Fix](upload-production-fix.md) — /api/upload/file was saving to local disk; production needs Object Storage. Always use memoryStorage + presigned PUT + trySetObjectEntityAclPolicy.
