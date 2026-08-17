@@ -11,40 +11,25 @@ import multer from "multer";
 import express from "express";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
-// Configure multer for local file uploads
-const uploadsDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = randomUUID();
-    const ext = path.extname(file.originalname);
-    cb(null, `${uniqueSuffix}${ext}`);
-  },
-});
+// Configure multer — memory storage so files can be forwarded to Object Storage in production
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+];
 
 const upload = multer({
-  storage: multerStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/svg+xml",
-      "video/mp4",
-      "video/webm",
-      "video/quicktime",
-    ];
-    if (allowedTypes.includes(file.mimetype)) {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error("Invalid file type"));
@@ -219,35 +204,50 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
 
-  // Serve uploaded files statically
+  // Serve uploaded files as static assets (used in dev; in production nginx handles this directly)
+  const uploadsDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
   app.use("/uploads", express.static(uploadsDir));
 
   // Direct file upload endpoint (admin)
-  app.post("/api/upload/file", isAdmin, upload.single("file"), (req, res) => {
+  // Saves to local disk → /uploads/<uuid>.<ext>
+  // On Hostinger: nginx serves /uploads/ as a persistent static directory
+  // On Replit dev: the static middleware above serves the files
+  app.post("/api/upload/file", isAdmin, upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
-      const fileUrl = `/uploads/${req.file.filename}`;
-      console.log("[Upload] File saved to:", fileUrl);
-      res.json({ url: fileUrl, filename: req.file.filename });
+
+      const ext = (req.file.originalname.split(".").pop() || "").toLowerCase();
+      const filename = ext ? `${randomUUID()}.${ext}` : randomUUID();
+      const filePath = path.join(uploadsDir, filename);
+      fs.writeFileSync(filePath, req.file.buffer);
+      const fileUrl = `/uploads/${filename}`;
+      console.log("[Upload] File saved at:", fileUrl);
+      res.json({ url: fileUrl, fileUrl });
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("[Upload] Error uploading file:", error);
       res.status(500).json({ error: "Failed to upload file" });
     }
   });
 
-  // Direct file upload endpoint (customer)
-  app.post("/api/user/upload/file", isAuthenticated, upload.single("file"), (req, res) => {
+  // Customer file upload — same local-disk approach
+  app.post("/api/user/upload/file", isAuthenticated, upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
-      const fileUrl = `/uploads/${req.file.filename}`;
-      console.log("[Upload] User file saved to:", fileUrl);
-      res.json({ url: fileUrl, filename: req.file.filename });
+
+      const ext = (req.file.originalname.split(".").pop() || "").toLowerCase();
+      const filename = ext ? `${randomUUID()}.${ext}` : randomUUID();
+      const filePath = path.join(uploadsDir, filename);
+      fs.writeFileSync(filePath, req.file.buffer);
+      const fileUrl = `/uploads/${filename}`;
+      console.log("[Upload] User file saved at:", fileUrl);
+      res.json({ url: fileUrl, fileUrl });
     } catch (error) {
-      console.error("Error uploading user file:", error);
+      console.error("[Upload] Error uploading user file:", error);
       res.status(500).json({ error: "Failed to upload file" });
     }
   });
@@ -1459,7 +1459,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/products", async (req, res) => {
+  app.get("/api/products", cacheMw("products", 45), async (req, res) => {
     try {
       // Parse brandIds - can be a comma-separated string or array
       let brandIds: string[] | undefined;
@@ -3530,6 +3530,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       const fullProduct = await storage.getProductById(product.id);
+      cacheInvalidate("products");
       res.json({ product: fullProduct });
     } catch (error) {
       console.error("Product creation error:", error);
@@ -3596,6 +3597,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       const fullProduct = await storage.getProductById(req.params.id);
+      cacheInvalidate("products");
       res.json({ product: fullProduct });
     } catch (error) {
       console.error("Product update error:", error);
@@ -3606,6 +3608,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.delete("/api/admin/products/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteProduct(req.params.id);
+      cacheInvalidate("products");
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete product" });
@@ -3650,7 +3653,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const parsed = insertCategorySchema.parse(req.body);
       const category = await storage.createCategory(parsed);
-      cacheInvalidate("categories", "categories_menu");
+      cacheInvalidate("categories", "categories_menu", "products");
+      storage.invalidateCategoryCache();
       res.json({ category });
     } catch (error) {
       console.error("Create category error:", error);
@@ -3691,7 +3695,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!category) {
         return res.status(404).json({ error: "Category not found" });
       }
-      cacheInvalidate("categories", "categories_menu");
+      cacheInvalidate("categories", "categories_menu", "products");
+      storage.invalidateCategoryCache();
       res.json({ category });
     } catch (error) {
       console.error("Update category error:", error);
@@ -3702,7 +3707,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.delete("/api/admin/categories/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteCategory(req.params.id);
-      cacheInvalidate("categories", "categories_menu");
+      cacheInvalidate("categories", "categories_menu", "products");
+      storage.invalidateCategoryCache();
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete category" });
