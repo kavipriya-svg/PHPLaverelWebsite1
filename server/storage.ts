@@ -1,5 +1,8 @@
 import { eq, and, or, like, desc, asc, sql, isNull, inArray, gte, lte, lt, gt, ne } from "drizzle-orm";
 import { db } from "./db";
+
+// Module-level category tree cache (avoids DB round-trips on every product request)
+const categoryTreeCache = new Map<string, { value: any; expiresAt: number }>();
 import { hashOtpCode, verifyOtpCodeHash } from "./password";
 import {
   users,
@@ -926,8 +929,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategories(): Promise<CategoryWithChildren[]> {
+    // Module-level TTL cache — avoids a full table scan on every product/category request
+    const CACHE_KEY = "storage:categories:tree";
+    const TTL_MS = 5 * 60 * 1000; // 5 minutes
+    const cached = categoryTreeCache.get(CACHE_KEY);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.value;
+    }
     const allCategories = await db.select().from(categories).orderBy(asc(categories.position));
-    return this.buildCategoryTree(allCategories);
+    const tree = this.buildCategoryTree(allCategories);
+    categoryTreeCache.set(CACHE_KEY, { value: tree, expiresAt: Date.now() + TTL_MS });
+    return tree;
+  }
+
+  invalidateCategoryCache(): void {
+    categoryTreeCache.clear();
   }
 
   private buildCategoryTree(cats: Category[], parentId: string | null = null): CategoryWithChildren[] {
