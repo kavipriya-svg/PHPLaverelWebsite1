@@ -30,33 +30,7 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          // Vendor: React core
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react-router")) {
-            return "vendor-react";
-          }
-          // Vendor: TanStack Query
-          if (id.includes("node_modules/@tanstack/")) {
-            return "vendor-query";
-          }
-          // Vendor: UI components (Radix, shadcn)
-          if (id.includes("node_modules/@radix-ui/") || id.includes("node_modules/lucide-react")) {
-            return "vendor-ui";
-          }
-          // Vendor: utilities
-          if (id.includes("node_modules/date-fns") || id.includes("node_modules/zod") || id.includes("node_modules/react-hook-form")) {
-            return "vendor-utils";
-          }
-          // Vendor: everything else from node_modules
-          if (id.includes("node_modules/")) {
-            return "vendor-misc";
-          }
-        },
-      },
-    },
+    chunkSizeWarningLimit: 2000,
   },
   server: {
     fs: {
