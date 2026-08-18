@@ -155,9 +155,25 @@ function fmt(paise: number) {
 
 // ─── Specimen circle (dynamic — driven by child categories) ──────────
 interface SpecimenCat { id: string; name: string; slug: string; imageUrl: string | null }
+
+// Colour palette cycling for placeholder circles when no image is set
+const SPECIMEN_COLORS = [
+  { bg: "#c0edd4", fg: "#012d1d" },
+  { bg: "#f5d5c0", fg: "#7a3010" },
+  { bg: "#d0e8f5", fg: "#0b3a56" },
+  { bg: "#f5e8c0", fg: "#6b4a00" },
+  { bg: "#e8d0f5", fg: "#3d1460" },
+  { bg: "#d0f5e8", fg: "#095c3a" },
+  { bg: "#f5d0d0", fg: "#5c0909" },
+  { bg: "#d0d8f5", fg: "#091450" },
+];
+
 function SpecimenCircle({ cat, index, isSelected, onClick }: { cat: SpecimenCat; index: number; isSelected: boolean; onClick: () => void }) {
   const fallbackImg = SPECIMENS[index % SPECIMENS.length]?.img ?? "";
   const src = cat.imageUrl || fallbackImg;
+  const colors = SPECIMEN_COLORS[index % SPECIMEN_COLORS.length];
+  const hasImg = !!(cat.imageUrl || fallbackImg);
+
   return (
     <div
       className="flex flex-col items-center group cursor-pointer"
@@ -167,20 +183,53 @@ function SpecimenCircle({ cat, index, isSelected, onClick }: { cat: SpecimenCat;
       <div
         className="w-full aspect-square rounded-full overflow-hidden mb-4"
         style={{
-          border: isSelected ? `2px solid ${C.primary}` : `1px solid ${C.outlineVariant}`,
-          transition: "border-color 0.4s, transform 0.4s",
-          boxShadow: isSelected ? `0 0 0 4px ${C.primaryFixed}` : "none",
+          border: isSelected ? `3px solid ${C.secondary}` : `2px solid ${C.outlineVariant}`,
+          transition: "border-color 0.3s, transform 0.3s, box-shadow 0.3s",
+          boxShadow: isSelected
+            ? `0 0 0 5px ${C.primaryFixed}, 0 8px 24px rgba(1,45,29,0.18)`
+            : "0 4px 12px rgba(0,0,0,0.10)",
+          backgroundColor: colors.bg,
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = C.primary; (e.currentTarget as HTMLDivElement).style.transform = "scale(1.05)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = isSelected ? C.primary : C.outlineVariant; (e.currentTarget as HTMLDivElement).style.transform = "scale(1)"; }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.borderColor = C.secondary;
+          el.style.transform = "scale(1.07)";
+          el.style.boxShadow = `0 0 0 4px ${C.primaryFixed}, 0 12px 28px rgba(1,45,29,0.22)`;
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.borderColor = isSelected ? C.secondary : C.outlineVariant;
+          el.style.transform = "scale(1)";
+          el.style.boxShadow = isSelected
+            ? `0 0 0 5px ${C.primaryFixed}, 0 8px 24px rgba(1,45,29,0.18)`
+            : "0 4px 12px rgba(0,0,0,0.10)";
+        }}
       >
-        <img src={src} alt={cat.name} loading="lazy" className="w-full h-full object-cover"
-          style={{ filter: isSelected ? "grayscale(0%)" : "grayscale(100%)", transition: "filter 0.7s cubic-bezier(0.16,1,0.3,1)" }}
-          onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.filter = "grayscale(0%)"}
-          onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.filter = isSelected ? "grayscale(0%)" : "grayscale(100%)"} />
+        {hasImg ? (
+          <img
+            src={src}
+            alt={cat.name}
+            loading="lazy"
+            className="w-full h-full object-cover"
+            style={{ transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1)" }}
+            onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1.08)"}
+            onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"}
+            onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: colors.bg }}>
+            <span style={{ fontFamily: "Playfair Display, serif", fontSize: "clamp(20px,4vw,32px)", fontWeight: 700, color: colors.fg, textAlign: "center", lineHeight: 1.2, padding: "0 8px" }}>
+              {cat.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
       </div>
-      <span style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, display: "block", marginBottom: 4 }}>SPECIMEN {String(index + 1).padStart(2, "0")}</span>
-      <span style={{ ...LABEL_CAPS, color: isSelected ? C.secondary : C.primary, letterSpacing: "0.15em" }}>{cat.name.toUpperCase()}</span>
+      <span style={{ ...LABEL_CAPS, fontSize: 10, color: C.outline, display: "block", marginBottom: 4 }}>
+        SPECIMEN {String(index + 1).padStart(2, "0")}
+      </span>
+      <span style={{ ...LABEL_CAPS, color: isSelected ? C.secondary : C.primary, letterSpacing: "0.15em" }}>
+        {cat.name.toUpperCase()}
+      </span>
     </div>
   );
 }
