@@ -479,8 +479,17 @@ export default function DogTreat() {
   const parentSlug = dt.proteinLibrary.parentCategorySlug || "wild-treats";
   const parentCat = allCats.find((c: any) => c.slug === parentSlug);
   const specimenCats: SpecimenCat[] = parentCat
-    ? allCats.filter((c: any) => c.parentId === parentCat.id && c.isActive !== false)
-      .map((c: any) => ({ id: c.id, name: c.name, slug: c.slug, imageUrl: c.imageUrl ?? null }))
+    ? allCats
+      .filter((c: any) => c.parentId === parentCat.id && c.isActive !== false)
+      // The category editor stores its two uploads as iconUrl and bannerUrl.
+      // Protein Library uses the square icon first, then supports legacy imageUrl
+      // and finally the banner when an icon has not been supplied.
+      .map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        imageUrl: c.iconUrl || c.imageUrl || c.bannerUrl || null,
+      }))
     : [];
 
   // Toggle selection: click same to deselect, click different to select
