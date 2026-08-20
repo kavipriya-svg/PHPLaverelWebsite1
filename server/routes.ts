@@ -23,6 +23,26 @@ const ALLOWED_MIME_TYPES = [
   "video/quicktime",
 ];
 
+function safeErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+
+  const cause = (error as Error & { cause?: unknown }).cause;
+  if (cause instanceof Error && cause.message) {
+    return `${error.message}; cause: ${cause.message}`;
+  }
+
+  if (cause && typeof cause === "object" && "message" in cause) {
+    const causeMessage = (cause as { message?: unknown }).message;
+    if (typeof causeMessage === "string" && causeMessage) {
+      return `${error.message}; cause: ${causeMessage}`;
+    }
+  }
+
+  return error.message;
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -1424,7 +1444,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const categories = await storage.getCategories();
       res.json({ categories });
     } catch (error) {
-      console.error("[API] Failed to fetch categories:", error instanceof Error ? error.message : String(error));
+      console.error("[API] Failed to fetch categories:", safeErrorMessage(error));
       res.status(500).json({ error: "Failed to fetch categories" });
     }
   });
