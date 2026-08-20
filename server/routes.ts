@@ -1424,6 +1424,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const categories = await storage.getCategories();
       res.json({ categories });
     } catch (error) {
+      console.error("[API] Failed to fetch categories:", error instanceof Error ? error.message : String(error));
       res.status(500).json({ error: "Failed to fetch categories" });
     }
   });
@@ -1434,6 +1435,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const activeCategories = categories.filter((c) => c.isActive !== false);
       res.json({ categories: activeCategories });
     } catch (error) {
+      console.error("[API] Failed to fetch category menu:", error instanceof Error ? error.message : String(error));
       res.status(500).json({ error: "Failed to fetch categories" });
     }
   });
@@ -1455,6 +1457,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const brands = await storage.getBrands();
       res.json({ brands });
     } catch (error) {
+      console.error("[API] Failed to fetch brands:", error instanceof Error ? error.message : String(error));
       res.status(500).json({ error: "Failed to fetch brands" });
     }
   });
@@ -1519,6 +1522,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const result = await storage.getProducts(filters);
       res.json(result);
     } catch (error) {
+      console.error("[API] Failed to fetch products:", error instanceof Error ? error.message : String(error));
       res.status(500).json({ error: "Failed to fetch products" });
     }
   });
