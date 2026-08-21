@@ -896,6 +896,14 @@ export default function HomepageSettingsPage() {
                   />
                 </FieldRow>
               </div>
+              <FieldRow label="Section Body" hint="Paragraph shown below the title, above the principles.">
+                <Textarea
+                  value={settings.philosophy.sectionBody}
+                  onChange={(e) => update("philosophy", { sectionBody: e.target.value })}
+                  rows={3}
+                  placeholder="A short description of the philosophy section…"
+                />
+              </FieldRow>
               <FieldRow label="Pull Quote">
                 <Textarea
                   value={settings.philosophy.quote}

@@ -1107,9 +1107,14 @@ function AncestralPhilosophySection({
           <p className="font-inter text-label-caps uppercase mb-4" style={{ color: C.secondary }}>
             {philosophy.label}
           </p>
-          <h2 className="font-playfair text-headline-lg mb-8" style={{ color: C.primary }}>
+          <h2 className="font-playfair text-headline-lg mb-4" style={{ color: C.primary }}>
             {philosophy.title}
           </h2>
+          {philosophy.sectionBody && (
+            <p className="font-inter text-body-md mb-8" style={{ color: C.onSurfaceVariant }}>
+              {philosophy.sectionBody}
+            </p>
+          )}
           <ul className="space-y-8">
             {philosophy.principles.map(p => (
               <li key={p.num} className="flex gap-4">

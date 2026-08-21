@@ -61,6 +61,7 @@ export interface HomepageSettings {
     visible: boolean;
     label: string;
     title: string;
+    sectionBody: string;
     imageUrl: string;
     quote: string;
     quoteAuthor: string;
@@ -183,6 +184,7 @@ export const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
     visible: true,
     label: "The Philosophy",
     title: "Ancestral Precision",
+    sectionBody: "",
     imageUrl:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAUPbA6QLtiVP5qe4diYDj9zfUXu2q50MzPgx4QdZkay0OYtQZDeAZGh-fkPEYOFZC0abgHT4hDnZFzRDjceSyJY5FBzv459HOZcSYjAGL_M8fPcHhPLqFFhNtFP53a9aYakL-ZksBCHjMK0XZapOm1GJASdtfBlbf12iC6DIDgaH_ULQdEuQVMMM9Vm_Fv6QzWsMCRnyOUndrGF2OWm3EEOD4d3y1O2HOENxT2BLUKJ2qb-5uWjQvC7TOjYfegJP4tcXKX357bGI7t",
     quote:
@@ -328,6 +330,7 @@ export function mergeHomepageSettings(
     philosophy: {
       ...d.philosophy,
       ...saved.philosophy,
+      sectionBody: saved.philosophy?.sectionBody ?? d.philosophy.sectionBody,
       principles: saved.philosophy?.principles ?? d.philosophy.principles,
     },
     apparel: { ...d.apparel, ...saved.apparel },
