@@ -42,14 +42,28 @@ jobs:
           printf '%s\n' "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.HOSTINGER_SSH_HOST }} >> ~/.ssh/known_hosts
+          echo "=== Key fingerprint in use ==="
           ssh-keygen -lf ~/.ssh/deploy_key
 
       - name: Upload built files to Hostinger
         run: |
-          rsync -avz --delete \
+          rsync -avz \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=120" \
-            dist package.json package-lock.json \
+            dist/ package.json package-lock.json \
             ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:/var/www/19dogs/
+
+      - name: Migrate production database schema
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=120 \
+            -N -L 5433:127.0.0.1:5432 \
+            ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} &
+          TUNNEL_PID=$!
+          sleep 5
+          DATABASE_URL="postgresql://postgres:19Dogs@127.0.0.1:5433/dogs_new" \
+            npx drizzle-kit push --force
+          kill $TUNNEL_PID || true
 
       - name: Restart application on Hostinger
         run: |
