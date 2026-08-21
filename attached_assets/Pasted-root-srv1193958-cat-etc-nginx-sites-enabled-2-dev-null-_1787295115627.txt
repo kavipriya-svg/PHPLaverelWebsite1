@@ -1,0 +1,100 @@
+root@srv1193958:~# cat /etc/nginx/sites-enabled/* 2>/dev/null | grep -A 20 "19dogs\|root\|proxy_pass"
+    server_name 19dogs.com www.19dogs.com;
+
+    location ^~ /objects/uploads/ {
+        alias /var/www/19dogs/uploads/;
+        default_type image/webp;
+        try_files $uri =404;
+        access_log off;
+    }
+
+    location /uploads/ {
+        alias /var/www/19dogs/uploads/;
+        try_files $uri =404;
+        access_log off;
+        expires 30d;
+        add_header Cache-Control "public";
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/19dogs.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/19dogs.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+}
+
+server {
+    client_max_body_size 50m;
+    if ($host = www.19dogs.com) {
+        return 301 https://$host$request_uri;
+    }
+    if ($host = 19dogs.com) {
+        return 301 https://$host$request_uri;
+    }
+    listen 80;
+    server_name 19dogs.com www.19dogs.com;
+    return 404;
+}
+root@srv1193958:~# ls -la /var/www/19dogs/
+ls -la /var/www/19dogs/public/ 2>/dev/null
+total 9520
+drwxr-xr-x  16     1001     1001    4096 Aug 21 06:42 .
+drwxr-xr-x   4 root     root        4096 Dec 22  2025 ..
+drwxr-xr-x   3 root     root        4096 Aug  8 12:11 .agents
+drwxr-xr-x   3 root     root        4096 Jul 28 15:49 .canvas
+-rw-r--r--   1 root     root         821 Dec 22  2025 .env
+drwxr-xr-x   8 root     root        4096 Aug 20 14:21 .git
+drwxr-xr-x   3 root     root        4096 Aug  8 12:11 .github
+-rw-r--r--   1 root     root         206 Aug 17 07:28 .gitignore
+-rw-r--r--   1 root     root           3 Aug  8 12:11 .nvmrc
+-rw-r--r--   1 root     root        1030 Aug  8 12:11 .replit
+-rw-r--r--   1 root     root        1765 Dec 22  2025 HOSTINGER_README.md
+drwxr-xr-x   2 root     root        4096 Aug 19 02:53 attached_assets
+-rw-r--r--   1 root     root       22950 Aug  8 12:11 audit-report.pdf
+drwxr-xr-x   4 root     root        4096 Aug  8 12:11 client
+-rw-r--r--   1 root     root         459 Dec 22  2025 components.json
+-rw-r--r--   1 root     root      183638 Dec 22  2025 database_backup.sql
+-rw-r--r--   1 root     root        7349 Dec 22  2025 design_guidelines.md
+drwxr-xr-x   3 root     root        4096 Aug 20 14:22 dist
+-rw-r--r--   1 root     root         327 Dec 22  2025 drizzle.config.ts
+-rw-r--r--   1 root     root     7035934 Dec 22  2025 homepage_after_wait.png
+-rw-r--r--   1 root     root         170 Dec 22  2025 hostinger_package.json
+-rw-r--r--   1     1001     1001 1485550 Aug 21 06:42 index.cjs
+drwxr-xr-x 432 root     root       20480 Aug 21 06:43 node_modules
+-rw-r--r--   1     1001     1001  388301 Aug 21 06:43 package-lock.json
+-rw-r--r--   1 root     root      391045 Aug  8 13:00 package-lock.json.backup
+-rw-r--r--   1     1001     1001    4921 Aug 21 06:42 package.json
+-rw-r--r--   1 root     root          80 Dec 22  2025 postcss.config.js
+drwxr-xr-x   3     1001     1001    4096 Aug 21 06:42 public
+-rw-r--r--   1 root     root       13132 Dec 31  2025 replit.md
+drwxr-xr-x   2 root     root        4096 Aug  8 12:11 script
+drwxr-xr-x   2 root     root        4096 Aug  8 12:11 scripts
+drwxr-xr-x   2 root     root        4096 Aug 20 14:21 server
+drwxr-xr-x   2 root     root        4096 Aug 16 16:25 shared
+-rw-r--r--   1 root     root        5730 Jul 28 15:49 tailwind.config.ts
+-rw-r--r--   1 root     root         657 Dec 22  2025 tsconfig.json
+drwxr-xr-x   2 www-data www-data   20480 Aug 20 05:53 uploads
+-rw-r--r--   1 root     root        1113 Aug 17 08:43 vite.config.ts
+total 36
+drwxr-xr-x  3 1001 1001  4096 Aug 21 06:42 .
+drwxr-xr-x 16 1001 1001  4096 Aug 21 06:42 ..
+-rw-r--r--  1 root root   976 Aug  8 12:11 .htaccess
+drwxr-xr-x  2 1001 1001 16384 Aug 21 06:42 assets
+-rw-r--r--  1 1001 1001  1145 Aug 21 06:42 favicon.png
+-rw-r--r--  1 1001 1001  1561 Aug 21 06:42 index.html
+root@srv1193958:~# pm2 list
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ 19dogs    │ default     │ 1.0.0   │ fork    │ 322326   │ 8m     │ 16   │ online    │ 0%       │ 130.1mb  │ root     │ disabled │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@srv1193958:~# 
