@@ -45,6 +45,8 @@ jobs:
           source: "dist/,package.json,package-lock.json"
           target: "/var/www/19dogs/"
           strip_components: 0
+          timeout: 120s
+          command_timeout: 20m
 
       - name: Restart application on Hostinger
         uses: appleboy/ssh-action@v1.0.3
@@ -52,6 +54,8 @@ jobs:
           host: ${{ secrets.HOSTINGER_SSH_HOST }}
           username: ${{ secrets.HOSTINGER_SSH_USER }}
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          timeout: 120s
+          command_timeout: 20m
           script: |
             set -e
             cd /var/www/19dogs
