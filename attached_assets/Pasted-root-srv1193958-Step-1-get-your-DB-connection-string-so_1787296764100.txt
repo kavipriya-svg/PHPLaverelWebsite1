@@ -1,0 +1,77 @@
+root@srv1193958:~# # Step 1: get your DB connection string
+source /var/www/19dogs/.env
+echo "Connecting to: $DATABASE_URL"
+
+# Step 2: run the fix
+psql "$DATABASE_URL" << 'SQL'
+
+-- Add any missing columns to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS customer_type varchar NOT NULL DEFAULT 'regular';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_role_id varchar;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash varchar;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_discount_type varchar;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_discount_value decimal(10,2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_sale_discount_type varchar;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_sale_discount_value decimal(10,2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_delivery_fee decimal(10,2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_delivery_fee_city decimal(10,2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_delivery_fee_india decimal(10,2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_delivery_schedule varchar;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_start_date timestamp;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_end_date timestamp;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_notes text;
+
+-- Create or update the superadmin user
+INSERT INTO users (email, password_hash, role, customer_type, first_name, last_name)
+VALUES (
+  'superadmin@store.com',
+  '$2b$12$A7KefQmH0vNVEV9WKgqhC.rdc0Si7SgTMhpJaVBLMou1HT98MOYme',
+  'admin',
+  'regular',
+  'Super',
+  'Admin'
+)
+ON CONFLICT (email) DO UPDATE SET
+  password_hash = '$2b$12$A7KefQmH0vNVEV9WKgqhC.rdc0Si7SgTMhpJaVBLMou1HT98MOYme',
+  role = 'admin';
+
+-- Confirm
+SELECT email, role, password_hash IS NOT NULL as has_password FROM users WHERE email = 'superadmin@store.com';
+
+SQL
+Connecting to: postgresql://neondb_owner:npg_dNZCRptPq18D@ep-jolly-frog-aecgcojx.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
+NOTICE:  column "customer_type" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "admin_role_id" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "password_hash" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_discount_type" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_discount_value" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_sale_discount_type" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_sale_discount_value" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_delivery_fee" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_delivery_fee_city" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_delivery_fee_india" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_delivery_schedule" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_start_date" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_end_date" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "subscription_notes" of relation "users" already exists, skipping
+ALTER TABLE
+INSERT 0 1
+        email         | role  | has_password 
+----------------------+-------+--------------
+ superadmin@store.com | admin | t
+(1 row)
+
+root@srv1193958:~# 
