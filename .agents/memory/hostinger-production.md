@@ -39,3 +39,10 @@ Changes in Replit dev must be **manually deployed to Hostinger** by the user (e.
 
 ## What IS shared between Replit dev and Hostinger
 - The **PostgreSQL database** — same `DATABASE_URL`. DB changes (schema, indexes, data) applied in Replit dev affect production immediately.
+
+## Production environment and schema sync
+When the PostgreSQL password or connection URL changes on the VPS, PM2 must be restarted with `--update-env` and then saved; otherwise the running app can continue using its previous environment.
+
+Passwords containing URL-reserved characters must be percent-encoded in `DATABASE_URL` before Node/pg can parse the URL. After the connection is fixed, verify the deployed schema against the app schema: a missing additive column can make otherwise healthy API routes return 500. Prefer a targeted `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for a known missing column, or review `npm run db:push` changes before applying a broader sync.
+
+**Why:** Production had a valid PostgreSQL server but an old malformed PM2 URL and a schema missing a newly required category field; separating connection repair from the minimal schema repair made the failure diagnosable without destructive changes.

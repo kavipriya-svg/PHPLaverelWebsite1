@@ -1,0 +1,59 @@
+root@srv1193958:/var/www/19dogs# node <<'NODE'
+const fs = require("fs");
+const { spawnSync } = require("child_process");
+
+function findDatabaseUrl(value) {
+  if (!value || typeof value !== "object") return null;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findDatabaseUrl(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  for (const [key, child] of Object.entries(value)) {
+    if (key === "DATABASE_URL" && typeof child === "string" && child.length > 0) {
+      return child;
+    }
+
+    const found = findDatabaseUrl(child);
+    if (found) return found;
+  }
+
+  return null;
+}
+
+const backup = JSON.parse(
+  fs.readFileSync("/root/.pm2/dump.pm2.bak", "utf8")
+);
+
+const databaseUrl = findDatabaseUrl(backup);
+
+if (!databaseUrl) {
+  console.error("No saved DATABASE_URL was found in the PM2 backup.");
+  process.exit(2);
+}
+
+console.log("Restoring the saved database connection in PM2...");
+
+const result = spawnSync(
+  "pm2",
+  ["restart", "19dogs", "--update-env"],
+  {
+    env: {
+      ...process.env,
+      DATABASE_URL: databaseUrl,
+      PORT: "5000",
+      NODE_ENV: "production"
+NODEess.exit(result.status ?? 1);
+Restoring the saved database connection in PM2...
+[PM2] Applying action restartProcessId on app [19dogs](ids: [ 0 ])
+[PM2] [19dogs](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ 19dogs    │ default     │ 1.0.0   │ fork    │ 315973   │ 0s     │ 10   │ online    │ 0%       │ 19.5mb   │ root     │ disabled │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@srv1193958:/var/www/19dogs#

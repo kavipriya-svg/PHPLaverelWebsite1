@@ -6,3 +6,10 @@ id = "ZZMldZmh0tzfhetWEb0X1"
 uri = "file://audit-report.pdf"
 type = "pdf"
 title = "Production Deployment & Performance Audit Report"
+
+[[outputs]]
+id = "fJaMZluhNBkHW9fLfwXG2"
+uri = "file://hostinger-release.tar.gz"
+type = "unspecified"
+title = "19Dogs Hostinger release"
+description = "Current Replit production build: dist plus package manifests. Upload it to the Hostinger VPS to replace the outdated frontend and server bundle without touching uploads or database data."
