@@ -75,6 +75,7 @@ export default function AdminCategories() {
   const [editCategory, setEditCategory] = useState<CategoryWithChildren | null>(null);
   const [deleteCategory, setDeleteCategory] = useState<CategoryWithChildren | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [localRootCategories, setLocalRootCategories] = useState<CategoryWithChildren[]>([]);
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -92,6 +93,14 @@ export default function AdminCategories() {
     queryKey: ["/api/admin/categories"],
   });
 
+  const categories = data?.categories || [];
+  const rootCategories = categories.filter((c) => !c.parentId);
+
+  // Sync local order from server data (but don't override while a drag is pending)
+  useEffect(() => {
+    setLocalRootCategories(rootCategories);
+  }, [data]);
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/admin/categories/${id}`);
@@ -108,20 +117,19 @@ export default function AdminCategories() {
 
   const reorderMutation = useMutation({
     mutationFn: async (updates: { id: string; position: number }[]) => {
-      await apiRequest("POST", "/api/admin/categories/reorder", { updates });
+      const res = await apiRequest("POST", "/api/admin/categories/reorder", { updates });
+      if (!res.ok) throw new Error("Reorder failed");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
       toast({ title: "Categories reordered successfully" });
     },
     onError: () => {
+      // Revert local state on failure
+      setLocalRootCategories(rootCategories);
       toast({ title: "Failed to reorder categories", variant: "destructive" });
     },
   });
-
-  const categories = data?.categories || [];
-
-  const rootCategories = categories.filter((c) => !c.parentId);
 
   const handleDragEnd = (event: DragEndEvent, siblings: CategoryWithChildren[]) => {
     const { active, over } = event;
@@ -132,6 +140,8 @@ export default function AdminCategories() {
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const reordered = arrayMove(siblings, oldIndex, newIndex);
+      // Optimistic update — order changes immediately in UI
+      setLocalRootCategories(reordered);
       const updates = reordered.map((cat, idx) => ({ id: cat.id, position: idx }));
       reorderMutation.mutate(updates);
     }
@@ -168,13 +178,13 @@ export default function AdminCategories() {
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
-              onDragEnd={(event) => handleDragEnd(event, rootCategories)}
+              onDragEnd={(event) => handleDragEnd(event, localRootCategories)}
             >
               <SortableContext
-                items={rootCategories.map((c) => c.id)}
+                items={localRootCategories.map((c) => c.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {rootCategories.map((category) => (
+                {localRootCategories.map((category) => (
                   <SortableCategoryItem
                     key={category.id}
                     category={category}
