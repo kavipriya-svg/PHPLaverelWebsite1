@@ -3759,6 +3759,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           storage.updateCategory(update.id, { position: update.position })
         )
       );
+
+      // Invalidate the server-side category cache so the next fetch returns the new order
+      storage.invalidateCategoryCache();
       
       res.json({ success: true });
     } catch (error) {
