@@ -18,8 +18,11 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npx tsx script/build.ts
@@ -52,7 +55,7 @@ jobs:
           script: |
             set -e
             cd /var/www/19dogs
-            npm ci --omit=dev
+            npm install --omit=dev
             pm2 restart 19dogs --update-env
             pm2 save
             echo "Deploy complete"
