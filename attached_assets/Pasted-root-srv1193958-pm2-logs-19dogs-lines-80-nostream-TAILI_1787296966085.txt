@@ -1,0 +1,125 @@
+root@srv1193958:~# pm2 logs 19dogs --lines 80 --nostream
+[TAILING] Tailing last 80 lines for [19dogs] process (change the value with --lines option)
+/root/.pm2/logs/19dogs-out.log last 80 lines:
+0|19dogs   | "children":[{"id":"be3bae5e-7af5-419a-a0af-6ea0794f584b","parentId":"d8511783-cc1c-409d-b4fb-99a4bc71aad7","name":"Gaming Laptops","slug":"gaming-laptops","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:00.935Z","updatedAt":"2025-12-01T14:46:00.935Z","children":[]},{"id":"86e2c144-0b19-4140-b8e7-bbaa66e0ab48","parentId":"d8511783-cc1c-409d-b4fb-99a4bc71aad7","name":"Business Laptops","slug":"business-laptops","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:00.971Z","updatedAt":"2025-12-01T14:46:00.971Z","children":[]}]},{"id":"16a11e8c-bb0d-42eb-88b9-ed210b893bac","parentId":"da0255ba-931f-4b1e-9448-ddf8eacfa85c","name":"Broth & Ice-Cream","slug":"broth-ice-cream","description":"Headphones, speakers, and more","imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":3,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.007Z","updatedAt":"2025-12-04T07:20:06.726Z","children":[{"id":"59f54753-dad3-418f-a02b-31947fbd7503","parentId":"16a11e8c-bb0d-42eb-88b9-ed210b893bac","name":"Headphones","slug":"headphones","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.043Z","updatedAt":"2025-12-01T14:46:01.043Z","children":[]},{"id":"d39f6b28-3260-4e15-b3e3-2578ec7f93e0","parentId":"16a11e8c-bb0d-42eb-88b9-ed210b893bac","name":"Speakers","slug":"speakers","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.080Z","updatedAt":"2025-12-01T14:46:01.080Z","children":[]}]}]},{"id":"9055837d-dd5c-4d13-8fe2-5f051c761ecc","parentId":null,"name":"Full Meal","slug":"full-meal","description":"","imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.117Z","updatedAt":"2025-12-04T07:18:40.224Z","children":[{"id":"4ff2a490-8f8e-49f3-a286-734a13306fc4","parentId":"9055837d-dd5c-4d13-8fe2-5f051c761ecc","name":"Men's Clothing","slug":"mens-clothing","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.153Z","updatedAt":"2025-12-04T07:20:13.906Z","children":[{"id":"4814ae62-a209-4671-80fc-125709666132","parentId":"4ff2a490-8f8e-49f3-a286-734a13306fc4","name":"Shirts","slug":"mens-shirts","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.190Z","updatedAt":"2025-12-01T14:46:01.190Z","children":[]},{"id":"c4ba257a-d51c-4b4e-8c98-794fe141f543","parentId":"4ff2a490-8f8e-49f3-a286-734a13306fc4","name":"Pants","slug":"mens-pants","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.226Z","updatedAt":"2025-12-01T14:46:01.226Z","children":[]},{"id":"e09c3b97-86bf-4614-860d-8755bda16b6c","parentId":"4ff2a490-8f8e-49f3-a286-734a13306fc4","name":"Jackets","slug":"mens-jackets","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":3,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.262Z","updatedAt":"2025-12-01T14:46:01.262Z","children":[]}]},{"id":"845a5a8c-3948-4c3d-9f31-35380edb8704","parentId":"9055837d-dd5c-4d13-8fe2-5f051c761ecc","name":"Women's Clothing","slug":"womens-clothing","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.301Z","updatedAt":"2025-12-04T07:20:22.562Z","children":[{"id":"62d20a0c-9847-41ff-91c4-a0cb4aa81e9f","parentId":"845a5a8c-3948-4c3d-9f31-35380edb8704","name":"Dresses","slug":"womens-dresses","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.335Z","updatedAt":"2025-12-01T14:46:01.335Z","children":[]},{"id":"9070c4b2-e652-4046-9de4-1d6fdcfe7bf7","parentId":"845a5a8c-3948-4c3d-9f31-35380edb8704","name":"Tops","slug":"womens-tops","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.372Z","updatedAt":"2025-12-01T14:46:01.372Z","children":[]}]},{"id":"e0ac1ddf-6253-4878-bcd0-dc6ff4d814d9","parentId":"9055837d-dd5c-4d13-8fe2-5f051c761ecc","name":"Footwear","slug":"footwear","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":3,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.408Z","updatedAt":"2025-12-04T07:20:29.947Z","children":[{"id":"c43762c6-bb13-4f51-b705-0fc9eb539aa2","parentId":"e0ac1ddf-6253-4878-bcd0-dc6ff4d814d9","name":"Sneakers","slug":"sneakers","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.445Z","updatedAt":"2025-12-01T14:46:01.445Z","children":[]},{"id":"68caa7bc-87e6-4d06-b0cc-e01a55a6c608","parentId":"e0ac1ddf-6253-4878-bcd0-dc6ff4d814d9","name":"Formal Shoes","slug":"formal-shoes","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.482Z","updatedAt":"2025-12-01T14:46:01.482Z","children":[]}]}]},{"id":"b8dbf5a2-f01a-42ac-ab1c-f298737b3c6e","parentId":null,"name":"Broth","slug":"broth","description":"","imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":3,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.519Z","updatedAt":"2025-12-04T07:20:35.358Z","children":[{"id":"3fc5dead-8289-4aca-8088-21e0cc191d8a","parentId":"b8dbf5a2-f01a-42ac-ab1c-f298737b3c6e","name":"Furniture","slug":"furniture","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.556Z","updatedAt":"2025-12-04T07:20:40.624Z","children":[{"id":"a67ba3ef-79fe-44fe-be74-753f62f9f565","parentId":"3fc5dead-8289-4aca-8088-21e0cc191d8a","name":"Living Room","slug":"living-room-furniture","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.592Z","updatedAt":"2025-12-01T14:46:01.592Z","children":[]},{"id":"fa40c504-007e-435b-a656-f1ff9e544b2b","parentId":"3fc5dead-8289-4aca-8088-21e0cc191d8a","name":"Bedroom","slug":"bedroom-furniture","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.629Z","updatedAt":"2025-12-01T14:46:01.629Z","children":[]}]},{"id":"b457473e-3e8b-4ac5-878a-443c80e80c2a","parentId":"b8dbf5a2-f01a-42ac-ab1c-f298737b3c6e","name":"Kitchen","slug":"kitchen","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.665Z","updatedAt":"2025-12-04T07:20:45.637Z","children":[{"id":"7d5f882e-5846-4b6f-aa8a-fa26b531b851","parentId":"b457473e-3e8b-4ac5-878a-443c80e80c2a","name":"Cookware","slug":"cookware","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.701Z","updatedAt":"2025-12-01T14:46:01.701Z","children":[]},{"id":"69e37496-9dde-490d-881a-c7b75dd1cb18","parentId":"b457473e-3e8b-4ac5-878a-443c80e80c2a","name":"Appliances","slug":"kitchen-appliances","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.743Z","updatedAt":"2025-12-01T14:46:01.743Z","children":[]}]}]},{"id":"29dabfc1-de57-4afc-ac80-2f4b2ed193df","parentId":null,"name":"Ice Cream","slug":"ice-cream","description":"","imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":4,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.781Z","updatedAt":"2025-12-04T07:20:50.182Z","children":[{"id":"828e1a95-57a8-4cbb-b882-fcbbb075d3f7","parentId":"29dabfc1-de57-4afc-ac80-2f4b2ed193df","name":"Fitness","slug":"fitness","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.818Z","updatedAt":"2025-12-04T07:20:54.192Z","children":[]},{"id":"ffb9e1a5-e75c-4418-b390-204552c70781","parentId":"29dabfc1-de57-4afc-ac80-2f4b2ed193df","name":"Camping","slug":"camping","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":false,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.854Z","updatedAt":"2025-12-04T07:20:56.714Z","children":[]}]},{"id":"90bfbd9f-a163-4612-88d5-79dc1e782591","parentId":null,"name":"Clothing","slug":"clothing","description":"","imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":5,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.893Z","updatedAt":"2025-12-01T17:56:42.546Z","children":[{"id":"62c70233-75f6-4747-a5fe-1383ccce5d93","parentId":"90bfbd9f-a163-4612-88d5-79dc1e782591","name":"Skincare","slug":"skincare","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":1,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.930Z","updatedAt":"2025-12-01T14:46:01.930Z","children":[]},{"id":"cfe37f50-923e-4494-8ec3-bc202cd6ee9e","parentId":"90bfbd9f-a163-4612-88d5-79dc1e782591","name":"Makeup","slug":"makeup","description":null,"imageUrl":null,"iconUrl":null,"bannerUrl":null,"position":2,"isActive":true,"showInHub":false,"metaTitle":null,"metaDescription":null,"metaKeywords":null,"createdAt":"2025-12-01T14:46:01.965Z","updatedAt":"2025-12-01T14:46:01.965Z","children":[]}]}]}
+0|19dogs   | 7:07:03 AM [express] GET /api/products 500 in 44ms :: {"error":"Failed to fetch products"}
+0|19dogs   | 7:07:03 AM [express] GET /api/home-blocks 304 in 25ms :: {"blocks":[{"id":"660277f3-1974-4a9a-9fc0-d73e410fd491","type":"category_grid","title":"Shop by Category","payload":{},"position":1,"isActive":true,"createdAt":"2025-12-01T14:46:06.387Z","updatedAt":"2025-12-07T18:44:11.471Z"},{"id":"c0381ee4-aabd-4248-bc76-d02c2d83f085","type":"featured_products","title":"Featured Products","payload":{},"position":2,"isActive":true,"createdAt":"2025-12-07T18:44:37.276Z","updatedAt":"2025-12-07T18:44:37.276Z"},{"id":"6c2f23f8-d343-4b72-ba81-cde3848c14d2","type":"trending_products","title":"Trending Now","payload":null,"position":3,"isActive":true,"createdAt":"2025-12-01T14:46:06.424Z","updatedAt":"2025-12-01T14:46:06.424Z"},{"id":"edbaae9c-6492-4184-8e2a-d11835fcc09b","type":"promotional_banner","title":"Special Offers","payload":null,"position":4,"isActive":true,"createdAt":"2025-12-01T14:46:06.461Z","updatedAt":"2025-12-01T14:46:06.461Z"},{"id":"bbc58424-e5cc-4111-ae35-a3c3befb3e16","type":"new_arrivals","title":"New Arrivals","payload":null,"position":5,"isActive":true,"createdAt":"2025-12-01T14:46:06.497Z","updatedAt":"2025-12-01T14:46:06.497Z"}]}
+0|19dogs   | 7:07:03 AM [express] GET /api/reviews/approved 304 in 49ms :: {"reviews":[],"total":0}
+0|19dogs   | 7:07:03 AM [express] GET /api/products 500 in 7ms :: {"error":"Failed to fetch products"}
+0|19dogs   | 7:07:11 AM [express] GET /api/wishlist 401 in 7ms :: {"message":"Unauthorized"}
+0|19dogs   | 7:07:11 AM [express] GET /api/cart 500 in 20ms :: {"error":"Failed to fetch cart"}
+0|19dogs   | 7:07:11 AM [express] GET /api/favicon 302 in 7ms
+0|19dogs   | 7:07:21 AM [express] POST /api/auth/unified-login 500 in 7ms :: {"error":"Login failed"}
+0|19dogs   | 7:07:27 AM [express] POST /api/auth/unified-login 500 in 16ms :: {"error":"Login failed"}
+0|19dogs   | 7:07:31 AM [express] POST /api/auth/unified-login 500 in 20ms :: {"error":"Login failed"}
+0|19dogs   | 7:08:04 AM [express] POST /api/admin/login 500 in 16ms :: {"error":"Login failed"}
+0|19dogs   | 7:08:10 AM [express] POST /api/admin/login 500 in 13ms :: {"error":"Login failed"}
+0|19dogs   | 7:18:29 AM [express] GET /api/settings/branding 304 in 5ms :: {"settings":{"logoUrl":"/objects/uploads/3b83cd31-2019-4f2d-80d9-d591c355057b","storeName":"19Dogs","showStoreName":false,"faviconUrl":"/objects/uploads/78504241-61b1-4dee-a325-8a4d3271b03d","topBarText":"Free Delivery for Order Above Rs 2500","showTopBar":true,"showHomeButton":true}}
+0|19dogs   | 7:18:29 AM [express] GET /api/integrations/public 304 in 13ms :: {"configs":{}}
+0|19dogs   | 7:18:29 AM [express] GET /api/wishlist 401 in 3ms :: {"message":"Unauthorized"}
+0|19dogs   | 7:18:29 AM [express] GET /api/cart 500 in 6ms :: {"error":"Failed to fetch cart"}
+0|19dogs   | 7:18:30 AM [express] GET /api/favicon 302 in 5ms
+0|19dogs   | 7:18:52 AM [express] POST /api/auth/unified-login 500 in 6ms :: {"error":"Login failed"}
+0|19dogs   | 7:19:08 AM [express] POST /api/auth/unified-login 500 in 16ms :: {"error":"Login failed"}
+0|19dogs   | 7:19:40 AM [express] GET /api/auth/user 304 in 2ms
+0|19dogs   | 7:19:58 AM [express] GET /api/wishlist 401 in 6ms :: {"message":"Unauthorized"}
+0|19dogs   | 7:19:58 AM [express] GET /api/cart 500 in 25ms :: {"error":"Failed to fetch cart"}
+0|19dogs   | 7:19:58 AM [express] GET /api/favicon 302 in 3ms
+0|19dogs   | 7:19:58 AM [express] GET /api/settings/branding 304 in 2ms :: {"settings":{"logoUrl":"/objects/uploads/3b83cd31-2019-4f2d-80d9-d591c355057b","storeName":"19Dogs","showStoreName":false,"faviconUrl":"/objects/uploads/78504241-61b1-4dee-a325-8a4d3271b03d","topBarText":"Free Delivery for Order Above Rs 2500","showTopBar":true,"showHomeButton":true}}
+0|19dogs   | 7:19:59 AM [express] GET /api/wishlist 401 in 6ms :: {"message":"Unauthorized"}
+0|19dogs   | 7:19:59 AM [express] GET /api/cart 500 in 16ms :: {"error":"Failed to fetch cart"}
+0|19dogs   | 7:19:59 AM [express] GET /api/favicon 302 in 6ms
+0|19dogs   | 7:20:00 AM [express] GET /api/wishlist 401 in 8ms :: {"message":"Unauthorized"}
+0|19dogs   | 7:20:00 AM [express] GET /api/favicon 302 in 7ms
+0|19dogs   | 7:20:00 AM [express] GET /api/cart 500 in 41ms :: {"error":"Failed to fetch cart"}
+0|19dogs   | 7:20:00 AM [express] GET /api/wishlist 401 in 7ms :: {"message":"Unauthorized"}
+0|19dogs   | 7:20:00 AM [express] GET /api/favicon 302 in 7ms
+0|19dogs   | 7:20:00 AM [express] GET /api/cart 500 in 30ms :: {"error":"Failed to fetch cart"}
+0|19dogs   | 7:20:00 AM [express] GET /api/wishlist 401 in 11ms :: {"message":"Unauthorized"}
+0|19dogs   | 7:20:00 AM [express] GET /api/cart 500 in 7ms :: {"error":"Failed to fetch cart"}
+0|19dogs   | 7:20:00 AM [express] GET /api/favicon 302 in 35ms
+0|19dogs   | 7:20:30 AM [express] POST /api/auth/unified-login 500 in 8ms :: {"error":"Login failed"}
+
+/root/.pm2/logs/19dogs-error.log last 80 lines:
+0|19dogs   |     column: undefined,
+0|19dogs   |     dataType: undefined,
+0|19dogs   |     constraint: undefined,
+0|19dogs   |     file: 'parse_relation.c',
+0|19dogs   |     line: '3722',
+0|19dogs   |     routine: 'errorMissingColumn'
+0|19dogs   |   }
+0|19dogs   | }
+0|19dogs   | Unified login error: t [Error]: Failed query: select "id", "email", "first_name", "last_name", "profile_image_url", "phone", "role", "customer_type", "admin_role_id", "password_hash", "subscription_discount_type", "subscription_discount_value", "subscription_sale_discount_type", "subscription_sale_discount_value", "subscription_delivery_fee", "subscription_delivery_fee_city", "subscription_delivery_fee_india", "subscription_delivery_schedule", "subscription_start_date", "subscription_end_date", "subscription_notes", "created_at", "updated_at" from "users" where "users"."email" = $1 limit $2
+0|19dogs   | params: superadmin@store.com,1
+0|19dogs   |     at Jg.queryWithCache (/var/www/19dogs/dist/index.cjs:79:32406)
+0|19dogs   |     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+0|19dogs   |     at async /var/www/19dogs/dist/index.cjs:79:35655
+0|19dogs   |     at async _y.getUserByEmail (/var/www/19dogs/dist/index.cjs:79:150337)
+0|19dogs   |     at async /var/www/19dogs/dist/index.cjs:395:6339 {
+0|19dogs   |   query: 'select "id", "email", "first_name", "last_name", "profile_image_url", "phone", "role", "customer_type", "admin_role_id", "password_hash", "subscription_discount_type", "subscription_discount_value", "subscription_sale_discount_type", "subscription_sale_discount_value", "subscription_delivery_fee", "subscription_delivery_fee_city", "subscription_delivery_fee_india", "subscription_delivery_schedule", "subscription_start_date", "subscription_end_date", "subscription_notes", "created_at", "updated_at" from "users" where "users"."email" = $1 limit $2',
+0|19dogs   |   params: [ 'superadmin@store.com', 1 ],
+0|19dogs   |   cause: error: column "customer_type" does not exist
+0|19dogs   |       at /var/www/19dogs/dist/index.cjs:64:13106
+0|19dogs   |       at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+0|19dogs   |       at async /var/www/19dogs/dist/index.cjs:79:35864
+0|19dogs   |       at async Jg.queryWithCache (/var/www/19dogs/dist/index.cjs:79:32381)
+0|19dogs   |       at async /var/www/19dogs/dist/index.cjs:79:35655
+0|19dogs   |       at async _y.getUserByEmail (/var/www/19dogs/dist/index.cjs:79:150337)
+0|19dogs   |       at async /var/www/19dogs/dist/index.cjs:395:6339 {
+0|19dogs   |     length: 113,
+0|19dogs   |     severity: 'ERROR',
+0|19dogs   |     code: '42703',
+0|19dogs   |     detail: undefined,
+0|19dogs   |     hint: undefined,
+0|19dogs   |     position: '88',
+0|19dogs   |     internalPosition: undefined,
+0|19dogs   |     internalQuery: undefined,
+0|19dogs   |     where: undefined,
+0|19dogs   |     schema: undefined,
+0|19dogs   |     table: undefined,
+0|19dogs   |     column: undefined,
+0|19dogs   |     dataType: undefined,
+0|19dogs   |     constraint: undefined,
+0|19dogs   |     file: 'parse_relation.c',
+0|19dogs   |     line: '3722',
+0|19dogs   |     routine: 'errorMissingColumn'
+0|19dogs   |   }
+0|19dogs   | }
+0|19dogs   | Unified login error: t [Error]: Failed query: select "id", "email", "first_name", "last_name", "profile_image_url", "phone", "role", "customer_type", "admin_role_id", "password_hash", "subscription_discount_type", "subscription_discount_value", "subscription_sale_discount_type", "subscription_sale_discount_value", "subscription_delivery_fee", "subscription_delivery_fee_city", "subscription_delivery_fee_india", "subscription_delivery_schedule", "subscription_start_date", "subscription_end_date", "subscription_notes", "created_at", "updated_at" from "users" where "users"."email" = $1 limit $2
+0|19dogs   | params: superadmin@store.com,1
+0|19dogs   |     at Jg.queryWithCache (/var/www/19dogs/dist/index.cjs:79:32406)
+0|19dogs   |     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+0|19dogs   |     at async /var/www/19dogs/dist/index.cjs:79:35655
+0|19dogs   |     at async _y.getUserByEmail (/var/www/19dogs/dist/index.cjs:79:150337)
+0|19dogs   |     at async /var/www/19dogs/dist/index.cjs:395:6339 {
+0|19dogs   |   query: 'select "id", "email", "first_name", "last_name", "profile_image_url", "phone", "role", "customer_type", "admin_role_id", "password_hash", "subscription_discount_type", "subscription_discount_value", "subscription_sale_discount_type", "subscription_sale_discount_value", "subscription_delivery_fee", "subscription_delivery_fee_city", "subscription_delivery_fee_india", "subscription_delivery_schedule", "subscription_start_date", "subscription_end_date", "subscription_notes", "created_at", "updated_at" from "users" where "users"."email" = $1 limit $2',
+0|19dogs   |   params: [ 'superadmin@store.com', 1 ],
+0|19dogs   |   cause: error: column "customer_type" does not exist
+0|19dogs   |       at /var/www/19dogs/dist/index.cjs:64:13106
+0|19dogs   |       at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+0|19dogs   |       at async /var/www/19dogs/dist/index.cjs:79:35864
+0|19dogs   |       at async Jg.queryWithCache (/var/www/19dogs/dist/index.cjs:79:32381)
+0|19dogs   |       at async /var/www/19dogs/dist/index.cjs:79:35655
+0|19dogs   |       at async _y.getUserByEmail (/var/www/19dogs/dist/index.cjs:79:150337)
+0|19dogs   |       at async /var/www/19dogs/dist/index.cjs:395:6339 {
+0|19dogs   |     length: 113,
+0|19dogs   |     severity: 'ERROR',
+0|19dogs   |     code: '42703',
+0|19dogs   |     detail: undefined,
+0|19dogs   |     hint: undefined,
+0|19dogs   |     position: '88',
+0|19dogs   |     internalPosition: undefined,
+0|19dogs   |     internalQuery: undefined,
+0|19dogs   |     where: undefined,
+0|19dogs   |     schema: undefined,
+0|19dogs   |     table: undefined,
+0|19dogs   |     column: undefined,
+0|19dogs   |     dataType: undefined,
+0|19dogs   |     constraint: undefined,
+0|19dogs   |     file: 'parse_relation.c',
+0|19dogs   |     line: '3722',
+0|19dogs   |     routine: 'errorMissingColumn'
+0|19dogs   |   }
+0|19dogs   | }
+
+root@srv1193958:~# 
