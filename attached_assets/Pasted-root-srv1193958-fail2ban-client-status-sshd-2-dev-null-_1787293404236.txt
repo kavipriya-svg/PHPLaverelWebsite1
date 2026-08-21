@@ -1,0 +1,20 @@
+root@srv1193958:~# fail2ban-client status sshd 2>/dev/null | grep -i "banned\|total"
+root@srv1193958:~# iptables -L INPUT -n --line-numbers | grep -i "DROP\|REJECT" | head -20
+root@srv1193958:~# tail -30 /var/log/auth.log | grep -i "invalid\|fail\|refused\|publickey\|disconnect"
+2026-08-21T06:05:45.958926+00:00 srv1193958 sshd[321409]: Invalid user root@srv1193958 from 52.234.6.48 port 33792
+2026-08-21T06:05:46.441188+00:00 srv1193958 sshd[321409]: Connection closed by invalid user root@srv1193958 52.234.6.48 port 33792 [preauth]
+2026-08-21T06:05:47.664436+00:00 srv1193958 sshd[321411]: Invalid user root@srv1193958 from 52.234.6.48 port 33793
+2026-08-21T06:05:48.148183+00:00 srv1193958 sshd[321411]: Connection closed by invalid user root@srv1193958 52.234.6.48 port 33793 [preauth]
+2026-08-21T06:09:58.675730+00:00 srv1193958 sshd[321428]: Accepted publickey for root from 127.0.0.1 port 34066 ssh2: ED25519 SHA256:kuJkmTwCEtMzps96p5Oalba4F+o5g4Cuwc1x2sfPVHk
+2026-08-21T06:09:59.847411+00:00 srv1193958 sshd[321428]: Received disconnect from 127.0.0.1 port 34066:11: disconnected by user
+2026-08-21T06:09:59.856557+00:00 srv1193958 sshd[321428]: Disconnected from user root 127.0.0.1 port 34066
+2026-08-21T06:12:41.291069+00:00 srv1193958 sshd[321547]: Invalid user root@srv1193958 from 172.214.155.227 port 50880
+2026-08-21T06:12:41.708195+00:00 srv1193958 sshd[321547]: Connection closed by invalid user root@srv1193958 172.214.155.227 port 50880 [preauth]
+2026-08-21T06:12:42.776962+00:00 srv1193958 sshd[321549]: Invalid user root@srv1193958 from 172.214.155.227 port 50881
+2026-08-21T06:12:43.204151+00:00 srv1193958 sshd[321549]: Connection closed by invalid user root@srv1193958 172.214.155.227 port 50881 [preauth]
+2026-08-21T06:17:41.736582+00:00 srv1193958 sshd[321699]: Invalid user root@srv1193958 from 20.127.238.92 port 32837
+2026-08-21T06:17:42.140785+00:00 srv1193958 sshd[321699]: Failed none for invalid user root@srv1193958 from 20.127.238.92 port 32837 ssh2
+2026-08-21T06:17:42.344736+00:00 srv1193958 sshd[321699]: Failed password for invalid user root@srv1193958 from 20.127.238.92 port 32837 ssh2
+2026-08-21T06:17:42.548672+00:00 srv1193958 sshd[321699]: Failed password for invalid user root@srv1193958 from 20.127.238.92 port 32837 ssh2
+2026-08-21T06:17:42.754657+00:00 srv1193958 sshd[321699]: Connection closed by invalid user root@srv1193958 20.127.238.92 port 32837 [preauth]
+root@srv1193958:~# 
