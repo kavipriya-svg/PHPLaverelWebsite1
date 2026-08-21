@@ -36,30 +36,26 @@ jobs:
           path: dist/
           retention-days: 7
 
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.HOSTINGER_SSH_HOST }} >> ~/.ssh/known_hosts
+          echo "=== Key fingerprint in use ==="
+          ssh-keygen -lf ~/.ssh/deploy_key
+
       - name: Upload built files to Hostinger
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          username: ${{ secrets.HOSTINGER_SSH_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          source: "dist/,package.json,package-lock.json"
-          target: "/var/www/19dogs/"
-          strip_components: 0
-          timeout: 120s
-          command_timeout: 20m
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=120" \
+            dist/ package.json package-lock.json \
+            ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:/var/www/19dogs/
 
       - name: Restart application on Hostinger
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          username: ${{ secrets.HOSTINGER_SSH_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          timeout: 120s
-          command_timeout: 20m
-          script: |
-            set -e
-            cd /var/www/19dogs
-            npm install --omit=dev
-            pm2 restart 19dogs --update-env
-            pm2 save
-            echo "Deploy complete"
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=120 \
+            ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} \
+            'cd /var/www/19dogs && npm install --omit=dev && pm2 restart 19dogs --update-env && pm2 save && echo "Deploy complete"'
