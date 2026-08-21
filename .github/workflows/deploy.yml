@@ -5,28 +5,24 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ matrix.node-version }}
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: npx tsx script/build.ts
         env:
           NODE_ENV: production
 
@@ -37,26 +33,26 @@ jobs:
           path: dist/
           retention-days: 7
 
-      # ── Optional: deploy dist/ to Hostinger via SSH ──────────────────
-      # Uncomment and configure these steps once you have set the secrets:
-      #   HOSTINGER_SSH_HOST, HOSTINGER_SSH_USER, HOSTINGER_SSH_KEY
-      #
-      # - name: Deploy to Hostinger via SSH
-      #   uses: appleboy/ssh-action@v1.0.3
-      #   with:
-      #     host: ${{ secrets.HOSTINGER_SSH_HOST }}
-      #     username: ${{ secrets.HOSTINGER_SSH_USER }}
-      #     key: ${{ secrets.HOSTINGER_SSH_KEY }}
-      #     script: |
-      #       cd /home/<your-user>/public_html
-      #       rm -rf dist
-      #       mkdir -p dist
-      #
-      # - name: Upload built files to Hostinger
-      #   uses: appleboy/scp-action@v0.1.7
-      #   with:
-      #     host: ${{ secrets.HOSTINGER_SSH_HOST }}
-      #     username: ${{ secrets.HOSTINGER_SSH_USER }}
-      #     key: ${{ secrets.HOSTINGER_SSH_KEY }}
-      #     source: "dist/"
-      #     target: "/home/<your-user>/public_html/"
+      - name: Upload built files to Hostinger
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          source: "dist/,package.json,package-lock.json"
+          target: "/var/www/19dogs/"
+          strip_components: 0
+
+      - name: Restart application on Hostinger
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/19dogs
+            npm ci --omit=dev
+            pm2 restart 19dogs --update-env
+            pm2 save
+            echo "Deploy complete"
