@@ -39,7 +39,9 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s' "${{ secrets.HOSTINGER_SSH_KEY_B64 }}" \
             | base64 --decode > ~/.ssh/deploy_key
+
           chmod 600 ~/.ssh/deploy_key
+
           ssh-keyscan -H "${{ secrets.HOSTINGER_SSH_HOST }}" \
             >> ~/.ssh/known_hosts
 
@@ -60,7 +62,8 @@ jobs:
       - name: Upload built files to Hostinger
         run: |
           rsync -avz \
-            -e "ssh -i ~/.ssh/deploy_key \
+            -e "ssh \
+              -i ~/.ssh/deploy_key \
               -o IdentitiesOnly=yes \
               -o StrictHostKeyChecking=no \
               -o ConnectTimeout=120" \
