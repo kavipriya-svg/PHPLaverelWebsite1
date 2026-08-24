@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+  # Allows deployment from GitHub Actions manually
+  workflow_dispatch:
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -37,6 +40,7 @@ jobs:
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
+
           printf '%s' "${{ secrets.HOSTINGER_SSH_KEY_B64 }}" \
             | base64 --decode > ~/.ssh/deploy_key
 
